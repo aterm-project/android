@@ -16704,4 +16704,169 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get r7ImportFailRolledBack =>
       'Импорт не удался и был отменён. Ничего не сохранено.';
+
+  @override
+  String get shellLocalInputTooLarge =>
+      'Ввод слишком большой для локальной оболочки и не был отправлен';
+
+  @override
+  String get shellLocalKindSystem => 'Оболочка по умолчанию';
+
+  @override
+  String get shellLocalKindCmd => 'Командная строка (cmd)';
+
+  @override
+  String get shellLocalKindPowershell => 'Windows PowerShell';
+
+  @override
+  String get shellLocalKindPwsh => 'PowerShell 7 (pwsh)';
+
+  @override
+  String get shellLocalKindBash => 'Bash';
+
+  @override
+  String get shellLocalKindZsh => 'Zsh';
+
+  @override
+  String get shellLocalKindFish => 'Fish';
+
+  @override
+  String get shellLocalKindSh => 'POSIX sh';
+
+  @override
+  String get shellLocalOptions => 'Параметры локальной оболочки…';
+
+  @override
+  String get shellLocalOptionsTitle => 'Запуск локальной оболочки';
+
+  @override
+  String get shellLocalShellLabel => 'Оболочка';
+
+  @override
+  String get shellLocalWorkingDirectoryLabel =>
+      'Рабочий каталог (необязательно)';
+
+  @override
+  String get shellLocalWorkingDirectoryHint =>
+      'Абсолютный путь или ~/папка; пусто — домашняя папка';
+
+  @override
+  String get shellLocalStart => 'Запустить оболочку';
+
+  @override
+  String get shellLocalInvalidWorkingDirectory =>
+      'Введите абсолютный путь к папке или ~/папка.';
+
+  @override
+  String get shellLocalWorkingDirectoryNotFound =>
+      'Этот рабочий каталог не существует.';
+
+  @override
+  String get shellLocalNotInstalled =>
+      'Эта оболочка не установлена на этом компьютере.';
+
+  @override
+  String get shellLocalUnavailable =>
+      'Локальная оболочка (только в настольном приложении)';
+
+  @override
+  String get shellLocalUnavailableDetail =>
+      'Здесь нельзя запустить оболочку на вашем компьютере, а Atermius никогда не запускает её на сервере. Используйте настольное приложение Atermius для локальных оболочек.';
+
+  @override
+  String shellLocalTabTitle(String shell) {
+    return 'Локально · $shell';
+  }
+
+  @override
+  String shellLocalNewShell(String shell) {
+    return 'Новая $shell';
+  }
+
+  @override
+  String get telnetHost => 'Хост Telnet';
+
+  @override
+  String get telnetProtocolUnencrypted => 'Telnet (без шифрования)';
+
+  @override
+  String get telnetInteractiveLogin =>
+      'Интерактивно в терминале (сохранённые данные не отправляются)';
+
+  @override
+  String get telnetLoginInteractiveHint =>
+      'Вход по Telnet интерактивный: введите имя пользователя и пароль в терминале. Сохранённые пароли, ключи и элементы связки ключей никогда не отправляются по Telnet.';
+
+  @override
+  String get telnetPlaintextWarningTitle => 'Telnet не шифруется';
+
+  @override
+  String get telnetPlaintextWarningBody =>
+      'Всё, что передаётся по Telnet, включая вводимые пароли, идёт открытым текстом и может быть прочитано или изменено в сети. Используйте только в доверенных сетях или для устройств без SSH. Сама сохранённая запись хоста остаётся зашифрованной.';
+
+  @override
+  String telnetPlaintextTerminalNotice(String endpoint) {
+    return 'Telnet-подключение к $endpoint не зашифровано: всё, что вы вводите, включая пароли, передаётся открытым текстом.';
+  }
+
+  @override
+  String telnetConnectedToEndpoint(String endpoint) {
+    return 'Telnet подключён к $endpoint (без шифрования)';
+  }
+
+  @override
+  String get telnetConnectedUnencrypted => 'Telnet подключён (без шифрования)';
+
+  @override
+  String get telnetConnecting => 'Подключение Telnet';
+
+  @override
+  String get telnetDisconnected => 'Telnet отключён';
+
+  @override
+  String get telnetConnectionClosedTerminal =>
+      '\r\n[Соединение Telnet закрыто]\r\n';
+
+  @override
+  String get telnetConnectionRefused => 'Сервер Telnet отклонил подключение.';
+
+  @override
+  String get telnetConnectionTimedOut =>
+      'Истекло время ожидания подключения Telnet.';
+
+  @override
+  String get telnetHostLookupFailed => 'Не удалось разрешить имя хоста Telnet.';
+
+  @override
+  String get telnetHostUnreachable => 'Не удалось связаться с хостом Telnet.';
+
+  @override
+  String get telnetRelayUnavailable =>
+      'Не удалось открыть Telnet через ретранслятор сервера.';
+
+  @override
+  String get telnetUnsupportedInBrowser =>
+      'Для Telnet в браузере нужен сервер Atermius, в который выполнен вход и где для этого адреса включён ретранслятор. Локальные профили браузера не могут открывать прямые TCP-подключения.';
+
+  @override
+  String get telnetProtocolError =>
+      'Сервер Telnet прислал некорректные или чрезмерные данные согласования, поэтому соединение закрыто.';
+
+  @override
+  String get telnetConnectionLost => 'Соединение Telnet потеряно.';
+
+  @override
+  String get telnetConnectCancelled => 'Подключение Telnet отменено.';
+
+  @override
+  String get telnetHostSettingsInvalid =>
+      'Хосты Telnet не могут использовать сохранённые данные входа, элементы связки ключей, промежуточные хосты или переадресацию портов. Входите интерактивно в терминале.';
+
+  @override
+  String get telnetQuickConnectNoUser =>
+      'Telnet не отправляет имя пользователя автоматически. Используйте: telnet хост[:порт] и войдите в терминале.';
+
+  @override
+  String get telnetInputTooLarge =>
+      'Вставленный текст слишком велик для отправки по Telnet (предел 1 МиБ). Ничего не отправлено.';
 }

@@ -39,6 +39,7 @@ class NewSessionMenu extends StatelessWidget {
     itemBuilder: (_) => [
       for (final item in [
         ('ssh', context.l10n.sshHost, Icons.terminal),
+        ('telnet', context.l10n.telnetHost, Icons.settings_ethernet),
         ('rdp', context.l10n.rdpRemoteDesktop, Icons.desktop_windows_outlined),
         ('vnc', context.l10n.vncRemoteDesktop, Icons.desktop_mac_outlined),
       ])

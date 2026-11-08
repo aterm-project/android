@@ -3,6 +3,7 @@ import '../platform/file_window_tracking.dart';
 import '../desktop/window/desktop_window.dart';
 import '../domain/window_combination.dart';
 import 'app_density.dart';
+import '../telnet/telnet_ui.dart';
 import 'app_motion.dart';
 import 'window_combinations.dart';
 import '../terminal/terminal_tools.dart';
@@ -13,6 +14,7 @@ import '../mcp/mcp_workspace.dart';
 import 'mcp_settings_panel.dart';
 import 'settings_scaffold.dart';
 import '../console/local_console.dart';
+import 'local_shell_menu.dart';
 import '../desktop/desktop_view.dart';
 import '../desktop/window/desktop_tab_windows.dart';
 import 'host_file_session.dart';
@@ -775,6 +777,7 @@ class _AppShellState extends State<AppShell> {
               kind: 'console',
               serialPort: tab.consoleSerialPort,
               baudRate: tab.consoleBaudRate,
+              shell: tab.consoleSerialPort == null ? tab.consoleShell : null,
             );
           final host = tab.host;
           return host == null
@@ -963,6 +966,15 @@ _snack(
         open: (pane) async {
           if (pane.kind == 'console') {
             if (!localConsoleSupported) return null;
+            if (pane.serialPort == null) {
+              final id = await app.openLocalShellTab(
+                launch: pane.shell ?? LocalShellLaunch.systemDefault,
+              );
+              return app.visibleTerminalTabs
+                  .where((t) => t.id == id && t.console != null)
+                  .firstOrNull
+                  ?.id;
+            }
             final before = app.terminalTabs.map((t) => t.id).toSet();
             await app.openConsoleTab(
               serialPort: pane.serialPort,
@@ -1280,7 +1292,8 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
     setState(() => _selectedFileId = null);
     try {
       if (tab.console != null) {
-        await app.openConsoleTab();
+        // Serial stays serial; a shell keeps its kind and working directory.
+        await app.duplicateConsoleTab(id);
       } else if (tab.host != null) {
         await app.openTerminalTab(tab.host!);
       }
@@ -1368,17 +1381,20 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
             (candidate) =>
                 candidate.id != id &&
                 (candidate.connection != null ||
+                    candidate.telnet != null ||
                     candidate.desktop != null ||
                     candidate.console != null),
           )
           .firstOrNull;
-      if (source == null && tab.host != null) {
+      if (source == null && tab.console != null) {
+        // A lone Console splits into a new independent PTY/serial session.
+        final copyId = await app.duplicateConsoleTab(id);
+        source = app.visibleTerminalTabs
+            .where((candidate) => candidate.id == copyId)
+            .firstOrNull;
+      } else if (source == null && tab.host != null) {
         final previous = app.terminalTabs.map((tab) => tab.id).toSet();
-        if (tab.console != null) {
-          await app.openConsoleTab();
-        } else {
-          await app.openTerminalTab(tab.host!);
-        }
+        await app.openTerminalTab(tab.host!);
         source = app.visibleTerminalTabs
             .where((tab) => !previous.contains(tab.id))
             .firstOrNull;
@@ -1408,7 +1424,10 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
       }
       return;
     }
-    if (tab == null || tab.closed || tab.connection == null) return;
+    if (tab == null ||
+        tab.closed ||
+        (tab.connection == null && tab.console == null))
+      return;
     final opened = await ApplicationWindows.instance.detach(
       owner: app,
       sessionId: id,
@@ -1420,7 +1439,9 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
         app.markTerminalDetached(id, false);
         if (mounted) app.showWorkspacePage(WorkspacePage.terminal);
       },
-      onOpenFiles: () => unawaited(_openSessionFiles(id)),
+      onOpenFiles: tab.connection == null
+          ? null
+          : () => unawaited(_openSessionFiles(id)),
     );
     if (!opened && mounted)
       {
@@ -1552,13 +1573,21 @@ _snack(context, context.l10n.theNewWindowWasntReadyThe, error: true);
         : app.terminalTabFor(file.sourceSessionId);
     final host = file?.host ?? tab?.host;
     final phase = tab?.state;
+    final telnet = host?.protocol == HostProtocol.telnet;
     final status = phase == 'connected'
-        ? context.l10n.sshConnected
+        ? (telnet
+              ? context.l10n.telnetConnectedUnencrypted
+              : context.l10n.sshConnected)
         : phase == 'connecting'
-        ? context.l10n.sshConnecting
-        : context.l10n.sshDisconnected;
+        ? (telnet ? context.l10n.telnetConnecting : context.l10n.sshConnecting)
+        : (telnet
+              ? context.l10n.telnetDisconnected
+              : context.l10n.sshDisconnected);
     final detail = [
-      if (host != null) '${host.username}@${host.endpoint}',
+      if (host != null)
+        host.username.isEmpty
+            ? host.endpoint
+            : '${host.username}@${host.endpoint}',
       app.currentVaultName,
       '${_statusLabel(app.syncStatus)} · ${context.l10n.pendingCountShort(app.pendingCount)}',
     ].join(' · ');
@@ -1743,9 +1772,7 @@ _snack(context, context.l10n.theNewWindowWasntReadyThe, error: true);
                     WorkspaceAction(
                       'cloud_new_${protocol.name}',
                       context.l10n.newTouppercaseHost(protocol.name.toUpperCase()),
-                      protocol == HostProtocol.ssh
-                          ? Icons.terminal
-                          : Icons.desktop_windows_outlined,
+                      hostProtocolIcon(protocol),
                       () => _showCloudHostEditor(
                         context,
                         app,
@@ -1753,16 +1780,24 @@ _snack(context, context.l10n.theNewWindowWasntReadyThe, error: true);
                       ),
                       enabled: app.activeVault?.canWrite == true,
                     ),
-                  if (localConsoleSupported)
-                    WorkspaceAction(
-                      'cloud_new_console',
-                      context.l10n.localConsole,
-                      Icons.code,
-                      () async {
-                        setState(() => _selectedFileId = null);
-                        await app.openConsoleTab();
-                      },
-                    ),
+                  ...localShellWorkspaceActions(
+                    context,
+                    idPrefix: 'cloud',
+                    onLaunch: (launch) async {
+                      setState(() => _selectedFileId = null);
+                      try {
+                        await app.openLocalShellTab(launch: launch);
+                      } catch (error) {
+                        if (mounted) {
+                          _snack(
+                            context,
+                            app.friendlyError(error),
+                            error: true,
+                          );
+                        }
+                      }
+                    },
+                  ),
                   if (supportsNewWindow)
                     WorkspaceAction(
                       'cloud_new_window',
@@ -1784,7 +1819,7 @@ _snack(context, context.l10n.theNewWindowWasntReadyThe, error: true);
                             (kIsWeb || tab.connection != null),
                         status: terminalStateLabel(context.l10n, tab.state),
                         canDetach:
-                            tab.connection != null &&
+                            (tab.connection != null || tab.console != null) &&
                             ApplicationWindows.instance.supported,
                       ),
                     for (final file in _fileTabs.entries)
@@ -8359,8 +8394,11 @@ class _TerminalPageState extends State<_TerminalPage> {
       final selected = app.terminalTabFor(
         widget.sessionWorkspace.selectedId ?? '',
       );
-      if (selected?.connection != null) {
-        _focusConnectedTerminalAfterMount(selected!.id, selected.connection!);
+      if (selected?.liveTerminalTransport != null) {
+        _focusConnectedTerminalAfterMount(
+          selected!.id,
+          selected.liveTerminalTransport!,
+        );
       } else {
         _focusRequestedForTab = null;
       }
@@ -8368,8 +8406,12 @@ class _TerminalPageState extends State<_TerminalPage> {
     }
     final activeTab = app.activeTerminalTab;
     final connected = activeTab?.connection != null;
+    // Telnet renders like a device terminal; SSH-only actions keep using
+    // [connected] (SSH connection only).
     final deviceSession =
-        activeTab?.desktop != null || activeTab?.console != null;
+        activeTab?.desktop != null ||
+        activeTab?.console != null ||
+        activeTab?.telnet != null;
     final shareStatus = activeTab == null
         ? null
         : app.terminalShareStatusFor(activeTab.id);
@@ -8431,10 +8473,15 @@ class _TerminalPageState extends State<_TerminalPage> {
     final liveSplitReady =
         stagedWorkspace?.isSplit == true &&
         stagedSplitTabs.length == stagedWorkspace!.panes.length &&
-        stagedSplitTabs.any((tab) => tab?.connection != null) &&
+        stagedSplitTabs.any(
+          (tab) => tab?.connection != null || tab?.telnet != null,
+        ) &&
         stagedSplitTabs.any((tab) => tab?.id == activeTab?.id);
-    if (activeTab != null && connected) {
-      _focusConnectedTerminalAfterMount(activeTab.id, activeTab.connection!);
+    if (activeTab != null && activeTab.liveTerminalTransport != null) {
+      _focusConnectedTerminalAfterMount(
+        activeTab.id,
+        activeTab.liveTerminalTransport!,
+      );
     } else {
       _focusRequestedForTab = null;
     }
@@ -9048,7 +9095,7 @@ return DesktopView(
                 child: Semantics(
                   label: context.l10n.sshTerminalInput,
                   textField: true,
-                  enabled: tab.connection != null,
+                  enabled: tab.liveTerminalTransport != null,
                   onTap: () =>
                       _requestTerminalKeyboard(id, fromUserGesture: true),
                   child: surface,
@@ -9067,7 +9114,7 @@ return DesktopView(
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted ||
           app.activeTerminalTabId != id ||
-          !identical(app.terminalTabFor(id)?.connection, connection)) {
+          !identical(app.terminalTabFor(id)?.liveTerminalTransport, connection)) {
         return;
       }
       _requestTerminalKeyboard(id);
@@ -9143,7 +9190,7 @@ return DesktopView(
           return const SizedBox.shrink();
         }
         final tab = tabs[paneIndex];
-        return tab?.connection != null
+        return tab?.connection != null || tab?.telnet != null
             ? _liveSplitTerminalPane(workspace, tab!, paneIndex)
             : _disconnectedLiveSplitPane(workspace, paneIndex);
       }
@@ -9342,7 +9389,7 @@ return DesktopView(
     final focusNode = _focusNodeFor(id);
     final viewKey = _viewKeyFor(id);
     if (app.activeTerminalTabId != id ||
-        app.terminalTabFor(id)?.connection == null) {
+        app.terminalTabFor(id)?.liveTerminalTransport == null) {
       return;
     }
     if (fromUserGesture && focusNode.hasFocus) {
@@ -9354,7 +9401,7 @@ return DesktopView(
     void openWhenFocused() {
       if (!mounted ||
           app.activeTerminalTabId != id ||
-          app.terminalTabFor(id)?.connection == null ||
+          app.terminalTabFor(id)?.liveTerminalTransport == null ||
           !focusNode.hasFocus) {
         return;
       }

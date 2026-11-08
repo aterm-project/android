@@ -15663,4 +15663,159 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get r7ImportFailRolledBack => 'インポートに失敗したため取り消しました。何も保存されていません。';
+
+  @override
+  String get shellLocalInputTooLarge => '入力が大きすぎるため、ローカルシェルに送信しませんでした';
+
+  @override
+  String get shellLocalKindSystem => 'システム既定のシェル';
+
+  @override
+  String get shellLocalKindCmd => 'コマンド プロンプト (cmd)';
+
+  @override
+  String get shellLocalKindPowershell => 'Windows PowerShell';
+
+  @override
+  String get shellLocalKindPwsh => 'PowerShell 7 (pwsh)';
+
+  @override
+  String get shellLocalKindBash => 'Bash';
+
+  @override
+  String get shellLocalKindZsh => 'Zsh';
+
+  @override
+  String get shellLocalKindFish => 'Fish';
+
+  @override
+  String get shellLocalKindSh => 'POSIX sh';
+
+  @override
+  String get shellLocalOptions => 'ローカルシェルのオプション…';
+
+  @override
+  String get shellLocalOptionsTitle => 'ローカルシェルを開始';
+
+  @override
+  String get shellLocalShellLabel => 'シェル';
+
+  @override
+  String get shellLocalWorkingDirectoryLabel => '作業ディレクトリ（任意）';
+
+  @override
+  String get shellLocalWorkingDirectoryHint => '絶対パスまたは ~/フォルダー。空欄の場合はホームフォルダー';
+
+  @override
+  String get shellLocalStart => 'シェルを開始';
+
+  @override
+  String get shellLocalInvalidWorkingDirectory =>
+      '絶対フォルダーパスまたは ~/フォルダーを入力してください。';
+
+  @override
+  String get shellLocalWorkingDirectoryNotFound => 'その作業ディレクトリは存在しません。';
+
+  @override
+  String get shellLocalNotInstalled => 'このコンピューターにはそのシェルがインストールされていません。';
+
+  @override
+  String get shellLocalUnavailable => 'ローカルシェル（デスクトップアプリのみ）';
+
+  @override
+  String get shellLocalUnavailableDetail =>
+      'ここではお使いのコンピューターでシェルを開始できません。また、Atermius がサーバー上でシェルを実行することはありません。ローカルシェルには Atermius デスクトップアプリを使用してください。';
+
+  @override
+  String shellLocalTabTitle(String shell) {
+    return 'ローカル · $shell';
+  }
+
+  @override
+  String shellLocalNewShell(String shell) {
+    return '新しい $shell';
+  }
+
+  @override
+  String get telnetHost => 'Telnet ホスト';
+
+  @override
+  String get telnetProtocolUnencrypted => 'Telnet（暗号化なし）';
+
+  @override
+  String get telnetInteractiveLogin => 'ターミナルで対話的にログイン（保存済み情報は送信しません）';
+
+  @override
+  String get telnetLoginInteractiveHint =>
+      'Telnet のログインは対話式です。ターミナルでユーザー名とパスワードを入力してください。保存済みのパスワード、鍵、キーチェーン項目が Telnet で送信されることはありません。';
+
+  @override
+  String get telnetPlaintextWarningTitle => 'Telnet は暗号化されません';
+
+  @override
+  String get telnetPlaintextWarningBody =>
+      'Telnet で送信される内容（入力したパスワードを含む）はすべて平文で送られ、ネットワーク上で読み取りや改ざんが可能です。信頼できるネットワーク、または SSH 非対応の機器でのみ使用してください。保存されたホスト情報自体は暗号化されたままです。';
+
+  @override
+  String telnetPlaintextTerminalNotice(String endpoint) {
+    return '$endpoint への Telnet は暗号化されていません。入力した内容（パスワードを含む）は平文で送信されます。';
+  }
+
+  @override
+  String telnetConnectedToEndpoint(String endpoint) {
+    return 'Telnet で $endpoint に接続しました（暗号化なし）';
+  }
+
+  @override
+  String get telnetConnectedUnencrypted => 'Telnet 接続済み（暗号化なし）';
+
+  @override
+  String get telnetConnecting => 'Telnet 接続中';
+
+  @override
+  String get telnetDisconnected => 'Telnet 切断';
+
+  @override
+  String get telnetConnectionClosedTerminal => '\r\n[Telnet 接続が閉じられました]\r\n';
+
+  @override
+  String get telnetConnectionRefused => 'Telnet サーバーが接続を拒否しました。';
+
+  @override
+  String get telnetConnectionTimedOut => 'Telnet 接続がタイムアウトしました。';
+
+  @override
+  String get telnetHostLookupFailed => 'Telnet ホスト名を解決できませんでした。';
+
+  @override
+  String get telnetHostUnreachable => 'Telnet ホストに到達できませんでした。';
+
+  @override
+  String get telnetRelayUnavailable => 'サーバーのリレー経由で Telnet を開けませんでした。';
+
+  @override
+  String get telnetUnsupportedInBrowser =>
+      'ブラウザーで Telnet を使うには、サインイン済みで、この宛先へのリレーが有効な Atermius サーバーが必要です。ブラウザーのローカルプロファイルでは生の TCP 接続を開けません。';
+
+  @override
+  String get telnetProtocolError =>
+      'Telnet サーバーから不正または過剰なネゴシエーションが送られたため、接続を閉じました。';
+
+  @override
+  String get telnetConnectionLost => 'Telnet 接続が切断されました。';
+
+  @override
+  String get telnetConnectCancelled => 'Telnet 接続をキャンセルしました。';
+
+  @override
+  String get telnetHostSettingsInvalid =>
+      'Telnet ホストでは保存済みのサインイン情報、キーチェーン項目、ジャンプホスト、ポート転送は使用できません。ターミナルで対話的にログインしてください。';
+
+  @override
+  String get telnetQuickConnectNoUser =>
+      'Telnet はユーザー名を自動送信しません。telnet ホスト[:ポート] の形式で接続し、ターミナルでログインしてください。';
+
+  @override
+  String get telnetInputTooLarge =>
+      '貼り付けた内容が大きすぎるため Telnet で送信できません（上限 1 MiB）。何も送信していません。';
 }

@@ -26199,6 +26199,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The import failed and was undone. Nothing was kept.'**
   String get r7ImportFailRolledBack;
+
+  /// No description provided for @shellLocalInputTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Input too large for the local shell; it was not sent'**
+  String get shellLocalInputTooLarge;
+
+  /// No description provided for @shellLocalKindSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System default shell'**
+  String get shellLocalKindSystem;
+
+  /// No description provided for @shellLocalKindCmd.
+  ///
+  /// In en, this message translates to:
+  /// **'Command Prompt (cmd)'**
+  String get shellLocalKindCmd;
+
+  /// No description provided for @shellLocalKindPowershell.
+  ///
+  /// In en, this message translates to:
+  /// **'Windows PowerShell'**
+  String get shellLocalKindPowershell;
+
+  /// No description provided for @shellLocalKindPwsh.
+  ///
+  /// In en, this message translates to:
+  /// **'PowerShell 7 (pwsh)'**
+  String get shellLocalKindPwsh;
+
+  /// No description provided for @shellLocalKindBash.
+  ///
+  /// In en, this message translates to:
+  /// **'Bash'**
+  String get shellLocalKindBash;
+
+  /// No description provided for @shellLocalKindZsh.
+  ///
+  /// In en, this message translates to:
+  /// **'Zsh'**
+  String get shellLocalKindZsh;
+
+  /// No description provided for @shellLocalKindFish.
+  ///
+  /// In en, this message translates to:
+  /// **'Fish'**
+  String get shellLocalKindFish;
+
+  /// No description provided for @shellLocalKindSh.
+  ///
+  /// In en, this message translates to:
+  /// **'POSIX sh'**
+  String get shellLocalKindSh;
+
+  /// No description provided for @shellLocalOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Local shell options…'**
+  String get shellLocalOptions;
+
+  /// No description provided for @shellLocalOptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a local shell'**
+  String get shellLocalOptionsTitle;
+
+  /// No description provided for @shellLocalShellLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Shell'**
+  String get shellLocalShellLabel;
+
+  /// No description provided for @shellLocalWorkingDirectoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Working directory (optional)'**
+  String get shellLocalWorkingDirectoryLabel;
+
+  /// No description provided for @shellLocalWorkingDirectoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Absolute path or ~/folder; empty uses your home folder'**
+  String get shellLocalWorkingDirectoryHint;
+
+  /// No description provided for @shellLocalStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start shell'**
+  String get shellLocalStart;
+
+  /// No description provided for @shellLocalInvalidWorkingDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an absolute folder path or ~/folder.'**
+  String get shellLocalInvalidWorkingDirectory;
+
+  /// No description provided for @shellLocalWorkingDirectoryNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That working directory doesn\'t exist.'**
+  String get shellLocalWorkingDirectoryNotFound;
+
+  /// No description provided for @shellLocalNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'That shell isn\'t installed on this computer.'**
+  String get shellLocalNotInstalled;
+
+  /// No description provided for @shellLocalUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Local shell (desktop app only)'**
+  String get shellLocalUnavailable;
+
+  /// No description provided for @shellLocalUnavailableDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This app can\'t start a shell on your computer here, and Atermius never runs one on the server. Use the Atermius desktop app for local shells.'**
+  String get shellLocalUnavailableDetail;
+
+  /// No description provided for @shellLocalTabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local · {shell}'**
+  String shellLocalTabTitle(String shell);
+
+  /// No description provided for @shellLocalNewShell.
+  ///
+  /// In en, this message translates to:
+  /// **'New {shell}'**
+  String shellLocalNewShell(String shell);
+
+  /// No description provided for @telnetHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet host'**
+  String get telnetHost;
+
+  /// No description provided for @telnetProtocolUnencrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet (unencrypted)'**
+  String get telnetProtocolUnencrypted;
+
+  /// No description provided for @telnetInteractiveLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Interactive in terminal (nothing saved is sent)'**
+  String get telnetInteractiveLogin;
+
+  /// No description provided for @telnetLoginInteractiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet login is interactive: type your user name and password in the terminal. Saved passwords, keys and Keychain items are never sent over Telnet.'**
+  String get telnetLoginInteractiveHint;
+
+  /// No description provided for @telnetPlaintextWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet is not encrypted'**
+  String get telnetPlaintextWarningTitle;
+
+  /// No description provided for @telnetPlaintextWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything sent over Telnet, including passwords you type, travels in plain text and can be read or changed on the network. Use it only on trusted networks or for devices without SSH. The saved host entry itself stays encrypted.'**
+  String get telnetPlaintextWarningBody;
+
+  /// No description provided for @telnetPlaintextTerminalNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet to {endpoint} is unencrypted: anything you type, including passwords, is sent in plain text.'**
+  String telnetPlaintextTerminalNotice(String endpoint);
+
+  /// No description provided for @telnetConnectedToEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet connected to {endpoint} (unencrypted)'**
+  String telnetConnectedToEndpoint(String endpoint);
+
+  /// No description provided for @telnetConnectedUnencrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet connected (unencrypted)'**
+  String get telnetConnectedUnencrypted;
+
+  /// No description provided for @telnetConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet connecting'**
+  String get telnetConnecting;
+
+  /// No description provided for @telnetDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet disconnected'**
+  String get telnetDisconnected;
+
+  /// No description provided for @telnetConnectionClosedTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'\r\n[Telnet connection closed]\r\n'**
+  String get telnetConnectionClosedTerminal;
+
+  /// No description provided for @telnetConnectionRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'The Telnet server refused the connection.'**
+  String get telnetConnectionRefused;
+
+  /// No description provided for @telnetConnectionTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'The Telnet connection timed out.'**
+  String get telnetConnectionTimedOut;
+
+  /// No description provided for @telnetHostLookupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The Telnet host name couldn\'t be resolved.'**
+  String get telnetHostLookupFailed;
+
+  /// No description provided for @telnetHostUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the Telnet host.'**
+  String get telnetHostUnreachable;
+
+  /// No description provided for @telnetRelayUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open Telnet through the server Relay.'**
+  String get telnetRelayUnavailable;
+
+  /// No description provided for @telnetUnsupportedInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet in a browser needs a signed-in Atermius server with Relay enabled for this destination. Browser local profiles can\'t open raw TCP connections.'**
+  String get telnetUnsupportedInBrowser;
+
+  /// No description provided for @telnetProtocolError.
+  ///
+  /// In en, this message translates to:
+  /// **'The Telnet server sent an invalid or excessive negotiation stream, so the connection was closed.'**
+  String get telnetProtocolError;
+
+  /// No description provided for @telnetConnectionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'The Telnet connection was lost.'**
+  String get telnetConnectionLost;
+
+  /// No description provided for @telnetConnectCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'The Telnet connection was cancelled.'**
+  String get telnetConnectCancelled;
+
+  /// No description provided for @telnetHostSettingsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet hosts can\'t use saved sign-in details, Keychain items, Jump Hosts or port forwarding. Log in interactively in the terminal.'**
+  String get telnetHostSettingsInvalid;
+
+  /// No description provided for @telnetQuickConnectNoUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Telnet doesn\'t send a user name automatically. Use: telnet host[:port] and log in in the terminal.'**
+  String get telnetQuickConnectNoUser;
+
+  /// No description provided for @telnetInputTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'That paste is too large to send over Telnet (limit 1 MiB). Nothing was sent.'**
+  String get telnetInputTooLarge;
 }
 
 class _AppLocalizationsDelegate
