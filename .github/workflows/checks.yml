@@ -2,6 +2,15 @@ name: Client checks
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
+env:
+  CMAKE_BUILD_PARALLEL_LEVEL: "4"
+  CMAKE_BUILD_PARALLEL: "4"
+  MAKEFLAGS: "-j4"
+  CARGO_BUILD_JOBS: "4"
+  FLUTTER_SUPPRESS_ANALYTICS: "true"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   check:
     runs-on: ubuntu-latest

@@ -113,7 +113,7 @@ class DesktopDisplayPersistence {
         }
         // Every VNC setting is a display setting.
         manifest = VncSettings.of(updated).applyTo(current.manifest);
-      case HostProtocol.ssh:
+      case HostProtocol.ssh || HostProtocol.telnet:
         throw StateError(currentL10n.sshHostsDontHaveRemoteDesktop);
     }
     return current.copyWith(manifest: manifest, clearManifest: manifest == null);

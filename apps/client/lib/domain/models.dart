@@ -29,7 +29,14 @@ enum AuthKind { password, privateKey }
 enum HostProtocol {
   ssh(22, 'SSH'),
   rdp(3389, 'RDP'),
-  vnc(5900, 'VNC');
+  vnc(5900, 'VNC'),
+
+  /// Plaintext Telnet terminal (RFC 854). Login is always interactive; saved
+  /// credentials, Jump Hosts and forwarding never apply.
+  telnet(23, 'Telnet');
+
+  /// True for protocols rendered in a text terminal (SSH and Telnet).
+  bool get isTerminal => this == ssh || this == telnet;
 
   const HostProtocol(this.defaultPort, this.label);
   final int defaultPort;
@@ -433,6 +440,8 @@ class HostRecord {
                ? 3389
                : protocol == HostProtocol.vnc
                ? 5900
+               : protocol == HostProtocol.telnet
+               ? 23
                : 22);
 
   final String id;
@@ -501,6 +510,14 @@ return currentL10n.rdpCertificateFingerprintMustContain64;
       {
 return currentL10n.usernameIsRequired;
 }
+    if (protocol == HostProtocol.telnet &&
+        (jumpHostId != null ||
+            portForwardProfiles.isNotEmpty ||
+            authKind != AuthKind.password ||
+            credentialId != null ||
+            login != null)) {
+      return currentL10n.telnetHostSettingsInvalid;
+    }
     if (protocol != HostProtocol.ssh &&
         (jumpHostId != null ||
             portForwardProfiles.isNotEmpty ||

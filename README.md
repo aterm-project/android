@@ -48,3 +48,9 @@ separately. Keep upstream licenses when distributing bundled dependencies.
 
 The server lives in the sibling `server` repository. The additional external
 temporary-sharing/cloud collaboration design is a proposal, not a deployment.
+
+## Latest imported transport support
+
+The validated Local Shell/Telnet integration is included. See [Local Shell](docs/LOCAL-SHELL.md)
+and [Telnet](docs/TELNET.md) for supported platforms and transport limits. Windows
+packaging is handled separately; this repository import does not claim new device acceptance.

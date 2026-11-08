@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'window_placement.dart';
+import '../console/local_shell.dart';
 import '../l10n/l10n.dart';
 
 /// Encrypted layout intent only: references are resolved in the current scope.
@@ -340,12 +341,14 @@ class CombinationPane {
     this.serialPort,
     this.baudRate,
     this.ownerPane,
+    this.shell,
   }) {
-    if ((ownerPane != null &&
+    if ((shell != null && (kind != 'console' || serialPort != null)) ||
+        (ownerPane != null &&
             (!{'sftp', 'scp'}.contains(kind) ||
                 ownerPane! < 0 ||
                 ownerPane! >= WindowCombination.maxPanes)) ||
-        !{'ssh', 'sftp', 'scp', 'rdp', 'vnc', 'console'}.contains(kind) ||
+        !{'ssh', 'sftp', 'scp', 'rdp', 'vnc', 'console', 'telnet'}.contains(kind) ||
         (kind == 'console'
             ? hostId != null
             : hostId == null || !_identifier(hostId!)) ||
@@ -365,6 +368,11 @@ class CombinationPane {
   final String kind;
   final String? hostId, remotePath, serialPort;
   final int? baudRate, ownerPane;
+
+  /// Local shell launch metadata (kind + optional working directory) for a
+  /// non-serial Console pane. Omitted for the system default so older
+  /// recipes and clients stay byte-compatible.
+  final LocalShellLaunch? shell;
   Map<String, Object?> toJson() => {
     'kind': kind,
     'host': hostId,
@@ -372,9 +380,13 @@ class CombinationPane {
     'serial_port': serialPort,
     'baud_rate': baudRate,
     if (ownerPane != null) 'owner': ownerPane,
+    if (shell != null && !shell!.isDefault) 'shell': shell!.toJson(),
   };
   factory CombinationPane.fromJson(Map<String, Object?> json) {
-    if (json.length != (json.containsKey('owner') ? 6 : 5) ||
+    if (json.length !=
+            5 +
+                (json.containsKey('owner') ? 1 : 0) +
+                (json.containsKey('shell') ? 1 : 0) ||
         (json.containsKey('owner') && json['owner'] is! int) ||
         !json.keys.toSet().containsAll({
           'kind',
@@ -397,7 +409,18 @@ class CombinationPane {
       serialPort: json['serial_port'] as String?,
       baudRate: json['baud_rate'] as int?,
       ownerPane: json['owner'] as int?,
+      shell: json.containsKey('shell')
+          ? _localShell(json['shell'])
+          : null,
     );
+  }
+}
+
+LocalShellLaunch _localShell(Object? value) {
+  try {
+    return LocalShellLaunch.fromJson(value);
+  } on FormatException {
+    throw FormatException(currentL10n.invalidWindowSetPane);
   }
 }
 

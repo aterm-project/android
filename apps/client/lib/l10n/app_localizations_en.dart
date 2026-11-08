@@ -16667,4 +16667,168 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get r7ImportFailRolledBack =>
       'The import failed and was undone. Nothing was kept.';
+
+  @override
+  String get shellLocalInputTooLarge =>
+      'Input too large for the local shell; it was not sent';
+
+  @override
+  String get shellLocalKindSystem => 'System default shell';
+
+  @override
+  String get shellLocalKindCmd => 'Command Prompt (cmd)';
+
+  @override
+  String get shellLocalKindPowershell => 'Windows PowerShell';
+
+  @override
+  String get shellLocalKindPwsh => 'PowerShell 7 (pwsh)';
+
+  @override
+  String get shellLocalKindBash => 'Bash';
+
+  @override
+  String get shellLocalKindZsh => 'Zsh';
+
+  @override
+  String get shellLocalKindFish => 'Fish';
+
+  @override
+  String get shellLocalKindSh => 'POSIX sh';
+
+  @override
+  String get shellLocalOptions => 'Local shell options…';
+
+  @override
+  String get shellLocalOptionsTitle => 'Start a local shell';
+
+  @override
+  String get shellLocalShellLabel => 'Shell';
+
+  @override
+  String get shellLocalWorkingDirectoryLabel => 'Working directory (optional)';
+
+  @override
+  String get shellLocalWorkingDirectoryHint =>
+      'Absolute path or ~/folder; empty uses your home folder';
+
+  @override
+  String get shellLocalStart => 'Start shell';
+
+  @override
+  String get shellLocalInvalidWorkingDirectory =>
+      'Enter an absolute folder path or ~/folder.';
+
+  @override
+  String get shellLocalWorkingDirectoryNotFound =>
+      'That working directory doesn\'t exist.';
+
+  @override
+  String get shellLocalNotInstalled =>
+      'That shell isn\'t installed on this computer.';
+
+  @override
+  String get shellLocalUnavailable => 'Local shell (desktop app only)';
+
+  @override
+  String get shellLocalUnavailableDetail =>
+      'This app can\'t start a shell on your computer here, and Atermius never runs one on the server. Use the Atermius desktop app for local shells.';
+
+  @override
+  String shellLocalTabTitle(String shell) {
+    return 'Local · $shell';
+  }
+
+  @override
+  String shellLocalNewShell(String shell) {
+    return 'New $shell';
+  }
+
+  @override
+  String get telnetHost => 'Telnet host';
+
+  @override
+  String get telnetProtocolUnencrypted => 'Telnet (unencrypted)';
+
+  @override
+  String get telnetInteractiveLogin =>
+      'Interactive in terminal (nothing saved is sent)';
+
+  @override
+  String get telnetLoginInteractiveHint =>
+      'Telnet login is interactive: type your user name and password in the terminal. Saved passwords, keys and Keychain items are never sent over Telnet.';
+
+  @override
+  String get telnetPlaintextWarningTitle => 'Telnet is not encrypted';
+
+  @override
+  String get telnetPlaintextWarningBody =>
+      'Everything sent over Telnet, including passwords you type, travels in plain text and can be read or changed on the network. Use it only on trusted networks or for devices without SSH. The saved host entry itself stays encrypted.';
+
+  @override
+  String telnetPlaintextTerminalNotice(String endpoint) {
+    return 'Telnet to $endpoint is unencrypted: anything you type, including passwords, is sent in plain text.';
+  }
+
+  @override
+  String telnetConnectedToEndpoint(String endpoint) {
+    return 'Telnet connected to $endpoint (unencrypted)';
+  }
+
+  @override
+  String get telnetConnectedUnencrypted => 'Telnet connected (unencrypted)';
+
+  @override
+  String get telnetConnecting => 'Telnet connecting';
+
+  @override
+  String get telnetDisconnected => 'Telnet disconnected';
+
+  @override
+  String get telnetConnectionClosedTerminal =>
+      '\r\n[Telnet connection closed]\r\n';
+
+  @override
+  String get telnetConnectionRefused =>
+      'The Telnet server refused the connection.';
+
+  @override
+  String get telnetConnectionTimedOut => 'The Telnet connection timed out.';
+
+  @override
+  String get telnetHostLookupFailed =>
+      'The Telnet host name couldn\'t be resolved.';
+
+  @override
+  String get telnetHostUnreachable => 'Couldn\'t reach the Telnet host.';
+
+  @override
+  String get telnetRelayUnavailable =>
+      'Couldn\'t open Telnet through the server Relay.';
+
+  @override
+  String get telnetUnsupportedInBrowser =>
+      'Telnet in a browser needs a signed-in Atermius server with Relay enabled for this destination. Browser local profiles can\'t open raw TCP connections.';
+
+  @override
+  String get telnetProtocolError =>
+      'The Telnet server sent an invalid or excessive negotiation stream, so the connection was closed.';
+
+  @override
+  String get telnetConnectionLost => 'The Telnet connection was lost.';
+
+  @override
+  String get telnetConnectCancelled => 'The Telnet connection was cancelled.';
+
+  @override
+  String get telnetHostSettingsInvalid =>
+      'Telnet hosts can\'t use saved sign-in details, Keychain items, Jump Hosts or port forwarding. Log in interactively in the terminal.';
+
+  @override
+  String get telnetQuickConnectNoUser =>
+      'Telnet doesn\'t send a user name automatically. Use: telnet host[:port] and log in in the terminal.';
+
+  @override
+  String get telnetInputTooLarge =>
+      'That paste is too large to send over Telnet (limit 1 MiB). Nothing was sent.';
 }

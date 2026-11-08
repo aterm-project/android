@@ -11,6 +11,7 @@ import 'app_density.dart';
 import 'app_motion.dart';
 import 'app_theme.dart';
 import '../l10n/l10n.dart';
+import '../telnet/telnet_ui.dart';
 
 const _uuid = Uuid();
 
@@ -280,15 +281,19 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                           ],
                         ),
                         fieldGap,
-                        _field(
-                          _username,
-                          _protocol == HostProtocol.ssh
-                              ? context.l10n.sshUsername
-                              : context.l10n.usernameOptional,
-                          id: 'username',
-                          icon: Icons.person_outline,
-                        ),
-                        fieldGap,
+                        // Telnet login is interactive; no user name is stored
+                        // or sent automatically.
+                        if (_protocol != HostProtocol.telnet) ...[
+                          _field(
+                            _username,
+                            _protocol == HostProtocol.ssh
+                                ? context.l10n.sshUsername
+                                : context.l10n.usernameOptional,
+                            id: 'username',
+                            icon: Icons.person_outline,
+                          ),
+                          fieldGap,
+                        ],
                         TextField(
                           key: ValueKey('${widget.keyPrefix}_tags'),
                           controller: _tags,
@@ -383,7 +388,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                                 : null,
                           ),
                         fieldGap,
-                        if (_protocol == HostProtocol.ssh &&
+                        if (_protocol == HostProtocol.telnet)
+                          const TelnetPlaintextNotice()
+                        else if (_protocol == HostProtocol.ssh &&
                             _source != _sourceOwn)
                           const SizedBox.shrink()
                         else if (_kind == AuthKind.password)
@@ -411,6 +418,8 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                         Text(
                           _protocol == HostProtocol.ssh
                               ? context.l10n.loginDetailsBelongToThisHost
+                              : _protocol == HostProtocol.telnet
+                              ? context.l10n.telnetLoginInteractiveHint
                               : context.l10n.signInDetailsAreStoredEncrypted,
                           style: const TextStyle(fontSize: 12),
                         ),
@@ -700,14 +709,15 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
               _rdpFingerprint.text.trim().isNotEmpty
           ? _rdpFingerprint.text.trim().replaceAll(':', '').toLowerCase()
           : null,
-      username: _username.text.trim(),
+      username: _protocol == HostProtocol.telnet ? '' : _username.text.trim(),
       groupId: _groupId,
       credentialId: _protocol == HostProtocol.ssh &&
               _source.startsWith('k:')
           ? _source.substring(2)
           : null,
       login:
-          (_protocol == HostProtocol.ssh && _source != _sourceOwn) ||
+          _protocol == HostProtocol.telnet ||
+              (_protocol == HostProtocol.ssh && _source != _sourceOwn) ||
               (_kind == AuthKind.password
                   ? _password.text.isEmpty
                   : _privateKey.text.isEmpty)

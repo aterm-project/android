@@ -154,9 +154,13 @@ Future<void> showHostProperties(
               context.l10n.userName: host.username,
               context.l10n.protocol2: host.protocol == HostProtocol.ssh
                   ? 'SSH / SFTP / SCP'
+                  : host.protocol == HostProtocol.telnet
+                  ? context.l10n.telnetProtocolUnencrypted
                   : host.protocol.label,
               context.l10n.propertyAuthentication:
-                  host.authKind == AuthKind.password
+                  host.protocol == HostProtocol.telnet
+                  ? context.l10n.telnetInteractiveLogin
+                  : host.authKind == AuthKind.password
                   ? context.l10n.password2
                   : context.l10n.sshKey,
               context.l10n.propertyStatus: ?state,
