@@ -1108,5 +1108,11 @@
     "Platform runners selected; README and CI added; original common lib/test/dependency code retained",
     "Generated build files excluded; standalone local path dependencies validated",
     "Existing Runner.entitlements supplemented with secure storage Keychain capability; iOS not built/tested"
-  ]
+  ],
+  "post_import_fixes": {
+    "apps/client/lib/desktop/window/desktop_window_stub.dart": {
+      "sha256": "b6d995c955c84a1513b60ec9ab2f63e692acff9be2018df7ebe9aa884d24903a",
+      "reason": "Restore missing Web conditional child-window API declarations; native Windows/Android implementation unchanged"
+    }
+  }
 }
