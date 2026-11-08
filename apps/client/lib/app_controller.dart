@@ -1,5 +1,6 @@
 import 'domain/window_combination.dart';
 import 'console/local_console.dart';
+import 'console/local_shell_l10n.dart';
 import 'desktop/desktop_session.dart';
 import 'desktop/rdp_certificate_persistence.dart';
 import 'desktop/window/desktop_tab_windows.dart';
@@ -51,6 +52,9 @@ import 'ssh/tmux_service.dart';
 import 'terminal/terminal_collaboration_service.dart';
 import 'terminal/mirrored_terminal.dart';
 import 'terminal/session_log.dart';
+import 'telnet/telnet_errors.dart';
+import 'telnet/telnet_session.dart';
+import 'telnet/telnet_transport.dart';
 import 'platform/application_windows.dart';
 import 'terminal/encrypted_shell_history_repository.dart';
 import 'terminal/shell_integration_protocol.dart';
@@ -248,7 +252,20 @@ class TerminalTabSession {
   LocalConsole? console;
   String? consoleSerialPort;
   int? consoleBaudRate;
+
+  /// Non-secret launch metadata of an embedded local shell (null for serial
+  /// consoles and every non-Console tab). Used by duplicate/split/window sets.
+  LocalShellLaunch? consoleShell;
   DesktopSession? desktop;
+
+  /// Plaintext Telnet session for a [HostProtocol.telnet] tab. Never set for
+  /// SSH or Console tabs; SSH-only features check [connection] instead.
+  TelnetSession? telnet;
+  TelnetConnectCancellation? telnetCancellation;
+
+  /// The live interactive transport (SSH, Telnet or Console), used for
+  /// terminal focus/keyboard decisions. SSH-only features use [connection].
+  Object? get liveTerminalTransport => connection ?? telnet ?? console;
   SshConnectCancellation? connectionCancellation = SshConnectCancellation();
   StreamSubscription<String>? outputSubscription;
   void Function(String text)? outputListener;
@@ -1049,6 +1066,10 @@ class AppController extends ChangeNotifier {
   final SessionUpdateNotifier? sessionUpdateNotifierForTesting;
   @visibleForTesting
   final SshConnectorForTesting? sshConnectorForTesting;
+
+  /// Replaces the Telnet TCP/Relay transport in tests (loopback fixtures).
+  @visibleForTesting
+  TelnetChannelConnector? telnetConnectorForTesting;
   @visibleForTesting
   final TerminalShareObserverJoinerForTesting?
   terminalShareObserverJoinerForTesting;
@@ -9009,7 +9030,9 @@ class AppController extends ChangeNotifier {
     page = WorkspacePage.terminal;
     final existingTab = workspacePaneTerminalTab(workspaceId, paneId);
     if (existingTab != null &&
-        (existingTab.connection != null || existingTab.state == 'connecting')) {
+        (existingTab.connection != null ||
+            existingTab.telnet != null ||
+            existingTab.state == 'connecting')) {
       activateTerminalTab(existingTab.id);
       return;
     }
@@ -19739,33 +19762,248 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// Opens a plaintext Telnet terminal tab (RFC 854) for [host].
+  ///
+  /// Login is interactive in the terminal: no credential is resolved, no
+  /// saved password or key is sent and login prompts are never parsed.
+  /// Native platforms connect directly over TCP; browsers use the
+  /// authenticated server Relay (same ticket, allowlist and audit policy as
+  /// SSH) and fail with an explicit unsupported error without one.
+  Future<void> _openTelnetTab(
+    HostRecord host, {
+    String? expectedVaultId,
+    void Function(String tabId)? onTabOpened,
+  }) async {
+    final issue = host.validate();
+    if (issue != null) throw StateError(issue);
+    // Saved-workspace restore binds the request to the Vault it was prepared
+    // for and to a Host that still exists there (same guard as SSH).
+    if (expectedVaultId != null) {
+      if (activeVault?.id != expectedVaultId) {
+        throw StateError(currentL10n.theVaultWasSwitchedWhilePreparing);
+      }
+      if (!hosts.any((candidate) => candidate.id == host.id)) {
+        throw StateError(currentL10n.theWorkspaceHostWasRemovedFrom);
+      }
+    }
+    final testConnector = telnetConnectorForTesting;
+    final client = api;
+    final deviceId = identity?.deviceId;
+    final useRelay = testConnector == null && !telnetDirectTcpSupported;
+    if (useRelay && (client == null || deviceId == null || session == null)) {
+      throw const TelnetException(TelnetFailure.unsupportedPlatform);
+    }
+    final tab = _addDeviceTab(host);
+    final reviewedVault = activeVault?.id;
+    final reviewedAccount = session?.accountId;
+    final reviewedDevice = identity?.deviceId;
+    bool current() =>
+        _isTerminalTabOpen(tab) &&
+        !workspaceLocked &&
+        stage == ClientStage.workspace &&
+        activeVault?.id == reviewedVault &&
+        session?.accountId == reviewedAccount &&
+        identity?.deviceId == reviewedDevice;
+    final cancellation = TelnetConnectCancellation();
+    tab.telnetCancellation = cancellation;
+    tab.connectionCancellation = null;
+    tab.log = sessionLogs.begin(host: host, viaJump: false);
+    tab.terminal.write(telnetPlaintextTerminalNotice(host.endpoint));
+    onTabOpened?.call(tab.id);
+    notifyListeners();
+    try {
+      final telnet = await TelnetSession.connect(
+        host: host.address,
+        port: host.port,
+        connector:
+            testConnector ??
+            (useRelay
+                ? (address, port) => connectTelnetViaRelay(
+                    api: client!,
+                    deviceId: deviceId!,
+                    host: address,
+                    port: port,
+                  )
+                : connectTelnetDirect),
+        cancellation: cancellation,
+        columns: tab.terminal.viewWidth,
+        rows: tab.terminal.viewHeight,
+      );
+      if (!current() || cancellation.isCancelled) {
+        // Closed, locked or switched scope while connecting: never attach a
+        // late connection to a stale or reused tab.
+        await telnet.close();
+        if (_isTerminalTabOpen(tab)) {
+          tab.telnetCancellation = null;
+          tab.state = 'failed';
+          tab.errorMessage = currentL10n.theWorkspaceChanged;
+          _notifyListenersIfAlive();
+        }
+        return;
+      }
+      tab.telnet = telnet;
+      tab.telnetCancellation = null;
+      tab.state = 'connected';
+      tab.errorMessage = null;
+      tab.log?.markConnected();
+      tab.outputSubscription = telnet.output.listen(
+        (text) {
+          // Queued output must not publish after the tab closed or the
+          // workspace scope changed.
+          if (!current() || !identical(tab.telnet, telnet)) return;
+          tab.terminal.write(text);
+          tab.log?.output(text);
+          tab.outputListener?.call(text);
+          tab.publishOutputToFanout(text);
+          if (_activeTerminalTabId == tab.id) {
+            _legacyTerminalOutputListener?.call(text);
+          }
+        },
+        onError: (Object error) =>
+            _handleTelnetConnectionEnded(tab, telnet, error: error),
+        onDone: () => _handleTelnetConnectionEnded(tab, telnet),
+      );
+      // The view may have been laid out while connecting.
+      telnet.resize(tab.terminal.viewWidth, tab.terminal.viewHeight);
+      _setNotice(currentL10n.telnetConnectedToEndpoint(host.endpoint));
+      notifyListeners();
+    } catch (error) {
+      if (!_isTerminalTabOpen(tab)) return;
+      tab.telnetCancellation = null;
+      tab.log?.markFailed(error);
+      tab.state = 'failed';
+      tab.errorMessage = friendlyError(error);
+      _setError(friendlyError(error));
+      rethrow;
+    }
+  }
+
+  void _handleTelnetConnectionEnded(
+    TerminalTabSession tab,
+    TelnetSession telnet, {
+    Object? error,
+  }) {
+    if (!_isTerminalTabOpen(tab) || !identical(tab.telnet, telnet)) return;
+    final subscription = tab.outputSubscription;
+    tab.outputSubscription = null;
+    tab.telnet = null;
+    tab.state = 'disconnected';
+    tab.log?.markClosed(
+      error == null ? SessionLogEndReason.remote : SessionLogEndReason.error,
+      error: error,
+    );
+    if (error != null) tab.errorMessage = friendlyError(error);
+    tab.terminal.write(currentL10n.telnetConnectionClosedTerminal);
+    if (_terminalShareHosts.containsKey(tab.id)) {
+      unawaited(stopTerminalShareFor(tab.id));
+    }
+    _notifyListenersIfAlive();
+    unawaited(() async {
+      try {
+        await subscription?.cancel();
+      } catch (_) {}
+      await telnet.close();
+    }());
+  }
+
+  /// Test seam: replaces the native PTY / serial console opener.
+  @visibleForTesting
+  LocalConsole Function({
+    LocalShellLaunch? shell,
+    String? serialPort,
+    int baudRate,
+  })?
+  localConsoleOpenerForTesting;
+
+  /// Opens a local shell (no [serialPort]) or a Windows COM console. The
+  /// signature is kept for MCP/quick-connect callers; see [openLocalShellTab].
   Future<void> openConsoleTab({
     String? serialPort,
     int baudRate = 115200,
   }) async {
-    if (!localConsoleSupported) {
+    if (serialPort == null) {
+      await openLocalShellTab();
+    } else {
+      await _openConsoleTab(serialPort: serialPort, baudRate: baudRate);
+    }
+  }
+
+  /// Starts an embedded local shell in its own PTY and returns the new tab id
+  /// (null when the tab could not be created). Startup failures leave a
+  /// disconnected tab with a sanitized, localized reason.
+  Future<String?> openLocalShellTab({
+    LocalShellLaunch launch = LocalShellLaunch.systemDefault,
+  }) => _openConsoleTab(shell: launch);
+
+  /// Opens an independent copy of a Console tab: a serial console reopens the
+  /// same COM port/baud (never a shell), and a local shell reuses its shell
+  /// kind and the shell's current (or launch) working directory.
+  Future<String?> duplicateConsoleTab(String id) async {
+    final source = _terminalTabs[id];
+    if (source == null || source.closed || source.console == null) return null;
+    final serialPort = source.consoleSerialPort;
+    if (serialPort != null) {
+      return _openConsoleTab(
+        serialPort: serialPort,
+        baudRate: source.consoleBaudRate ?? 115200,
+      );
+    }
+    var launch = source.consoleShell ?? LocalShellLaunch.systemDefault;
+    if (source.console case final LocalConsoleWorkingDirectory probe) {
+      final cwd = await probe
+          .currentWorkingDirectory()
+          .timeout(const Duration(seconds: 1), onTimeout: () => null)
+          .catchError((Object _) => null);
+      if (cwd != null && isPlausibleLocalShellWorkingDirectory(cwd)) {
+        launch = launch.copyWith(workingDirectory: cwd);
+      }
+    }
+    if (!_isTerminalTabOpen(source)) return null;
+    return _openConsoleTab(shell: launch);
+  }
+
+  Future<String?> _openConsoleTab({
+    LocalShellLaunch? shell,
+    String? serialPort,
+    int baudRate = 115200,
+  }) async {
+    if (!localConsoleSupported && localConsoleOpenerForTesting == null) {
       throw UnsupportedError(currentL10n.theLocalConsoleRequiresTheDesktop);
     }
+    final launch = serialPort == null
+        ? shell ?? LocalShellLaunch.systemDefault
+        : null;
     final tab = _addDeviceTab(
       HostRecord(
         id: _uuid.v4(),
-        name: serialPort == null
-            ? currentL10n.localConsole
-            : '$serialPort · $baudRate',
+        name: serialPort != null
+            ? '$serialPort · $baudRate'
+            : localShellTabTitle(currentL10n, launch!),
         address: 'localhost',
       ),
     );
+    tab.consoleSerialPort = serialPort;
+    tab.consoleBaudRate = serialPort == null ? null : baudRate;
+    tab.consoleShell = launch;
     notifyListeners();
     try {
-      final console = serialPort == null
-          ? openLocalConsole()
+      final opener = localConsoleOpenerForTesting;
+      final console = opener != null
+          ? opener(shell: launch, serialPort: serialPort, baudRate: baudRate)
+          : serialPort == null
+          ? openLocalConsole(launch: launch!)
           : openSerialConsole(serialPort, baudRate: baudRate);
+      if (!_isTerminalTabOpen(tab)) {
+        // The tab was closed (or the workspace reset) while starting.
+        unawaited(console.close().catchError((Object _) {}));
+        return null;
+      }
       tab.console = console;
-      tab.consoleSerialPort = serialPort;
-      tab.consoleBaudRate = serialPort == null ? null : baudRate;
       tab.state = 'connected';
       tab.outputSubscription = console.output.listen(
-        tab.terminal.write,
+        (text) {
+          if (_isTerminalTabOpen(tab)) tab.terminal.write(text);
+        },
         onError: (_) {
           if (_isTerminalTabOpen(tab)) {
             tab.state = 'disconnected';
@@ -19773,20 +20011,29 @@ class AppController extends ChangeNotifier {
             _notifyListenersIfAlive();
           }
         },
+        cancelOnError: true,
       );
       unawaited(
         console.exitCode.then((code) {
-          if (!_isTerminalTabOpen(tab)) return;
+          if (!_isTerminalTabOpen(tab) || !identical(tab.console, console)) {
+            return;
+          }
           tab.state = 'disconnected';
           tab.terminal.write(currentL10n.consoleExitedCode(code));
           _notifyListenersIfAlive();
-        }),
+        }, onError: (Object _) {}),
       );
+    } on LocalShellException catch (error) {
+      tab.state = 'disconnected';
+      tab.errorMessage = localShellIssueMessage(currentL10n, error.issue);
+      tab.terminal.write('\r\n[${tab.errorMessage}]\r\n');
     } catch (_) {
       tab.state = 'disconnected';
       tab.errorMessage = currentL10n.couldntStartTheLocalShell;
+      tab.terminal.write('\r\n[${tab.errorMessage}]\r\n');
     }
     _notifyListenersIfAlive();
+    return tab.id;
   }
 
   /// Opens and connects an SSH tab through the normal credential, Jump Host
@@ -19803,6 +20050,13 @@ class AppController extends ChangeNotifier {
     String? expectedVaultId,
     void Function(String tabId)? onTabOpened,
   }) async {
+    if (host.protocol == HostProtocol.telnet) {
+      return _openTelnetTab(
+        host,
+        expectedVaultId: expectedVaultId,
+        onTabOpened: onTabOpened,
+      );
+    }
     if (host.protocol != HostProtocol.ssh) {
       return _openDesktopTab(host, onTabOpened: onTabOpened);
     }
@@ -20732,6 +20986,11 @@ class AppController extends ChangeNotifier {
     final console = tab.console;
     tab.console = null;
     await console?.close();
+    tab.telnetCancellation?.cancel();
+    tab.telnetCancellation = null;
+    final telnet = tab.telnet;
+    tab.telnet = null;
+    await telnet?.close();
     _clearShellIntegrationFor(tab, clearHistory: true);
     await tab.shellHistoryPersistenceQueue.timeout(
       const Duration(seconds: 5),
@@ -20795,6 +21054,11 @@ class AppController extends ChangeNotifier {
       return;
     }
     _terminalTabs[id]?.console?.input(input);
+    if (_terminalTabs[id]?.telnet?.input(input) ==
+        TelnetInputResult.tooLarge) {
+      // Oversized paste: rejected whole, never sent truncated.
+      _setError(currentL10n.telnetInputTooLarge);
+    }
     _terminalTabs[id]?.connection?.input(input);
   }
 
@@ -20807,6 +21071,7 @@ class AppController extends ChangeNotifier {
       tmuxHandle.resize(columns, rows);
     } else {
       _terminalTabs[id]?.console?.resize(columns, rows);
+      _terminalTabs[id]?.telnet?.resize(columns, rows);
       _terminalTabs[id]?.connection?.resize(columns, rows);
     }
     if (id != null) {

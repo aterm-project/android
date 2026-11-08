@@ -9,6 +9,7 @@ void main() {
     HostProtocol.ssh,
     HostProtocol.rdp,
     HostProtocol.vnc,
+    HostProtocol.telnet,
   ]) {
     testWidgets(
       'new session menu opens ${protocol.name} with correct default port',
@@ -38,6 +39,7 @@ void main() {
             HostProtocol.ssh => 'SSH host',
             HostProtocol.rdp => 'RDP remote desktop',
             HostProtocol.vnc => 'VNC remote desktop',
+            HostProtocol.telnet => 'Telnet host',
           }),
         );
         await tester.pumpAndSettle();

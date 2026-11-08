@@ -1,7 +1,7 @@
 import 'models.dart';
 import '../l10n/l10n.dart';
 
-enum QuickConnectKind { ssh, rdp, vnc, console, serial }
+enum QuickConnectKind { ssh, rdp, vnc, console, serial, telnet }
 
 class QuickConnectRequest {
   const QuickConnectRequest(
@@ -19,6 +19,7 @@ class QuickConnectRequest {
   HostProtocol get protocol => switch (kind) {
     QuickConnectKind.rdp => HostProtocol.rdp,
     QuickConnectKind.vnc => HostProtocol.vnc,
+    QuickConnectKind.telnet => HostProtocol.telnet,
     _ => HostProtocol.ssh,
   };
   String get label => switch (kind) {
@@ -50,7 +51,7 @@ class QuickConnectRequest {
   static QuickConnectRequest? parse(String input) {
     final words = input.trim().split(RegExp(r'\s+'));
     final verb = words.first.toLowerCase();
-    if (!const ['ssh', 'rdp', 'vnc', 'console', 'tty'].contains(verb))
+    if (!const ['ssh', 'rdp', 'vnc', 'console', 'tty', 'telnet'].contains(verb))
       return null;
     if (verb == 'console' && words.length == 1)
       return const QuickConnectRequest(QuickConnectKind.console);
@@ -123,6 +124,8 @@ class QuickConnectRequest {
               ? 3389
               : verb == 'vnc'
               ? 5900
+              : verb == 'telnet'
+              ? 23
               : 22,
         ),
       );
@@ -134,6 +137,11 @@ class QuickConnectRequest {
       target = target.substring(at + 1);
       if (username.isEmpty) {
         throw FormatException(currentL10n.aUserNameIsRequiredBefore);
+      }
+      // Telnet login is always interactive in the terminal; a user name is
+      // never sent automatically, so do not accept one here.
+      if (verb == 'telnet') {
+        throw FormatException(currentL10n.telnetQuickConnectNoUser);
       }
     }
     final withPort = RegExp(r'^\[([0-9a-fA-F:.]+)\](?::([0-9]+))?$')
@@ -167,6 +175,8 @@ class QuickConnectRequest {
         ? 3389
         : verb == 'vnc'
         ? 5900
+        : verb == 'telnet'
+        ? 23
         : 22;
     if (port < 1 || port > 65535) {
       throw FormatException(currentL10n.portMustBe165535);

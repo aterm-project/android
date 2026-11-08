@@ -12912,5 +12912,121 @@
   },
   "r7ImportIssueInvalidGroup": "A group name contains control characters or is too long.",
   "r7ImportIssueCsvFieldTooLong": "A field is too long.",
-  "r7ImportFailRolledBack": "The import failed and was undone. Nothing was kept."
+  "r7ImportFailRolledBack": "The import failed and was undone. Nothing was kept.",
+  "shellLocalInputTooLarge": "Input too large for the local shell; it was not sent",
+  "@shellLocalInputTooLarge": {},
+  "shellLocalKindSystem": "System default shell",
+  "@shellLocalKindSystem": {},
+  "shellLocalKindCmd": "Command Prompt (cmd)",
+  "@shellLocalKindCmd": {},
+  "shellLocalKindPowershell": "Windows PowerShell",
+  "@shellLocalKindPowershell": {},
+  "shellLocalKindPwsh": "PowerShell 7 (pwsh)",
+  "@shellLocalKindPwsh": {},
+  "shellLocalKindBash": "Bash",
+  "@shellLocalKindBash": {},
+  "shellLocalKindZsh": "Zsh",
+  "@shellLocalKindZsh": {},
+  "shellLocalKindFish": "Fish",
+  "@shellLocalKindFish": {},
+  "shellLocalKindSh": "POSIX sh",
+  "@shellLocalKindSh": {},
+  "shellLocalOptions": "Local shell options…",
+  "@shellLocalOptions": {},
+  "shellLocalOptionsTitle": "Start a local shell",
+  "@shellLocalOptionsTitle": {},
+  "shellLocalShellLabel": "Shell",
+  "@shellLocalShellLabel": {},
+  "shellLocalWorkingDirectoryLabel": "Working directory (optional)",
+  "@shellLocalWorkingDirectoryLabel": {},
+  "shellLocalWorkingDirectoryHint": "Absolute path or ~/folder; empty uses your home folder",
+  "@shellLocalWorkingDirectoryHint": {},
+  "shellLocalStart": "Start shell",
+  "@shellLocalStart": {},
+  "shellLocalInvalidWorkingDirectory": "Enter an absolute folder path or ~/folder.",
+  "@shellLocalInvalidWorkingDirectory": {},
+  "shellLocalWorkingDirectoryNotFound": "That working directory doesn't exist.",
+  "@shellLocalWorkingDirectoryNotFound": {},
+  "shellLocalNotInstalled": "That shell isn't installed on this computer.",
+  "@shellLocalNotInstalled": {},
+  "shellLocalUnavailable": "Local shell (desktop app only)",
+  "@shellLocalUnavailable": {},
+  "shellLocalUnavailableDetail": "This app can't start a shell on your computer here, and Atermius never runs one on the server. Use the Atermius desktop app for local shells.",
+  "@shellLocalUnavailableDetail": {},
+  "shellLocalTabTitle": "Local · {shell}",
+  "@shellLocalTabTitle": {
+    "placeholders": {
+      "shell": {
+        "type": "String"
+      }
+    }
+  },
+  "shellLocalNewShell": "New {shell}",
+  "@shellLocalNewShell": {
+    "placeholders": {
+      "shell": {
+        "type": "String"
+      }
+    }
+  },
+  "telnetHost": "Telnet host",
+  "@telnetHost": {},
+  "telnetProtocolUnencrypted": "Telnet (unencrypted)",
+  "@telnetProtocolUnencrypted": {},
+  "telnetInteractiveLogin": "Interactive in terminal (nothing saved is sent)",
+  "@telnetInteractiveLogin": {},
+  "telnetLoginInteractiveHint": "Telnet login is interactive: type your user name and password in the terminal. Saved passwords, keys and Keychain items are never sent over Telnet.",
+  "@telnetLoginInteractiveHint": {},
+  "telnetPlaintextWarningTitle": "Telnet is not encrypted",
+  "@telnetPlaintextWarningTitle": {},
+  "telnetPlaintextWarningBody": "Everything sent over Telnet, including passwords you type, travels in plain text and can be read or changed on the network. Use it only on trusted networks or for devices without SSH. The saved host entry itself stays encrypted.",
+  "@telnetPlaintextWarningBody": {},
+  "telnetPlaintextTerminalNotice": "Telnet to {endpoint} is unencrypted: anything you type, including passwords, is sent in plain text.",
+  "@telnetPlaintextTerminalNotice": {
+    "placeholders": {
+      "endpoint": {
+        "type": "String"
+      }
+    }
+  },
+  "telnetConnectedToEndpoint": "Telnet connected to {endpoint} (unencrypted)",
+  "@telnetConnectedToEndpoint": {
+    "placeholders": {
+      "endpoint": {
+        "type": "String"
+      }
+    }
+  },
+  "telnetConnectedUnencrypted": "Telnet connected (unencrypted)",
+  "@telnetConnectedUnencrypted": {},
+  "telnetConnecting": "Telnet connecting",
+  "@telnetConnecting": {},
+  "telnetDisconnected": "Telnet disconnected",
+  "@telnetDisconnected": {},
+  "telnetConnectionClosedTerminal": "\r\n[Telnet connection closed]\r\n",
+  "@telnetConnectionClosedTerminal": {},
+  "telnetConnectionRefused": "The Telnet server refused the connection.",
+  "@telnetConnectionRefused": {},
+  "telnetConnectionTimedOut": "The Telnet connection timed out.",
+  "@telnetConnectionTimedOut": {},
+  "telnetHostLookupFailed": "The Telnet host name couldn't be resolved.",
+  "@telnetHostLookupFailed": {},
+  "telnetHostUnreachable": "Couldn't reach the Telnet host.",
+  "@telnetHostUnreachable": {},
+  "telnetRelayUnavailable": "Couldn't open Telnet through the server Relay.",
+  "@telnetRelayUnavailable": {},
+  "telnetUnsupportedInBrowser": "Telnet in a browser needs a signed-in Atermius server with Relay enabled for this destination. Browser local profiles can't open raw TCP connections.",
+  "@telnetUnsupportedInBrowser": {},
+  "telnetProtocolError": "The Telnet server sent an invalid or excessive negotiation stream, so the connection was closed.",
+  "@telnetProtocolError": {},
+  "telnetConnectionLost": "The Telnet connection was lost.",
+  "@telnetConnectionLost": {},
+  "telnetConnectCancelled": "The Telnet connection was cancelled.",
+  "@telnetConnectCancelled": {},
+  "telnetHostSettingsInvalid": "Telnet hosts can't use saved sign-in details, Keychain items, Jump Hosts or port forwarding. Log in interactively in the terminal.",
+  "@telnetHostSettingsInvalid": {},
+  "telnetQuickConnectNoUser": "Telnet doesn't send a user name automatically. Use: telnet host[:port] and log in in the terminal.",
+  "@telnetQuickConnectNoUser": {},
+  "telnetInputTooLarge": "That paste is too large to send over Telnet (limit 1 MiB). Nothing was sent.",
+  "@telnetInputTooLarge": {}
 }

@@ -18,10 +18,10 @@ McpWorkspace appMcpWorkspace(AppController app) => McpWorkspace(
         (tab) => McpSession(
           id: tab.id,
           name: tab.host?.name ?? 'Console',
-          kind: tab.console != null
+          kind: _isConsoleTab(tab)
               ? 'console'
               : tab.host?.protocol.name ?? 'ssh',
-          hostId: tab.console == null ? tab.host?.id : null,
+          hostId: _isConsoleTab(tab) ? null : tab.host?.id,
           state: tab.state,
           isAlive: () => !tab.closed && app.terminalTabs.contains(tab),
           terminal: tab.desktop == null ? tab.terminal : null,
@@ -38,3 +38,10 @@ McpWorkspace appMcpWorkspace(AppController app) => McpWorkspace(
   connect: app.openTerminalTab,
   openConsole: app.openConsoleTab,
 );
+
+// Keep a failed Shell/serial startup identifiable without exposing its
+// synthetic Host id as a saved SSH host.
+bool _isConsoleTab(TerminalTabSession tab) =>
+    tab.console != null ||
+    tab.consoleShell != null ||
+    tab.consoleSerialPort != null;
