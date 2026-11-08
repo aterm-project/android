@@ -3,13 +3,16 @@
 Windows and Linux runners are imported; the macOS runner is newly generated
 with Flutter 3.47.5 and has not been built or tested on a Mac.
 
-Windows requires Visual Studio C++ tools, CMake and vcpkg. First build the bundled
+Windows requires Visual Studio C++ tools, CMake 3.28+ and vcpkg. Install
+`openssl:x64-windows-static-md` and `zlib:x64-windows-static-md` with vcpkg.
+First build the bundled
 FreeRDP engine using `integration/native/build_rdp_windows.ps1 -VcpkgRoot <path>`.
 Then run `flutter pub get --enforce-lockfile` and `flutter build windows` from
 `apps/client`. Set `ATERMIUS_RDP_DIR` if using a separately built engine bundle.
 The native engine build is capped at 8 workers; no USB driver is installed.
 
-Linux requires CMake, Ninja, GTK 3 and the platform plugin development libraries;
+Linux requires CMake, Ninja, a C/C++ toolchain, GTK 3 development headers,
+`libsecret-1-dev`, and a running desktop keyring service;
 run `flutter build linux`. macOS requires Xcode; run `flutter build macos`.
 Signing, notarization, permissions, native RDP and full UI behavior on Mac/Linux
 require platform-specific validation; Windows RDP evidence does not cover them.
