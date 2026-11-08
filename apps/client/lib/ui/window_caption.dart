@@ -161,7 +161,7 @@ class WindowBarMetrics {
   static const fallbackCaptionHeight = 32.0;
 
   /// Label font size inside dense native-height tabs.
-  static const denseLabelSize = 12.5;
+  static const denseLabelSize = 13.5;
 
   factory WindowBarMetrics.of(
     BuildContext context,
@@ -185,8 +185,8 @@ class WindowBarMetrics {
       dense: true,
       tabHeight: height - inset * 2,
       tabInset: inset,
-      iconSize: 16,
-      actionWidth: 40,
+      iconSize: 17,
+      actionWidth: 42,
     );
   }
 
