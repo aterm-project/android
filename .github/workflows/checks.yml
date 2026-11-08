@@ -1,0 +1,15 @@
+name: Client checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: bash tools/install_flutter_linux.sh
+      - run: flutter pub get --enforce-lockfile
+        working-directory: apps/client
+      - run: flutter test --concurrency=4 test/session_workspace_actions_test.dart test/workspace_tab_drag_test.dart test/terminal_tools_sidebar_test.dart
+        working-directory: apps/client

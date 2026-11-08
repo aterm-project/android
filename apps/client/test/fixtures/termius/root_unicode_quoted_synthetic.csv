@@ -1,0 +1,6 @@
+﻿Groups,Label,Tags,Hostname/IP,Protocol,Port,Username,Password
+项目/开发,"主机, ""甲""
+第二行","dev,测试",example.invalid,ssh,2222,fixture_user," @=fixture, ""password""
+ "
+,Empty port,single,192.0.2.1,ssh,,u,
+Prod/Edge,Leading literals,"x,y",2001:db8::1,ssh,22,u,=synthetic-only
