@@ -1,0 +1,14 @@
+# docker compose -f deploy/compose.yaml -f deploy/compose.desktop.yaml up -d --build
+# Set PUBLIC_ORIGIN and Relay CIDR/port allowlists in the environment first.
+services:
+  server:
+    environment:
+      ATERMIUS_GUACD_ADDRESS: guacd:4822
+    depends_on:
+      - guacd
+  guacd:
+    image: guacamole/guacd:1.6.0@sha256:8974eaa9ba32f713daf311e7cc8cd7e4cdfba1edea39eed75524e78ef4b08f4f
+    restart: unless-stopped
+    # No published port: only the Atermius server may reach guacd.
+    security_opt:
+      - no-new-privileges:true

@@ -1,0 +1,107 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "atermius-prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [{ "expr": "atermius_accounts", "legendFormat": "{{status}}", "refId": "A", "range": true }],
+      "title": "Accounts by lifecycle",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "atermius-prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [{ "expr": "atermius_vaults", "legendFormat": "{{state}}", "refId": "A", "range": true }],
+      "title": "Vaults by lifecycle",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "atermius-prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 8 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "expr": "atermius_devices_active", "instant": true, "refId": "A", "range": false }],
+      "title": "Active devices",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "atermius-prometheus" },
+      "fieldConfig": { "defaults": { "mappings": [{ "options": { "0": { "color": "red", "text": "Disabled" }, "1": { "color": "green", "text": "Enabled" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 8 },
+      "id": 4,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
+      "targets": [{ "expr": "atermius_ssh_relay_enabled", "instant": true, "refId": "A", "range": false }],
+      "title": "SSH Relay policy",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "atermius-prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "id": 5,
+      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [{ "expr": "atermius_blob_stored_bytes", "legendFormat": "Stored blob bytes", "refId": "A", "range": true }],
+      "title": "Stored attachment bytes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "atermius-prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "id": 6,
+      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [{ "expr": "atermius_upload_reserved_bytes", "legendFormat": "Reserved upload bytes", "refId": "A", "range": true }],
+      "title": "Upload reservations",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "atermius-prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 8 },
+      "id": 7,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "expr": "atermius_vault_quota_bytes", "instant": true, "refId": "A", "range": false }],
+      "title": "Configured Vault quota",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "atermius-prometheus" },
+      "fieldConfig": { "defaults": { "mappings": [{ "options": { "0": { "color": "red", "text": "Down" }, "1": { "color": "green", "text": "Up" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 8 },
+      "id": 8,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
+      "targets": [{ "expr": "up{job=\"atermius\"}", "instant": true, "refId": "A", "range": false }],
+      "title": "Prometheus scrape status",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "atermius-prometheus" },
+      "fieldConfig": { "defaults": { "mappings": [{ "options": { "0": { "color": "green", "text": "No firing alerts" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 12, "x": 0, "y": 21 },
+      "id": 9,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
+      "targets": [{ "expr": "sum(ALERTS{job=\"atermius\",alertstate=\"firing\"}) or vector(0)", "instant": true, "refId": "A", "range": false }],
+      "title": "Firing Atermius alerts",
+      "type": "stat"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["atermius", "instance"],
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "Atermius Instance Overview",
+  "uid": "atermius-instance-overview",
+  "version": 1
+}

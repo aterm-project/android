@@ -1,0 +1,18 @@
+# Opt-in overlay for encrypted archive replication to one operator-configured
+# S3-compatible target. Apply with compose.yaml and compose.backup.yaml.
+services:
+  server:
+    environment:
+      ATERMIUS_BACKUP_S3_BUCKET: "${ATERMIUS_BACKUP_S3_BUCKET:?Set in deploy/.env}"
+      ATERMIUS_BACKUP_S3_REGION: "${ATERMIUS_BACKUP_S3_REGION:?Set in deploy/.env}"
+      ATERMIUS_BACKUP_S3_CREDENTIALS_FILE: /run/secrets/atermius-backup-s3.json
+      # Optional pass-throughs stay unset when omitted from deploy/.env.
+      ATERMIUS_BACKUP_S3_ENDPOINT_URL:
+      ATERMIUS_BACKUP_S3_PREFIX:
+    volumes:
+      - type: bind
+        source: "${ATERMIUS_BACKUP_S3_CREDENTIALS_HOST_FILE:?Set in deploy/.env}"
+        target: /run/secrets/atermius-backup-s3.json
+        read_only: true
+        bind:
+          create_host_path: false

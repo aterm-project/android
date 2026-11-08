@@ -1,0 +1,17 @@
+# Opt-in Apple Push Notification service provider. Keep the P-256 .p8 key
+# outside the data volume and apply this overlay with compose.yaml.
+services:
+  server:
+    environment:
+      ATERMIUS_APNS_PRIVATE_KEY_FILE: /run/secrets/atermius-apns-auth-key.p8
+      ATERMIUS_APNS_TEAM_ID: "${ATERMIUS_APNS_TEAM_ID:?Set in deploy/.env}"
+      ATERMIUS_APNS_KEY_ID: "${ATERMIUS_APNS_KEY_ID:?Set in deploy/.env}"
+      ATERMIUS_APNS_TOPIC: "${ATERMIUS_APNS_TOPIC:?Set in deploy/.env}"
+      ATERMIUS_APNS_USE_SANDBOX: "${ATERMIUS_APNS_USE_SANDBOX:-false}"
+    volumes:
+      - type: bind
+        source: "${ATERMIUS_APNS_PRIVATE_KEY_HOST_FILE:?Set in deploy/.env}"
+        target: /run/secrets/atermius-apns-auth-key.p8
+        read_only: true
+        bind:
+          create_host_path: false

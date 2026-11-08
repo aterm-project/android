@@ -1,0 +1,12 @@
+# Local Compose acceptance only. This certificate is issued by Caddy's local
+# CA and is not a production ACME or publicly trusted certificate.
+{$ATERMIUS_CADDY_DOMAIN} {
+	tls internal
+	encode zstd gzip
+	reverse_proxy server:8080 {
+		# Caddy supplies X-Forwarded-For/Proto/Host and forwards upgrades.
+		health_uri /health/ready
+		health_interval 5s
+		health_timeout 3s
+	}
+}

@@ -1,0 +1,14 @@
+{
+	email {$ATERMIUS_CADDY_ACME_EMAIL}
+}
+
+{$ATERMIUS_CADDY_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:8080 {
+		# Caddy supplies X-Forwarded-For/Proto/Host using the peer and actual
+		# request scheme; its proxy also forwards WebSocket upgrades.
+		health_uri /health/ready
+		health_interval 5s
+		health_timeout 3s
+	}
+}

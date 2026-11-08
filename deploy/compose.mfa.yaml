@@ -1,0 +1,9 @@
+services:
+  server:
+    environment:
+      ATERMIUS_MFA_ENCRYPTION_KEY_FILE: /mfa-key/atermius-mfa.key
+    volumes:
+      - type: bind
+        source: "${ATERMIUS_MFA_KEY_HOST_DIR:?Set in deploy/.env}/atermius-mfa.key"
+        target: /mfa-key/atermius-mfa.key
+        read_only: true

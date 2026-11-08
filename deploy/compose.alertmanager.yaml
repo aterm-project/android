@@ -1,0 +1,60 @@
+# Opt-in, single-instance Alertmanager webhook delivery. Apply after
+# compose.yaml and compose.prometheus.yaml, after provisioning the protected
+# host directory that contains webhook-url.
+services:
+  prometheus:
+    networks:
+      - default
+      - metrics
+      - alertmanager
+    volumes:
+      - type: bind
+        source: ./prometheus/prometheus-alertmanager.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+        bind:
+          create_host_path: false
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    user: "65534:65534"
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    depends_on:
+      prometheus:
+        condition: service_started
+    volumes:
+      - type: bind
+        source: ./alertmanager/alertmanager.yml
+        target: /etc/alertmanager/alertmanager.yml
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${ATERMIUS_ALERTMANAGER_WEBHOOK_HOST_DIR:?Set in deploy/.env}/"
+        target: /run/atermius-alertmanager-secrets
+        read_only: true
+        bind:
+          create_host_path: false
+      - alertmanager-data:/alertmanager
+    networks:
+      - alertmanager
+      - alertmanager-egress
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+
+volumes:
+  alertmanager-data:
+
+networks:
+  alertmanager:
+    internal: true
+  alertmanager-egress:
+    driver: bridge

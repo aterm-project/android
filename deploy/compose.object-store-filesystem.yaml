@@ -1,0 +1,13 @@
+# Opt-in filesystem backend for new client-encrypted Vault attachment objects.
+# Keep this separate from compose.object-store-s3.yaml and backup overlays.
+services:
+  server:
+    environment:
+      ATERMIUS_OBJECT_STORE_BACKEND: filesystem
+      ATERMIUS_OBJECT_STORE_FILESYSTEM_ROOT: /object-store
+    volumes:
+      - object-store-data:/object-store
+
+volumes:
+  object-store-data:
+    name: "${ATERMIUS_OBJECT_STORE_FILESYSTEM_VOLUME_NAME:-atermius-object-store}"
