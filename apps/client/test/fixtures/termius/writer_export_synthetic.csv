@@ -1,0 +1,6 @@
+﻿Groups,Label,Tags,Hostname/IP,Protocol,Port,Username,Password
+,=SUM(A1),,192.0.2.10,ssh,22,u,
+,shared-user,"a,b",svc.example,ssh,22,svc,shared-synthetic
+项目/Dev,"主机, ""甲""
+第二行","dev,测试",example.invalid,ssh,2222,fixture_user," @=fixture, ""password""
+ "

@@ -1,0 +1,20 @@
+{
+  "vector_version": 1,
+  "purpose": "Deterministic host attachment interoperability test material; contains no secret user data.",
+  "format": "atermius-host-attachment-v1",
+  "blob_id": "00000000-0000-4000-8000-000000000001",
+  "object_id": "00000000-0000-4000-8000-000000000002",
+  "file_name": "vector.txt",
+  "media_type": "text/plain",
+  "blob_key_base64url": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "chunk_index": 0,
+  "nonce_base64url": "DA0ODxAREhMUFRYX",
+  "plaintext_utf8": "atermius host attachment vector v1",
+  "plaintext_sha256": "b819b679500e2f0bc2a446b9410177052fb4df84b0a08899a79a73e80dd70ebe",
+  "hkdf_info_utf8": "[\"atermius\",\"host-attachment-chunk\",1,\"00000000-0000-4000-8000-000000000001\",0]",
+  "derived_chunk_key_hex": "f8b376810470abdafad041b1206309c2069c8108e049a591df1955a3348ac8ac",
+  "aad_utf8": "{\"blob_id\":\"00000000-0000-4000-8000-000000000001\",\"chunk_index\":0,\"format\":\"atermius-host-attachment-v1\",\"plaintext_size\":34,\"version\":1}",
+  "ciphertext_and_tag_hex": "79d7e6271da9038000109dc3183c9e3b196fe7e33eb2b174d3db4d4b4c6eb8b7c2a1c9aa3f79e33735aa1777c1c0313a5a80",
+  "ciphertext_sha256": "2907a97c04c6a981ed561861e19e8b88c8856550a4a3302e8bb0e3bc7c924ea7",
+  "ciphertext_size": 50
+}
