@@ -237,7 +237,7 @@ class DesktopSession extends ChangeNotifier {
 
   Future<void> connect(ApiClient api, String deviceId, HostRecord host) async {
     try {
-      if (host.protocol == HostProtocol.ssh || host.validate() != null)
+      if (host.protocol.isTerminal || host.validate() != null)
         throw const FormatException('Invalid desktop Host');
       final ticket = await api.createRelayTicket(
         deviceId: deviceId,
@@ -297,7 +297,7 @@ class DesktopSession extends ChangeNotifier {
     }
     if (guacdPort == null) {
       if (_closed) return;
-      if (host.protocol == HostProtocol.ssh || host.validate() != null) {
+      if (host.protocol.isTerminal || host.validate() != null) {
         _fail(currentL10n.invalidRemoteDesktopHostSettings);
         return;
       }
@@ -477,7 +477,7 @@ class DesktopSession extends ChangeNotifier {
 
   Future<void> _connectLocalGateway(HostRecord host, int guacdPort) async {
     try {
-      if (host.protocol == HostProtocol.ssh || host.validate() != null)
+      if (host.protocol.isTerminal || host.validate() != null)
         throw const FormatException('Invalid desktop Host');
       final socket = await transport
           .connectDirect('127.0.0.1', guacdPort)

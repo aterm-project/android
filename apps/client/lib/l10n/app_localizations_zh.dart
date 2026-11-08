@@ -14824,4 +14824,156 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r7ImportFailRolledBack => '导入失败并已撤销，未保留任何内容。';
+
+  @override
+  String get shellLocalInputTooLarge => '输入内容过大，未发送到本地 Shell';
+
+  @override
+  String get shellLocalKindSystem => '系统默认 Shell';
+
+  @override
+  String get shellLocalKindCmd => '命令提示符 (cmd)';
+
+  @override
+  String get shellLocalKindPowershell => 'Windows PowerShell';
+
+  @override
+  String get shellLocalKindPwsh => 'PowerShell 7 (pwsh)';
+
+  @override
+  String get shellLocalKindBash => 'Bash';
+
+  @override
+  String get shellLocalKindZsh => 'Zsh';
+
+  @override
+  String get shellLocalKindFish => 'Fish';
+
+  @override
+  String get shellLocalKindSh => 'POSIX sh';
+
+  @override
+  String get shellLocalOptions => '本地 Shell 选项…';
+
+  @override
+  String get shellLocalOptionsTitle => '启动本地 Shell';
+
+  @override
+  String get shellLocalShellLabel => 'Shell';
+
+  @override
+  String get shellLocalWorkingDirectoryLabel => '工作目录（可选）';
+
+  @override
+  String get shellLocalWorkingDirectoryHint => '绝对路径或 ~/文件夹；留空则使用主目录';
+
+  @override
+  String get shellLocalStart => '启动 Shell';
+
+  @override
+  String get shellLocalInvalidWorkingDirectory => '请输入绝对文件夹路径或 ~/文件夹。';
+
+  @override
+  String get shellLocalWorkingDirectoryNotFound => '该工作目录不存在。';
+
+  @override
+  String get shellLocalNotInstalled => '此电脑未安装该 Shell。';
+
+  @override
+  String get shellLocalUnavailable => '本地 Shell（仅限桌面应用）';
+
+  @override
+  String get shellLocalUnavailableDetail =>
+      '此处无法在你的电脑上启动 Shell，Atermius 也绝不会在服务器上运行 Shell。请使用 Atermius 桌面应用打开本地 Shell。';
+
+  @override
+  String shellLocalTabTitle(String shell) {
+    return '本地 · $shell';
+  }
+
+  @override
+  String shellLocalNewShell(String shell) {
+    return '新建 $shell';
+  }
+
+  @override
+  String get telnetHost => 'Telnet 主机';
+
+  @override
+  String get telnetProtocolUnencrypted => 'Telnet（未加密）';
+
+  @override
+  String get telnetInteractiveLogin => '在终端中交互登录（不发送任何已保存信息）';
+
+  @override
+  String get telnetLoginInteractiveHint =>
+      'Telnet 采用交互式登录：请在终端中输入用户名和密码。已保存的密码、密钥和钥匙串条目绝不会通过 Telnet 发送。';
+
+  @override
+  String get telnetPlaintextWarningTitle => 'Telnet 未加密';
+
+  @override
+  String get telnetPlaintextWarningBody =>
+      '通过 Telnet 发送的所有内容（包括您输入的密码）均以明文传输，可能在网络中被读取或篡改。请仅在可信网络或不支持 SSH 的设备上使用。已保存的主机条目本身仍保持加密。';
+
+  @override
+  String telnetPlaintextTerminalNotice(String endpoint) {
+    return '到 $endpoint 的 Telnet 连接未加密：您输入的任何内容（包括密码）都以明文发送。';
+  }
+
+  @override
+  String telnetConnectedToEndpoint(String endpoint) {
+    return 'Telnet 已连接到 $endpoint（未加密）';
+  }
+
+  @override
+  String get telnetConnectedUnencrypted => 'Telnet 已连接（未加密）';
+
+  @override
+  String get telnetConnecting => 'Telnet 正在连接';
+
+  @override
+  String get telnetDisconnected => 'Telnet 已断开';
+
+  @override
+  String get telnetConnectionClosedTerminal => '\r\n[Telnet 连接已关闭]\r\n';
+
+  @override
+  String get telnetConnectionRefused => 'Telnet 服务器拒绝了连接。';
+
+  @override
+  String get telnetConnectionTimedOut => 'Telnet 连接超时。';
+
+  @override
+  String get telnetHostLookupFailed => '无法解析 Telnet 主机名。';
+
+  @override
+  String get telnetHostUnreachable => '无法连接到 Telnet 主机。';
+
+  @override
+  String get telnetRelayUnavailable => '无法通过服务器中继打开 Telnet。';
+
+  @override
+  String get telnetUnsupportedInBrowser =>
+      '在浏览器中使用 Telnet 需要已登录且为该目标启用了中继的 Atermius 服务器。浏览器本地配置文件无法打开原始 TCP 连接。';
+
+  @override
+  String get telnetProtocolError => 'Telnet 服务器发送了无效或过量的协商数据，连接已关闭。';
+
+  @override
+  String get telnetConnectionLost => 'Telnet 连接已断开。';
+
+  @override
+  String get telnetConnectCancelled => 'Telnet 连接已取消。';
+
+  @override
+  String get telnetHostSettingsInvalid =>
+      'Telnet 主机不能使用已保存的登录信息、钥匙串条目、跳板机或端口转发。请在终端中交互登录。';
+
+  @override
+  String get telnetQuickConnectNoUser =>
+      'Telnet 不会自动发送用户名。请使用：telnet 主机[:端口]，并在终端中登录。';
+
+  @override
+  String get telnetInputTooLarge => '粘贴内容过大，无法通过 Telnet 发送（上限 1 MiB）。未发送任何内容。';
 }

@@ -13,6 +13,12 @@ import '../mcp/mcp_workspace.dart';
 import 'mcp_settings_panel.dart';
 import 'settings_scaffold.dart';
 import '../console/local_console.dart';
+import '../console/local_shell_l10n.dart';
+import 'local_shell_menu.dart';
+import '../telnet/telnet_errors.dart';
+import '../telnet/telnet_session.dart';
+import '../telnet/telnet_transport.dart';
+import '../telnet/telnet_ui.dart';
 import '../desktop/desktop_session.dart';
 import '../desktop/rdp_certificate_persistence.dart';
 import '../domain/quick_connect.dart';
@@ -111,6 +117,17 @@ enum _LocalWorkspace {
 
 /// Only display metadata is retained by the unlocked local Snippet list. The
 /// script body and structured parameter values are fetched again when edited.
+
+/// Test seam mirroring [AppController.localConsoleOpenerForTesting] for the
+/// local Profile workspace (fake PTY / serial console).
+@visibleForTesting
+LocalConsole Function({
+  LocalShellLaunch? shell,
+  String? serialPort,
+  int baudRate,
+})?
+localProfileConsoleOpenerForTesting;
+
 class _LocalSnippetSummary {
   const _LocalSnippetSummary({
     required this.id,
@@ -196,6 +213,7 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
             hostId: session.console == null ? session.host.id : null,
             state:
                 session.desktop?.state ??
+                session.telnetState ??
                 (session.connected.value ? 'connected' : 'disconnected'),
             isAlive: () => !session._closed && _sessions.contains(session),
             terminal: session.desktop == null ? session.terminal : null,
@@ -1529,20 +1547,49 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     });
   }
 
-  Future<void> _openConsole({String? serialPort, int baudRate = 115200}) async {
-    if (_activeProfile == null || _busy || !localConsoleSupported) return;
+  /// Starts a local shell ([shell], default system shell) or a serial console
+  /// ([serialPort]) and returns the new session id, or null on failure.
+  Future<String?> _openConsole({
+    String? serialPort,
+    int baudRate = 115200,
+    LocalShellLaunch? shell,
+  }) async {
+    final opener = localProfileConsoleOpenerForTesting;
+    if (_activeProfile == null ||
+        _busy ||
+        _disposing ||
+        (!localConsoleSupported && opener == null)) {
+      if (!localConsoleSupported && opener == null && mounted) {
+        unawaited(showLocalShellUnavailable(context));
+      }
+      return null;
+    }
+    final launch = serialPort == null
+        ? shell ?? LocalShellLaunch.systemDefault
+        : null;
     try {
-      final console = serialPort == null
-          ? openLocalConsole()
+      final console = opener != null
+          ? opener(shell: launch, serialPort: serialPort, baudRate: baudRate)
+          : serialPort == null
+          ? openLocalConsole(launch: launch!)
           : openSerialConsole(serialPort, baudRate: baudRate);
-      _addDeviceSession(
-        _LocalTerminalSession.console(
-          console,
-          title: serialPort == null ? context.l10n.localConsole : '$serialPort · $baudRate',
-          serialPort: serialPort,
-          baudRate: serialPort == null ? null : baudRate,
-        ),
+      if (!mounted || _disposing) {
+        unawaited(console.close().catchError((Object _) {}));
+        return null;
+      }
+      final session = _LocalTerminalSession.console(
+        console,
+        title: serialPort == null
+            ? localShellTabTitle(context.l10n, launch!)
+            : '$serialPort · $baudRate',
+        serialPort: serialPort,
+        baudRate: serialPort == null ? null : baudRate,
+        shell: launch,
       );
+      _addDeviceSession(session);
+      return session.id;
+    } on LocalShellException catch (error) {
+      _showMessage(localShellIssueMessage(context.l10n, error.issue));
     } catch (error) {
       _showMessage(
         error is UnsupportedError
@@ -1550,6 +1597,31 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
             : context.l10n.couldntStartTheConsole,
       );
     }
+    return null;
+  }
+
+  /// Independent copy of a Console session: serial stays serial (same port and
+  /// baud), a shell keeps its kind and current/launch working directory.
+  Future<String?> _duplicateConsole(_LocalTerminalSession source) async {
+    final serialPort = source.consoleSerialPort;
+    if (serialPort != null) {
+      return _openConsole(
+        serialPort: serialPort,
+        baudRate: source.consoleBaudRate ?? 115200,
+      );
+    }
+    var launch = source.consoleShell ?? LocalShellLaunch.systemDefault;
+    if (source.console case final LocalConsoleWorkingDirectory probe) {
+      final cwd = await probe
+          .currentWorkingDirectory()
+          .timeout(const Duration(seconds: 1), onTimeout: () => null)
+          .catchError((Object _) => null);
+      if (cwd != null && isPlausibleLocalShellWorkingDirectory(cwd)) {
+        launch = launch.copyWith(workingDirectory: cwd);
+      }
+    }
+    if (!mounted || _disposing || !_sessions.contains(source)) return null;
+    return _openConsole(shell: launch);
   }
 
   VoidCallback? _dismissHostSearch;
@@ -1656,7 +1728,35 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     bool Function()? shouldContinue,
     void Function(_LocalTerminalSession session)? onSessionOpened,
   }) async {
-    if (kIsWeb) return;
+    if (kIsWeb) {
+      // A browser LocalVault has no authenticated Relay and cannot open raw
+      // TCP; say so instead of silently doing nothing.
+      if (host.protocol == HostProtocol.telnet && mounted) {
+        _showMessage(context.l10n.telnetUnsupportedInBrowser);
+      }
+      return;
+    }
+    if (host.protocol == HostProtocol.telnet) {
+      if (_activeProfile == null || _busy) return;
+      final issue = host.validate();
+      if (issue != null) {
+        _showMessage(issue);
+        return;
+      }
+      // Plaintext, interactive login: no credential is resolved or sent.
+      final tab = _LocalTerminalSession.telnet(
+        host,
+        connector: localTelnetConnector,
+        log: _sessionLogs?.begin(host: host, viaJump: false),
+        onStateChanged: () {
+          if (mounted && !_disposing) _onSessionChanged();
+        },
+      );
+      _addDeviceSession(tab);
+      onSessionOpened?.call(tab);
+      await tab.telnetReady;
+      return;
+    }
     if (host.protocol != HostProtocol.ssh) {
       if (_activeProfile == null || _busy) return;
       final repository = _repository;
@@ -2139,7 +2239,9 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     _sessions.clear();
     _detached.clear();
     _selectedTabId = 'hosts';
-    _layout.restore(null);
+    // During dispose the layout is already disposed; touching it would throw
+    // and skip closing the sessions below (leaking PTYs/SSH connections).
+    if (!_disposing) _layout.restore(null);
     for (final session in closing) {
       session.connected.removeListener(_onSessionChanged);
       if (!_disposing) _layout.remove(session.id);
@@ -2230,10 +2332,7 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     final source = _visibleSessions.where((s) => s.id == id).firstOrNull;
     if (source == null || _busy) return;
     if (source.console != null) {
-      await _openConsole(
-        serialPort: source.consoleSerialPort,
-        baudRate: source.consoleBaudRate ?? 115200,
-      );
+      await _duplicateConsole(source);
     } else {
       await _connectLocalHost(source.host);
     }
@@ -2274,13 +2373,13 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
             .firstOrNull ??
         _visibleSessions.where((s) => s.id != id).firstOrNull;
     var other = target;
-    if (other == null) {
+    if (other == null && source.console != null) {
+      // A lone Console splits into a new independent PTY/serial session.
+      final copyId = await _duplicateConsole(source);
+      other = _visibleSessions.where((s) => s.id == copyId).firstOrNull;
+    } else if (other == null) {
       final before = _sessions.map((s) => s.id).toSet();
-      if (source.console != null) {
-        await _openConsole();
-      } else {
-        await _connectLocalHost(source.host);
-      }
+      await _connectLocalHost(source.host);
       other = _visibleSessions.where((s) => !before.contains(s.id)).firstOrNull;
     }
     if (!mounted ||
@@ -2463,7 +2562,7 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     final session = _visibleSessions.where((s) => s.id == id).firstOrNull;
     if (session == null ||
         !session.connected.value ||
-        session.connection == null)
+        (session.connection == null && session.console == null))
       return;
     final opened = await ApplicationWindows.instance.detach(
       owner: _windowOwner,
@@ -2490,9 +2589,11 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
         _detached.remove(id);
         _selectTerminalTab(id);
       },
-      onOpenFiles: () {
-        unawaited(_openSessionFiles(session));
-      },
+      onOpenFiles: session.connection == null
+          ? null
+          : () {
+              unawaited(_openSessionFiles(session));
+            },
     );
     if (!opened && mounted && !_disposing) _showMessage(context.l10n.theNewWindowDidntOpenThe);
   }
@@ -3260,6 +3361,9 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
                   kind: 'console',
                   serialPort: session.consoleSerialPort,
                   baudRate: session.consoleBaudRate,
+                  shell: session.consoleSerialPort == null
+                      ? session.consoleShell
+                      : null,
                 )
               : CombinationPane(
                   kind: session.host.protocol.name,
@@ -3459,13 +3563,13 @@ _showMessage(error is FileWindowCaptureUnavailable?FileWindowCaptureUnavailable.
         open: (pane) async {
           if (pane.kind == 'console') {
             if (!localConsoleSupported) return null;
-            final before = _sessions.map((s) => s.id).toSet();
-            await _openConsole(
+            final id = await _openConsole(
               serialPort: pane.serialPort,
               baudRate: pane.baudRate ?? 115200,
+              shell: pane.serialPort == null ? pane.shell : null,
             );
             return _visibleSessions
-                .where((s) => !before.contains(s.id) && s.console != null)
+                .where((s) => s.id == id && s.console != null)
                 .firstOrNull
                 ?.id;
           }
@@ -3480,7 +3584,8 @@ _showMessage(error is FileWindowCaptureUnavailable?FileWindowCaptureUnavailable.
                     s.host.id == host.id &&
                     (s.connected.value ||
                         (s.desktop != null &&
-                            s.desktop!.state != 'disconnected')),
+                            s.desktop!.state != 'disconnected') ||
+                        s.telnetState == 'connecting'),
               )
               .firstOrNull
               ?.id;
@@ -4120,20 +4225,16 @@ _showMessage(
                       ? 'local_host_add'
                       : 'local_new_${protocol.name}',
                   context.l10n.newTouppercaseHost(protocol.name.toUpperCase()),
-                  protocol == HostProtocol.ssh
-                      ? Icons.terminal
-                      : Icons.desktop_windows_outlined,
+                  hostProtocolIcon(protocol),
                   () => _addHost(protocol),
                   enabled: !_busy,
                 ),
-              if (localConsoleSupported)
-                WorkspaceAction(
-                  'local_new_console',
-                  context.l10n.localConsole,
-                  Icons.code,
-                  _openConsole,
-                  enabled: !_busy,
-                ),
+              ...localShellWorkspaceActions(
+                context,
+                idPrefix: 'local',
+                onLaunch: (launch) => _openConsole(shell: launch),
+                enabled: !_busy,
+              ),
             ],
             if (activeSession != null && activeSession.connection != null) ...[
               WorkspaceAction(
@@ -4220,7 +4321,8 @@ _showMessage(
                       isConnected: session.connected.value,
                       canOpenFiles: session.connection != null,
                       canDetach:
-                          session.connection != null &&
+                          (session.connection != null ||
+                              session.console != null) &&
                           ApplicationWindows.instance.supported,
                     ),
                   for (final entry in _files.entries)
@@ -4391,6 +4493,25 @@ _showMessage(
                             ),
                           );
                         }
+                        if (session.isTelnet) {
+                          return ExcludeFocus(
+                            excluding: _selectedTabId != id,
+                            child: TerminalView(
+                              session.terminal,
+                              key: ValueKey('local_telnet_view_${session.id}'),
+                              autofocus: _selectedTabId == id,
+                              readOnly: !session.connected.value,
+                              hardwareKeyboardOnly: false,
+                              textStyle: TerminalStyle(
+                                fontSize: _terminalFontSizeChoice.toDouble(),
+                              ),
+                              theme: terminalColorThemeOf(
+                                context,
+                                _terminalThemeChoice,
+                              ),
+                            ),
+                          );
+                        }
                         if (session.console != null) {
                           return ExcludeFocus(
                             excluding: _selectedTabId != id,
@@ -4439,7 +4560,7 @@ _showMessage(
                   status: active == null ? context.l10n.localLocked : context.l10n.localUnlocked,
                   detail: session == null
                       ? context.l10n.hostsAndSignInDetailsAre
-                      : '${session.host.username}@${session.host.address}:${session.host.port} · ${session.connected.value ? context.l10n.connected : context.l10n.disconnected}',
+                      : '${session.host.username.isEmpty ? '' : '${session.host.username}@'}${session.host.address}:${session.host.port} · ${session.isTelnet ? '${context.l10n.telnetProtocolUnencrypted} · ' : ''}${session.connected.value ? context.l10n.connected : context.l10n.disconnected}',
                   sessionCount: _sessions
                       .where((s) => s.connected.value)
                       .length,
@@ -6664,6 +6785,7 @@ class _LocalTerminalSession {
     String? title,
     String? serialPort,
     int? baudRate,
+    LocalShellLaunch? shell,
   }) : host = HostRecord(
          id: const Uuid().v4(),
          name: title ?? currentL10n.localConsole,
@@ -6674,6 +6796,7 @@ class _LocalTerminalSession {
     console = value;
     consoleSerialPort = serialPort;
     consoleBaudRate = baudRate;
+    consoleShell = serialPort == null ? shell : null;
     terminal.onOutput = value.input;
     terminal.onResize = (w, h, _, _) => value.resize(w, h);
     _stdout = value.output.listen(
@@ -6691,6 +6814,90 @@ class _LocalTerminalSession {
       }),
     );
   }
+  /// Plaintext Telnet tab. The tab appears immediately in `connecting`
+  /// state; [telnetReady] completes when the connection attempt settles.
+  /// A late completion after [close] is closed and never attached.
+  _LocalTerminalSession.telnet(
+    this.host, {
+    required TelnetChannelConnector connector,
+    this.log,
+    VoidCallback? onStateChanged,
+  }) : connection = null {
+    _onTelnetStateChanged = onStateChanged;
+    telnetState = 'connecting';
+    connected.value = false;
+    terminal.write(telnetPlaintextTerminalNotice(host.endpoint));
+    final cancellation = TelnetConnectCancellation();
+    _telnetCancellation = cancellation;
+    telnetReady = _connectTelnet(connector, cancellation);
+  }
+
+  Future<void> _connectTelnet(
+    TelnetChannelConnector connector,
+    TelnetConnectCancellation cancellation,
+  ) async {
+    try {
+      final session = await TelnetSession.connect(
+        host: host.address,
+        port: host.port,
+        connector: connector,
+        cancellation: cancellation,
+        columns: terminal.viewWidth,
+        rows: terminal.viewHeight,
+      );
+      if (_closed) {
+        await session.close();
+        return;
+      }
+      telnet = session;
+      _telnetCancellation = null;
+      terminal.onOutput = (text) {
+        if (session.input(text) == TelnetInputResult.tooLarge) {
+          // Rejected whole; nothing partial was sent.
+          terminal.write(
+            '\r\n\x1b[33m${currentL10n.telnetInputTooLarge}\x1b[0m\r\n',
+          );
+        }
+      };
+      terminal.onResize = (width, height, _, _) =>
+          session.resize(width, height);
+      _stdout = session.output.listen(
+        (text) {
+          if (_closed) return;
+          terminal.write(text);
+          log?.output(text);
+        },
+        onError: (Object error) {
+          if (_closed) return;
+          telnetError = error.toString();
+          log?.markClosed(SessionLogEndReason.error, error: error);
+        },
+        onDone: () {
+          if (_closed) return;
+          telnetState = 'disconnected';
+          connected.value = false;
+          terminal.write(currentL10n.telnetConnectionClosedTerminal);
+          log?.markClosed(SessionLogEndReason.remote);
+          _onTelnetStateChanged?.call();
+        },
+      );
+      session.resize(terminal.viewWidth, terminal.viewHeight);
+      log?.markConnected();
+      telnetState = 'connected';
+      connected.value = true;
+    } catch (error) {
+      if (_closed) return;
+      _telnetCancellation = null;
+      telnetState = 'failed';
+      telnetError = error is TelnetException
+          ? error.toString()
+          : telnetFailureMessage(TelnetFailure.unreachable);
+      log?.markFailed(error);
+      terminal.write('\r\n\x1b[31m$telnetError\x1b[0m\r\n');
+      _onTelnetStateChanged?.call();
+    }
+  }
+
   _LocalTerminalSession.desktop(this.host, DesktopSession value)
     : connection = null,
       log = null {
@@ -6706,7 +6913,19 @@ class _LocalTerminalSession {
   LocalConsole? console;
   String? consoleSerialPort;
   int? consoleBaudRate;
+  LocalShellLaunch? consoleShell;
   DesktopSession? desktop;
+
+  /// Set only for Telnet tabs (never SSH/Console); SSH-only tools check
+  /// [connection], which stays null here.
+  TelnetSession? telnet;
+  TelnetConnectCancellation? _telnetCancellation;
+  VoidCallback? _onTelnetStateChanged;
+  String? telnetState;
+  String? telnetError;
+  Future<void> telnetReady = Future<void>.value();
+  bool get isTelnet =>
+      host.protocol == HostProtocol.telnet && desktop == null && console == null;
   final terminal = MirroredTerminal(maxLines: 5000);
   final connected = ValueNotifier<bool>(true);
   final viewKey = GlobalKey<_LocalSshTerminalDialogState>();
@@ -6726,6 +6945,10 @@ class _LocalTerminalSession {
       if (_stderr != null) _stderr!.cancel(),
     ]);
     await terminal.closeMirror();
+    _telnetCancellation?.cancel();
+    _telnetCancellation = null;
+    _onTelnetStateChanged = null;
+    await telnet?.close();
     await connection?.close();
     await console?.close();
     await desktop?.close();

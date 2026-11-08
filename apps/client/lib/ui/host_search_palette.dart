@@ -6,6 +6,7 @@ import '../domain/quick_connect.dart';
 import 'app_motion.dart';
 import 'host_search_field.dart';
 import '../l10n/l10n.dart';
+import '../telnet/telnet_ui.dart';
 
 /// Keep duplicate leaf names distinguishable in nested group filters.
 Map<String, String> hostSearchGroupLabels(Iterable<GroupRecord> groups) {
@@ -255,9 +256,7 @@ class _HostSearchPaletteState extends State<_HostSearchPalette> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             leading: Icon(
-                              host.protocol == HostProtocol.ssh
-                                  ? Icons.terminal
-                                  : Icons.desktop_windows_outlined,
+                              hostProtocolIcon(host.protocol),
                               size: 20,
                             ),
                             title: Text(
