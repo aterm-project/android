@@ -137,7 +137,7 @@ void main() {
             expect(
               density.profile,
               c.platform == TargetPlatform.windows
-                  ? AppDensityProfile.compact
+                  ? AppDensityProfile.windows
                   : AppDensityProfile.touch,
             );
             // Panel never wider than the window; compact desktop is narrower

@@ -25,9 +25,7 @@ Widget _app(
 }
 
 void main() {
-  testWidgets('compact desktop theme is ~90% of Material defaults', (
-    tester,
-  ) async {
+  testWidgets('Windows theme adds one point to compact chrome', (tester) async {
     late ThemeData theme;
     await tester.pumpWidget(
       _app(
@@ -41,21 +39,21 @@ void main() {
       ),
     );
     final density = AppDensity.of(tester.element(find.byType(SizedBox)));
-    expect(density.profile, AppDensityProfile.compact);
+    expect(density.profile, AppDensityProfile.windows);
     final text = theme.textTheme;
-    expect(text.bodyLarge!.fontSize, 14.5);
-    expect(text.bodyMedium!.fontSize, 13);
-    expect(text.titleLarge!.fontSize, 19);
-    expect(text.headlineSmall!.fontSize, 21);
+    expect(text.bodyLarge!.fontSize, 15.5);
+    expect(text.bodyMedium!.fontSize, 14);
+    expect(text.titleLarge!.fontSize, 20);
+    expect(text.headlineSmall!.fontSize, 22);
     // M3 line-height ratios survive (no clipped CJK/Cyrillic ascenders).
     expect(text.bodyLarge!.height, greaterThanOrEqualTo(1.2));
     expect(text.titleLarge!.height, greaterThanOrEqualTo(1.2));
-    expect(theme.iconTheme.size, 20);
+    expect(theme.iconTheme.size, 21);
     expect(
       theme.inputDecorationTheme.contentPadding,
-      const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+      const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
     );
-    expect(theme.dialogTheme.titleTextStyle!.fontSize, 19);
+    expect(theme.dialogTheme.titleTextStyle!.fontSize, 20);
   });
 
   testWidgets('touch keeps 48dp hit targets while glyphs shrink', (

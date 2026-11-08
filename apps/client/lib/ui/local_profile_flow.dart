@@ -5089,7 +5089,7 @@ _showMessage(
                     padding: const EdgeInsets.all(HostCardMetrics.iconPadding),
                     child: HostSystemIcon(
                       host: host,
-                      size: HostCardMetrics.iconSize,
+                      size: metrics.glyphSize,
                     ),
                   ),
                 ),
@@ -5103,9 +5103,9 @@ _showMessage(
                         host.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        strutStyle: HostCardMetrics.titleStrut,
-                        style: const TextStyle(
-                          fontSize: HostCardMetrics.titleSize,
+                        strutStyle: metrics.titleTextStrut,
+                        style: TextStyle(
+                          fontSize: metrics.titleTextSize,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -5114,10 +5114,10 @@ _showMessage(
                         '${host.username}@${host.address}:${host.port}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        strutStyle: HostCardMetrics.subtitleStrut,
-                        style: const TextStyle(
+                        strutStyle: metrics.subtitleTextStrut,
+                        style: TextStyle(
                           color: AppColors.muted,
-                          fontSize: HostCardMetrics.subtitleSize,
+                          fontSize: metrics.subtitleTextSize,
                         ),
                       ),
                     ],
@@ -5141,10 +5141,10 @@ _showMessage(
                   host.tags.join(' · '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  strutStyle: HostCardMetrics.metaStrut,
-                  style: const TextStyle(
+                  strutStyle: metrics.metaTextStrut,
+                  style: TextStyle(
                     color: AppColors.muted,
-                    fontSize: HostCardMetrics.metaSize,
+                    fontSize: metrics.metaTextSize,
                   ),
                 ),
               ),

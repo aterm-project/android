@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'app_density.dart';
 
 double appMenuItemHeight(BuildContext context) =>
-    AppDensity.of(context).isCompact ? 36 : 48;
+    AppDensity.of(context).menuItemHeight;
 
 double appMenuIconSize(BuildContext context) =>
-    AppDensity.of(context).isCompact ? 16 : 18;
+    AppDensity.of(context).menuIconSize;
 
 /// Shared menu geometry without scaling text or shrinking touch hit targets.
 PopupMenuItem<T> appMenuItem<T>(
@@ -57,7 +57,7 @@ class AppMenuLabel extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: AppDensity.of(context).textSize(11),
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),

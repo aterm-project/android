@@ -11,6 +11,7 @@ import '../terminal/terminal_search.dart';
 import '../terminal/terminal_tools.dart';
 import 'app_motion.dart';
 import 'app_theme.dart';
+import 'app_density.dart';
 import '../l10n/l10n.dart';
 
 /// Keep the terminal child mounted across opening/closing and width changes.
@@ -186,8 +187,8 @@ class TerminalToolsSectionTabs extends StatelessWidget {
               key: const ValueKey('terminal-tools-section-title'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12,
+              style: TextStyle(
+                fontSize: AppDensity.of(context).textSize(12),
                 color: AppColors.muted,
                 fontWeight: FontWeight.w600,
               ),
@@ -421,11 +422,11 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
                   ? TextAlign.center
                   : TextAlign.start,
               textAlignVertical: TextAlignVertical.center,
-              style: const TextStyle(fontSize: 13),
+              style: TextStyle(fontSize: AppDensity.of(context).textSize(13)),
               decoration: InputDecoration(
                 hintText: context.l10n.searchCurrentTerminalOutput,
-                hintStyle: const TextStyle(
-                  fontSize: 12,
+                hintStyle: TextStyle(
+                  fontSize: AppDensity.of(context).textSize(12),
                   color: AppColors.muted,
                 ),
                 hintMaxLines: 1,
@@ -459,7 +460,9 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
                 liveRegion: true,
                 child: Text(
                   widget.searchStatus,
-                  style: const TextStyle(fontSize: 11),
+                  style: TextStyle(
+                    fontSize: AppDensity.of(context).textSize(11),
+                  ),
                 ),
               ),
             ),
@@ -488,8 +491,8 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
           Expanded(
             child: Text(
               context.l10n.searchHistory,
-              style: const TextStyle(
-                fontSize: 12,
+              style: TextStyle(
+                fontSize: AppDensity.of(context).textSize(12),
                 color: AppColors.muted,
                 fontWeight: FontWeight.w600,
               ),
@@ -510,7 +513,10 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
             child: Center(
               child: Text(
                 context.l10n.searchTermsAreRecordedWhenYou,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(
+                  color: AppColors.muted,
+                  fontSize: AppDensity.of(context).textSize(12),
+                ),
               ),
             ),
           )
@@ -556,10 +562,13 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
       onChanged: (value) => setState(() => _filter = value),
       textAlign: _filter.isEmpty ? TextAlign.center : TextAlign.start,
       textAlignVertical: TextAlignVertical.center,
-      style: const TextStyle(fontSize: 13),
+      style: TextStyle(fontSize: AppDensity.of(context).textSize(13)),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(fontSize: 12, color: AppColors.muted),
+        hintStyle: TextStyle(
+          fontSize: AppDensity.of(context).textSize(12),
+          color: AppColors.muted,
+        ),
         hintMaxLines: 1,
         prefixIcon: const Icon(Icons.filter_list, size: 16),
         prefixIconConstraints: _prefixConstraints,
@@ -590,7 +599,10 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
           Expanded(
             child: Text(
               context.l10n.saveEncryptedAsSnippets,
-              style: const TextStyle(fontSize: 11, color: AppColors.muted),
+              style: TextStyle(
+                fontSize: AppDensity.of(context).textSize(11),
+                color: AppColors.muted,
+              ),
             ),
           ),
           IconButton(
@@ -614,7 +626,10 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Text(
           context.l10n.clickToInsertPressEnterTo,
-          style: const TextStyle(fontSize: 11, color: AppColors.muted),
+          style: TextStyle(
+            fontSize: AppDensity.of(context).textSize(11),
+            color: AppColors.muted,
+          ),
         ),
       ),
     ),
@@ -662,7 +677,10 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
         child: Text(
           widget.historyNotice?.call() ??
               context.l10n.showsCommandsCompletedOnTheCurrent,
-          style: const TextStyle(fontSize: 11, color: AppColors.muted),
+          style: TextStyle(
+            fontSize: AppDensity.of(context).textSize(11),
+            color: AppColors.muted,
+          ),
         ),
       ),
     ),
@@ -694,7 +712,10 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
                 item.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                style: TextStyle(
+                  fontSize: AppDensity.of(context).textSize(11),
+                  color: AppColors.muted,
+                ),
               ),
               subtitle: Text(
                 item.command,
