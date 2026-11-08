@@ -154,7 +154,7 @@ ThemeData buildAppTheme({Locale? locale, TargetPlatform? platform}) {
       menuPadding: EdgeInsets.symmetric(vertical: density.space2),
       labelTextStyle: WidgetStateProperty.resolveWith(
         (states) => TextStyle(
-          fontSize: density.isCompact ? 12 : 13,
+          fontSize: density.textSize(density.isCompact ? 12 : 13),
           height: 1.3,
           color: states.contains(WidgetState.disabled)
               ? AppColors.muted.withValues(alpha: .5)
@@ -177,16 +177,17 @@ ThemeData buildAppTheme({Locale? locale, TargetPlatform? platform}) {
     ),
     menuButtonTheme: MenuButtonThemeData(
       style: ButtonStyle(
-        minimumSize: WidgetStatePropertyAll(
-          Size(0, density.isCompact ? 36 : 48),
-        ),
+        minimumSize: WidgetStatePropertyAll(Size(0, density.menuItemHeight)),
         padding: const WidgetStatePropertyAll(
           EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         ),
         textStyle: WidgetStatePropertyAll(
-          TextStyle(fontSize: density.isCompact ? 12 : 13, height: 1.3),
+          TextStyle(
+            fontSize: density.textSize(density.isCompact ? 12 : 13),
+            height: 1.3,
+          ),
         ),
-        iconSize: WidgetStatePropertyAll(density.isCompact ? 16 : 18),
+        iconSize: WidgetStatePropertyAll(density.menuIconSize),
         visualDensity: VisualDensity.standard,
       ),
     ),

@@ -4729,7 +4729,7 @@ class _HostCard extends StatelessWidget {
                           ),
                           child: HostSystemIcon(
                             host: host,
-                            size: HostCardMetrics.iconSize,
+                            size: metrics.glyphSize,
                           ),
                         ),
                       ),
@@ -4743,9 +4743,9 @@ class _HostCard extends StatelessWidget {
                               host.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              strutStyle: HostCardMetrics.titleStrut,
-                              style: const TextStyle(
-                                fontSize: HostCardMetrics.titleSize,
+                              strutStyle: metrics.titleTextStrut,
+                              style: TextStyle(
+                                fontSize: metrics.titleTextSize,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -4756,10 +4756,10 @@ class _HostCard extends StatelessWidget {
                                   : '${host.protocol.label} · ${host.endpoint}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              strutStyle: HostCardMetrics.subtitleStrut,
-                              style: const TextStyle(
+                              strutStyle: metrics.subtitleTextStrut,
+                              style: TextStyle(
                                 color: AppColors.muted,
-                                fontSize: HostCardMetrics.subtitleSize,
+                                fontSize: metrics.subtitleTextSize,
                               ),
                             ),
                           ],
@@ -4871,10 +4871,10 @@ class _HostCard extends StatelessWidget {
                                     groupName!,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    strutStyle: HostCardMetrics.metaStrut,
-                                    style: const TextStyle(
+                                    strutStyle: metrics.metaTextStrut,
+                                    style: TextStyle(
                                       color: AppColors.teal,
-                                      fontSize: HostCardMetrics.metaSize,
+                                      fontSize: metrics.metaTextSize,
                                     ),
                                   ),
                                 ),
@@ -4888,10 +4888,10 @@ class _HostCard extends StatelessWidget {
                                 host.tags.take(2).join(' · '),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                strutStyle: HostCardMetrics.metaStrut,
-                                style: const TextStyle(
+                                strutStyle: metrics.metaTextStrut,
+                                style: TextStyle(
                                   color: AppColors.muted,
-                                  fontSize: HostCardMetrics.metaSize,
+                                  fontSize: metrics.metaTextSize,
                                 ),
                               ),
                             ),
@@ -4907,10 +4907,10 @@ class _HostCard extends StatelessWidget {
                                 context.l10n.unavailableGroup,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                strutStyle: HostCardMetrics.metaStrut,
-                                style: const TextStyle(
+                                strutStyle: metrics.metaTextStrut,
+                                style: TextStyle(
                                   color: AppColors.orange,
-                                  fontSize: HostCardMetrics.metaSize,
+                                  fontSize: metrics.metaTextSize,
                                 ),
                               ),
                             ),

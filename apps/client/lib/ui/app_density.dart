@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Which proportion set the UI chrome uses.
@@ -7,7 +8,7 @@ import 'package:flutter/material.dart';
 /// [compact] is the desktop/pointer set (about 90% of the R6a comfortable
 /// proportions). [touch] keeps phone/tablet glyphs a little smaller than R6a
 /// but never shrinks hit targets below the platform minimum (48dp).
-enum AppDensityProfile { compact, touch }
+enum AppDensityProfile { compact, windows, touch }
 
 /// Shared presentation metrics for app chrome (dialogs, lists, forms, cards).
 ///
@@ -78,6 +79,38 @@ class AppDensity extends ThemeExtension<AppDensity> {
     radiusDialog: 16,
   );
 
+  /// Windows uses the native caption as the chrome baseline, with one logical
+  /// point more text and glyph size than the compact pointer profile.
+  static const windows = AppDensity(
+    profile: AppDensityProfile.windows,
+    space1: 2,
+    space2: 4,
+    space3: 6,
+    space4: 8,
+    space5: 13,
+    space6: 17,
+    space7: 21,
+    iconSm: 16,
+    iconMd: 19,
+    iconLg: 23,
+    iconDefault: 21,
+    controlHeight: 36,
+    listGap: 8,
+    pagePadding: EdgeInsets.all(21),
+    cardPadding: EdgeInsets.all(15),
+    dialogPadding: EdgeInsets.fromLTRB(21, 19, 21, 17),
+    inputPadding: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+    listTilePadding: EdgeInsets.symmetric(horizontal: 13),
+    dialogSm: 416,
+    dialogMd: 500,
+    dialogLg: 624,
+    dialogXl: 896,
+    radiusSm: 6,
+    radiusMd: 10,
+    radiusLg: 12,
+    radiusDialog: 16,
+  );
+
   /// Touch (Android/iOS) proportions: glyphs slightly smaller than R6a, hit
   /// targets unchanged.
   static const touch = AppDensity(
@@ -114,9 +147,8 @@ class AppDensity extends ThemeExtension<AppDensity> {
     TargetPlatform.android ||
     TargetPlatform.iOS ||
     TargetPlatform.fuchsia => touch,
-    TargetPlatform.windows ||
-    TargetPlatform.linux ||
-    TargetPlatform.macOS => compact,
+    TargetPlatform.windows => kIsWeb ? compact : windows,
+    TargetPlatform.linux || TargetPlatform.macOS => compact,
   };
 
   /// The density installed by [buildAppTheme], or the platform default when a
@@ -157,7 +189,17 @@ class AppDensity extends ThemeExtension<AppDensity> {
   final double radiusLg;
   final double radiusDialog;
 
-  bool get isCompact => profile == AppDensityProfile.compact;
+  bool get isCompact => profile != AppDensityProfile.touch;
+
+  /// One-point Windows adjustment for explicit chrome styles. User text
+  /// scaling and terminal/framebuffer geometry are applied separately.
+  double textSize(double base) =>
+      base + (profile == AppDensityProfile.windows ? 1 : 0);
+  double glyphSize(double base) =>
+      base + (profile == AppDensityProfile.windows ? 1 : 0);
+  double get menuItemHeight =>
+      profile == AppDensityProfile.windows ? 38 : (isCompact ? 36 : 48);
+  double get menuIconSize => glyphSize(isCompact ? 16 : 18);
 
   /// A dialog body width that never exceeds the available screen width minus
   /// the dialog inset, so narrow windows and phones do not overflow.
@@ -167,7 +209,8 @@ class AppDensity extends ThemeExtension<AppDensity> {
   }
 
   /// Multiplier applied to R6a fixed dialog/page widths.
-  double get widthFactor => isCompact ? 0.9 : 1.0;
+  double get widthFactor =>
+      profile == AppDensityProfile.windows ? 0.94 : (isCompact ? 0.9 : 1.0);
 
   /// Horizontal inset Material dialogs keep from the window edge.
   double get dialogInset => isCompact ? 24 : 16;
@@ -178,7 +221,7 @@ class AppDensity extends ThemeExtension<AppDensity> {
   TextTheme applyTextSizes(TextTheme base) {
     final sizes = isCompact ? _compactSizes : _touchSizes;
     TextStyle? sized(TextStyle? style, double size, [double? height]) =>
-        style?.copyWith(fontSize: size, height: height);
+        style?.copyWith(fontSize: textSize(size), height: height);
     // Compact desktop tightens the airy M3 1.43–1.5 body/title line boxes to
     // ~1.38–1.4 (still >= 1.35 for CJK/Cyrillic). Touch keeps M3 ratios.
     double? tight(double ratio) => isCompact ? ratio : null;
@@ -214,7 +257,11 @@ class AppDensity extends ThemeExtension<AppDensity> {
   @override
   AppDensity copyWith({AppDensityProfile? profile}) {
     if (profile == null || profile == this.profile) return this;
-    return profile == AppDensityProfile.compact ? compact : touch;
+    return switch (profile) {
+      AppDensityProfile.compact => compact,
+      AppDensityProfile.windows => windows,
+      AppDensityProfile.touch => touch,
+    };
   }
 
   @override
