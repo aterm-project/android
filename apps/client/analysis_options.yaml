@@ -1,0 +1,19 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - lib/**/*.g.dart
+    - build/**
+    - web/**
+    - android/**
+    - ios/**
+    - windows/**
+    - linux/**
+
+linter:
+  rules:
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    require_trailing_commas: true
+
