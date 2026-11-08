@@ -1,0 +1,64 @@
+name: aterm_client
+description: Atermius self-hosted encrypted SSH workspace client.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.41.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
+  flutter_riverpod: ^3.4.3
+  go_router: ^18.0.1
+  http: ^1.6.0
+  crypto: ^3.0.7
+  # Pinned to the version already locked transitively; used only for
+  # bounded inflate + CRC32 in the OpenSSH bundle (Termius transfer).
+  archive: 4.3.0
+  ffi: ^2.1.4
+  win32: 5.15.0
+  pointycastle: ^4.0.0
+  uuid: ^4.5.2
+  path: ^1.9.1
+  sodium: ^4.1.1+1
+  cryptography: ^2.9.0
+  drift: ^2.35.0
+  drift_flutter: ^0.3.1
+  sqlite3_flutter_libs: ^0.6.0
+  path_provider: ^2.1.5
+  flutter_secure_storage: ^10.0.0
+  flutter_secure_storage_platform_interface: ^2.1.1
+  xterm: ^4.0.0
+  dartssh2: ^4.1.0
+  web_socket_channel: ^3.0.3
+  file_picker: ^10.3.10
+  intl: ^0.20.2
+  web: ^1.1.1
+  yaml: ^3.1.4
+  flutter_pty: ^0.4.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  stream_channel: ^2.1.4
+  drift_dev: ^2.35.0
+  build_runner: ^2.11.1
+
+dependency_overrides:
+  drift:
+    path: ../../packages/drift
+  sqlite3:
+    path: ../../packages/sqlite3
+  xterm:
+    path: ../../packages/xterm
+
+flutter:
+  generate: true
+  uses-material-design: true

@@ -1,0 +1,51 @@
+{
+  "vector_version": 1,
+  "purpose": "Deterministic Atermius record envelope v1 interoperability fixture. All keys and record data are synthetic public test material; never reuse these keys.",
+  "format": "atermius-sync-record-envelope-v1",
+  "context": {
+    "server_space_id": "10000000-0000-4000-8000-000000000001",
+    "vault_id": "20000000-0000-4000-8000-000000000002",
+    "device_id": "60000000-0000-4000-8000-000000000006",
+    "record_id": "30000000-0000-4000-8000-000000000003",
+    "revision_id": "40000000-0000-4000-8000-000000000004",
+    "op_id": "50000000-0000-4000-8000-000000000005"
+  },
+  "test_only": {
+    "vault_key_base64url": "QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl8",
+    "signing_seed_base64url": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+    "signing_public_key_base64url": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+    "kdf_salt_base64url": "ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8",
+    "nonce_base64url": "YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3"
+  },
+  "plaintext_jcs_utf8": "{\"host\":\"sync.example.test\",\"id\":\"30000000-0000-4000-8000-000000000003\",\"name\":\"Fixture host\",\"port\":22,\"type\":\"host\"}",
+  "record_hkdf_info_jcs_utf8": "[\"atermius\",\"record\",1,\"20000000-0000-4000-8000-000000000002\",\"30000000-0000-4000-8000-000000000003\",\"40000000-0000-4000-8000-000000000004\"]",
+  "record_key_hex": "23583e87005d41b11efd42b9b97e2bde812bf7e1d8b85c8ef582c3c3f6db2726",
+  "header_jcs_utf8": "{\"base_revision_id\":null,\"crypto_suite\":\"atermius-vault-v1\",\"device_id\":\"60000000-0000-4000-8000-000000000006\",\"device_seq\":\"1\",\"kdf_salt\":\"ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8\",\"key_epoch\":\"1\",\"membership_version\":\"1\",\"op_id\":\"50000000-0000-4000-8000-000000000005\",\"operation\":\"create\",\"record_id\":\"30000000-0000-4000-8000-000000000003\",\"record_schema\":1,\"revision_id\":\"40000000-0000-4000-8000-000000000004\",\"server_space_id\":\"10000000-0000-4000-8000-000000000001\",\"vault_id\":\"20000000-0000-4000-8000-000000000002\",\"wire_version\":1}",
+  "signed_payload_jcs_utf8": "{\"ciphertext\":\"NWPShDYbzHssvZqN8Url1mXvOVjR1qbJiljth4-tA2iVIcinr9q2Nk7OUBS7LmCnRvZcw97pelPsP6Hv5MDK-JlPYCl21ibuChwfPYqjTD2bVWtbLmLWF0eRLt6Ahq-TYhGnB1hR2taJ3_SE4lU5YJdPcdLxahPmfUnAR97jjobbiggxBfc\",\"header\":{\"base_revision_id\":null,\"crypto_suite\":\"atermius-vault-v1\",\"device_id\":\"60000000-0000-4000-8000-000000000006\",\"device_seq\":\"1\",\"kdf_salt\":\"ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8\",\"key_epoch\":\"1\",\"membership_version\":\"1\",\"op_id\":\"50000000-0000-4000-8000-000000000005\",\"operation\":\"create\",\"record_id\":\"30000000-0000-4000-8000-000000000003\",\"record_schema\":1,\"revision_id\":\"40000000-0000-4000-8000-000000000004\",\"server_space_id\":\"10000000-0000-4000-8000-000000000001\",\"vault_id\":\"20000000-0000-4000-8000-000000000002\",\"wire_version\":1},\"nonce\":\"YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3\"}",
+  "envelope_jcs_utf8": "{\"ciphertext\":\"NWPShDYbzHssvZqN8Url1mXvOVjR1qbJiljth4-tA2iVIcinr9q2Nk7OUBS7LmCnRvZcw97pelPsP6Hv5MDK-JlPYCl21ibuChwfPYqjTD2bVWtbLmLWF0eRLt6Ahq-TYhGnB1hR2taJ3_SE4lU5YJdPcdLxahPmfUnAR97jjobbiggxBfc\",\"header\":{\"base_revision_id\":null,\"crypto_suite\":\"atermius-vault-v1\",\"device_id\":\"60000000-0000-4000-8000-000000000006\",\"device_seq\":\"1\",\"kdf_salt\":\"ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8\",\"key_epoch\":\"1\",\"membership_version\":\"1\",\"op_id\":\"50000000-0000-4000-8000-000000000005\",\"operation\":\"create\",\"record_id\":\"30000000-0000-4000-8000-000000000003\",\"record_schema\":1,\"revision_id\":\"40000000-0000-4000-8000-000000000004\",\"server_space_id\":\"10000000-0000-4000-8000-000000000001\",\"vault_id\":\"20000000-0000-4000-8000-000000000002\",\"wire_version\":1},\"nonce\":\"YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3\",\"signature\":\"yFwN0v26hE2VWfc1aKSQCMm8ReWwn4ZjmInQ1ZvKLXQHHzy6vJHs6Gk3OhzOp5clF2Ad8Mg0iCJeBlM257ayAg\"}",
+  "envelope_jcs_sha256": "5f1695eb1e277f7adc4ca5be60df909a0f2be0ba0769f98314eeaafc61ced3d1",
+  "ciphertext_sha256": "328bb540f361a3d78b8f623c9f5ce5e9cc2b06f8b8bdf0fc2f6296a66536311b",
+  "envelope": {
+    "header": {
+      "wire_version": 1,
+      "server_space_id": "10000000-0000-4000-8000-000000000001",
+      "vault_id": "20000000-0000-4000-8000-000000000002",
+      "record_id": "30000000-0000-4000-8000-000000000003",
+      "revision_id": "40000000-0000-4000-8000-000000000004",
+      "base_revision_id": null,
+      "op_id": "50000000-0000-4000-8000-000000000005",
+      "device_id": "60000000-0000-4000-8000-000000000006",
+      "device_seq": "1",
+      "key_epoch": "1",
+      "membership_version": "1",
+      "record_schema": 1,
+      "operation": "create",
+      "crypto_suite": "atermius-vault-v1",
+      "kdf_salt": "ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8"
+    },
+    "nonce": "YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3",
+    "ciphertext": "NWPShDYbzHssvZqN8Url1mXvOVjR1qbJiljth4-tA2iVIcinr9q2Nk7OUBS7LmCnRvZcw97pelPsP6Hv5MDK-JlPYCl21ibuChwfPYqjTD2bVWtbLmLWF0eRLt6Ahq-TYhGnB1hR2taJ3_SE4lU5YJdPcdLxahPmfUnAR97jjobbiggxBfc",
+    "signature": "yFwN0v26hE2VWfc1aKSQCMm8ReWwn4ZjmInQ1ZvKLXQHHzy6vJHs6Gk3OhzOp5clF2Ad8Mg0iCJeBlM257ayAg"
+  },
+  "signed_payload_sha256": "c5c2b751f13d8675c113794fe6a87c52c3cf1f5b39562a879b73c24693cd3e40"
+}

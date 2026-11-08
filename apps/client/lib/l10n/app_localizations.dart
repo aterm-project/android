@@ -1,0 +1,26240 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_zh.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('ja'),
+    Locale('ru'),
+    Locale('zh'),
+  ];
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get languageSystemDefault;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageSettingTitle;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the display language for this device. System default follows your device language and uses English when it isn\'t supported.'**
+  String get languageSettingDescription;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'System default · currently {language}'**
+  String languageSettingSystemResolved(Object language);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The language changed for this session but couldn\'t be saved on this device.'**
+  String get languageSettingSaveFailed;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device only. Not synced and not stored in the Vault.'**
+  String get languageSettingDevicePreference;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} terminal tab, {status}, {selection}'**
+  String tabSemanticsLabel(Object title, Object status, Object selection);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'connected'**
+  String get tabSemanticsConnected;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'disconnected'**
+  String get tabSemanticsDisconnected;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'active'**
+  String get tabSemanticsActive;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'inactive'**
+  String get tabSemanticsInactive;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a six-digit code from your authenticator app to continue. This challenge expires {expiresAt}.'**
+  String mfaChallengeTotp(DateTime expiresAt);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a one-time recovery code to continue. This challenge expires {expiresAt}.'**
+  String mfaChallengeRecovery(DateTime expiresAt);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication'**
+  String get propertyAuthentication;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get propertyStatus;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get propertyRoute;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get propertyTags;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Key epoch {epoch} maps to different local keys on this device.'**
+  String keyEpochLocalMismatch(int epoch);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery code copied.'**
+  String get recoveryCodeCopiedFeedback;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the recovery code. Select and copy it manually.'**
+  String get recoveryCodeCopyFailedFeedback;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 session revoked} other{{count} sessions revoked}} for the selected account.'**
+  String sessionsRevokedForSelectedAccount(int count);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Username (optional)'**
+  String get usernameOptional;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH port forwarding cannot run on this platform.'**
+  String get forwardRuntimeUnsupported;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected. You can edit profiles now; connect this Host over SSH to start them.'**
+  String get forwardRuntimeDisconnected;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Running forwards stay on this device and stop automatically when this SSH connection ends.'**
+  String get forwardRuntimeRunningNote;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Running · {active} active · {total} total'**
+  String forwardStatusRunning(int active, int total);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping…'**
+  String get forwardStatusStopping;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get forwardStatusStopped;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {error}'**
+  String forwardStatusFailed(Object error);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'unknown error'**
+  String get forwardStatusUnknownError;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Other devices on your networks that can reach {bind} will be able to connect to {destination} through your SSH login.'**
+  String forwardExposureLocal(Object bind, Object destination);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Other devices that can reach {bind} will be able to use an unauthenticated SOCKS proxy through your SSH login.'**
+  String forwardExposureDynamic(Object bind);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections arriving at the SSH server will be relayed by this device to {destination}.'**
+  String forwardExposureRemoteLoopback(Object destination);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections arriving at the SSH server will be relayed by this device to {destination}, and the server may accept them from other machines.'**
+  String forwardExposureRemotePublic(Object destination);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server rejected a listener on {endpoint}. The port may be in use on the server, or AllowTcpForwarding/PermitListen may forbid it.'**
+  String forwardRemoteListenerRejected(Object endpoint);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'This device could not connect to {endpoint}.'**
+  String forwardLocalDestinationUnreachable(Object endpoint);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get keybarMore;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get keybarLess;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attached file owner.'**
+  String get invalidAttachedFileOwner;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Unexpected owner field.'**
+  String get unexpectedWindowCombinationOwnerField;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The file session\'s SSH owner isn\'t included in the window set.'**
+  String get fileSessionSshOwnerMissingFromWindowSet;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'connected'**
+  String get terminalStateConnected;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'connecting'**
+  String get terminalStateConnecting;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'reconnecting'**
+  String get terminalStateReconnecting;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'disconnected'**
+  String get terminalStateDisconnected;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'closed'**
+  String get terminalStateClosed;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'ended'**
+  String get terminalStateEnded;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'failed'**
+  String get terminalStateFailed;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH password'**
+  String get sshPasswordLabel;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Password (optional)'**
+  String get passwordOptionalLabel;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Host “{name}”'**
+  String quotedHostName(Object name);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Host references} other{{count} Hosts reference}} unavailable Groups. Edit affected Hosts to choose a current Group or explicitly choose No group.'**
+  String hostsReferenceUnavailableGroups(int count);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending'**
+  String pendingCountShort(int count);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get purgeConsentEnabled;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get purgeConsentOff;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore deadline status: Unavailable'**
+  String get restoreDeadlineStatusUnavailable;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore deadline status: Passed according to this device clock; the server makes the final decision'**
+  String get restoreDeadlineStatusPassed;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore deadline status: Future, {deadline}'**
+  String restoreDeadlineStatusFuture(DateTime deadline);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent relationship needs repair'**
+  String get groupParentNeedsRepair;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Inside {parent}'**
+  String groupInsideParent(Object parent);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 host} other{{count} hosts}}'**
+  String groupHostCount(int count);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 subgroup} other{{count} subgroups}}'**
+  String groupSubgroupCount(int count);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Default credential unavailable'**
+  String get groupDefaultCredentialUnavailable;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Default credential: {name}'**
+  String groupDefaultCredentialName(Object name);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Password stored encrypted'**
+  String get credentialPasswordStoredEncrypted;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Private key stored encrypted'**
+  String get credentialPrivateKeyStoredEncrypted;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Side by side'**
+  String get splitAxisSideBySide;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Stacked'**
+  String get splitAxisStacked;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Canceled. Remote completion status is unknown; the command was not retried.'**
+  String get execCancelledUnknown;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out waiting for the SSH exec request. Disconnect and reconnect before retrying; remote completion is unknown.'**
+  String get execOpenTimedOut;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out. Remote completion status is unknown; the command was not retried.'**
+  String get execTimedOutUnknown;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Output exceeded the 64 KiB limit. The exec channel was closed; completion status is unknown.'**
+  String get execOutputTruncated;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Bash is unavailable on this target, or its login shell is not POSIX-compatible. No snippet payload was executed.'**
+  String get execBashUnavailable;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to review Host connection settings: {error}'**
+  String unableToReviewHostConnectionSettings(Object error);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted backup completed on server'**
+  String get adminJobBackupCompleted;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted backup failed; check server backup configuration'**
+  String get adminJobBackupFailed;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted backup job interrupted'**
+  String get adminJobBackupInterrupted;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Isolated restore copy prepared; it is not activated'**
+  String get adminJobRestorePrepared;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Isolated restore copy preparation failed; live data is unchanged'**
+  String get adminJobRestoreFailed;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore copy prepared; job status update was interrupted'**
+  String get adminJobRestorePreparedStatusInterrupted;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Isolated restore copy preparation interrupted'**
+  String get adminJobRestoreInterrupted;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance failed; check server health before retrying'**
+  String get adminJobMaintenanceFailed;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance was interrupted; refresh the job list before retrying'**
+  String get adminJobMaintenanceInterrupted;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Result {code}'**
+  String adminJobResultCode(Object code);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password changed. Other sessions were revoked.'**
+  String get masterPasswordChangedSessionsRevoked;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password change confirmed. Other sessions were revoked.'**
+  String get masterPasswordChangeConfirmedSessionsRevoked;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {username} and rotate the Vault key for every remaining active member device? The removed account receives no new key. Existing old copies cannot be erased remotely. Other pending invitation tokens become invalid and must be reissued.'**
+  String confirmRemoveMemberAndRotate(Object username);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel the pending invitation for {username} and rotate the Vault key for every remaining active member device? The removed account receives no new key. Existing old copies cannot be erased remotely. Other pending invitation tokens become invalid and must be reissued.'**
+  String confirmCancelInvitationAndRotate(Object username);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'{consent}.'**
+  String recycleBinPurgeConsentLine(Object consent);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'{consent}. Consent applies to this exact tombstone. When enabled, bounded Maintenance may purge it after its restore deadline and other required checks. Enabling consent does not purge it immediately; offline device copies and exports are not removed.'**
+  String recycleBinPurgeConsentLineOwner(Object consent);
+
+  /// No description provided for @objectDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Object download failed.'**
+  String get objectDownloadFailed;
+
+  /// No description provided for @objectRangeDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Object range download failed.'**
+  String get objectRangeDownloadFailed;
+
+  /// No description provided for @requestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed.'**
+  String get requestFailed;
+
+  /// No description provided for @theServerReturnedAnInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned an invalid response.'**
+  String get theServerReturnedAnInvalidResponse;
+
+  /// No description provided for @consoleExitedCode.
+  ///
+  /// In en, this message translates to:
+  /// **'\n[Console exited: {code}]\n'**
+  String consoleExitedCode(int code);
+
+  /// No description provided for @thisDevicesSecureStorageCouldntDelete.
+  ///
+  /// In en, this message translates to:
+  /// **' This device\'s secure storage couldn\'t delete the old refresh token; the token has been revoked on the server.'**
+  String get thisDevicesSecureStorageCouldntDelete;
+
+  /// No description provided for @someLocalStateCleanupHitAn.
+  ///
+  /// In en, this message translates to:
+  /// **' Some local state cleanup hit an error; the app forced the current session to sign out.'**
+  String get someLocalStateCleanupHitAn;
+
+  /// No description provided for @aVaultRecoveryContextHasNo.
+  ///
+  /// In en, this message translates to:
+  /// **'A Vault recovery context has no valid signed membership version.'**
+  String get aVaultRecoveryContextHasNo;
+
+  /// No description provided for @aCommandSnippetIsAlreadyRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'A command snippet is already running.'**
+  String get aCommandSnippetIsAlreadyRunning;
+
+  /// No description provided for @aDisabledRecoveryAccountReturnedActive.
+  ///
+  /// In en, this message translates to:
+  /// **'A disabled Recovery account returned active recovery material.'**
+  String get aDisabledRecoveryAccountReturnedActive;
+
+  /// No description provided for @aNewRecoveryKeyboxFailedIts.
+  ///
+  /// In en, this message translates to:
+  /// **'A new Recovery keybox failed its local check.'**
+  String get aNewRecoveryKeyboxFailedIts;
+
+  /// No description provided for @aNewDeviceKeyEnvelopeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'A new device key envelope failed its local check.'**
+  String get aNewDeviceKeyEnvelopeFailed;
+
+  /// No description provided for @aPreviousSshExecRequestIs.
+  ///
+  /// In en, this message translates to:
+  /// **'A previous SSH exec request is still pending. Disconnect and reconnect before running another command.'**
+  String get aPreviousSshExecRequestIs;
+
+  /// No description provided for @aRecoveryConfirmationIsAlreadyPending.
+  ///
+  /// In en, this message translates to:
+  /// **'A recovery confirmation is already pending.'**
+  String get aRecoveryConfirmationIsAlreadyPending;
+
+  /// No description provided for @aReferencedSnippetCredentialChangedAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'A referenced Snippet Credential changed after review. Review the full batch again.'**
+  String get aReferencedSnippetCredentialChangedAfter;
+
+  /// No description provided for @aRequiredVaultKeyCouldNot.
+  ///
+  /// In en, this message translates to:
+  /// **'A required Vault key could not be recovered. Check recovery status and try an enrolled device.'**
+  String get aRequiredVaultKeyCouldNot;
+
+  /// No description provided for @aSelectedHostConnectionOrSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'A selected Host, connection, or Snippet changed after review. Review the full batch again.'**
+  String get aSelectedHostConnectionOrSnippet;
+
+  /// No description provided for @accountRecoveredSignInWithThe2.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovered. Sign in with the new master password on this device.'**
+  String get accountRecoveredSignInWithThe2;
+
+  /// No description provided for @accountRecoveryIsBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery is busy.'**
+  String get accountRecoveryIsBusy;
+
+  /// No description provided for @accountRelayPolicyResetToInherit.
+  ///
+  /// In en, this message translates to:
+  /// **'Account relay policy reset to inherit.'**
+  String get accountRelayPolicyResetToInherit;
+
+  /// No description provided for @accountRelayPolicySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Account relay policy saved.'**
+  String get accountRelayPolicySaved;
+
+  /// No description provided for @accountStatusUpdatedToStatusRevokedsessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Account status updated to {status}; {revokedSessions, plural, =1{1 session} other{{revokedSessions} sessions}} revoked.'**
+  String accountStatusUpdatedToStatusRevokedsessions(
+    String status,
+    int revokedSessions,
+  );
+
+  /// No description provided for @anExistingRecoveryKeyboxCouldNot.
+  ///
+  /// In en, this message translates to:
+  /// **'An existing Recovery keybox could not be verified or opened; refusing to rotate away the only recovery copy.'**
+  String get anExistingRecoveryKeyboxCouldNot;
+
+  /// No description provided for @bashExecutionRequiresACancellationHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bash execution requires a cancellation handle.'**
+  String get bashExecutionRequiresACancellationHandle;
+
+  /// No description provided for @batchExecutionIsOnlySupportedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch execution is only supported for structured Bash snippets.'**
+  String get batchExecutionIsOnlySupportedFor;
+
+  /// No description provided for @batchTargetsMustBeDistinctConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch targets must be distinct connected Hosts.'**
+  String get batchTargetsMustBeDistinctConnected;
+
+  /// No description provided for @bucketAccessVerifiedWithHeadbucketThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Bucket access verified with HeadBucket. This check does not verify uploads, multipart operations, restore, or provider-wide interoperability.'**
+  String get bucketAccessVerifiedWithHeadbucketThis;
+
+  /// No description provided for @chooseBetweenTwoAndMaxterminaltabsConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose between two and {maxTerminalTabs} connected Hosts.'**
+  String chooseBetweenTwoAndMaxterminaltabsConnected(int maxTerminalTabs);
+
+  /// No description provided for @commandExecutionIsUnavailableNoCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Command execution is unavailable. No command was sent.'**
+  String get commandExecutionIsUnavailableNoCommand;
+
+  /// No description provided for @conflictingSignedRecoveryKeyboxesExistFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflicting signed Recovery keyboxes exist for a Vault epoch.'**
+  String get conflictingSignedRecoveryKeyboxesExistFor;
+
+  /// No description provided for @connectThisTerminalBeforeEnablingShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect this terminal before enabling shell integration.'**
+  String get connectThisTerminalBeforeEnablingShell;
+
+  /// No description provided for @connectToTheServerBeforeChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the server before checking backup bucket access.'**
+  String get connectToTheServerBeforeChecking;
+
+  /// No description provided for @theConsoleOutputStreamClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'The console output stream closed.'**
+  String get theConsoleOutputStreamClosed;
+
+  /// No description provided for @couldNotDisableBackgroundSyncNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not disable background sync notifications.'**
+  String get couldNotDisableBackgroundSyncNotifications;
+
+  /// No description provided for @couldNotEnableBackgroundSyncNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not enable background sync notifications.'**
+  String get couldNotEnableBackgroundSyncNotifications;
+
+  /// No description provided for @couldNotPersistTheMobilePush.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not persist the mobile push opt-out.'**
+  String get couldNotPersistTheMobilePush;
+
+  /// No description provided for @couldNotRemoveThisDevicesPush.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove this device’s push endpoint.'**
+  String get couldNotRemoveThisDevicesPush;
+
+  /// No description provided for @credentialReferenceNameIsMissingOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential reference {name} is missing or is not a password Credential'**
+  String credentialReferenceNameIsMissingOr(String name);
+
+  /// No description provided for @currentAccountSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Current account session expired.'**
+  String get currentAccountSessionExpired;
+
+  /// No description provided for @enterTheAccountName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the account name.'**
+  String get enterTheAccountName;
+
+  /// No description provided for @groupRelayPolicyResetToInherit.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Relay policy reset to inherit.'**
+  String get groupRelayPolicyResetToInherit;
+
+  /// No description provided for @groupRelayPolicySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Relay policy saved.'**
+  String get groupRelayPolicySaved;
+
+  /// No description provided for @groupDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Group default'**
+  String get groupDefault;
+
+  /// No description provided for @groupDefaultIsUnavailableChooseA.
+  ///
+  /// In en, this message translates to:
+  /// **'Group default is unavailable. Choose a Host override or repair the Group default.'**
+  String get groupDefaultIsUnavailableChooseA;
+
+  /// No description provided for @groupMembershipSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Group membership saved.'**
+  String get groupMembershipSaved;
+
+  /// No description provided for @hostChangedRepeatedlyWhileSavingReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Host changed repeatedly while saving; reopen and retry.'**
+  String get hostChangedRepeatedlyWhileSavingReopen;
+
+  /// No description provided for @hostIdentityChangedWhileTheEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Host identity changed while the editor was open.'**
+  String get hostIdentityChangedWhileTheEditor;
+
+  /// No description provided for @hostOverrideIsUnavailableChooseInherit.
+  ///
+  /// In en, this message translates to:
+  /// **'Host override is unavailable. Choose Inherit from Group or another credential.'**
+  String get hostOverrideIsUnavailableChooseInherit;
+
+  /// No description provided for @hostOverrideIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Host override: {identity}'**
+  String hostOverrideIdentity(String identity);
+
+  /// No description provided for @theHostsTagsFieldWasAlso.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host\'s \"Tags\" field was also changed during editing. Reopen and review it, then try again.'**
+  String get theHostsTagsFieldWasAlso;
+
+  /// No description provided for @theHostsLabelFieldWasAlso.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host\'s \"{label}\" field was also changed during editing. Reopen and review it, then try again.'**
+  String theHostsLabelFieldWasAlso(String label);
+
+  /// No description provided for @inheritedFromValuevalueIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Inherited from {valueValue}: {identity}'**
+  String inheritedFromValuevalueIdentity(String valueValue, String identity);
+
+  /// No description provided for @instanceAdminAccessIsRequiredTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance admin access is required to check backup bucket access.'**
+  String get instanceAdminAccessIsRequiredTo;
+
+  /// No description provided for @invalidAdminVaultPaginationResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid admin Vault pagination response.'**
+  String get invalidAdminVaultPaginationResponse;
+
+  /// No description provided for @invalidAdminAccountInvitationPaginationResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid admin account invitation pagination response.'**
+  String get invalidAdminAccountInvitationPaginationResponse;
+
+  /// No description provided for @invalidAdminAccountPaginationResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid admin account pagination response.'**
+  String get invalidAdminAccountPaginationResponse;
+
+  /// No description provided for @invalidAdminAccountSessionsPaginationResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid admin account sessions pagination response.'**
+  String get invalidAdminAccountSessionsPaginationResponse;
+
+  /// No description provided for @invalidAdminMaintenancePaginationResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid admin maintenance pagination response.'**
+  String get invalidAdminMaintenancePaginationResponse;
+
+  /// No description provided for @invalidMobilePushToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid mobile push token.'**
+  String get invalidMobilePushToken;
+
+  /// No description provided for @invalidRestoreJobReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid restore job receipt.'**
+  String get invalidRestoreJobReceipt;
+
+  /// No description provided for @invalidRestoreSourcePageResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid restore source page response.'**
+  String get invalidRestoreSourcePageResponse;
+
+  /// No description provided for @invitationCreatedForUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation created for {username}.'**
+  String invitationCreatedForUsername(String username);
+
+  /// No description provided for @invitationRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation revoked.'**
+  String get invitationRevoked;
+
+  /// No description provided for @jumpHostCredentialForHostnameChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump Host Credential for {hostName} changed before dispatch. The remaining batch was stopped.'**
+  String jumpHostCredentialForHostnameChanged(String hostName);
+
+  /// No description provided for @jumpHostRoutingForHostnameChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump Host routing for {hostName} changed before dispatch. Review the batch again.'**
+  String jumpHostRoutingForHostnameChanged(String hostName);
+
+  /// No description provided for @couldntResolveTheSshCredentialFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t resolve the SSH credential for Jump Host {name}: {connectionError}'**
+  String couldntResolveTheSshCredentialFor(String name, String connectionError);
+
+  /// No description provided for @theJumpHostMustUseThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The Jump Host must use the SSH protocol.'**
+  String get theJumpHostMustUseThe;
+
+  /// No description provided for @theJumpHostRouteChangedWhile.
+  ///
+  /// In en, this message translates to:
+  /// **'The Jump Host route changed while preparing the connection. Reconnect.'**
+  String get theJumpHostRouteChangedWhile;
+
+  /// No description provided for @theJumpHostRouteOrCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'The Jump Host route or credential changed while preparing the connection. Reconnect.'**
+  String get theJumpHostRouteOrCredential;
+
+  /// No description provided for @theJumpHostChainCantForm.
+  ///
+  /// In en, this message translates to:
+  /// **'The Jump Host chain can\'t form a cycle.'**
+  String get theJumpHostChainCantForm;
+
+  /// No description provided for @theJumpHostChainContainsA.
+  ///
+  /// In en, this message translates to:
+  /// **'The Jump Host chain contains a host that no longer exists; edit and repair this reference.'**
+  String get theJumpHostChainContainsA;
+
+  /// No description provided for @theJumpHostChainSupportsUp.
+  ///
+  /// In en, this message translates to:
+  /// **'The Jump Host chain supports up to {maxJumpHostHops} hops.'**
+  String theJumpHostChainSupportsUp(int maxJumpHostHops);
+
+  /// No description provided for @loadAConsistentAccountAndInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'Load a consistent account and instance policy before resetting.'**
+  String get loadAConsistentAccountAndInstance;
+
+  /// No description provided for @loadAConsistentAccountAndInstance2.
+  ///
+  /// In en, this message translates to:
+  /// **'Load a consistent account and instance policy before saving.'**
+  String get loadAConsistentAccountAndInstance2;
+
+  /// No description provided for @loadTheLatestSshRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Load the latest SSH relay policy before saving.'**
+  String get loadTheLatestSshRelayPolicy;
+
+  /// No description provided for @theMfaSignInResponseDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The MFA sign-in response doesn\'t match the current account or device.'**
+  String get theMfaSignInResponseDoesnt;
+
+  /// No description provided for @mfaSettingsAreBeingProcessed.
+  ///
+  /// In en, this message translates to:
+  /// **'MFA settings are being processed.'**
+  String get mfaSettingsAreBeingProcessed;
+
+  /// No description provided for @mfaVerificationFailedTheCodeIs.
+  ///
+  /// In en, this message translates to:
+  /// **'MFA verification failed: the code is invalid or already used, or the sign-in challenge expired. Sign in again and enter a new code.'**
+  String get mfaVerificationFailedTheCodeIs;
+
+  /// No description provided for @mfaVerifiedAndUnlockedLocallyThe.
+  ///
+  /// In en, this message translates to:
+  /// **'MFA verified and unlocked locally; the server still stores only encrypted records and key envelopes.'**
+  String get mfaVerifiedAndUnlockedLocallyThe;
+
+  /// No description provided for @mustBeBetween0And1000000.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be between 0 and 1000000.'**
+  String get mustBeBetween0And1000000;
+
+  /// No description provided for @mustNotBeNegative.
+  ///
+  /// In en, this message translates to:
+  /// **'Must not be negative.'**
+  String get mustNotBeNegative;
+
+  /// No description provided for @noS3BackupBucketIsConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No S3 backup bucket is configured on the server.'**
+  String get noS3BackupBucketIsConfigured;
+
+  /// No description provided for @noSshCredentialIsConfiguredChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'No SSH credential is configured. Choose a Host override or set a Group default.'**
+  String get noSshCredentialIsConfiguredChoose;
+
+  /// No description provided for @noAccountRecoveryIsAwaitingConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'No account recovery is awaiting confirmation.'**
+  String get noAccountRecoveryIsAwaitingConfirmation;
+
+  /// No description provided for @noAuthenticatedSession.
+  ///
+  /// In en, this message translates to:
+  /// **'No authenticated session.'**
+  String get noAuthenticatedSession;
+
+  /// No description provided for @noEffectiveSshCredentialIsSet.
+  ///
+  /// In en, this message translates to:
+  /// **'No effective SSH credential is set. Choose a Host override or set a Group default.'**
+  String get noEffectiveSshCredentialIsSet;
+
+  /// No description provided for @notStartedBecauseBatchCancellationWas.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started because batch cancellation was requested during preflight.'**
+  String get notStartedBecauseBatchCancellationWas;
+
+  /// No description provided for @notStartedBecauseBatchCancellationWas2.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started because batch cancellation was requested.'**
+  String get notStartedBecauseBatchCancellationWas2;
+
+  /// No description provided for @notStartedBecauseThePreviousHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started because the previous Host did not complete successfully.'**
+  String get notStartedBecauseThePreviousHost;
+
+  /// No description provided for @notStartedBecauseThePreviousHost2.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started because the previous Host failed validation or execution.'**
+  String get notStartedBecauseThePreviousHost2;
+
+  /// No description provided for @offlineKnownhostApprovalIsLimitedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline KnownHost approval is limited to a first-seen endpoint with no local trust or revocation history.'**
+  String get offlineKnownhostApprovalIsLimitedTo;
+
+  /// No description provided for @offlineKnownhostQueueDidNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline KnownHost queue did not match the explicitly reviewed SSH key.'**
+  String get offlineKnownhostQueueDidNotMatch;
+
+  /// No description provided for @prometheusScrapeCredentialRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Prometheus scrape credential revoked.'**
+  String get prometheusScrapeCredentialRevoked;
+
+  /// No description provided for @rdpCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'RDP certificate'**
+  String get rdpCertificate;
+
+  /// No description provided for @recoveryCouldNotBeStartedCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery could not be started. Check the account name and code.'**
+  String get recoveryCouldNotBeStartedCheck;
+
+  /// No description provided for @recoveryDescriptorHashIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery descriptor hash is invalid.'**
+  String get recoveryDescriptorHashIsInvalid;
+
+  /// No description provided for @recoveryDescriptorPublicKeysDoNot.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery descriptor public keys do not match the wrapped identity.'**
+  String get recoveryDescriptorPublicKeysDoNot;
+
+  /// No description provided for @recoveryIdentityEnvelopeIsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery identity envelope is missing.'**
+  String get recoveryIdentityEnvelopeIsMissing;
+
+  /// No description provided for @referencedCredentialChangedAfterPreviewReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Referenced Credential changed after preview. Review the command and try again.'**
+  String get referencedCredentialChangedAfterPreviewReview;
+
+  /// No description provided for @reloadTheLatestAccountAndInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload the latest account and instance policies before resetting.'**
+  String get reloadTheLatestAccountAndInstance;
+
+  /// No description provided for @reloadTheLatestAccountAndInstance2.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload the latest account and instance policies before saving.'**
+  String get reloadTheLatestAccountAndInstance2;
+
+  /// No description provided for @reloadTheLatestGroupAndInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload the latest group and instance policies before resetting.'**
+  String get reloadTheLatestGroupAndInstance;
+
+  /// No description provided for @reloadTheLatestGroupAndInstance2.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload the latest group and instance policies before saving.'**
+  String get reloadTheLatestGroupAndInstance2;
+
+  /// No description provided for @reloadTheLatestPolicyAfterThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload the latest policy after the revision conflict before retrying.'**
+  String get reloadTheLatestPolicyAfterThe;
+
+  /// No description provided for @restoreIsEncryptedAndQueuedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore is encrypted and queued on this device; sync status will retry.'**
+  String get restoreIsEncryptedAndQueuedOn;
+
+  /// No description provided for @restoreIsEncryptedLocallyAndWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore is encrypted locally and waiting to sync.'**
+  String get restoreIsEncryptedLocallyAndWaiting;
+
+  /// No description provided for @restoreIsSafelyQueuedOnThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore is safely queued on this device and will retry when the server is reachable.'**
+  String get restoreIsSafelyQueuedOnThis;
+
+  /// No description provided for @restoreStageResponseDidNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore stage response did not match.'**
+  String get restoreStageResponseDidNotMatch;
+
+  /// No description provided for @retryThePendingAccountRecoveryCompletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry the pending account recovery completion before signing in.'**
+  String get retryThePendingAccountRecoveryCompletion;
+
+  /// No description provided for @theSftpDocumentBelongsToA.
+  ///
+  /// In en, this message translates to:
+  /// **'The SFTP document belongs to a different SSH session.'**
+  String get theSftpDocumentBelongsToA;
+
+  /// No description provided for @theSftpServerVersionDoesntSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'The SFTP server version doesn\'t support safe file uploads.'**
+  String get theSftpServerVersionDoesntSupport;
+
+  /// No description provided for @theSftpServerVersionIsBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'The SFTP server version is below 3 and doesn\'t support safe text editing.'**
+  String get theSftpServerVersionIsBelow;
+
+  /// No description provided for @sshCredentialForHostnameChangedBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH Credential for {hostName} changed before dispatch. The remaining batch was stopped.'**
+  String sshCredentialForHostnameChangedBefore(String hostName);
+
+  /// No description provided for @sshConnectionOrHostChangedAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH connection or Host changed after preview. Review the target and try again.'**
+  String get sshConnectionOrHostChangedAfter;
+
+  /// No description provided for @sshExecFailedAfterDispatchRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH exec failed after dispatch. Remote completion status is unknown; the command was not retried.'**
+  String get sshExecFailedAfterDispatchRemote;
+
+  /// No description provided for @sshHostKeyApprovalProofAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host-key approval proof account or Vault scope changed.'**
+  String get sshHostKeyApprovalProofAccount;
+
+  /// No description provided for @sshHostKeyTestDecisionBecame.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host-key test decision became stale.'**
+  String get sshHostKeyTestDecisionBecame;
+
+  /// No description provided for @sshHostKeyTrustChangedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host-key trust changed for {hostName}. Reconnect and review the batch again.'**
+  String sshHostKeyTrustChangedFor(String hostName);
+
+  /// No description provided for @sshHostKeyVerificationEvidenceIs.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host-key verification evidence is missing for {hostName}. Reconnect before running a batch.'**
+  String sshHostKeyVerificationEvidenceIs(String hostName);
+
+  /// No description provided for @sshRelayPolicySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH relay policy saved.'**
+  String get sshRelayPolicySaved;
+
+  /// No description provided for @sshHostKeyTrustWasConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host key trust was confirmed by sync in the current Vault.'**
+  String get sshHostKeyTrustWasConfirmed;
+
+  /// No description provided for @sshHostKeyTrustWasRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host key trust was revoked and saved encrypted to the current Vault.'**
+  String get sshHostKeyTrustWasRevoked;
+
+  /// No description provided for @theSshHostKeyApprovalWas.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH host key approval was queued encrypted; the current connection stopped. Connect after the Vault sync confirms it.'**
+  String get theSshHostKeyApprovalWas;
+
+  /// No description provided for @theSshHostOrJumpHost.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH host or Jump Host route changed. Reconnect and try again.'**
+  String get theSshHostOrJumpHost;
+
+  /// No description provided for @theSshHostSettingsChangedReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH host settings changed; reconnect the current workspace pane.'**
+  String get theSshHostSettingsChangedReconnect;
+
+  /// No description provided for @sshSessionClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH session closed'**
+  String get sshSessionClosed;
+
+  /// No description provided for @sshCredentials2.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH credentials'**
+  String get sshCredentials2;
+
+  /// No description provided for @theSshCredentialWasSavedEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH credential was saved encrypted and added to the local sync queue; refreshing sync status failed and will be retried later.'**
+  String get theSshCredentialWasSavedEncrypted;
+
+  /// No description provided for @sshCredentialSavedEncryptedPlaintextIs.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH credential saved encrypted; plaintext is kept only in the unlocked session.'**
+  String get sshCredentialSavedEncryptedPlaintextIs;
+
+  /// No description provided for @theSshCredentialChangedReconnectThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH credential changed; reconnect the current workspace pane.'**
+  String get theSshCredentialChangedReconnectThe;
+
+  /// No description provided for @theSshCredentialOrHostSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH credential or host settings changed; reconnect the current workspace pane.'**
+  String get theSshCredentialOrHostSettings;
+
+  /// No description provided for @sshStoppedTheFirstHostKey.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH stopped: the first host key approval was queued encrypted. Reconnect after the Vault sync confirms it.'**
+  String get sshStoppedTheFirstHostKey;
+
+  /// No description provided for @sshConnectedToEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH connected to {endpoint}.'**
+  String sshConnectedToEndpoint(String endpoint);
+
+  /// No description provided for @sshSignInDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH sign-in details'**
+  String get sshSignInDetails;
+
+  /// No description provided for @theSshTerminalIsClosedSo.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH terminal is closed, so input control can\'t be granted.'**
+  String get theSshTerminalIsClosedSo;
+
+  /// No description provided for @theSshConnectionClosedReconnectThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH connection closed; reconnect the current workspace pane.'**
+  String get theSshConnectionClosedReconnectThe;
+
+  /// No description provided for @selectAVaultBeforeResolvingThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a Vault before resolving this Credential.'**
+  String get selectAVaultBeforeResolvingThis;
+
+  /// No description provided for @selectAVaultBeforeResolvingThis2.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a Vault before resolving this Host.'**
+  String get selectAVaultBeforeResolvingThis2;
+
+  /// No description provided for @selectAnActiveMemberOfThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an active member of this server-managed group.'**
+  String get selectAnActiveMemberOfThis;
+
+  /// No description provided for @selectedSessionRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected session revoked.'**
+  String get selectedSessionRevoked;
+
+  /// No description provided for @selectedSessionWasAlreadyRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected session was already revoked.'**
+  String get selectedSessionWasAlreadyRevoked;
+
+  /// No description provided for @serverActivationWasSuperseded.
+  ///
+  /// In en, this message translates to:
+  /// **'Server activation was superseded.'**
+  String get serverActivationWasSuperseded;
+
+  /// No description provided for @serverCommittedTheRotationButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Server committed the rotation but the new local key state failed verification.'**
+  String get serverCommittedTheRotationButThe;
+
+  /// No description provided for @serverStateAdvancedUnexpectedlyDuringRotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Server state advanced unexpectedly during rotation recovery.'**
+  String get serverStateAdvancedUnexpectedlyDuringRotation;
+
+  /// No description provided for @signOutBeforeStartingFullAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out before starting full account recovery.'**
+  String get signOutBeforeStartingFullAccount;
+
+  /// No description provided for @snippetArgumentsChangedAfterPreviewReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet arguments changed after preview. Review them and try again.'**
+  String get snippetArgumentsChangedAfterPreviewReview;
+
+  /// No description provided for @snippetArgumentsChangedAfterReviewReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet arguments changed after review. Review the full batch again.'**
+  String get snippetArgumentsChangedAfterReviewReview;
+
+  /// No description provided for @snippetDefinitionChangedAfterPreviewReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet definition changed after preview. Review it and try again.'**
+  String get snippetDefinitionChangedAfterPreviewReview;
+
+  /// No description provided for @snippetScriptIsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet script is empty'**
+  String get snippetScriptIsEmpty;
+
+  /// No description provided for @splitWorkspacesRequireExactlyTwoHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Split workspaces require exactly two Hosts.'**
+  String get splitWorkspacesRequireExactlyTwoHosts;
+
+  /// No description provided for @storedNextRecoveryPackageIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored next Recovery package is invalid.'**
+  String get storedNextRecoveryPackageIsInvalid;
+
+  /// No description provided for @storedRecoveryChallengeIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored recovery challenge is invalid.'**
+  String get storedRecoveryChallengeIsInvalid;
+
+  /// No description provided for @storedRecoveryDeviceKeyIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored recovery device key is invalid.'**
+  String get storedRecoveryDeviceKeyIsInvalid;
+
+  /// No description provided for @storedRecoveryDeviceProofIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored recovery device proof is invalid.'**
+  String get storedRecoveryDeviceProofIsInvalid;
+
+  /// No description provided for @storedRecoveryRequestDoesNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored recovery request does not match this server instance.'**
+  String get storedRecoveryRequestDoesNotMatch;
+
+  /// No description provided for @theGroupInheritanceChainIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The Group inheritance chain is unavailable. Choose a valid Group or a Host override.'**
+  String get theGroupInheritanceChainIsUnavailable;
+
+  /// No description provided for @theHostGroupInheritanceChainIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host Group inheritance chain is unavailable. Choose a valid Group or a Host credential override.'**
+  String get theHostGroupInheritanceChainIs;
+
+  /// No description provided for @theHostDidNotReturnA.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host did not return a Bash execution result.'**
+  String get theHostDidNotReturnA;
+
+  /// No description provided for @theSshExecRequestFailedAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH exec request failed after dispatch.'**
+  String get theSshExecRequestFailedAfter;
+
+  /// No description provided for @theAccountNowInheritsTheInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'The account now inherits the instance relay policy.'**
+  String get theAccountNowInheritsTheInstance;
+
+  /// No description provided for @theEffectiveSshCredentialIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The effective SSH credential is unavailable. Choose a valid Host override or repair the Group default.'**
+  String get theEffectiveSshCredentialIsUnavailable;
+
+  /// No description provided for @theEnabledRecoveryIdentityHasAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The enabled Recovery identity has an invalid generation.'**
+  String get theEnabledRecoveryIdentityHasAn;
+
+  /// No description provided for @theEncryptedSshHostKeyApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'The encrypted SSH host-key approval was not durably queued.'**
+  String get theEncryptedSshHostKeyApproval;
+
+  /// No description provided for @theExistingRecoveryDescriptorDoesNot.
+  ///
+  /// In en, this message translates to:
+  /// **'The existing Recovery descriptor does not match its wrapped identity.'**
+  String get theExistingRecoveryDescriptorDoesNot;
+
+  /// No description provided for @theGroupNowInheritsTheInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'The group now inherits the instance Relay policy.'**
+  String get theGroupNowInheritsTheInstance;
+
+  /// No description provided for @theInstanceRelayPolicyChangedWhile.
+  ///
+  /// In en, this message translates to:
+  /// **'The instance Relay policy changed while this group was loading. Reload to get a consistent snapshot.'**
+  String get theInstanceRelayPolicyChangedWhile;
+
+  /// No description provided for @theInstanceRelayPolicyChangedReload.
+  ///
+  /// In en, this message translates to:
+  /// **'The instance Relay policy changed. Reload this group before reviewing effective access.'**
+  String get theInstanceRelayPolicyChangedReload;
+
+  /// No description provided for @theInstancePolicyChangedWhileResetting.
+  ///
+  /// In en, this message translates to:
+  /// **'The instance policy changed while resetting. Reload the latest policies; your draft is preserved.'**
+  String get theInstancePolicyChangedWhileResetting;
+
+  /// No description provided for @theInstancePolicyChangedWhileSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'The instance policy changed while saving. Reload the latest policies; your draft is preserved.'**
+  String get theInstancePolicyChangedWhileSaving;
+
+  /// No description provided for @theInstanceRelayPolicyChangedWhile2.
+  ///
+  /// In en, this message translates to:
+  /// **'The instance relay policy changed while this account policy was loading. Reload to get a consistent snapshot.'**
+  String get theInstanceRelayPolicyChangedWhile2;
+
+  /// No description provided for @theMergedHostRecordIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The merged Host record is invalid.'**
+  String get theMergedHostRecordIsInvalid;
+
+  /// No description provided for @theNewMasterPasswordMustContain.
+  ///
+  /// In en, this message translates to:
+  /// **'The new master password must contain at least 12 characters.'**
+  String get theNewMasterPasswordMustContain;
+
+  /// No description provided for @theNewMasterPasswordsDoNot.
+  ///
+  /// In en, this message translates to:
+  /// **'The new master passwords do not match.'**
+  String get theNewMasterPasswordsDoNot;
+
+  /// No description provided for @theRecoveryChallengeExpiredStartAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'The recovery challenge expired. Start again.'**
+  String get theRecoveryChallengeExpiredStartAgain;
+
+  /// No description provided for @theRecoveryCodeOrServerDescriptor.
+  ///
+  /// In en, this message translates to:
+  /// **'The recovery code or server descriptor is invalid.'**
+  String get theRecoveryCodeOrServerDescriptor;
+
+  /// No description provided for @theRecoveryCompletionReceiptIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The recovery completion receipt is invalid.'**
+  String get theRecoveryCompletionReceiptIsInvalid;
+
+  /// No description provided for @theRecoveryResponseDidNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The recovery response did not match this account.'**
+  String get theRecoveryResponseDidNotMatch;
+
+  /// No description provided for @theRelayPolicyChangedElsewhereReload.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay policy changed elsewhere. Reload the latest settings before retrying.'**
+  String get theRelayPolicyChangedElsewhereReload;
+
+  /// No description provided for @theReviewedSshSessionForHostname.
+  ///
+  /// In en, this message translates to:
+  /// **'The reviewed SSH session for {hostName} changed before dispatch.'**
+  String theReviewedSshSessionForHostname(String hostName);
+
+  /// No description provided for @theServerCouldNotVerifyAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The server could not verify access to the configured S3 backup bucket.'**
+  String get theServerCouldNotVerifyAccess;
+
+  /// No description provided for @theServerDeploymentDoesNotCurrently.
+  ///
+  /// In en, this message translates to:
+  /// **'The server deployment does not currently allow this relay setting. Your edits are still here; review the deployment limits and retry.'**
+  String get theServerDeploymentDoesNotCurrently;
+
+  /// No description provided for @theServerOrAuthenticationStateChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The server or authentication state changed during recovery. Start again.'**
+  String get theServerOrAuthenticationStateChanged;
+
+  /// No description provided for @theServerRestorePeriodHasNot.
+  ///
+  /// In en, this message translates to:
+  /// **'The server restore period has not ended.'**
+  String get theServerRestorePeriodHasNot;
+
+  /// No description provided for @thisSnippetReferencesACredentialThat.
+  ///
+  /// In en, this message translates to:
+  /// **'This Snippet references a Credential that is not currently available. Restore that Credential first.'**
+  String get thisSnippetReferencesACredentialThat;
+
+  /// No description provided for @thisCommandPreviewHasAlreadyBeen.
+  ///
+  /// In en, this message translates to:
+  /// **'This command preview has already been confirmed.'**
+  String get thisCommandPreviewHasAlreadyBeen;
+
+  /// No description provided for @thisRecordTypeCannotBeRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'This record type cannot be restored by this client version.'**
+  String get thisRecordTypeCannotBeRestored;
+
+  /// No description provided for @thisRecoveryCodeBelongsToAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'This recovery code belongs to another server instance.'**
+  String get thisRecoveryCodeBelongsToAnother;
+
+  /// No description provided for @thisWorkspaceReferencesAHostThat.
+  ///
+  /// In en, this message translates to:
+  /// **'This workspace references a Host that is not currently available. Restore the Host first.'**
+  String get thisWorkspaceReferencesAHostThat;
+
+  /// No description provided for @tooManySshHostKeyChecks.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many SSH host-key checks were requested for this route.'**
+  String get tooManySshHostKeyChecks;
+
+  /// No description provided for @unableToLoadTheSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load the SSH relay policy. Check your connection and retry.'**
+  String get unableToLoadTheSshRelay;
+
+  /// No description provided for @unableToSaveTheSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save the SSH relay policy. Check your connection and retry.'**
+  String get unableToSaveTheSshRelay;
+
+  /// No description provided for @vaultChangedWhileSshHostKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while SSH host-key approval was reviewed.'**
+  String get vaultChangedWhileSshHostKey;
+
+  /// No description provided for @vaultChangedWhileSshHostKey2.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while SSH host-key approval was saved.'**
+  String get vaultChangedWhileSshHostKey2;
+
+  /// No description provided for @vaultChangedWhileSshHostKey3.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while SSH host-key approval was syncing.'**
+  String get vaultChangedWhileSshHostKey3;
+
+  /// No description provided for @vaultChangedWhileSshHostKey4.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while SSH host-key revocation was saved.'**
+  String get vaultChangedWhileSshHostKey4;
+
+  /// No description provided for @vaultContainsAnUnsupportedReferenceRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault contains an unsupported reference record type.'**
+  String get vaultContainsAnUnsupportedReferenceRecord;
+
+  /// No description provided for @vaultContainsDuplicateCredentialIdentities.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault contains duplicate Credential identities.'**
+  String get vaultContainsDuplicateCredentialIdentities;
+
+  /// No description provided for @vaultKeysAreBeingCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault keys are being cleared.'**
+  String get vaultKeysAreBeingCleared;
+
+  /// No description provided for @vaultQuotaUpdatedToQuotabytesBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault quota updated to {quotaBytes} bytes.'**
+  String vaultQuotaUpdatedToQuotabytesBytes(int quotaBytes);
+
+  /// No description provided for @vaultReferenceRecordIdentityIsMalformed.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault reference record identity is malformed.'**
+  String get vaultReferenceRecordIdentityIsMalformed;
+
+  /// No description provided for @vaultSyncDidNotConfirmThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault sync did not confirm the reviewed SSH host-key approval.'**
+  String get vaultSyncDidNotConfirmThe;
+
+  /// No description provided for @vaultSyncDidNotConfirmThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault sync did not confirm this SSH key approval. The connection was stopped; sync the Vault and review the key again.'**
+  String get vaultSyncDidNotConfirmThis;
+
+  /// No description provided for @vaultSyncIsUnavailableExistingSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault sync is unavailable. Existing SSH host-key history must be checked online before this connection can continue.'**
+  String get vaultSyncIsUnavailableExistingSsh;
+
+  /// No description provided for @vaultIdHasConflictingDeviceKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} has conflicting device keys for one key epoch.'**
+  String vaultIdHasConflictingDeviceKeys(String id);
+
+  /// No description provided for @vaultIdHasNoKeyEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} has no key envelope for its active key epoch.'**
+  String vaultIdHasNoKeyEnvelope(String id);
+
+  /// No description provided for @vaultIdHasNoKeyEnvelope2.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} has no key envelope for the current device.'**
+  String vaultIdHasNoKeyEnvelope2(String id);
+
+  /// No description provided for @vaultIdKeyEnvelopeEpochDoes.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} key envelope epoch does not match its membership version.'**
+  String vaultIdKeyEnvelopeEpochDoes(String id);
+
+  /// No description provided for @vaultIdKeyEnvelopeRefersTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} key envelope refers to an unknown membership version.'**
+  String vaultIdKeyEnvelopeRefersTo(String id);
+
+  /// No description provided for @vaultIdKeyEnvelopeSignerIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} key envelope signer is not a member at the signed version.'**
+  String vaultIdKeyEnvelopeSignerIs(String id);
+
+  /// No description provided for @vaultIdLatestSignedMembershipEpoch.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} latest signed membership epoch does not match the server descriptor.'**
+  String vaultIdLatestSignedMembershipEpoch(String id);
+
+  /// No description provided for @vaultIdLegacyDisplayNameEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} legacy display name envelope cannot be opened by any available epoch key.'**
+  String vaultIdLegacyDisplayNameEnvelope(String id);
+
+  /// No description provided for @vaultIdMembershipDoesNotInclude.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} membership does not include this account as an active member.'**
+  String vaultIdMembershipDoesNotInclude(String id);
+
+  /// No description provided for @vaultIdSignedDisplayNameEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id} signed display name envelope is invalid.'**
+  String vaultIdSignedDisplayNameEnvelope(String id);
+
+  /// No description provided for @theEpochEpochKeyForVault.
+  ///
+  /// In en, this message translates to:
+  /// **'The epoch {epoch} key for Vault {id} is missing; approval was aborted.'**
+  String theEpochEpochKeyForVault(String id, int epoch);
+
+  /// No description provided for @theCurrentKeyEpochOfVault.
+  ///
+  /// In en, this message translates to:
+  /// **'The current key epoch of Vault {id} isn\'t on this device, so that device can\'t be approved.'**
+  String theCurrentKeyEpochOfVault(String id);
+
+  /// No description provided for @theSigningDeviceForVaultId.
+  ///
+  /// In en, this message translates to:
+  /// **'The signing device for Vault {id} is unknown, so its key envelope can\'t be verified.'**
+  String theSigningDeviceForVaultId(String id);
+
+  /// No description provided for @vaultSubstring.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {substring}'**
+  String vaultSubstring(String substring);
+
+  /// No description provided for @vaultVaultidChangedOwnerWithoutA.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} changed Owner without a transfer signed by the prior Owner.'**
+  String vaultVaultidChangedOwnerWithoutA(String vaultId);
+
+  /// No description provided for @vaultVaultidHasAnOwnershipTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} has an ownership transfer signed by the new owner.'**
+  String vaultVaultidHasAnOwnershipTransfer(String vaultId);
+
+  /// No description provided for @vaultVaultidMembershipHasAnInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} membership has an invalid member.'**
+  String vaultVaultidMembershipHasAnInvalid(String vaultId);
+
+  /// No description provided for @vaultVaultidMembershipHasNoMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} membership has no members.'**
+  String vaultVaultidMembershipHasNoMembers(String vaultId);
+
+  /// No description provided for @vaultVaultidMembershipMustContainExactly.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} membership must contain exactly one active owner.'**
+  String vaultVaultidMembershipMustContainExactly(String vaultId);
+
+  /// No description provided for @vaultVaultidMembershipSignerIsAbsent.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} membership signer is absent from its device directory.'**
+  String vaultVaultidMembershipSignerIsAbsent(String vaultId);
+
+  /// No description provided for @vaultVaultidMembershipWasNotSigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} membership was not signed by its active owner.'**
+  String vaultVaultidMembershipWasNotSigned(String vaultId);
+
+  /// No description provided for @vaultVaultidOwnershipTransferChangedUnrelated.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} ownership transfer changed unrelated membership data.'**
+  String vaultVaultidOwnershipTransferChangedUnrelated(String vaultId);
+
+  /// No description provided for @vaultVaultidOwnershipTransferDoesNot.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} ownership transfer does not follow the signed owner and epoch chain.'**
+  String vaultVaultidOwnershipTransferDoesNot(String vaultId);
+
+  /// No description provided for @vaultVaultidOwnershipTransferMetadataIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} ownership transfer metadata is invalid.'**
+  String vaultVaultidOwnershipTransferMetadataIs(String vaultId);
+
+  /// No description provided for @vaultVaultidOwnershipTransferUnexpectedlyChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId} ownership transfer unexpectedly changed the member set.'**
+  String vaultVaultidOwnershipTransferUnexpectedlyChanged(String vaultId);
+
+  /// No description provided for @theApprovalKeyEnvelopeSignatureFor.
+  ///
+  /// In en, this message translates to:
+  /// **'The approval key envelope signature for Vault {vaultId} is invalid.'**
+  String theApprovalKeyEnvelopeSignatureFor(String vaultId);
+
+  /// No description provided for @theApprovedKeyForVaultVaultid.
+  ///
+  /// In en, this message translates to:
+  /// **'The approved key for Vault {vaultId} couldn\'t be unsealed as the server key.'**
+  String theApprovedKeyForVaultVaultid(String vaultId);
+
+  /// No description provided for @theServerKeyEnvelopeForVault.
+  ///
+  /// In en, this message translates to:
+  /// **'The server key envelope for Vault {vaultId} doesn\'t match the approval file.'**
+  String theServerKeyEnvelopeForVault(String vaultId);
+
+  /// No description provided for @someActiveDevicesInTheVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Some active devices in the Vault don\'t support schema 2 or 1 GiB attachments. Update those devices, or remove active devices that are no longer used from the Vault, then try again.'**
+  String get someActiveDevicesInTheVault;
+
+  /// No description provided for @vaultCreationReturnedSuccessButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault creation returned success, but the server couldn\'t verify the staged data yet; the migration journal is kept.'**
+  String get vaultCreationReturnedSuccessButThe;
+
+  /// No description provided for @theVaultCreationResultCantBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault creation result can\'t be confirmed right now; the migration journal is kept. Resume later.'**
+  String get theVaultCreationResultCantBe;
+
+  /// No description provided for @theVaultDeletionGracePeriodHas.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault deletion grace period has ended; the deletion can\'t be cancelled.'**
+  String get theVaultDeletionGracePeriodHas;
+
+  /// No description provided for @theVaultDeletionScheduleWasCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault deletion schedule was created; the server deadline was updated.'**
+  String get theVaultDeletionScheduleWasCreated;
+
+  /// No description provided for @theVaultDeletionScheduleWasCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault deletion schedule was cancelled and write access restored.'**
+  String get theVaultDeletionScheduleWasCancelled;
+
+  /// No description provided for @theVaultSyncStateIsAbnormal.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault sync state is abnormal, so SSH host keys can\'t be verified safely.'**
+  String get theVaultSyncStateIsAbnormal;
+
+  /// No description provided for @theVaultNameHasntBeenVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault name hasn\'t been verified with its key; creating the member invitation was stopped.'**
+  String get theVaultNameHasntBeenVerified;
+
+  /// No description provided for @theVaultNameHasntBeenVerified2.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault name hasn\'t been verified with its key; the member key rotation was stopped.'**
+  String get theVaultNameHasntBeenVerified2;
+
+  /// No description provided for @theVaultWasSwitchedWhilePreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault was switched while preparing the workspace connection. Reconnect.'**
+  String get theVaultWasSwitchedWhilePreparing;
+
+  /// No description provided for @theVaultKeyStateStillCant.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault key state still can\'t be verified; pending local data is kept.'**
+  String get theVaultKeyStateStillCant;
+
+  /// No description provided for @youCantSwitchVaultsWhileThe.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t switch Vaults while the Vault key is being rotated.'**
+  String get youCantSwitchVaultsWhileThe;
+
+  /// No description provided for @theVaultHasntFinishedFullySyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault hasn\'t finished fully syncing the current version. Sync and try again.'**
+  String get theVaultHasntFinishedFullySyncing;
+
+  /// No description provided for @theVaultWasSwitchedReopenThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault was switched. Reopen the Host and try again.'**
+  String get theVaultWasSwitchedReopenThe;
+
+  /// No description provided for @theVaultWasSwitchedReopenThe2.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault was switched. Reopen the credential and try again.'**
+  String get theVaultWasSwitchedReopenThe2;
+
+  /// No description provided for @theVaultWasSwitchedReopenThe4.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault was switched. Reopen the group and try again.'**
+  String get theVaultWasSwitchedReopenThe4;
+
+  /// No description provided for @theVaultWasSwitchedReopenThe3.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault was switched. Reopen the recycle bin.'**
+  String get theVaultWasSwitchedReopenThe3;
+
+  /// No description provided for @theVaultWasSwitchedReopenThe5.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault was switched. Reopen the snippet and try again.'**
+  String get theVaultWasSwitchedReopenThe5;
+
+  /// No description provided for @theVaultWasSwitchedThePreference.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault was switched; the preference repair is paused.'**
+  String get theVaultWasSwitchedThePreference;
+
+  /// No description provided for @theVaultWasSwitchedCommandHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault was switched; command history sync wasn\'t enabled.'**
+  String get theVaultWasSwitchedCommandHistory;
+
+  /// No description provided for @vaultCreatedItsKeyWasGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault created; its key was generated and signed by this device.'**
+  String get vaultCreatedItsKeyWasGenerated;
+
+  /// No description provided for @theVaultsCurrentEpochOrMembership.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault\'s current epoch or membership version is invalid.'**
+  String get theVaultsCurrentEpochOrMembership;
+
+  /// No description provided for @theVaultsCurrentKeyEpochDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault\'s current key epoch doesn\'t match the signed membership list.'**
+  String get theVaultsCurrentKeyEpochDoesnt;
+
+  /// No description provided for @aVaultMemberChangeIsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'A Vault member change is in progress. Try again later.'**
+  String get aVaultMemberChangeIsIn;
+
+  /// No description provided for @localChangesArePausedDuringThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Local changes are paused during the Vault member key rotation. Try again after it completes.'**
+  String get localChangesArePausedDuringThe;
+
+  /// No description provided for @theVaultMemberKeyRotationIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault member key rotation is being committed. Wait for it to finish before locking the workspace.'**
+  String get theVaultMemberKeyRotationIs;
+
+  /// No description provided for @theVaultMemberKeyRotationIs2.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault member key rotation is being committed. Wait for it to finish before locking the account.'**
+  String get theVaultMemberKeyRotationIs2;
+
+  /// No description provided for @vaultMembersOrTheSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault members or the signed-in device changed. Choose the observer devices again.'**
+  String get vaultMembersOrTheSignedIn;
+
+  /// No description provided for @invalidVaultMembershipVersionSyncAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Vault membership version. Sync and try again.'**
+  String get invalidVaultMembershipVersionSyncAnd;
+
+  /// No description provided for @vaultMembershipChangedUnlockToVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault membership changed; unlock to verify the latest permissions and keys.'**
+  String get vaultMembershipChangedUnlockToVerify;
+
+  /// No description provided for @theVaultOrSshConnectionChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault or SSH connection changed; reconnect the current workspace pane.'**
+  String get theVaultOrSshConnectionChanged;
+
+  /// No description provided for @theVaultOrSignInSession.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault or sign-in session was switched. Reopen the recycle bin.'**
+  String get theVaultOrSignInSession;
+
+  /// No description provided for @theVaultOrSignedInDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault or signed-in device changed; joining the terminal share was cancelled.'**
+  String get theVaultOrSignedInDevice;
+
+  /// No description provided for @theVaultOrSignedInDevice2.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault or signed-in device changed; reconnecting the terminal share was cancelled.'**
+  String get theVaultOrSignedInDevice2;
+
+  /// No description provided for @theVaultOrDeviceStateChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault or device state changed. Reopen the terminal share.'**
+  String get theVaultOrDeviceStateChanged;
+
+  /// No description provided for @vaultOwnershipWasTransferredThisAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault ownership was transferred. This account keeps editor access, and the new Owner and every retained active device received the new epoch key. Pending invitation tokens are invalid and must be reissued by the new Owner.'**
+  String get vaultOwnershipWasTransferredThisAccount;
+
+  /// No description provided for @theVaultIsRestoringOrChanging.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault is restoring or changing membership, so SSH host keys can\'t be verified right now.'**
+  String get theVaultIsRestoringOrChanging;
+
+  /// No description provided for @aVaultStateActionIsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'A Vault state action is in progress. Try again later.'**
+  String get aVaultStateActionIsIn;
+
+  /// No description provided for @theVaultDeviceDirectoryIsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault device directory is missing a valid account or signing public key.'**
+  String get theVaultDeviceDirectoryIsMissing;
+
+  /// No description provided for @theTmuxSessionStartedAndWas.
+  ///
+  /// In en, this message translates to:
+  /// **'The tmux session started and was saved encrypted to the workspace.'**
+  String get theTmuxSessionStartedAndWas;
+
+  /// No description provided for @theTmuxActionTimedOutCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'The tmux action timed out. Check the host status and try again.'**
+  String get theTmuxActionTimedOutCheck;
+
+  /// No description provided for @theLabelPreferenceConflictWasRepaired.
+  ///
+  /// In en, this message translates to:
+  /// **'The {label} preference conflict was repaired and confirmed by server sync.'**
+  String theLabelPreferenceConflictWasRepaired(String label);
+
+  /// No description provided for @theLabelPreferenceConflictWasConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The {label} preference conflict was confirmed by sync.'**
+  String theLabelPreferenceConflictWasConfirmed(String label);
+
+  /// No description provided for @messageCode.
+  ///
+  /// In en, this message translates to:
+  /// **'{message} ({code})'**
+  String messageCode(String message, String code);
+
+  /// No description provided for @noticemessageThisDeviceCouldntSaveThe.
+  ///
+  /// In en, this message translates to:
+  /// **'{noticeMessage} This device couldn\'t save the current session sync state; other open tabs may need to sign in again.'**
+  String noticemessageThisDeviceCouldntSaveThe(Object noticeMessage);
+
+  /// No description provided for @uploadMissingEncryptedObjectsAndRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload missing encrypted objects and restore local state atomically'**
+  String get uploadMissingEncryptedObjectsAndRestore;
+
+  /// No description provided for @youCantRevokeThisDeviceFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t revoke this device from itself'**
+  String get youCantRevokeThisDeviceFrom;
+
+  /// No description provided for @theCurrentlySignedInAdminAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'The currently signed-in admin account can\'t be managed from here.'**
+  String get theCurrentlySignedInAdminAccount;
+
+  /// No description provided for @aGroupCantBeMovedInto.
+  ///
+  /// In en, this message translates to:
+  /// **'A group can\'t be moved into itself or one of its subgroups.'**
+  String get aGroupCantBeMovedInto;
+
+  /// No description provided for @theCurrentVaultOwnerCantBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault Owner can\'t be revoked or demoted through a member rotation.'**
+  String get theCurrentVaultOwnerCantBe;
+
+  /// No description provided for @theVaultOwnerCantBeRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault Owner can\'t be revoked or demoted through this action.'**
+  String get theVaultOwnerCantBeRevoked;
+
+  /// No description provided for @theNewMasterPasswordsDontMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The new master passwords don\'t match.'**
+  String get theNewMasterPasswordsDontMatch;
+
+  /// No description provided for @thePersonalVaultWasGeneratedAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'The personal Vault was generated and encrypted on this device; its key is never sent to the server.'**
+  String get thePersonalVaultWasGeneratedAnd;
+
+  /// No description provided for @aMasterPasswordChangeIsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'A master password change is in progress. Wait for it to finish before deleting the account.'**
+  String get aMasterPasswordChangeIsIn;
+
+  /// No description provided for @aMasterPasswordChangeIsIn2.
+  ///
+  /// In en, this message translates to:
+  /// **'A master password change is in progress. Try again later.'**
+  String get aMasterPasswordChangeIsIn2;
+
+  /// No description provided for @theMasterPasswordChangeIsBeing.
+  ///
+  /// In en, this message translates to:
+  /// **'The master password change is being committed. Wait for it to finish before locking the workspace.'**
+  String get theMasterPasswordChangeIsBeing;
+
+  /// No description provided for @theMasterPasswordChangeIsBeing2.
+  ///
+  /// In en, this message translates to:
+  /// **'The master password change is being committed. Wait for it to finish before locking the account.'**
+  String get theMasterPasswordChangeIsBeing2;
+
+  /// No description provided for @masterPasswordChangedOtherSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password changed; other sign-in sessions were revoked.'**
+  String get masterPasswordChangedOtherSignIn;
+
+  /// No description provided for @theMasterPasswordWasCommittedBut.
+  ///
+  /// In en, this message translates to:
+  /// **'The master password was committed, but the refreshed account profile is inconsistent; retry to confirm.'**
+  String get theMasterPasswordWasCommittedBut;
+
+  /// No description provided for @theMasterPasswordMustBeAt2.
+  ///
+  /// In en, this message translates to:
+  /// **'The master password must be at least 12 characters'**
+  String get theMasterPasswordMustBeAt2;
+
+  /// No description provided for @theMasterPasswordMustBeAt3.
+  ///
+  /// In en, this message translates to:
+  /// **'The master password must be at least 12 characters.'**
+  String get theMasterPasswordMustBeAt3;
+
+  /// No description provided for @masterPasswordVerificationFailedTheDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password verification failed; the deletion schedule wasn\'t changed. Enter the master password again.'**
+  String get masterPasswordVerificationFailedTheDeletion;
+
+  /// No description provided for @aHostCantUseItselfAs.
+  ///
+  /// In en, this message translates to:
+  /// **'A host can\'t use itself as its Jump Host.'**
+  String get aHostCantUseItselfAs;
+
+  /// No description provided for @theHostCouldntBeReadBack.
+  ///
+  /// In en, this message translates to:
+  /// **'The host couldn\'t be read back after saving.'**
+  String get theHostCouldntBeReadBack;
+
+  /// No description provided for @theHostHasntGrantedThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'The host hasn\'t granted this device valid input control.'**
+  String get theHostHasntGrantedThisDevice;
+
+  /// No description provided for @theHostNoLongerExistsResync.
+  ///
+  /// In en, this message translates to:
+  /// **'The host no longer exists. Resync and try again.'**
+  String get theHostNoLongerExistsResync;
+
+  /// No description provided for @theHostWasSavedEncryptedAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'The host was saved encrypted and added to the local sync queue; refreshing sync status failed and will be retried later.'**
+  String get theHostWasSavedEncryptedAnd;
+
+  /// No description provided for @theHostWasSavedEncryptedLocally.
+  ///
+  /// In en, this message translates to:
+  /// **'The host was saved encrypted locally, waiting to sync.'**
+  String get theHostWasSavedEncryptedLocally;
+
+  /// No description provided for @theHostRevokedOrEndedInput.
+  ///
+  /// In en, this message translates to:
+  /// **'The host revoked or ended input control.'**
+  String get theHostRevokedOrEndedInput;
+
+  /// No description provided for @theHostOrJumpHostRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'The host or Jump Host route changed while preparing the connection. Reconnect.'**
+  String get theHostOrJumpHostRoute;
+
+  /// No description provided for @hostInputControlEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Host input control ended.'**
+  String get hostInputControlEnded;
+
+  /// No description provided for @hostInputControlAuthorizationExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Host input control authorization expired.'**
+  String get hostInputControlAuthorizationExpired;
+
+  /// No description provided for @onlyIsolatedRestoreCopiesInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Only isolated restore copies in the \"prepared\" state can be discarded. Refresh the job list.'**
+  String get onlyIsolatedRestoreCopiesInThe;
+
+  /// No description provided for @theJobIsStillRunningAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'The job is still running and automatic status checks are paused. You can refresh the job status manually.'**
+  String get theJobIsStillRunningAnd;
+
+  /// No description provided for @theJobStatusIsTemporarilyUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The job status is temporarily unavailable and automatic status checks are paused. You can refresh the job status manually.'**
+  String get theJobStatusIsTemporarilyUnavailable;
+
+  /// No description provided for @theSessionWasRefreshedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The session was refreshed, but the new session snapshot couldn\'t be saved safely; this tab can keep working for now, but other tabs need to sign in again.'**
+  String get theSessionWasRefreshedButThe;
+
+  /// No description provided for @theSavedTmuxSessionNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved tmux session no longer exists; a new session won\'t be created automatically.'**
+  String get theSavedTmuxSessionNoLonger;
+
+  /// No description provided for @theRepairTombstoneHasntBeenConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The repair tombstone hasn\'t been confirmed by the server change cursor yet. Sync and try again.'**
+  String get theRepairTombstoneHasntBeenConfirmed;
+
+  /// No description provided for @theCandidateRecordIsMissingA.
+  ///
+  /// In en, this message translates to:
+  /// **'The candidate record is missing a verified current version; the repair is paused.'**
+  String get theCandidateRecordIsMissingA;
+
+  /// No description provided for @aPreferenceRepairIsInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'A preference repair is in progress. Wait for it to finish and try again.'**
+  String get aPreferenceRepairIsInProgress;
+
+  /// No description provided for @thePreferenceRepairStateCantBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The preference repair state can\'t be verified. Retry the sync before continuing.'**
+  String get thePreferenceRepairStateCantBe;
+
+  /// No description provided for @thePreferenceRepairStateCantBe2.
+  ///
+  /// In en, this message translates to:
+  /// **'The preference repair state can\'t be verified; resync before handling it.'**
+  String get thePreferenceRepairStateCantBe2;
+
+  /// No description provided for @theSharedSessionEndedAndThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The shared session ended and the input control lease was revoked.'**
+  String get theSharedSessionEndedAndThe;
+
+  /// No description provided for @compatibleSftpDownloadsOnlySupportFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Compatible SFTP downloads only support files up to 16 MiB'**
+  String get compatibleSftpDownloadsOnlySupportFiles;
+
+  /// No description provided for @invalidCompatibleDownloadSizeLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid compatible download size limit'**
+  String get invalidCompatibleDownloadSizeLimit;
+
+  /// No description provided for @preparingExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing export'**
+  String get preparingExport;
+
+  /// No description provided for @preparingVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing verification'**
+  String get preparingVerification;
+
+  /// No description provided for @theCredentialNameCantBeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential name can\'t be empty'**
+  String get theCredentialNameCantBeEmpty;
+
+  /// No description provided for @theCredentialUserNameCantBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential user name can\'t be empty'**
+  String get theCredentialUserNameCantBe;
+
+  /// No description provided for @theShareRequestComesFromA.
+  ///
+  /// In en, this message translates to:
+  /// **'The share request comes from a different server instance.'**
+  String get theShareRequestComesFromA;
+
+  /// No description provided for @groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groups;
+
+  /// No description provided for @theGroupDeletionWasSavedEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'The group deletion was saved encrypted and added to the local sync queue; refreshing sync status failed and will be retried later.'**
+  String get theGroupDeletionWasSavedEncrypted;
+
+  /// No description provided for @theGroupDeletionWasSavedEncrypted2.
+  ///
+  /// In en, this message translates to:
+  /// **'The group deletion was saved encrypted and will propagate to other devices after sync.'**
+  String get theGroupDeletionWasSavedEncrypted2;
+
+  /// No description provided for @theGroupNameCantExceed256.
+  ///
+  /// In en, this message translates to:
+  /// **'The group name can\'t exceed 256 UTF-8 bytes.'**
+  String get theGroupNameCantExceed256;
+
+  /// No description provided for @theGroupNameContainsUnsupportedControl.
+  ///
+  /// In en, this message translates to:
+  /// **'The group name contains unsupported control characters.'**
+  String get theGroupNameContainsUnsupportedControl;
+
+  /// No description provided for @theGroupWasSavedEncryptedAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'The group was saved encrypted and added to the local sync queue; refreshing sync status failed and will be retried later.'**
+  String get theGroupWasSavedEncryptedAnd;
+
+  /// No description provided for @groupSavedEncryptedWaitingToSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Group saved encrypted, waiting to sync.'**
+  String get groupSavedEncryptedWaitingToSync;
+
+  /// No description provided for @invalidGroupColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid group color.'**
+  String get invalidGroupColor;
+
+  /// No description provided for @anAccountBeingDeletedCantPerform.
+  ///
+  /// In en, this message translates to:
+  /// **'An account being deleted can\'t perform this action.'**
+  String get anAccountBeingDeletedCantPerform;
+
+  /// No description provided for @anAccountBeingDeletedCantRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'An account being deleted can\'t revoke sessions.'**
+  String get anAccountBeingDeletedCantRevoke;
+
+  /// No description provided for @theDeletionTombstoneIsStillWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'The deletion tombstone is still waiting for change-feed confirmation. Retry the sync.'**
+  String get theDeletionTombstoneIsStillWaiting;
+
+  /// No description provided for @theDeletionTombstoneWasSavedEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'The deletion tombstone was saved encrypted and added to the local sync queue; refreshing sync status failed and will be retried later.'**
+  String get theDeletionTombstoneWasSavedEncrypted;
+
+  /// No description provided for @theDeletionWasSavedAsAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The deletion was saved as an encrypted tombstone and will propagate to other devices after sync.'**
+  String get theDeletionWasSavedAsAn;
+
+  /// No description provided for @encryptedBackupJobSubmittedItsStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted backup job submitted. Its status appears in the list below.'**
+  String get encryptedBackupJobSubmittedItsStatus;
+
+  /// No description provided for @protocol2.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol'**
+  String get protocol2;
+
+  /// No description provided for @anotherSyncTaskIsStillRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Another sync task is still running. Retry the preference repair after it finishes.'**
+  String get anotherSyncTaskIsStillRunning;
+
+  /// No description provided for @anotherInstanceAdminJobIsRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Another instance admin job is running. Try again later.'**
+  String get anotherInstanceAdminJobIsRunning;
+
+  /// No description provided for @onlyTheVaultOwnerCanManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the Vault Owner can manage deletion schedules.'**
+  String get onlyTheVaultOwnerCanManage;
+
+  /// No description provided for @onlyTheVaultOwnerCanManage2.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the Vault Owner can manage members.'**
+  String get onlyTheVaultOwnerCanManage2;
+
+  /// No description provided for @onlyTheVaultOwnerCanInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the Vault owner can invite members.'**
+  String get onlyTheVaultOwnerCanInvite;
+
+  /// No description provided for @onlyTheCurrentVaultOwnerCan.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the current Vault Owner can change automatic purge consent.'**
+  String get onlyTheCurrentVaultOwnerCan;
+
+  /// No description provided for @onlyTheCurrentVaultOwnerCan2.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the current Vault Owner can permanently purge records.'**
+  String get onlyTheCurrentVaultOwnerCan2;
+
+  /// No description provided for @inputControlCanOnlyBeGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Input control can only be granted to devices explicitly approved for this share.'**
+  String get inputControlCanOnlyBeGranted;
+
+  /// No description provided for @onlyExistingHostsInTheCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Only existing hosts in the current Vault can be referenced.'**
+  String get onlyExistingHostsInTheCurrent;
+
+  /// No description provided for @aVaultWithThisIdAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'A Vault with this ID already exists, but it isn\'t the new empty Vault staged this time.'**
+  String get aVaultWithThisIdAlready;
+
+  /// No description provided for @aGroupWithThisNameAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'A group with this name already exists under the same parent. Change the name or choose another parent.'**
+  String get aGroupWithThisNameAlready;
+
+  /// No description provided for @theSyncVaultWasSwitchedOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The sync Vault was switched or is no longer writable; migration is paused.'**
+  String get theSyncVaultWasSwitchedOr;
+
+  /// No description provided for @theSyncVaultWasSwitchedMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'The sync Vault was switched; migration is paused.'**
+  String get theSyncVaultWasSwitchedMigration;
+
+  /// No description provided for @aSyncIsStillRunningThe.
+  ///
+  /// In en, this message translates to:
+  /// **'A sync is still running; the member change was cancelled. Try again later.'**
+  String get aSyncIsStillRunningThe;
+
+  /// No description provided for @aSyncIsStillRunningRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'A sync is still running. Retry the preference repair after it finishes.'**
+  String get aSyncIsStillRunningRetry;
+
+  /// No description provided for @theConflictCandidatesOrVersionsChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The conflict candidates or versions changed after sync. Check the list and choose again.'**
+  String get theConflictCandidatesOrVersionsChanged;
+
+  /// No description provided for @syncCompleteReceivedcountChangesReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync complete: {receivedCount, plural, =1{1 change received} other{{receivedCount} changes received}}.'**
+  String syncCompleteReceivedcountChangesReceived(int receivedCount);
+
+  /// No description provided for @theMasterPasswordCantBeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The master password can\'t be changed during sync or snapshot restore. Try again after it completes.'**
+  String get theMasterPasswordCantBeChanged;
+
+  /// No description provided for @theAccountCantBeDeletedDuring.
+  ///
+  /// In en, this message translates to:
+  /// **'The account can\'t be deleted during sync or snapshot restore. Try again after it completes.'**
+  String get theAccountCantBeDeletedDuring;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @address.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get address;
+
+  /// No description provided for @theBackupIntervalMustBe1.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup interval must be 1 to 720 hours.'**
+  String get theBackupIntervalMustBe1;
+
+  /// No description provided for @aMasterPasswordChangeIsWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'A master password change is waiting for confirmation; retry the original action first.'**
+  String get aMasterPasswordChangeIsWaiting;
+
+  /// No description provided for @theInstanceIsAlreadyInitializedFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'The instance is already initialized; first-account registration can\'t be used again.'**
+  String get theInstanceIsAlreadyInitializedFirst;
+
+  /// No description provided for @theAuditCursorExpiredTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'The audit cursor expired. The server may have switched generations; reload from the first page.'**
+  String get theAuditCursorExpiredTheServer;
+
+  /// No description provided for @thePasswordCantBeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The password can\'t be empty'**
+  String get thePasswordCantBeEmpty;
+
+  /// No description provided for @thePasswordChangeOperationStateConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'The password change operation state conflicts. To avoid changing it twice, keep the current session and contact an administrator.'**
+  String get thePasswordChangeOperationStateConflicts;
+
+  /// No description provided for @noServerInstanceIsConfiguredYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No server instance is configured yet.'**
+  String get noServerInstanceIsConfiguredYet;
+
+  /// No description provided for @nestedWorkspacesCanOnlyReferenceExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Nested workspaces can only reference existing hosts in the current Vault.'**
+  String get nestedWorkspacesCanOnlyReferenceExisting;
+
+  /// No description provided for @theWorkspaceTmuxReferenceChangedReload.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace tmux reference changed. Reload and try again.'**
+  String get theWorkspaceTmuxReferenceChangedReload;
+
+  /// No description provided for @theWorkspaceHostWasRemovedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace host was removed from the current Vault while preparing the connection; repair the reference first.'**
+  String get theWorkspaceHostWasRemovedFrom;
+
+  /// No description provided for @theWorkspaceDeletionWasAddedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace deletion was added to the local encrypted sync queue; refreshing sync status failed and will be retried later.'**
+  String get theWorkspaceDeletionWasAddedTo;
+
+  /// No description provided for @theWorkspaceDeletionWasSavedEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace deletion was saved encrypted and will propagate to other devices after sync.'**
+  String get theWorkspaceDeletionWasSavedEncrypted;
+
+  /// No description provided for @workspacesCanOnlyAddReferencesTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces can only add references to existing hosts in the current Vault.'**
+  String get workspacesCanOnlyAddReferencesTo;
+
+  /// No description provided for @theWorkspaceNoLongerExistsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace no longer exists in the current Vault.'**
+  String get theWorkspaceNoLongerExistsIn;
+
+  /// No description provided for @theWorkspaceWasSwitchedTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace was switched. Try again.'**
+  String get theWorkspaceWasSwitchedTryAgain;
+
+  /// No description provided for @theWorkspaceWasSavedEncryptedAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace was saved encrypted and added to the local sync queue; refreshing sync status failed and will be retried later.'**
+  String get theWorkspaceWasSavedEncryptedAnd;
+
+  /// No description provided for @workspaceSavedEncryptedWaitingToSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace saved encrypted, waiting to sync.'**
+  String get workspaceSavedEncryptedWaitingToSync;
+
+  /// No description provided for @theWorkspaceChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace changed.'**
+  String get theWorkspaceChanged;
+
+  /// No description provided for @theWorkspaceIsLockedButThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace is locked, but this device\'s automatic unlock record couldn\'t be cleared; fix local storage, then sign in again and lock.'**
+  String get theWorkspaceIsLockedButThis;
+
+  /// No description provided for @theWorkspaceIsntLockedRightNow.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace isn\'t locked right now.'**
+  String get theWorkspaceIsntLockedRightNow;
+
+  /// No description provided for @theWorkspacePaneNoLongerExists.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace pane no longer exists.'**
+  String get theWorkspacePaneNoLongerExists;
+
+  /// No description provided for @theWorkspacePaneOrHostReference.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace pane or host reference changed. Reconnect and try again.'**
+  String get theWorkspacePaneOrHostReference;
+
+  /// No description provided for @localChangesAreBlockedWhileThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Local changes are blocked while the workspace is locked. Unlock it first.'**
+  String get localChangesAreBlockedWhileThe;
+
+  /// No description provided for @uploadedName.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded {name}'**
+  String uploadedName(String name);
+
+  /// No description provided for @savedName.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String savedName(String name);
+
+  /// No description provided for @savedNameButCouldntConfirmThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}, but couldn\'t confirm the original permissions were restored; check the remote file permissions.'**
+  String savedNameButCouldntConfirmThe(String name);
+
+  /// No description provided for @thePinnedServerIdentityChangedDuring.
+  ///
+  /// In en, this message translates to:
+  /// **'The pinned server identity changed during confirmation. Reconnect and try again.'**
+  String get thePinnedServerIdentityChangedDuring;
+
+  /// No description provided for @unlockedLocallyTheServerStillStores.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked locally; the server still stores only encrypted records and key envelopes.'**
+  String get unlockedLocallyTheServerStillStores;
+
+  /// No description provided for @memberInvitationAcceptedTheVaultIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Member invitation accepted; the Vault is unlocked and syncing has started.'**
+  String get memberInvitationAcceptedTheVaultIs;
+
+  /// No description provided for @anExistingRepairTombstoneAlreadySpecifies.
+  ///
+  /// In en, this message translates to:
+  /// **'An existing repair tombstone already specifies the retained record; retry the repair with that record.'**
+  String get anExistingRepairTombstoneAlreadySpecifies;
+
+  /// No description provided for @theRecordRetainedByAnExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'The record retained by an existing repair tombstone is inconsistent and needs a manual check.'**
+  String get theRecordRetainedByAnExisting;
+
+  /// No description provided for @aServerAccessGroupWithThe.
+  ///
+  /// In en, this message translates to:
+  /// **'A server access group with the same name already exists (ignoring case and Unicode compatibility characters).'**
+  String get aServerAccessGroupWithThe;
+
+  /// No description provided for @thePreviouslySubmittedMasterPasswordChange.
+  ///
+  /// In en, this message translates to:
+  /// **'The previously submitted master password change was confirmed; other sign-in sessions were revoked.'**
+  String get thePreviouslySubmittedMasterPasswordChange;
+
+  /// No description provided for @attachedToTheSavedTmuxSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Attached to the saved tmux session.'**
+  String get attachedToTheSavedTmuxSession;
+
+  /// No description provided for @theKeyKeyInTheArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'The {key} key in the archive doesn\'t match the locally unlocked key.'**
+  String theKeyKeyInTheArchive(String key);
+
+  /// No description provided for @theArchiveNoLongerCorrespondsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive no longer corresponds to the current server space/Vault; nothing was imported.'**
+  String get theArchiveNoLongerCorrespondsTo;
+
+  /// No description provided for @theArchiveWasVerifiedAndRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive was verified and restored. Historical keys are kept only in this client\'s memory; the local outbox and conflict branches are preserved.'**
+  String get theArchiveWasVerifiedAndRestored;
+
+  /// No description provided for @lockTheWorkspaceAfterTheArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock the workspace after the archive operation completes.'**
+  String get lockTheWorkspaceAfterTheArchive;
+
+  /// No description provided for @theCurrentOwnerDeviceIsntIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Owner device isn\'t in the retained members\' set of active devices; the rotation was aborted.'**
+  String get theCurrentOwnerDeviceIsntIn;
+
+  /// No description provided for @theCurrentPostgresqlModeSupportsInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'The current PostgreSQL mode supports instance maintenance; server-side encrypted backup and restore aren\'t available yet.'**
+  String get theCurrentPostgresqlModeSupportsInstance;
+
+  /// No description provided for @theCurrentVaultIsntWritable.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault isn\'t writable.'**
+  String get theCurrentVaultIsntWritable;
+
+  /// No description provided for @theCurrentVaultIsntWritableSo.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault isn\'t writable, so the {label} preference can\'t be repaired.'**
+  String theCurrentVaultIsntWritableSo(String label);
+
+  /// No description provided for @theCurrentVaultIsReadOnly6.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault is read-only or being deleted; command history sync can\'t be enabled.'**
+  String get theCurrentVaultIsReadOnly6;
+
+  /// No description provided for @theCurrentVaultIsReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault is read-only; preferences can\'t be changed.'**
+  String get theCurrentVaultIsReadOnly;
+
+  /// No description provided for @theCurrentVaultIsReadOnly2.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault is read-only; groups can\'t be changed.'**
+  String get theCurrentVaultIsReadOnly2;
+
+  /// No description provided for @theCurrentVaultIsReadOnly3.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault is read-only; groups can\'t be deleted.'**
+  String get theCurrentVaultIsReadOnly3;
+
+  /// No description provided for @theCurrentVaultIsReadOnly4.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault is read-only; automatic purge consent can\'t be changed.'**
+  String get theCurrentVaultIsReadOnly4;
+
+  /// No description provided for @theCurrentVaultIsReadOnly5.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault is read-only; records can\'t be purged permanently.'**
+  String get theCurrentVaultIsReadOnly5;
+
+  /// No description provided for @theCurrentVaultSyncRepositoryIsnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault sync repository isn\'t ready yet.'**
+  String get theCurrentVaultSyncRepositoryIsnt;
+
+  /// No description provided for @theCurrentVaultSyncTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault sync timed out; the SSH host key trust check was stopped.'**
+  String get theCurrentVaultSyncTimedOut;
+
+  /// No description provided for @theCurrentVaultIsLockedSo.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault is locked, so SSH host keys can\'t be verified.'**
+  String get theCurrentVaultIsLockedSo;
+
+  /// No description provided for @theCurrentVaultOrSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault or signed-in device can\'t be used for terminal sharing.'**
+  String get theCurrentVaultOrSignedIn;
+
+  /// No description provided for @refreshingTheCurrentVaultStateTimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshing the current Vault state timed out; the SSH host key trust check was stopped.'**
+  String get refreshingTheCurrentVaultStateTimed;
+
+  /// No description provided for @theCurrentMasterPasswordOrSix.
+  ///
+  /// In en, this message translates to:
+  /// **'The current master password or six-digit authenticator code is invalid or already used. Enter the master password and a new six-digit code again.'**
+  String get theCurrentMasterPasswordOrSix;
+
+  /// No description provided for @theCurrentMasterPasswordOrAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'The current master password or account key envelope can\'t be verified.'**
+  String get theCurrentMasterPasswordOrAccount;
+
+  /// No description provided for @theCurrentMasterPasswordMustBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The current master password must be at least 12 characters.'**
+  String get theCurrentMasterPasswordMustBe;
+
+  /// No description provided for @theCurrentMasterPasswordCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The current master password couldn\'t be verified; the account credentials weren\'t changed. Check the password and try again.'**
+  String get theCurrentMasterPasswordCouldntBe;
+
+  /// No description provided for @theCurrentHostOrVaultIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The current host or Vault is unavailable.'**
+  String get theCurrentHostOrVaultIs;
+
+  /// No description provided for @tmuxIsntAvailableOnTheCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'tmux isn\'t available on the current host.'**
+  String get tmuxIsntAvailableOnTheCurrent;
+
+  /// No description provided for @theCurrentSessionIsMissingThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The current session is missing the account name.'**
+  String get theCurrentSessionIsMissingThe;
+
+  /// No description provided for @theCurrentSyncHasntFinishedWait.
+  ///
+  /// In en, this message translates to:
+  /// **'The current sync hasn\'t finished. Wait for it before creating a member invitation.'**
+  String get theCurrentSyncHasntFinishedWait;
+
+  /// No description provided for @theCurrentSyncHasntFinishedWait2.
+  ///
+  /// In en, this message translates to:
+  /// **'The current sync hasn\'t finished. Wait for it before changing Vault members.'**
+  String get theCurrentSyncHasntFinishedWait2;
+
+  /// No description provided for @anInputControlLeaseIsAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'An input control lease is already active. Revoke it first.'**
+  String get anInputControlLeaseIsAlready;
+
+  /// No description provided for @theCurrentMemberRoleCantBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The current member role can\'t be revoked through this action.'**
+  String get theCurrentMemberRoleCantBe;
+
+  /// No description provided for @theCurrentServerDoesntDeclareSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'The current server doesn\'t declare support for discarding isolated restore copies.'**
+  String get theCurrentServerDoesntDeclareSupport;
+
+  /// No description provided for @theresNoSignedInAccountWhose.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no signed-in account whose password can be changed.'**
+  String get theresNoSignedInAccountWhose;
+
+  /// No description provided for @noAccountIsSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'No account is signed in.'**
+  String get noAccountIsSignedIn;
+
+  /// No description provided for @thereAreNoPendingLabelPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no pending {label} preference conflicts.'**
+  String thereAreNoPendingLabelPreference(String label);
+
+  /// No description provided for @theCurrentTestSshConnectorDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The current test SSH connector doesn\'t support Jump Hosts.'**
+  String get theCurrentTestSshConnectorDoesnt;
+
+  /// No description provided for @theCurrentTestSshConnectorDoesnt2.
+  ///
+  /// In en, this message translates to:
+  /// **'The current test SSH connector doesn\'t support multi-hop Jump Hosts.'**
+  String get theCurrentTestSshConnectorDoesnt2;
+
+  /// No description provided for @thisBrowserHasNoRegisteredDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser has no registered device key. Add this device again from an authorized device.'**
+  String get thisBrowserHasNoRegisteredDevice;
+
+  /// No description provided for @thisBrowserHasNoRegisteredDevice2.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser has no registered device key. Add this device from an authorized device first.'**
+  String get thisBrowserHasNoRegisteredDevice2;
+
+  /// No description provided for @theCurrentDeviceKeyIsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The current device key is missing or doesn\'t match the session. Authorize this device again.'**
+  String get theCurrentDeviceKeyIsMissing;
+
+  /// No description provided for @thisDeviceDoesntHaveKeysFor.
+  ///
+  /// In en, this message translates to:
+  /// **'This device doesn\'t have keys for every Vault, so it can\'t approve that device.'**
+  String get thisDeviceDoesntHaveKeysFor;
+
+  /// No description provided for @theCurrentDeviceIdentityDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The current device identity doesn\'t match the sign-in session.'**
+  String get theCurrentDeviceIdentityDoesntMatch;
+
+  /// No description provided for @theCurrentAccountOrVaultChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The current account or Vault changed, so the SSH host key can\'t be verified.'**
+  String get theCurrentAccountOrVaultChanged;
+
+  /// No description provided for @theCurrentAccountDoesntHaveInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'The current account doesn\'t have instance admin permissions.'**
+  String get theCurrentAccountDoesntHaveInstance;
+
+  /// No description provided for @theCurrentAccountIdentityIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The current account identity is unavailable. Sign in again.'**
+  String get theCurrentAccountIdentityIsUnavailable;
+
+  /// No description provided for @theCurrentAccountVerificationDetailsDont.
+  ///
+  /// In en, this message translates to:
+  /// **'The current account verification details don\'t match.'**
+  String get theCurrentAccountVerificationDetailsDont;
+
+  /// No description provided for @theRoleOfAPendingInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'The role of a pending invitation can\'t be changed directly. Revoke it and invite again with the new role.'**
+  String get theRoleOfAPendingInvitation;
+
+  /// No description provided for @thePendingMasterPasswordChangeRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'The pending master password change request was cleared.'**
+  String get thePendingMasterPasswordChangeRequest;
+
+  /// No description provided for @theServerIdentityAwaitingConfirmationWas.
+  ///
+  /// In en, this message translates to:
+  /// **'The server identity awaiting confirmation was cancelled. Reconnect and try again.'**
+  String get theServerIdentityAwaitingConfirmationWas;
+
+  /// No description provided for @theSnapshotWasRestoredSafelySome.
+  ///
+  /// In en, this message translates to:
+  /// **'The snapshot was restored safely; some operations are still waiting to upload or conflicts are waiting to retry. The original outbox is kept.'**
+  String get theSnapshotWasRestoredSafelySome;
+
+  /// No description provided for @snapshotRestoreCompleteReceivedcountRecordsVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot restore complete: {receivedCount, plural, =1{1 record verified and rebuilt} other{{receivedCount} records verified and rebuilt}}.'**
+  String snapshotRestoreCompleteReceivedcountRecordsVerified(int receivedCount);
+
+  /// No description provided for @youCantSwitchVaultsDuringSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t switch Vaults during snapshot restore.'**
+  String get youCantSwitchVaultsDuringSnapshot;
+
+  /// No description provided for @localChangesArePausedDuringSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Local changes are paused during snapshot restore. Try again after it completes.'**
+  String get localChangesArePausedDuringSnapshot;
+
+  /// No description provided for @theMemberRoleCanOnlyBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The member role can only be set to editor or viewer.'**
+  String get theMemberRoleCanOnlyBe;
+
+  /// No description provided for @theMemberRoleWasUpdatedAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'The member role was updated and new keys were rotated for every retained member device.'**
+  String get theMemberRoleWasUpdatedAnd;
+
+  /// No description provided for @theMemberRoleWasUpdatedAnd2.
+  ///
+  /// In en, this message translates to:
+  /// **'The member role was updated and new keys were rotated for every retained member device. Pending invitations stay pending, but old tokens are invalid; invite again.'**
+  String get theMemberRoleWasUpdatedAnd2;
+
+  /// No description provided for @memberRoleUpdatedTheServerCommitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Member role updated; the server committed a new key epoch.'**
+  String get memberRoleUpdatedTheServerCommitted;
+
+  /// No description provided for @memberAccessWasRevokedAndThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Member access was revoked and the Vault key was rotated for retained members. Pending invitations stay pending, but old tokens are invalid; invite again.'**
+  String get memberAccessWasRevokedAndThe;
+
+  /// No description provided for @memberAccessWasRevokedAndThe3.
+  ///
+  /// In en, this message translates to:
+  /// **'Member access was revoked and the Vault key rotated for retained members. The revoked member doesn\'t receive the new epoch key; copies they already saved can\'t be deleted remotely.'**
+  String get memberAccessWasRevokedAndThe3;
+
+  /// No description provided for @memberAccessWasRevokedAndThe2.
+  ///
+  /// In en, this message translates to:
+  /// **'Member access was revoked and the server committed a new key epoch. Note that copies they already saved can\'t be deleted remotely.'**
+  String get memberAccessWasRevokedAndThe2;
+
+  /// No description provided for @invalidMemberAccountIdFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid member account ID format.'**
+  String get invalidMemberAccountIdFormat;
+
+  /// No description provided for @theMemberRotationResultCantBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The member rotation result can\'t be confirmed right now, so this Vault was locked to avoid using the old key. Sign in again and check the membership before continuing.'**
+  String get theMemberRotationResultCantBe;
+
+  /// No description provided for @ownershipCanOnlyBeTransferredTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Ownership can only be transferred to an active member who accepted their invitation.'**
+  String get ownershipCanOnlyBeTransferredTo;
+
+  /// No description provided for @theSelectedJumpHostNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected Jump Host no longer exists. Choose a valid host or clear the stale reference.'**
+  String get theSelectedJumpHostNoLonger;
+
+  /// No description provided for @theSelectedSshCredentialNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected SSH credential no longer exists. Choose a valid credential or clear this override.'**
+  String get theSelectedSshCredentialNoLonger;
+
+  /// No description provided for @theSelectedSessionNoLongerExists.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected session no longer exists or was already revoked. Refresh the session list.'**
+  String get theSelectedSessionNoLongerExists;
+
+  /// No description provided for @theSelectedRetainedRecordChangedCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected retained record changed. Check the candidates again.'**
+  String get theSelectedRetainedRecordChangedCheck;
+
+  /// No description provided for @theSelectedGroupNoLongerExists.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected group no longer exists. Choose a valid group or remove the group.'**
+  String get theSelectedGroupNoLongerExists;
+
+  /// No description provided for @theSelectedEncryptedArchiveIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected encrypted archive is unavailable. Refresh the source list and try again.'**
+  String get theSelectedEncryptedArchiveIsUnavailable;
+
+  /// No description provided for @theSelectedArchiveIsInvalidRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected archive is invalid. Refresh the source list and try again.'**
+  String get theSelectedArchiveIsInvalidRefresh;
+
+  /// No description provided for @theSelectedArchiveSourceIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected archive source is invalid. Refresh the source list and try again.'**
+  String get theSelectedArchiveSourceIsInvalid;
+
+  /// No description provided for @theSelectedServerAccessGroupNo.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected server access group no longer exists. Refresh the list.'**
+  String get theSelectedServerAccessGroupNo;
+
+  /// No description provided for @theApprovalFileDoesntMatchThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The approval file doesn\'t match the device request generated by this browser.'**
+  String get theApprovalFileDoesntMatchThe;
+
+  /// No description provided for @theVaultKeyEnvelopeContextIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault key envelope context in the approval file is invalid.'**
+  String get theVaultKeyEnvelopeContextIn;
+
+  /// No description provided for @theVaultKeyEnvelopeInThe2.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault key envelope in the approval file has an invalid format.'**
+  String get theVaultKeyEnvelopeInThe2;
+
+  /// No description provided for @theDeviceCapabilityReportInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The device capability report in the approval file has an invalid format.'**
+  String get theDeviceCapabilityReportInThe;
+
+  /// No description provided for @theApprovalFileContainsDuplicateVault.
+  ///
+  /// In en, this message translates to:
+  /// **'The approval file contains duplicate Vault key envelopes.'**
+  String get theApprovalFileContainsDuplicateVault;
+
+  /// No description provided for @theApprovalFileBelongsToA.
+  ///
+  /// In en, this message translates to:
+  /// **'The approval file belongs to a different account or server instance.'**
+  String get theApprovalFileBelongsToA;
+
+  /// No description provided for @theApprovalFileIsStagedAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'The approval file is staged. After sign-in, the client verifies the owner certificate and each Vault key envelope before unlocking data.'**
+  String get theApprovalFileIsStagedAfter;
+
+  /// No description provided for @theDeviceSelfProofInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The device self-proof in the approval file doesn\'t match the local device key.'**
+  String get theDeviceSelfProofInThe;
+
+  /// No description provided for @theApproverOrCurrentDeviceIsnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The approver or current device isn\'t in the server account\'s device directory.'**
+  String get theApproverOrCurrentDeviceIsnt;
+
+  /// No description provided for @theApproverCertificateFieldsAreInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The approver certificate fields are invalid.'**
+  String get theApproverCertificateFieldsAreInvalid;
+
+  /// No description provided for @theApproverCertificateSignatureIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The approver certificate signature is invalid.'**
+  String get theApproverCertificateSignatureIsInvalid;
+
+  /// No description provided for @thisHostCouldntBeFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This host couldn\'t be found.'**
+  String get thisHostCouldntBeFound;
+
+  /// No description provided for @theVaultOnThisDeviceCouldnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault on this device couldn\'t be found.'**
+  String get theVaultOnThisDeviceCouldnt;
+
+  /// No description provided for @theScrapeCredentialWasRotatedThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The scrape credential was rotated; the value is shown only once.'**
+  String get theScrapeCredentialWasRotatedThe;
+
+  /// No description provided for @toCancelAccountDeletionSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'To cancel account deletion, sign out first and use the recovery option on the sign-in page.'**
+  String get toCancelAccountDeletionSignOut;
+
+  /// No description provided for @theFileWasSavedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The file was saved, but the folder couldn\'t be refreshed: {friendlyError}'**
+  String theFileWasSavedButThe(String friendlyError);
+
+  /// No description provided for @theNewMasterPasswordMustDiffer.
+  ///
+  /// In en, this message translates to:
+  /// **'The new master password must differ from the current one.'**
+  String get theNewMasterPasswordMustDiffer;
+
+  /// No description provided for @theNewMasterPasswordMustBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The new master password must be at least 12 characters.'**
+  String get theNewMasterPasswordMustBe;
+
+  /// No description provided for @couldntDiscardTheIsolatedRestoreCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t discard the isolated restore copy. Refresh the job list and try again.'**
+  String get couldntDiscardTheIsolatedRestoreCopy;
+
+  /// No description provided for @couldntSaveChangesToTheTmux.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save changes to the tmux session reference. Try again later.'**
+  String get couldntSaveChangesToTheTmux;
+
+  /// No description provided for @couldntSaveTheScheduledBackupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the scheduled backup settings. Try again.'**
+  String get couldntSaveTheScheduledBackupSettings;
+
+  /// No description provided for @couldntPrepareTheIsolatedRestoreCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t prepare the isolated restore copy. Live data wasn\'t changed.'**
+  String get couldntPrepareTheIsolatedRestoreCopy;
+
+  /// No description provided for @couldntCreateANewTmuxSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create a new tmux session. Try again.'**
+  String get couldntCreateANewTmuxSession;
+
+  /// No description provided for @couldntJoinInputControlMakeSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t join input control. Make sure the host still grants control to this device.'**
+  String get couldntJoinInputControlMakeSure;
+
+  /// No description provided for @couldntStartTheLocalShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the local shell.'**
+  String get couldntStartTheLocalShell;
+
+  /// No description provided for @couldntStartTerminalSharingCheckThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start terminal sharing. Check the connection and Vault membership, then try again.'**
+  String get couldntStartTerminalSharingCheckThe;
+
+  /// No description provided for @couldntSafelyCreateRemoteFileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t safely create remote file {name}. It may already exist, or the current user lacks write permission; existing files aren\'t overwritten. ({error})'**
+  String couldntSafelyCreateRemoteFileName(String name, Object error);
+
+  /// No description provided for @couldntSafelyRestoreTheSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t safely restore the sign-in session. Sign in again.'**
+  String get couldntSafelyRestoreTheSignIn;
+
+  /// No description provided for @theRefreshRequestStateCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The refresh request state couldn\'t be recorded safely, so the refresh request was blocked. Check this device\'s secure storage and try again.'**
+  String get theRefreshRequestStateCouldntBe;
+
+  /// No description provided for @couldntCompleteTheTmuxSessionAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t complete the tmux session action. Check the host status and try again.'**
+  String get couldntCompleteTheTmuxSessionAction;
+
+  /// No description provided for @couldntFinishSyncingTheCurrentVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t finish syncing the current Vault ({syncStatus}); the SSH host key trust check was stopped.'**
+  String couldntFinishSyncingTheCurrentVault(String syncStatus);
+
+  /// No description provided for @couldntConfirmTheTmuxSessionStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm the tmux session started. Check the host and try again.'**
+  String get couldntConfirmTheTmuxSessionStarted;
+
+  /// No description provided for @couldntReadEncryptedArchiveSourcesTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read encrypted archive sources. Try again later.'**
+  String get couldntReadEncryptedArchiveSourcesTry;
+
+  /// No description provided for @couldntReadLocalSecuritySettingsCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read local security settings. Check browser storage and try again.'**
+  String get couldntReadLocalSecuritySettingsCheck;
+
+  /// No description provided for @couldntReadThisTerminalShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read this terminal share.'**
+  String get couldntReadThisTerminalShare;
+
+  /// No description provided for @couldntReadTheScheduledBackupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the scheduled backup settings. Try again.'**
+  String get couldntReadTheScheduledBackupSettings;
+
+  /// No description provided for @couldntReadTheRestoreJobStatus2.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the restore job status. Try again later.'**
+  String get couldntReadTheRestoreJobStatus2;
+
+  /// No description provided for @couldntRejoinTheShareMayHave.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t rejoin; the share may have ended or Vault access may have changed.'**
+  String get couldntRejoinTheShareMayHave;
+
+  /// No description provided for @couldntVerifyTheCurrentDeviceApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t verify the current device approval.'**
+  String get couldntVerifyTheCurrentDeviceApproval;
+
+  /// No description provided for @thePendingVaultRecordsCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The pending Vault records couldn\'t be verified; turning off sync took effect, but the offline queue wasn\'t cleared.'**
+  String get thePendingVaultRecordsCouldntBe;
+
+  /// No description provided for @thePendingCommandHistoryCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The pending command history couldn\'t be verified; turning off sync took effect, but the offline queue wasn\'t cleared.'**
+  String get thePendingCommandHistoryCouldntBe;
+
+  /// No description provided for @theStagedVaultCreationDataDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The staged Vault creation data doesn\'t match the target ID.'**
+  String get theStagedVaultCreationDataDoesnt;
+
+  /// No description provided for @theStagedVaultCreationDataHas.
+  ///
+  /// In en, this message translates to:
+  /// **'The staged Vault creation data has an invalid format.'**
+  String get theStagedVaultCreationDataHas;
+
+  /// No description provided for @couldntReadTheRestoreJobStatus3.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the restore job status right now; the system will keep trying.'**
+  String get couldntReadTheRestoreJobStatus3;
+
+  /// No description provided for @couldntReadTheRestoreJobStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the restore job status right now. Retry manually.'**
+  String get couldntReadTheRestoreJobStatus;
+
+  /// No description provided for @upToMaxterminaltabsSshTerminalTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {maxTerminalTabs} SSH terminal tabs can be open at once; close a tab first.'**
+  String upToMaxterminaltabsSshTerminalTabs(int maxTerminalTabs);
+
+  /// No description provided for @aVaultIsInItsDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'A Vault is in its deletion grace period, so the server doesn\'t allow approving new devices right now.'**
+  String get aVaultIsInItsDeletion;
+
+  /// No description provided for @theServerSyncGenerationChangedUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'The server sync generation changed; unlock the Vault to resume sync safely.'**
+  String get theServerSyncGenerationChangedUnlock;
+
+  /// No description provided for @theServerHasntConfiguredEncryptedBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'The server hasn\'t configured encrypted backups. Ask the instance operator to set ATERMIUS_BACKUP_ARCHIVE_DIR (an owner-only directory outside the data directory) and ATERMIUS_BACKUP_KEY_FILE (a 32-byte owner-only key file outside the data directory). This client never sends or shows these paths, archive file names or keys.'**
+  String get theServerHasntConfiguredEncryptedBackups;
+
+  /// No description provided for @theServerHasntConfiguredIsolatedRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'The server hasn\'t configured isolated restore storage. Contact the instance operator.'**
+  String get theServerHasntConfiguredIsolatedRestore;
+
+  /// No description provided for @theServerAccessGroupWasUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'The server access group was updated by another administrator. Reload the latest data; your current draft is kept.'**
+  String get theServerAccessGroupWasUpdated;
+
+  /// No description provided for @theServersInitialVaultMembershipRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'The server\'s initial Vault membership record has an invalid format.'**
+  String get theServersInitialVaultMembershipRecord;
+
+  /// No description provided for @theServerVaultKeyEnvelopeDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The server Vault key envelope doesn\'t match the creation data staged on this device.'**
+  String get theServerVaultKeyEnvelopeDoesnt;
+
+  /// No description provided for @theServersVaultMembershipListHas.
+  ///
+  /// In en, this message translates to:
+  /// **'The server\'s Vault membership list has an invalid format; the key rotation was stopped.'**
+  String get theServersVaultMembershipListHas;
+
+  /// No description provided for @theServerVaultMembershipChainDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The server Vault membership chain doesn\'t match the creation data staged on this device.'**
+  String get theServerVaultMembershipChainDoesnt;
+
+  /// No description provided for @theServersEncryptedArchiveConfigurationIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The server\'s encrypted archive configuration is unavailable. Contact the server operator.'**
+  String get theServersEncryptedArchiveConfigurationIs;
+
+  /// No description provided for @theServerSyncCursorExpiredA.
+  ///
+  /// In en, this message translates to:
+  /// **'The server sync cursor expired; a new snapshot is required.'**
+  String get theServerSyncCursorExpiredA;
+
+  /// No description provided for @theServerInstanceIdChangedAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'The server instance ID changed and can\'t be confirmed through key recovery.'**
+  String get theServerInstanceIdChangedAnd;
+
+  /// No description provided for @theServerInstanceIdentityChangedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'The server instance identity changed. To protect your local vault, the client refused to connect.'**
+  String get theServerInstanceIdentityChangedTo;
+
+  /// No description provided for @theServerHasntConfirmedThatOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'The server hasn\'t confirmed that only the selected {label} preference record remains. Sync and try again.'**
+  String theServerHasntConfirmedThatOnly(String label);
+
+  /// No description provided for @theServerHasntConfiguredAUsable.
+  ///
+  /// In en, this message translates to:
+  /// **'The server hasn\'t configured a usable encrypted backup destination and key; the scheduled backup wasn\'t changed.'**
+  String get theServerHasntConfiguredAUsable;
+
+  /// No description provided for @theServerAcceptedTheRevocationRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'The server accepted the revocation request. The old session won\'t be restored; sign in again.'**
+  String get theServerAcceptedTheRevocationRequest;
+
+  /// No description provided for @theServerAcceptedTheDeletionRequest2.
+  ///
+  /// In en, this message translates to:
+  /// **'The server accepted the deletion request, but returned an invalid grace period state.'**
+  String get theServerAcceptedTheDeletionRequest2;
+
+  /// No description provided for @theServerAcceptedTheDeletionRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'The server accepted the deletion request; the current session and this device\'s unlock key were cleared. Use the account recovery option on the sign-in page; if still within the grace period you can cancel, then you must sign in again.'**
+  String get theServerAcceptedTheDeletionRequest;
+
+  /// No description provided for @theServerCommittedTheVaultOwnership.
+  ///
+  /// In en, this message translates to:
+  /// **'The server committed the Vault ownership transfer and a new key epoch; this account was demoted to editor.'**
+  String get theServerCommittedTheVaultOwnership;
+
+  /// No description provided for @theServerSnapshotContainsRecordsThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot contains records this device already purged. To prevent old data from coming back, the client keeps its current cache, sync cursor and local drafts and stops automatic sync. If the server was just restored from a pre-purge backup, an administrator must first review and reprocess the server restore state; this device won\'t automatically delete saved purge receipts.'**
+  String get theServerSnapshotContainsRecordsThis;
+
+  /// No description provided for @theServerCommittedTheMemberRotation.
+  ///
+  /// In en, this message translates to:
+  /// **'The server committed the member rotation, but the new epoch and membership can\'t be verified locally; further actions were stopped.'**
+  String get theServerCommittedTheMemberRotation;
+
+  /// No description provided for @theServerMembershipChainBelongsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'The server membership chain belongs to a different Vault.'**
+  String get theServerMembershipChainBelongsTo;
+
+  /// No description provided for @theServerRejectedThisBackupSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'The server rejected this backup schedule request. Refresh and try again.'**
+  String get theServerRejectedThisBackupSchedule;
+
+  /// No description provided for @theServerRejectedThisIsolatedRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'The server rejected this isolated restore request. Refresh the source list and try again.'**
+  String get theServerRejectedThisIsolatedRestore;
+
+  /// No description provided for @theServerDidntReturnTheVault.
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t return the Vault ID for the accepted invitation.'**
+  String get theServerDidntReturnTheVault;
+
+  /// No description provided for @theServerDidntReturnAValid.
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t return a valid deletion grace period and deadline.'**
+  String get theServerDidntReturnAValid;
+
+  /// No description provided for @theServerDidntProvideAVerifiable.
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t provide a verifiable restore deadline, so the permanent purge was blocked.'**
+  String get theServerDidntProvideAVerifiable;
+
+  /// No description provided for @theServerDidntProvideAValid.
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t provide a valid instance signing identity.'**
+  String get theServerDidntProvideAValid;
+
+  /// No description provided for @theServerDidntReturnAnAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t return an account identifier, so a device request can\'t be created.'**
+  String get theServerDidntReturnAnAccount;
+
+  /// No description provided for @theServerSigningKeyDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The server signing key doesn\'t match the pinned identity. Verify the candidate fingerprint over a separate trusted channel first.'**
+  String get theServerSigningKeyDoesntMatch;
+
+  /// No description provided for @theServerSigningKeyDoesntMatch2.
+  ///
+  /// In en, this message translates to:
+  /// **'The server signing key doesn\'t match the pinned identity. Compare the candidate fingerprint over a separate trusted channel; no account connection or authentication request is sent before you confirm.'**
+  String get theServerSigningKeyDoesntMatch2;
+
+  /// No description provided for @theServerIsMissingTheExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is missing the existing recovery identity envelope, so it can\'t be rotated safely.'**
+  String get theServerIsMissingTheExisting;
+
+  /// No description provided for @theServerDeviceDirectoryDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The server device directory doesn\'t match the account or public key in the approval file.'**
+  String get theServerDeviceDirectoryDoesntMatch;
+
+  /// No description provided for @theServersDeviceCapabilityReportDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The server\'s device capability report doesn\'t match the approval file.'**
+  String get theServersDeviceCapabilityReportDoesnt;
+
+  /// No description provided for @theServerIdentityChangedDuringConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'The server identity changed during confirmation. Reconnect and verify the new fingerprint.'**
+  String get theServerIdentityChangedDuringConfirmation;
+
+  /// No description provided for @serverIdentityConfirmationIsInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Server identity confirmation is in progress.'**
+  String get serverIdentityConfirmationIsInProgress;
+
+  /// No description provided for @serverIdentityConfirmationIsInProgress2.
+  ///
+  /// In en, this message translates to:
+  /// **'Server identity confirmation is in progress and can\'t be cancelled right now.'**
+  String get serverIdentityConfirmationIsInProgress2;
+
+  /// No description provided for @serverIdentityConfirmationIsInProgress3.
+  ///
+  /// In en, this message translates to:
+  /// **'Server identity confirmation is in progress. Wait for the current action to finish.'**
+  String get serverIdentityConfirmationIsInProgress3;
+
+  /// No description provided for @theServerRotationResultDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The server rotation result doesn\'t match the signed epoch/membership version.'**
+  String get theServerRotationResultDoesntMatch;
+
+  /// No description provided for @theServerReturnedADifferentMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned a different migration destination Vault ID.'**
+  String get theServerReturnedADifferentMigration;
+
+  /// No description provided for @theVaultOwnerStateReturnedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault Owner state returned by the server doesn\'t match.'**
+  String get theVaultOwnerStateReturnedBy;
+
+  /// No description provided for @theServerReturnedAnInvalidMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned an invalid master password change receipt.'**
+  String get theServerReturnedAnInvalidMaster;
+
+  /// No description provided for @theServerReturnedAnInvalidRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned an invalid recovery setup receipt.'**
+  String get theServerReturnedAnInvalidRecovery;
+
+  /// No description provided for @theMembershipVersionReturnedByThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The membership version returned by the server doesn\'t match the local signature.'**
+  String get theMembershipVersionReturnedByThe;
+
+  /// No description provided for @theRevocationStateReturnedByThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The revocation state returned by the server is invalid; the Vault stays locked.'**
+  String get theRevocationStateReturnedByThe;
+
+  /// No description provided for @theAccountRevocationStateReturnedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'The account revocation state returned by the server is invalid.'**
+  String get theAccountRevocationStateReturnedBy;
+
+  /// No description provided for @theServerReturnedDuplicateMigrationDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned duplicate migration destination Vaults.'**
+  String get theServerReturnedDuplicateMigrationDestination;
+
+  /// No description provided for @noIsolatedRestoreCopyToDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'No isolated restore copy to discard was found. Refresh the job list.'**
+  String get noIsolatedRestoreCopyToDiscard;
+
+  /// No description provided for @thereAreUncommittedLocalChangesRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'There are uncommitted local changes. Rotate member keys after sync completes so older records can still be committed.'**
+  String get thereAreUncommittedLocalChangesRotate;
+
+  /// No description provided for @thereAreUncommittedLocalChangesCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'There are uncommitted local changes. Create the member invitation after sync succeeds so older records can still be committed.'**
+  String get thereAreUncommittedLocalChangesCreate;
+
+  /// No description provided for @theLocalFileNameIsntA.
+  ///
+  /// In en, this message translates to:
+  /// **'The local file name isn\'t a safe remote file name.'**
+  String get theLocalFileNameIsntA;
+
+  /// No description provided for @localConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Console'**
+  String get localConsole;
+
+  /// No description provided for @theLocalConsoleRequiresTheDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'The local Console requires the desktop client.'**
+  String get theLocalConsoleRequiresTheDesktop;
+
+  /// No description provided for @thisDevicesEncryptedHistoryRepositoryIsnt.
+  ///
+  /// In en, this message translates to:
+  /// **'This device\'s encrypted history repository isn\'t ready yet.'**
+  String get thisDevicesEncryptedHistoryRepositoryIsnt;
+
+  /// No description provided for @thisDeviceHasNoCurrentSession.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has no current session snapshot that can be restored safely. Sign in again.'**
+  String get thisDeviceHasNoCurrentSession;
+
+  /// No description provided for @thisSignInCanContinueBut.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in can continue, but the sign-in state can\'t be remembered.'**
+  String get thisSignInCanContinueBut;
+
+  /// No description provided for @refreshingVaultMembershipTryChangingIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshing Vault membership. Try changing it again shortly.'**
+  String get refreshingVaultMembershipTryChangingIt;
+
+  /// No description provided for @anotherVaultMemberInvitationIsBeing.
+  ///
+  /// In en, this message translates to:
+  /// **'Another Vault member invitation is being accepted. Try again later.'**
+  String get anotherVaultMemberInvitationIsBeing;
+
+  /// No description provided for @confirmingTheInputControlRevocationTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirming the input control revocation. Try again shortly.'**
+  String get confirmingTheInputControlRevocationTry;
+
+  /// No description provided for @connectingHostApprovedInputControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting host-approved input control.'**
+  String get connectingHostApprovedInputControl;
+
+  /// No description provided for @thisHostChangedAfterThePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host changed after the preview. Resync and review the refresh differences.'**
+  String get thisHostChangedAfterThePreview;
+
+  /// No description provided for @thisHostNoLongerExistsOr.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host no longer exists or can\'t be read uniquely; resync before editing.'**
+  String get thisHostNoLongerExistsOr;
+
+  /// No description provided for @thisHostsLocalEncryptedRecordCouldnt.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host\'s local encrypted record couldn\'t be verified; saving was stopped to avoid overwriting or losing data.'**
+  String get thisHostsLocalEncryptedRecordCouldnt;
+
+  /// No description provided for @thisHostIsMissingAVerifiable.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host is missing a verifiable local revision; saving was stopped to avoid breaking the sync history.'**
+  String get thisHostIsMissingAVerifiable;
+
+  /// No description provided for @thisSshCredentialIsStillReferenced.
+  ///
+  /// In en, this message translates to:
+  /// **'This SSH credential is still referenced by {groupCount, plural, =1{1 group default} other{{groupCount} group defaults}}, {hostCount, plural, =1{1 host override} other{{hostCount} host overrides}} and {snippetParameterCount, plural, =1{1 snippet secret parameter} other{{snippetParameterCount} snippet secret parameters}}; replace or clear these references first.'**
+  String thisSshCredentialIsStillReferenced(
+    int groupCount,
+    int hostCount,
+    int snippetParameterCount,
+  );
+
+  /// No description provided for @thisSshCredentialNoLongerExists.
+  ///
+  /// In en, this message translates to:
+  /// **'This SSH credential no longer exists or can\'t be verified; resync the Vault first.'**
+  String get thisSshCredentialNoLongerExists;
+
+  /// No description provided for @theTerminalFontSizePreferenceIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal font size preference in this Vault has duplicate records or an unconfirmed repair. Complete an explicit repair.'**
+  String get theTerminalFontSizePreferenceIn;
+
+  /// No description provided for @theTerminalShortcutPreferenceInThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal shortcut preference in this Vault has duplicate records or an unconfirmed repair. Complete an explicit repair.'**
+  String get theTerminalShortcutPreferenceInThis;
+
+  /// No description provided for @theTerminalColorPreferenceInThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal color preference in this Vault has duplicate records or an unconfirmed repair. Complete an explicit repair.'**
+  String get theTerminalColorPreferenceInThis;
+
+  /// No description provided for @theDefaultWorkspacePreferenceInThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The default workspace preference in this Vault has duplicate records or an unconfirmed repair. Complete an explicit repair.'**
+  String get theDefaultWorkspacePreferenceInThis;
+
+  /// No description provided for @thisVaultContainsUnsupportedPreferenceRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault contains unsupported preference records; the repair is paused.'**
+  String get thisVaultContainsUnsupportedPreferenceRecords;
+
+  /// No description provided for @thisVaultContainsPreferencesThatThis.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault contains preferences that this client doesn\'t support.'**
+  String get thisVaultContainsPreferencesThatThis;
+
+  /// No description provided for @thisVaultCantBeUsedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault can\'t be used to create a terminal share right now.'**
+  String get thisVaultCantBeUsedTo;
+
+  /// No description provided for @thisVaultIsntCurrentlyInAn.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault isn\'t currently in an active state that allows deletion.'**
+  String get thisVaultIsntCurrentlyInAn;
+
+  /// No description provided for @thisVaultIsCurrentlyReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault is currently read-only; members can\'t be changed.'**
+  String get thisVaultIsCurrentlyReadOnly;
+
+  /// No description provided for @thisVaultHasNoDeletionSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault has no deletion schedule that can be cancelled.'**
+  String get thisVaultHasNoDeletionSchedule;
+
+  /// No description provided for @thisVaultIsInItsDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault is in its deletion grace period and is currently read-only.'**
+  String get thisVaultIsInItsDeletion;
+
+  /// No description provided for @thisVaultIsInItsDeletion2.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault is in its deletion grace period and read-only; the Owner can cancel the deletion before the deadline.'**
+  String get thisVaultIsInItsDeletion2;
+
+  /// No description provided for @thisHostIsStillUsedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'This host is still used as a Jump Host by {dependants, plural, =1{1 host} other{{dependants} hosts}}; replace or clear these references first.'**
+  String thisHostIsStillUsedAs(int dependants);
+
+  /// No description provided for @thisSessionWasSignedOutIn.
+  ///
+  /// In en, this message translates to:
+  /// **'This session was signed out in another tab. Sign in again.'**
+  String get thisSessionWasSignedOutIn;
+
+  /// No description provided for @thisSessionsRefreshTokenStateCant.
+  ///
+  /// In en, this message translates to:
+  /// **'This session\'s refresh token state can\'t be restored safely. Sign in again.'**
+  String get thisSessionsRefreshTokenStateCant;
+
+  /// No description provided for @thisSharedSessionDoesntHaveHost.
+  ///
+  /// In en, this message translates to:
+  /// **'This shared session doesn\'t have host-approved input control enabled.'**
+  String get thisSharedSessionDoesntHaveHost;
+
+  /// No description provided for @thisGroupIsStillReferencedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'This group is still referenced by {hostCount, plural, =1{1 Host} other{{hostCount} Hosts}} and {childCount, plural, =1{1 subgroup} other{{childCount} subgroups}}; move those records first.'**
+  String thisGroupIsStillReferencedBy(int hostCount, int childCount);
+
+  /// No description provided for @thisGroupNoLongerExistsOr.
+  ///
+  /// In en, this message translates to:
+  /// **'This group no longer exists or can\'t be verified; resync the Vault first.'**
+  String get thisGroupNoLongerExistsOr;
+
+  /// No description provided for @thisDeletedRecordIsPastThe.
+  ///
+  /// In en, this message translates to:
+  /// **'This deleted record is past the server restore deadline{dateText}. The tombstone keeps reserving this record ID; to keep using it, create a new record with a new ID.'**
+  String thisDeletedRecordIsPastThe(String dateText);
+
+  /// No description provided for @thisInstanceIsntInitializedYetCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'This instance isn\'t initialized yet. Create the first account with the one-time bootstrap token generated by the administrator.'**
+  String get thisInstanceIsntInitializedYetCreate;
+
+  /// No description provided for @thisWorkspaceHostNoLongerExists.
+  ///
+  /// In en, this message translates to:
+  /// **'This workspace host no longer exists in the current Vault. Repair the reference first.'**
+  String get thisWorkspaceHostNoLongerExists;
+
+  /// No description provided for @thisWorkspacePaneAlreadyHasA.
+  ///
+  /// In en, this message translates to:
+  /// **'This workspace pane already has a tmux session reference; use Resume.'**
+  String get thisWorkspacePaneAlreadyHasA;
+
+  /// No description provided for @thisWorkspacePaneIsAlreadyAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'This workspace pane is already attached to tmux.'**
+  String get thisWorkspacePaneIsAlreadyAttached;
+
+  /// No description provided for @thisWorkspacePaneIsRunningA.
+  ///
+  /// In en, this message translates to:
+  /// **'This workspace pane is running a tmux action.'**
+  String get thisWorkspacePaneIsRunningA;
+
+  /// No description provided for @thisWorkspacePaneHasNoSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This workspace pane has no saved tmux session reference.'**
+  String get thisWorkspacePaneHasNoSaved;
+
+  /// No description provided for @mobilePushIsntSupportedOnThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile push isn\'t supported on this platform.'**
+  String get mobilePushIsntSupportedOnThis;
+
+  /// No description provided for @thisAppBuildDoesntHaveFirebase.
+  ///
+  /// In en, this message translates to:
+  /// **'This app build doesn\'t have Firebase Cloud Messaging configured.'**
+  String get thisAppBuildDoesntHaveFirebase;
+
+  /// No description provided for @thisMembersAccessWasRevokedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'This member\'s access was revoked; to authorize them again, create a new member invitation.'**
+  String get thisMembersAccessWasRevokedTo;
+
+  /// No description provided for @thisBrowserCantSafelyCoordinateSession.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser can\'t safely coordinate session refresh across tabs, so the refresh token wasn\'t rotated. Update the browser to enable safe session sync.'**
+  String get thisBrowserCantSafelyCoordinateSession;
+
+  /// No description provided for @thisBrowserHasNoDeviceKey.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser has no device key awaiting approval. Generate a device request first.'**
+  String get thisBrowserHasNoDeviceKey;
+
+  /// No description provided for @youLeftThisTerminalShareEnter.
+  ///
+  /// In en, this message translates to:
+  /// **'You left this terminal share. Enter the session UUID again.'**
+  String get youLeftThisTerminalShareEnter;
+
+  /// No description provided for @thisTerminalIsAlreadyBeingShared.
+  ///
+  /// In en, this message translates to:
+  /// **'This terminal is already being shared.'**
+  String get thisTerminalIsAlreadyBeingShared;
+
+  /// No description provided for @thisRecordIdIsReservedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'This record ID is reserved by a deletion tombstone and can\'t be recreated. Restore it from the recycle bin, or create a record with a new ID.'**
+  String get thisRecordIdIsReservedBy;
+
+  /// No description provided for @thisRecordWasUpdatedOnAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'This record was updated on another device; the conflict branch was kept.'**
+  String get thisRecordWasUpdatedOnAnother;
+
+  /// No description provided for @thisRecordHasNoHistoricalVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'This record has no historical version that can be restored.'**
+  String get thisRecordHasNoHistoricalVersion;
+
+  /// No description provided for @thisRecordsHostIdentityCantBe.
+  ///
+  /// In en, this message translates to:
+  /// **'This record\'s Host identity can\'t be verified; saving was stopped to avoid overwriting other data.'**
+  String get thisRecordsHostIdentityCantBe;
+
+  /// No description provided for @backgroundSyncNotificationsAreTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Background sync notifications are turned off on this device.'**
+  String get backgroundSyncNotificationsAreTurnedOff;
+
+  /// No description provided for @backgroundSyncNotificationsAreOnFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Background sync notifications are on for this device.'**
+  String get backgroundSyncNotificationsAreOnFor;
+
+  /// No description provided for @thisDeviceWasRevokedSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'This device was revoked. Sign in again on an administrator-approved device.'**
+  String get thisDeviceWasRevokedSignIn;
+
+  /// No description provided for @thisAccountIsntAMemberOf.
+  ///
+  /// In en, this message translates to:
+  /// **'This account isn\'t a member of the current Vault.'**
+  String get thisAccountIsntAMemberOf;
+
+  /// No description provided for @thisAccountNameDoesntMatchThe.
+  ///
+  /// In en, this message translates to:
+  /// **'This account name doesn\'t match the signed-in account.'**
+  String get thisAccountNameDoesntMatchThe;
+
+  /// No description provided for @thisChangeCantBeMadeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'This change can\'t be made in the account\'s current state.'**
+  String get thisChangeCantBeMadeIn;
+
+  /// No description provided for @theresNoMasterPasswordChangeWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no master password change waiting for confirmation.'**
+  String get theresNoMasterPasswordChangeWaiting;
+
+  /// No description provided for @theresNoServerIdentityRecoveryWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no server identity recovery waiting for confirmation.'**
+  String get theresNoServerIdentityRecoveryWaiting;
+
+  /// No description provided for @theresNoActivePrometheusScrapeCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no active Prometheus scrape credential.'**
+  String get theresNoActivePrometheusScrapeCredential;
+
+  /// No description provided for @theParentGroupNoLongerExists2.
+  ///
+  /// In en, this message translates to:
+  /// **'The parent group no longer exists. Choose another parent or Top-level group.'**
+  String get theParentGroupNoLongerExists2;
+
+  /// No description provided for @invalidParentGroupChooseAValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid parent group. Choose a valid group or Top-level group.'**
+  String get invalidParentGroupChooseAValid;
+
+  /// No description provided for @thePasswordCredentialReferencedBySnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'The password credential referenced by snippet parameter \"{name}\" doesn\'t exist or is unavailable; saving was stopped.'**
+  String thePasswordCredentialReferencedBySnippet(String name);
+
+  /// No description provided for @theSnippetCommandCantBeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet command can\'t be empty'**
+  String get theSnippetCommandCantBeEmpty;
+
+  /// No description provided for @theSnippetTitleCantBeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet title can\'t be empty'**
+  String get theSnippetTitleCantBeEmpty;
+
+  /// No description provided for @userName.
+  ///
+  /// In en, this message translates to:
+  /// **'User name'**
+  String get userName;
+
+  /// No description provided for @theSignInSessionWasRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in session was restored. Enter the master password to unlock the encrypted workspace.'**
+  String get theSignInSessionWasRestored;
+
+  /// No description provided for @theSignInSessionDeviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in session device ID doesn\'t match the local device identity.'**
+  String get theSignInSessionDeviceId;
+
+  /// No description provided for @theSignInResponseDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in response doesn\'t match the current account or device.'**
+  String get theSignInResponseDoesntMatch;
+
+  /// No description provided for @theSignInStateChangedTry.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in state changed. Try again.'**
+  String get theSignInStateChangedTry;
+
+  /// No description provided for @theSignInStateExpiredSign.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in state expired. Sign in again.'**
+  String get theSignInStateExpiredSign;
+
+  /// No description provided for @theSignedInAccountChangedSign.
+  ///
+  /// In en, this message translates to:
+  /// **'The signed-in account changed; sign out and sign in again with the new master password.'**
+  String get theSignedInAccountChangedSign;
+
+  /// No description provided for @invalidFolderNameFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid folder name format'**
+  String get invalidFolderNameFormat;
+
+  /// No description provided for @theDestinationVaultsCurrentServerState.
+  ///
+  /// In en, this message translates to:
+  /// **'The destination Vault\'s current server state isn\'t verified yet; continue the migration after snapshot restore completes.'**
+  String get theDestinationVaultsCurrentServerState;
+
+  /// No description provided for @theTargetHostsSshCredentialChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The target host\'s SSH credential changed while preparing the connection. Reconnect.'**
+  String get theTargetHostsSshCredentialChanged;
+
+  /// No description provided for @theTargetMemberHasNoActive.
+  ///
+  /// In en, this message translates to:
+  /// **'The target member has no active device that can receive the new Vault key; the ownership transfer was cancelled.'**
+  String get theTargetMemberHasNoActive;
+
+  /// No description provided for @theTargetAccountIsNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'The target account is no longer in the current admin list. Refresh and try again.'**
+  String get theTargetAccountIsNoLonger;
+
+  /// No description provided for @thePrivateKeyCantBeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The private key can\'t be empty'**
+  String get thePrivateKeyCantBeEmpty;
+
+  /// No description provided for @theWindowSetHasASync.
+  ///
+  /// In en, this message translates to:
+  /// **'The window set has a sync conflict. Resolve the conflict first.'**
+  String get theWindowSetHasASync;
+
+  /// No description provided for @theWindowSetIsBeingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The window set is being saved. Try again shortly.'**
+  String get theWindowSetIsBeingSaved;
+
+  /// No description provided for @port2.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get port2;
+
+  /// No description provided for @theSignedMembershipEntryHasAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The signed membership entry has an invalid format.'**
+  String get theSignedMembershipEntryHasAn;
+
+  /// No description provided for @theSignedMembershipListDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The signed membership list doesn\'t match the server ACL state; refresh and try again.'**
+  String get theSignedMembershipListDoesntMatch;
+
+  /// No description provided for @theSignedMembershipListDoesntMatch2.
+  ///
+  /// In en, this message translates to:
+  /// **'The signed membership list doesn\'t match the server membership directory.'**
+  String get theSignedMembershipListDoesntMatch2;
+
+  /// No description provided for @theSignedMembershipListContainsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The signed membership list contains invalid or duplicate members.'**
+  String get theSignedMembershipListContainsInvalid;
+
+  /// No description provided for @theSignedMembershipListIsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The signed membership list is missing existing server members.'**
+  String get theSignedMembershipListIsMissing;
+
+  /// No description provided for @theAdminAuditCursorExpiredThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The admin audit cursor expired. The instance or server generation may have changed; reload from the first page.'**
+  String get theAdminAuditCursorExpiredThe;
+
+  /// No description provided for @theAdminAuditCursorIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The admin audit cursor is invalid or doesn\'t belong to the current admin/instance. Reload from the first page.'**
+  String get theAdminAuditCursorIsInvalid;
+
+  /// No description provided for @theTerminalVaultOrSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal, Vault or signed-in device changed; sharing was cancelled.'**
+  String get theTerminalVaultOrSignedIn;
+
+  /// No description provided for @terminalSharingStoppedBecauseAnObservers.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal sharing stopped because an observer\'s connection was too slow; the SSH connection can still be used.'**
+  String get terminalSharingStoppedBecauseAnObservers;
+
+  /// No description provided for @terminalSharingHasntDisconnectedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal sharing hasn\'t disconnected yet.'**
+  String get terminalSharingHasntDisconnectedYet;
+
+  /// No description provided for @terminalSharingDisconnectedTheSshConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal sharing disconnected. The SSH connection can still be used.'**
+  String get terminalSharingDisconnectedTheSshConnection;
+
+  /// No description provided for @terminalSharingDisconnectedTheSshConnection2.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal sharing disconnected; the SSH connection can still be used.'**
+  String get terminalSharingDisconnectedTheSshConnection2;
+
+  /// No description provided for @theTerminalSharingConnectionWasDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal sharing connection was disconnected.'**
+  String get theTerminalSharingConnectionWasDisconnected;
+
+  /// No description provided for @terminalFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal font size'**
+  String get terminalFontSize;
+
+  /// No description provided for @terminalFontSizePreferenceSavedEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal font size preference saved encrypted; it syncs to other devices through the current Vault.'**
+  String get terminalFontSizePreferenceSavedEncrypted;
+
+  /// No description provided for @theTerminalFontSizePreferenceNeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal font size preference needs an explicit repair first.'**
+  String get theTerminalFontSizePreferenceNeeds;
+
+  /// No description provided for @aHostReferencedByTheTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'A host referenced by the terminal is no longer in the current Vault; reopen the host before saving the layout.'**
+  String get aHostReferencedByTheTerminal;
+
+  /// No description provided for @terminalShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal shortcuts'**
+  String get terminalShortcuts;
+
+  /// No description provided for @terminalShortcutPreferenceSavedEncryptedIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal shortcut preference saved encrypted; it syncs to other devices through the current Vault.'**
+  String get terminalShortcutPreferenceSavedEncryptedIt;
+
+  /// No description provided for @theTerminalShortcutPreferenceNeedsAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal shortcut preference needs an explicit repair first.'**
+  String get theTerminalShortcutPreferenceNeedsAn;
+
+  /// No description provided for @theTerminalControlChannelDisconnectedThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal control channel disconnected; the SSH connection can still be used.'**
+  String get theTerminalControlChannelDisconnectedThe;
+
+  /// No description provided for @terminalColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal colors'**
+  String get terminalColors;
+
+  /// No description provided for @terminalColorPreferenceSavedEncryptedIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal color preference saved encrypted; it syncs to other devices through the current Vault.'**
+  String get terminalColorPreferenceSavedEncryptedIt;
+
+  /// No description provided for @theTerminalColorPreferenceNeedsAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal color preference needs an explicit repair first.'**
+  String get theTerminalColorPreferenceNeedsAn;
+
+  /// No description provided for @maintenanceJobSubmittedRefreshTheJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance job submitted. Refresh the job list to see its status.'**
+  String get maintenanceJobSubmittedRefreshTheJob;
+
+  /// No description provided for @automaticStatusChecksArePausedYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic status checks are paused. You can refresh the job status manually.'**
+  String get automaticStatusChecksArePausedYou;
+
+  /// No description provided for @scheduledBackupsTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled backups turned off.'**
+  String get scheduledBackupsTurnedOff;
+
+  /// No description provided for @scheduledBackupSettingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled backup settings saved.'**
+  String get scheduledBackupSettingsSaved;
+
+  /// No description provided for @authenticationMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication method'**
+  String get authenticationMethod;
+
+  /// No description provided for @theRecordWasClearedFromThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The record was cleared from this device\'s active cache and a signed server proof was received; catching up the sync cursor failed. Retrying the sync fetches the cleanup marker before sending pending content.'**
+  String get theRecordWasClearedFromThis;
+
+  /// No description provided for @thePublicKeysForDeviceDeviceid.
+  ///
+  /// In en, this message translates to:
+  /// **'The public keys for device {deviceId} differ between the account directory and the Vault directory.'**
+  String thePublicKeysForDeviceDeviceid(String deviceId);
+
+  /// No description provided for @theEncryptionPublicKeyOfDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'The encryption public key of device {deviceId} has an invalid length.'**
+  String theEncryptionPublicKeyOfDevice(String deviceId);
+
+  /// No description provided for @theKeyEnvelopeTargetForDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'The key envelope target for device {deviceId} is invalid or duplicated.'**
+  String theKeyEnvelopeTargetForDevice(String deviceId);
+
+  /// No description provided for @theSigningPublicKeyOfDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'The signing public key of device {deviceId} has an invalid length.'**
+  String theSigningPublicKeyOfDevice(String deviceId);
+
+  /// No description provided for @deviceRevoked2.
+  ///
+  /// In en, this message translates to:
+  /// **'Device revoked.'**
+  String get deviceRevoked2;
+
+  /// No description provided for @deviceAddedGiveTheApprovalResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Device added. Give the approval result to the new device and import it there.'**
+  String get deviceAddedGiveTheApprovalResult;
+
+  /// No description provided for @theVaultKeyEnvelopeInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault key envelope in the device approval has an invalid format.'**
+  String get theVaultKeyEnvelopeInThe;
+
+  /// No description provided for @theKeyEnvelopeContextInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The key envelope context in the device approval is invalid.'**
+  String get theKeyEnvelopeContextInThe;
+
+  /// No description provided for @theDeviceApprovalContainsDuplicateVault.
+  ///
+  /// In en, this message translates to:
+  /// **'The device approval contains duplicate Vault key envelopes.'**
+  String get theDeviceApprovalContainsDuplicateVault;
+
+  /// No description provided for @theDeviceApprovalFileHasAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The device approval file has an invalid format.'**
+  String get theDeviceApprovalFileHasAn;
+
+  /// No description provided for @theDeviceApprovalFilesAccountOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The device approval file\'s account or structure is invalid.'**
+  String get theDeviceApprovalFilesAccountOr;
+
+  /// No description provided for @theDeviceApprovalCertificateFieldsAre.
+  ///
+  /// In en, this message translates to:
+  /// **'The device approval certificate fields are missing.'**
+  String get theDeviceApprovalCertificateFieldsAre;
+
+  /// No description provided for @theDeviceRequestIsMalformedOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The device request is malformed or belongs to a different account.'**
+  String get theDeviceRequestIsMalformedOr;
+
+  /// No description provided for @thisAccountIsAlreadyAnActive.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is already an active member of the Vault; use the authorized-device approval flow.'**
+  String get thisAccountIsAlreadyAnActive;
+
+  /// No description provided for @thisInvitationIsNoLongerWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation is no longer waiting to be accepted. Refresh and try again.'**
+  String get thisInvitationIsNoLongerWaiting;
+
+  /// No description provided for @closeASessionTabFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Close a session tab first.'**
+  String get closeASessionTabFirst;
+
+  /// No description provided for @joinTheHostsTerminalShareFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the host\'s terminal share first.'**
+  String get joinTheHostsTerminalShareFirst;
+
+  /// No description provided for @openThisAccountsSessionListFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Open this account\'s session list first.'**
+  String get openThisAccountsSessionListFirst;
+
+  /// No description provided for @openAtLeastOneTerminalTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Open at least one terminal tab first.'**
+  String get openAtLeastOneTerminalTab;
+
+  /// No description provided for @signInAndUnlockTheAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in and unlock the account on a trusted device first.'**
+  String get signInAndUnlockTheAccount;
+
+  /// No description provided for @signInFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in first.'**
+  String get signInFirst;
+
+  /// No description provided for @signInBeforeChangingMfaSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in before changing MFA settings.'**
+  String get signInBeforeChangingMfaSettings;
+
+  /// No description provided for @signInBeforeViewingMfaSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in before viewing MFA settings.'**
+  String get signInBeforeViewingMfaSettings;
+
+  /// No description provided for @signInBeforeManagingThisDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in before managing this device\'s background sync notifications.'**
+  String get signInBeforeManagingThisDevices;
+
+  /// No description provided for @signInAndUnlockTheSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in and unlock the sync account first.'**
+  String get signInAndUnlockTheSync;
+
+  /// No description provided for @signInAndUnlockTheTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in and unlock the target Vault first.'**
+  String get signInAndUnlockTheTarget;
+
+  /// No description provided for @signInAndUnlockTheAccount2.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in and unlock the account first.'**
+  String get signInAndUnlockTheAccount2;
+
+  /// No description provided for @signInToThisAccountAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to this account and unlock the current device first.'**
+  String get signInToThisAccountAnd;
+
+  /// No description provided for @resolveThePreferenceReadErrorFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve the preference read error first.'**
+  String get resolveThePreferenceReadErrorFirst;
+
+  /// No description provided for @unlockTheVaultFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the Vault first'**
+  String get unlockTheVaultFirst;
+
+  /// No description provided for @unlockTheVaultFirst2.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the Vault first.'**
+  String get unlockTheVaultFirst2;
+
+  /// No description provided for @unlockAVaultBeforeSharingA.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock a Vault before sharing a terminal.'**
+  String get unlockAVaultBeforeSharingA;
+
+  /// No description provided for @unlockTheWorkspaceFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the workspace first.'**
+  String get unlockTheWorkspaceFirst;
+
+  /// No description provided for @unlockTheCurrentVaultBeforeVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the current Vault before verifying SSH host keys.'**
+  String get unlockTheCurrentVaultBeforeVerifying;
+
+  /// No description provided for @unlockTheWorkspaceThatContainsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the workspace that contains the current host first.'**
+  String get unlockTheWorkspaceThatContainsThe;
+
+  /// No description provided for @unlockTheVaultThatOwnsThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the Vault that owns this shared session first.'**
+  String get unlockTheVaultThatOwnsThis;
+
+  /// No description provided for @unlockTheAccountBeforeExportingA.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the account before exporting a share request.'**
+  String get unlockTheAccountBeforeExportingA;
+
+  /// No description provided for @connectToAnSshHostFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to an SSH host first'**
+  String get connectToAnSshHostFirst;
+
+  /// No description provided for @connectSshBeforeStartingTerminalSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect SSH before starting terminal sharing.'**
+  String get connectSshBeforeStartingTerminalSharing;
+
+  /// No description provided for @connectToTheServerFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the server first.'**
+  String get connectToTheServerFirst;
+
+  /// No description provided for @connectTheHostForThisWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect the host for this workspace pane first.'**
+  String get connectTheHostForThisWorkspace;
+
+  /// No description provided for @chooseAVaultFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a Vault first.'**
+  String get chooseAVaultFirst;
+
+  /// No description provided for @chooseAndUnlockAVaultFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose and unlock a Vault first.'**
+  String get chooseAndUnlockAVaultFirst;
+
+  /// No description provided for @configureTheServerAddressFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure the server address first'**
+  String get configureTheServerAddressFirst;
+
+  /// No description provided for @retryThePendingMasterPasswordChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry the pending master password change before deleting the account.'**
+  String get retryThePendingMasterPasswordChange;
+
+  /// No description provided for @tooManyRequestsTryAgainLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Try again later.'**
+  String get tooManyRequestsTryAgainLater;
+
+  /// No description provided for @waitForTheCurrentSyncOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the current sync or archive operation to finish.'**
+  String get waitForTheCurrentSyncOr;
+
+  /// No description provided for @enterAVaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a Vault name'**
+  String get enterAVaultName;
+
+  /// No description provided for @enterTheBootstrapToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the bootstrap token'**
+  String get enterTheBootstrapToken;
+
+  /// No description provided for @enterAGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a group name.'**
+  String get enterAGroupName;
+
+  /// No description provided for @enterTheCurrentMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the current master password.'**
+  String get enterTheCurrentMasterPassword;
+
+  /// No description provided for @enterTheCurrentAccountNameAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the current account name and master password to verify again.'**
+  String get enterTheCurrentAccountNameAnd;
+
+  /// No description provided for @enterANameForTheNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name for the new Vault.'**
+  String get enterANameForTheNew;
+
+  /// No description provided for @enterAValidTerminalSharingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid terminal sharing session UUID.'**
+  String get enterAValidTerminalSharingSession;
+
+  /// No description provided for @enterAValidAccountNameAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid account name and a duration of 1 to 30 days.'**
+  String get enterAValidAccountNameAnd;
+
+  /// No description provided for @enterTheServerAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the server address'**
+  String get enterTheServerAddress;
+
+  /// No description provided for @enterAnMfaCodeValidFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an MFA code valid for this account.'**
+  String get enterAnMfaCodeValidFor;
+
+  /// No description provided for @enterTheAccountInvitationTokenIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the account invitation token issued by the administrator'**
+  String get enterTheAccountInvitationTokenIssued;
+
+  /// No description provided for @enterTheAccountNameAndMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the account name and master password.'**
+  String get enterTheAccountNameAndMaster;
+
+  /// No description provided for @enterTheAccountPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the account password.'**
+  String get enterTheAccountPassword;
+
+  /// No description provided for @enterTheAccountEmailUserName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the account email/user name'**
+  String get enterTheAccountEmailUserName;
+
+  /// No description provided for @enterTheInvitationToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the invitation token.'**
+  String get enterTheInvitationToken;
+
+  /// No description provided for @choose1To8ActiveVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose 1 to 8 active Vault devices.'**
+  String get choose1To8ActiveVault;
+
+  /// No description provided for @chooseALabelPreferenceFromThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a {label} preference from the current conflict list.'**
+  String chooseALabelPreferenceFromThe(String label);
+
+  /// No description provided for @theAccountIsStillTheOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'The account is still the Owner of a shared Vault with other members. The server won\'t transfer ownership or delete other accounts\' data automatically; remove the other members, then try again.'**
+  String get theAccountIsStillTheOwner;
+
+  /// No description provided for @theAccountSessionChangedSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The account session changed. Sign in again, then unlock.'**
+  String get theAccountSessionChangedSignIn;
+
+  /// No description provided for @theAccountDeletionGracePeriodHas.
+  ///
+  /// In en, this message translates to:
+  /// **'The account deletion grace period has ended; it can\'t be cancelled.'**
+  String get theAccountDeletionGracePeriodHas;
+
+  /// No description provided for @theAccountDeletionWasCancelledThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The account deletion was cancelled. The server won\'t restore old sessions; enter your password to sign in again.{valueValue}'**
+  String theAccountDeletionWasCancelledThe(String valueValue);
+
+  /// No description provided for @theAccountResponseDoesntMatchThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The account response doesn\'t match the current session.'**
+  String get theAccountResponseDoesntMatchThe;
+
+  /// No description provided for @accountSecuritySettingsAreBeingProcessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Account security settings are being processed. Try again later.'**
+  String get accountSecuritySettingsAreBeingProcessed;
+
+  /// No description provided for @invalidAccountKeyLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid account key length.'**
+  String get invalidAccountKeyLength;
+
+  /// No description provided for @invalidAccountKeyLengthTheMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid account key length; the master password change was stopped.'**
+  String get invalidAccountKeyLengthTheMaster;
+
+  /// No description provided for @theAccountAlreadyHasAPending.
+  ///
+  /// In en, this message translates to:
+  /// **'The account already has a pending deletion; cancel it from the account recovery option on the sign-in page.'**
+  String get theAccountAlreadyHasAPending;
+
+  /// No description provided for @theAccountEnteredItsDeletionGrace.
+  ///
+  /// In en, this message translates to:
+  /// **'The account entered its deletion grace period. Server purge_after: {deadline}. The current session and this device\'s unlock key were cleared; during the grace period you can cancel on the sign-in page, then you must sign in again.{valueValue}{valueValue2}'**
+  String theAccountEnteredItsDeletionGrace(
+    String deadline,
+    String valueValue,
+    String valueValue2,
+  );
+
+  /// No description provided for @accountRecoverySettingsAreBeingProcessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery settings are being processed.'**
+  String get accountRecoverySettingsAreBeingProcessed;
+
+  /// No description provided for @theAccountStateJustChangedSign.
+  ///
+  /// In en, this message translates to:
+  /// **'The account state just changed. Sign in again to view it.'**
+  String get theAccountStateJustChangedSign;
+
+  /// No description provided for @anAccountStateActionIsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'An account state action is in progress. Try again later.'**
+  String get anAccountStateActionIsIn;
+
+  /// No description provided for @theInputControlAuthorizationOrVault.
+  ///
+  /// In en, this message translates to:
+  /// **'The input control authorization or Vault state changed; joining was cancelled.'**
+  String get theInputControlAuthorizationOrVault;
+
+  /// No description provided for @theInputControlConnectionWasDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'The input control connection was disconnected.'**
+  String get theInputControlConnectionWasDisconnected;
+
+  /// No description provided for @theFingerprintYouEnteredDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The fingerprint you entered doesn\'t match the candidate instance signing key.'**
+  String get theFingerprintYouEnteredDoesntMatch;
+
+  /// No description provided for @invalidMigrationDestinationVaultId.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid migration destination Vault ID.'**
+  String get invalidMigrationDestinationVaultId;
+
+  /// No description provided for @theMigrationDestinationVaultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration destination Vault couldn\'t be verified as a writable Owner Vault for this device.'**
+  String get theMigrationDestinationVaultCouldntBe;
+
+  /// No description provided for @theMigrationDestinationVaultCouldntBe2.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration destination Vault couldn\'t be opened; the local migration journal can still be resumed.'**
+  String get theMigrationDestinationVaultCouldntBe2;
+
+  /// No description provided for @theMigrationDestinationVaultIsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration destination Vault is missing its initial signed membership chain.'**
+  String get theMigrationDestinationVaultIsMissing;
+
+  /// No description provided for @invalidMigrationRecordId.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid migration record ID.'**
+  String get invalidMigrationRecordId;
+
+  /// No description provided for @theRestoreJobFinishedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The restore job finished, but the isolated copy state isn\'t verified and can\'t be managed from here.'**
+  String get theRestoreJobFinishedButThe;
+
+  /// No description provided for @remoteDesktopRequiresASignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop requires a sign-in gateway.'**
+  String get remoteDesktopRequiresASignIn;
+
+  /// No description provided for @invalidRemoteFileNameFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid remote file name format'**
+  String get invalidRemoteFileNameFormat;
+
+  /// No description provided for @invalidRemoteFilePathFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid remote file path format'**
+  String get invalidRemoteFilePathFormat;
+
+  /// No description provided for @notificationPermissionWasntGrantedBackgroundSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission wasn\'t granted; background sync notifications weren\'t registered.'**
+  String get notificationPermissionWasntGrantedBackgroundSync;
+
+  /// No description provided for @invitationCreatedGiveTheOneTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation created. Give the one-time token to the target account over a trusted channel.'**
+  String get invitationCreatedGiveTheOneTime;
+
+  /// No description provided for @theInvitationWasAcceptedButThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The invitation was accepted, but this device couldn\'t switch to the invited Vault. Select that Vault again and sync.'**
+  String get theInvitationWasAcceptedButThis;
+
+  /// No description provided for @theInvitationWasAcceptedButThis2.
+  ///
+  /// In en, this message translates to:
+  /// **'The invitation was accepted, but this device didn\'t receive a Vault key envelope it can decrypt. Ask the inviter to check the device public key.'**
+  String get theInvitationWasAcceptedButThis2;
+
+  /// No description provided for @theInvitationRoleCanOnlyBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The invitation role can only be editor or viewer.'**
+  String get theInvitationRoleCanOnlyBe;
+
+  /// No description provided for @someLocalRecordsCouldntBeVerified3.
+  ///
+  /// In en, this message translates to:
+  /// **'Some local records couldn\'t be verified, so the host\'s group, credential or Jump Host references can\'t be checked safely. Repair or resync the Vault first.'**
+  String get someLocalRecordsCouldntBeVerified3;
+
+  /// No description provided for @someLocalRecordsCouldntBeVerified4.
+  ///
+  /// In en, this message translates to:
+  /// **'Some local records couldn\'t be verified, so credential references can\'t be checked safely. Repair or resync the Vault first.'**
+  String get someLocalRecordsCouldntBeVerified4;
+
+  /// No description provided for @someLocalRecordsCouldntBeVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Some local records couldn\'t be verified, so group references can\'t be checked safely. Repair or resync the Vault first.'**
+  String get someLocalRecordsCouldntBeVerified;
+
+  /// No description provided for @someLocalRecordsCouldntBeVerified2.
+  ///
+  /// In en, this message translates to:
+  /// **'Some local records couldn\'t be verified, so the snippet\'s SSH credential references can\'t be checked safely. Repair or resync the Vault first.'**
+  String get someLocalRecordsCouldntBeVerified2;
+
+  /// No description provided for @theQuotaMustBeBetween1.
+  ///
+  /// In en, this message translates to:
+  /// **'The quota must be between 1 byte and 1 TiB.'**
+  String get theQuotaMustBeBetween1;
+
+  /// No description provided for @theReVerifiedAccountMustMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The re-verified account must match the currently signed-in account.'**
+  String get theReVerifiedAccountMustMatch;
+
+  /// No description provided for @theIsolatedCopyIsntVerifiedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated copy isn\'t verified yet. The server verifies ownership and integrity before cleanup.'**
+  String get theIsolatedCopyIsntVerifiedYet;
+
+  /// No description provided for @theIsolatedCopyWasDiscardedYou.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated copy was discarded. You can prepare it again from the source archive.'**
+  String get theIsolatedCopyWasDiscardedYou;
+
+  /// No description provided for @isolatedCopyCleanupHasntFinishedYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Isolated copy cleanup hasn\'t finished. You can safely retry the cleanup.'**
+  String get isolatedCopyCleanupHasntFinishedYou;
+
+  /// No description provided for @isolatedCopyCleanupDidntFinishYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Isolated copy cleanup didn\'t finish; you can safely retry.'**
+  String get isolatedCopyCleanupDidntFinishYou;
+
+  /// No description provided for @theIsolatedRestoreCopyPreparationJob3.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated restore copy preparation job was interrupted. Live data wasn\'t changed.'**
+  String get theIsolatedRestoreCopyPreparationJob3;
+
+  /// No description provided for @theIsolatedRestoreCopyPreparationJob.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated restore copy preparation job was accepted. It won\'t activate the copy or replace live data.'**
+  String get theIsolatedRestoreCopyPreparationJob;
+
+  /// No description provided for @theIsolatedRestoreCopyPreparationJob2.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated restore copy preparation job finished. Live data wasn\'t changed.'**
+  String get theIsolatedRestoreCopyPreparationJob2;
+
+  /// No description provided for @theIsolatedRestoreCopyWasDiscarded.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated restore copy was discarded. The source archive and live data weren\'t changed.'**
+  String get theIsolatedRestoreCopyWasDiscarded;
+
+  /// No description provided for @theIsolatedRestoreCopyIsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated restore copy is ready. Live data wasn\'t changed.'**
+  String get theIsolatedRestoreCopyIsReady;
+
+  /// No description provided for @theIsolatedRestoreCopyIsReady2.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated restore copy is ready, but a job status update was interrupted. Live data wasn\'t changed.'**
+  String get theIsolatedRestoreCopyIsReady2;
+
+  /// No description provided for @theIsolatedRestoreCopyIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated restore copy is invalid. Refresh the job list and try again.'**
+  String get theIsolatedRestoreCopyIsInvalid;
+
+  /// No description provided for @theIsolatedRestoreCopyFailedVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated restore copy failed verification; the server didn\'t delete any unknown files. Contact the instance operator.'**
+  String get theIsolatedRestoreCopyFailedVerification;
+
+  /// No description provided for @theIsolatedRestoreCopyStateChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The isolated restore copy state changed. Refresh the job list and try again.'**
+  String get theIsolatedRestoreCopyStateChanged;
+
+  /// No description provided for @theDefaultSshCredentialNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'The default SSH credential no longer exists. Choose a valid credential or clear the default.'**
+  String get theDefaultSshCredentialNoLonger;
+
+  /// No description provided for @defaultWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Default workspace'**
+  String get defaultWorkspace;
+
+  /// No description provided for @defaultWorkspacePreferenceSavedEncryptedIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Default workspace preference saved encrypted; it syncs to other devices through the current Vault.'**
+  String get defaultWorkspacePreferenceSavedEncryptedIt;
+
+  /// No description provided for @theDefaultWorkspacePreferenceNeedsAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The default workspace preference needs an explicit repair first.'**
+  String get theDefaultWorkspacePreferenceNeedsAn;
+
+  /// No description provided for @restoreDeadlineFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'(restore deadline {format})'**
+  String restoreDeadlineFormat(String format);
+
+  /// No description provided for @unsupportedArgon2idParameters.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported Argon2id parameters.'**
+  String get unsupportedArgon2idParameters;
+
+  /// No description provided for @notASupportedAtermiusEncryptedArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a supported Atermius encrypted archive.'**
+  String get notASupportedAtermiusEncryptedArchive;
+
+  /// No description provided for @anEncryptedArchiveChunkIsTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'An encrypted archive chunk is truncated.'**
+  String get anEncryptedArchiveChunkIsTruncated;
+
+  /// No description provided for @theEncryptedArchiveExceedsTheFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The encrypted archive exceeds the file size limit.'**
+  String get theEncryptedArchiveExceedsTheFile;
+
+  /// No description provided for @anArchiveObjectIsEmptyOr.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive object is empty or exceeds the 32 MiB limit.'**
+  String get anArchiveObjectIsEmptyOr;
+
+  /// No description provided for @invalidArchiveArgon2idSaltLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive Argon2id salt length.'**
+  String get invalidArchiveArgon2idSaltLength;
+
+  /// No description provided for @theArchiveContentExceedsTheSize.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive content exceeds the size that can be processed.'**
+  String get theArchiveContentExceedsTheSize;
+
+  /// No description provided for @theArchiveChunkLengthDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive chunk length doesn\'t match.'**
+  String get theArchiveChunkLengthDoesntMatch;
+
+  /// No description provided for @theArchiveHeaderIsntCanonicalJson.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive header isn\'t canonical JSON.'**
+  String get theArchiveHeaderIsntCanonicalJson;
+
+  /// No description provided for @theArchiveHeaderHasUnknownOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive header has unknown or incomplete fields.'**
+  String get theArchiveHeaderHasUnknownOr;
+
+  /// No description provided for @theArchiveHeaderExceedsTheSize.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive header exceeds the size limit.'**
+  String get theArchiveHeaderExceedsTheSize;
+
+  /// No description provided for @invalidArchiveHeaderLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive header length.'**
+  String get invalidArchiveHeaderLength;
+
+  /// No description provided for @wrongArchivePasswordOrTheArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong archive password, or the archive content failed integrity verification.'**
+  String get wrongArchivePasswordOrTheArchive;
+
+  /// No description provided for @theTotalArchiveObjectDataExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'The total archive object data exceeds the limit.'**
+  String get theTotalArchiveObjectDataExceeds;
+
+  /// No description provided for @theNumberOfArchiveObjectsExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'The number of archive objects exceeds the limit.'**
+  String get theNumberOfArchiveObjectsExceeds;
+
+  /// No description provided for @theArchiveHasTrailingDataOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive has trailing data or incomplete content.'**
+  String get theArchiveHasTrailingDataOr;
+
+  /// No description provided for @theArchiveFileSizeIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive file size is invalid or exceeds the limit.'**
+  String get theArchiveFileSizeIsInvalid;
+
+  /// No description provided for @theArchiveFileIsTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive file is truncated.'**
+  String get theArchiveFileIsTruncated;
+
+  /// No description provided for @invalidArchivePlaintextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive plaintext size.'**
+  String get invalidArchivePlaintextSize;
+
+  /// No description provided for @invalidArchivePlaintextType.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive plaintext type.'**
+  String get invalidArchivePlaintextType;
+
+  /// No description provided for @theArchivePlaintextExceedsTheFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive plaintext exceeds the file size limit.'**
+  String get theArchivePlaintextExceedsTheFile;
+
+  /// No description provided for @theArchiveManifestIsntCanonicalJson.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive manifest isn\'t canonical JSON.'**
+  String get theArchiveManifestIsntCanonicalJson;
+
+  /// No description provided for @theArchiveManifestExceedsThe16.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive manifest exceeds the 16 MiB limit.'**
+  String get theArchiveManifestExceedsThe16;
+
+  /// No description provided for @invalidArchiveManifestLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive manifest length.'**
+  String get invalidArchiveManifestLength;
+
+  /// No description provided for @theArchiveVersionServerSpaceOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive version, server space or Vault doesn\'t match the current target. Cross-space and cross-Vault imports aren\'t supported yet.'**
+  String get theArchiveVersionServerSpaceOr;
+
+  /// No description provided for @theArchiveLengthOrChunkParameters.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive length or chunk parameters exceed resource limits.'**
+  String get theArchiveLengthOrChunkParameters;
+
+  /// No description provided for @theSeparateArchivePasswordMustBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The separate archive password must be at least 12 UTF-8 bytes.'**
+  String get theSeparateArchivePasswordMustBe;
+
+  /// No description provided for @invalidDecryptedArchiveChunkLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid decrypted archive chunk length.'**
+  String get invalidDecryptedArchiveChunkLength;
+
+  /// No description provided for @notASupportedLocalEncryptedArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a supported local encrypted archive.'**
+  String get notASupportedLocalEncryptedArchive;
+
+  /// No description provided for @aLocalEncryptedArchiveChunkIs.
+  ///
+  /// In en, this message translates to:
+  /// **'A local encrypted archive chunk is truncated.'**
+  String get aLocalEncryptedArchiveChunkIs;
+
+  /// No description provided for @theLocalEncryptedArchiveExceedsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The local encrypted archive exceeds the file size limit.'**
+  String get theLocalEncryptedArchiveExceedsThe;
+
+  /// No description provided for @unsupportedLocalArchiveArgon2idParameters.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported local archive Argon2id parameters.'**
+  String get unsupportedLocalArchiveArgon2idParameters;
+
+  /// No description provided for @invalidSshTrustRecordMetadataIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid SSH trust record metadata in the local archive.'**
+  String get invalidSshTrustRecordMetadataIn;
+
+  /// No description provided for @invalidOrderOrUniquenessOfSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid order or uniqueness of SSH trust records in the local archive.'**
+  String get invalidOrderOrUniquenessOfSsh;
+
+  /// No description provided for @theNumberOfSshTrustRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'The number of SSH trust records in the local archive exceeds the limit.'**
+  String get theNumberOfSshTrustRecords;
+
+  /// No description provided for @invalidSshTrustRecordInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid SSH trust record in the local archive.'**
+  String get invalidSshTrustRecordInThe;
+
+  /// No description provided for @invalidBase64urlEncodingInTheLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid base64url encoding in the local archive.'**
+  String get invalidBase64urlEncodingInTheLocal;
+
+  /// No description provided for @invalidLocalArchiveSaltLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid local archive salt length.'**
+  String get invalidLocalArchiveSaltLength;
+
+  /// No description provided for @theLocalArchiveContentIsntCanonical.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive content isn\'t canonical JSON.'**
+  String get theLocalArchiveContentIsntCanonical;
+
+  /// No description provided for @theLocalArchiveContentIsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive content is empty or exceeds the size limit.'**
+  String get theLocalArchiveContentIsEmpty;
+
+  /// No description provided for @unsupportedLocalArchiveContentFormatOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported local archive content format or version.'**
+  String get unsupportedLocalArchiveContentFormatOr;
+
+  /// No description provided for @theLocalArchiveChunkLengthDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive chunk length doesn\'t match.'**
+  String get theLocalArchiveChunkLengthDoesnt;
+
+  /// No description provided for @theLocalArchivePassphraseMustBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive passphrase must be 12 to 1024 UTF-8 bytes.'**
+  String get theLocalArchivePassphraseMustBe;
+
+  /// No description provided for @theLocalArchiveContainsDuplicateRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive contains duplicate record IDs.'**
+  String get theLocalArchiveContainsDuplicateRecord;
+
+  /// No description provided for @theLocalArchiveSizeIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive size is invalid or exceeds the limit.'**
+  String get theLocalArchiveSizeIsInvalid;
+
+  /// No description provided for @theLocalArchiveHeaderIsntCanonical.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive header isn\'t canonical JSON.'**
+  String get theLocalArchiveHeaderIsntCanonical;
+
+  /// No description provided for @theLocalArchiveHeaderHasUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive header has unknown or incomplete fields.'**
+  String get theLocalArchiveHeaderHasUnknown;
+
+  /// No description provided for @theLocalArchiveHeaderExceedsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive header exceeds the size limit.'**
+  String get theLocalArchiveHeaderExceedsThe;
+
+  /// No description provided for @invalidLocalArchiveHeaderLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid local archive header length.'**
+  String get invalidLocalArchiveHeaderLength;
+
+  /// No description provided for @wrongLocalArchivePasswordOrThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong local archive password, or the archive failed integrity verification.'**
+  String get wrongLocalArchivePasswordOrThe;
+
+  /// No description provided for @theLocalArchiveHasTrailingData.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive has trailing data or incomplete content.'**
+  String get theLocalArchiveHasTrailingData;
+
+  /// No description provided for @theLocalArchiveFileIsTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive file is truncated.'**
+  String get theLocalArchiveFileIsTruncated;
+
+  /// No description provided for @theLocalArchivePlaintextIsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive plaintext is empty or exceeds the limit.'**
+  String get theLocalArchivePlaintextIsEmpty;
+
+  /// No description provided for @theLocalArchivePlaintextExceedsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive plaintext exceeds the size limit.'**
+  String get theLocalArchivePlaintextExceedsThe;
+
+  /// No description provided for @unsupportedLocalArchiveFormatOrVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported local archive format or version.'**
+  String get unsupportedLocalArchiveFormatOrVersion;
+
+  /// No description provided for @invalidDecryptedChunkLengthInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid decrypted chunk length in the local archive.'**
+  String get invalidDecryptedChunkLengthInThe;
+
+  /// No description provided for @theLocalArchiveRecordListExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive record list exceeds the limit.'**
+  String get theLocalArchiveRecordListExceeds;
+
+  /// No description provided for @invalidRecordOrderOrUniquenessIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid record order or uniqueness in the local archive.'**
+  String get invalidRecordOrderOrUniquenessIn;
+
+  /// No description provided for @theNumberOfRecordsInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The number of records in the local archive exceeds the limit.'**
+  String get theNumberOfRecordsInThe;
+
+  /// No description provided for @invalidLocalArchiveRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid local archive record.'**
+  String get invalidLocalArchiveRecord;
+
+  /// No description provided for @theLocalArchiveLengthOrChunk.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive length or chunk parameters exceed the limits.'**
+  String get theLocalArchiveLengthOrChunk;
+
+  /// No description provided for @theVaultMembershipChainIsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault membership chain is missing or exceeds the limit.'**
+  String get theVaultMembershipChainIsMissing;
+
+  /// No description provided for @aDeviceSequenceFloorIsOut.
+  ///
+  /// In en, this message translates to:
+  /// **'A device sequence floor is out of the safe range.'**
+  String get aDeviceSequenceFloorIsOut;
+
+  /// No description provided for @invalidDeviceSequenceFloorsFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid device sequence floors format.'**
+  String get invalidDeviceSequenceFloorsFormat;
+
+  /// No description provided for @theEpochKeySha256Doesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The epoch key SHA-256 doesn\'t match the binary block.'**
+  String get theEpochKeySha256Doesnt;
+
+  /// No description provided for @theEpochKeyDescriptorsDontMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The epoch key descriptors don\'t match the key envelope set.'**
+  String get theEpochKeyDescriptorsDontMatch;
+
+  /// No description provided for @invalidDeviceSignatureOnTheEpoch.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid device signature on the epoch key.'**
+  String get invalidDeviceSignatureOnTheEpoch;
+
+  /// No description provided for @theEpochKeyProofSignerIsnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The epoch key proof signer isn\'t a Vault member in that version.'**
+  String get theEpochKeyProofSignerIsnt;
+
+  /// No description provided for @epochEpochMapsToInconsistentVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Epoch {epoch} maps to inconsistent Vault keys.'**
+  String epochEpochMapsToInconsistentVault(int epoch);
+
+  /// No description provided for @theUnsealedKeyEnvelopeDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The unsealed key envelope doesn\'t match the local epoch key.'**
+  String get theUnsealedKeyEnvelopeDoesntMatch;
+
+  /// No description provided for @invalidMembershipEncryptionFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid membership encryption fingerprint.'**
+  String get invalidMembershipEncryptionFingerprint;
+
+  /// No description provided for @invalidMembershipMemberRoleStateId.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid membership member role/state/id.'**
+  String get invalidMembershipMemberRoleStateId;
+
+  /// No description provided for @theMembershipSignerWasntAnActive.
+  ///
+  /// In en, this message translates to:
+  /// **'The membership signer wasn\'t an active Owner in the corresponding signed version.'**
+  String get theMembershipSignerWasntAnActive;
+
+  /// No description provided for @objectRefsMustBeUniqueLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'object_refs must be unique lowercase UUIDs in strictly ascending order.'**
+  String get objectRefsMustBeUniqueLowercase;
+
+  /// No description provided for @objectRefsIsntAnArrayOr.
+  ///
+  /// In en, this message translates to:
+  /// **'object_refs isn\'t an array or exceeds 1024 entries.'**
+  String get objectRefsIsntAnArrayOr;
+
+  /// No description provided for @theSnapshotCurrentHeadIsInconsistent.
+  ///
+  /// In en, this message translates to:
+  /// **'The snapshot current head is inconsistent with the same pinned history watermark.'**
+  String get theSnapshotCurrentHeadIsInconsistent;
+
+  /// No description provided for @theSnapshotHeadCommitSeqDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The snapshot head commit_seq doesn\'t match the pinned history watermark.'**
+  String get theSnapshotHeadCommitSeqDoesnt;
+
+  /// No description provided for @theSnapshotHeadCommitSeqExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'The snapshot head commit_seq exceeds the pinned snapshot watermark.'**
+  String get theSnapshotHeadCommitSeqExceeds;
+
+  /// No description provided for @aSnapshotHeadIsMissingFields.
+  ///
+  /// In en, this message translates to:
+  /// **'A snapshot head is missing fields or duplicated.'**
+  String get aSnapshotHeadIsMissingFields;
+
+  /// No description provided for @theSnapshotHeadSetDoesntCover.
+  ///
+  /// In en, this message translates to:
+  /// **'The snapshot head set doesn\'t cover all history records.'**
+  String get theSnapshotHeadSetDoesntCover;
+
+  /// No description provided for @fieldMustBeADecimalString.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} must be a decimal string.'**
+  String fieldMustBeADecimalString(String field);
+
+  /// No description provided for @labelMustBeAJsonObject.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} must be a JSON object.'**
+  String labelMustBeAJsonObject(String label);
+
+  /// No description provided for @uploadedObjectObjectidFailedReadBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded object {objectId} failed read-back verification.'**
+  String uploadedObjectObjectidFailedReadBack(String objectId);
+
+  /// No description provided for @revisionCommitSeqIsntMonotonicOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Revision commit_seq isn\'t monotonic or exceeds the snapshot watermark.'**
+  String get revisionCommitSeqIsntMonotonicOr;
+
+  /// No description provided for @theRevisionHistoryCursorIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The revision history cursor is invalid or repeated.'**
+  String get theRevisionHistoryCursorIsInvalid;
+
+  /// No description provided for @theRevisionHistoryExceedsTheArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'The revision history exceeds the archive entry limit.'**
+  String get theRevisionHistoryExceedsTheArchive;
+
+  /// No description provided for @theServerGenerationDiffersBetweenRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'The server generation differs between revision and conflict history pages.'**
+  String get theServerGenerationDiffersBetweenRevision;
+
+  /// No description provided for @conflictSeqIsntMonotonicOrExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'conflict_seq isn\'t monotonic or exceeds the snapshot watermark.'**
+  String get conflictSeqIsntMonotonicOrExceeds;
+
+  /// No description provided for @aConflictBranchReferencesABase.
+  ///
+  /// In en, this message translates to:
+  /// **'A conflict branch references a base revision outside the snapshot.'**
+  String get aConflictBranchReferencesABase;
+
+  /// No description provided for @theConflictHistoryCursorIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The conflict history cursor is invalid or repeated.'**
+  String get theConflictHistoryCursorIsInvalid;
+
+  /// No description provided for @theConflictHistoryExceedsTheArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'The conflict history exceeds the archive entry limit.'**
+  String get theConflictHistoryExceedsTheArchive;
+
+  /// No description provided for @aConflictResolutionReferencesARevision.
+  ///
+  /// In en, this message translates to:
+  /// **'A conflict resolution references a revision outside the snapshot.'**
+  String get aConflictResolutionReferencesARevision;
+
+  /// No description provided for @theConflictResolutionStateAndResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'The conflict resolution state and resolution_seq don\'t match.'**
+  String get theConflictResolutionStateAndResolution;
+
+  /// No description provided for @encryptedArchiveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted archive file'**
+  String get encryptedArchiveFile;
+
+  /// No description provided for @theHistorySnapshotContainsADuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'The history snapshot contains a duplicate conflict_id.'**
+  String get theHistorySnapshotContainsADuplicate;
+
+  /// No description provided for @theHistorySnapshotContainsADuplicate2.
+  ///
+  /// In en, this message translates to:
+  /// **'The history snapshot contains a duplicate revision_id.'**
+  String get theHistorySnapshotContainsADuplicate2;
+
+  /// No description provided for @historicalSigningDeviceIdIsntIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Historical signing device {id} isn\'t in the verifiable Vault directory.'**
+  String historicalSigningDeviceIdIsntIn(String id);
+
+  /// No description provided for @historyEntriesExceedTheArchiveResource.
+  ///
+  /// In en, this message translates to:
+  /// **'History entries exceed the archive resource limit.'**
+  String get historyEntriesExceedTheArchiveResource;
+
+  /// No description provided for @aHistoryPageDoesntMatchThe.
+  ///
+  /// In en, this message translates to:
+  /// **'A history page doesn\'t match the pinned Vault snapshot context.'**
+  String get aHistoryPageDoesntMatchThe;
+
+  /// No description provided for @theSameDeviceIdHasConflicting.
+  ///
+  /// In en, this message translates to:
+  /// **'The same device ID has conflicting public key directory entries.'**
+  String get theSameDeviceIdHasConflicting;
+
+  /// No description provided for @pinningTheServerHistorySnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinning the server history snapshot'**
+  String get pinningTheServerHistorySnapshot;
+
+  /// No description provided for @sha256OfObjectIdDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'SHA-256 of object {id} doesn\'t match its content digest.'**
+  String sha256OfObjectIdDoesnt(String id);
+
+  /// No description provided for @objectIdIsReferencedByVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Object {id} is referenced by verified records, but neither the server nor the local archive cache has its content; an incomplete archive won\'t be created.'**
+  String objectIdIsReferencedByVerified(String id);
+
+  /// No description provided for @unsupportedArchiveBinaryBlockKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported archive binary block kind.'**
+  String get unsupportedArchiveBinaryBlockKind;
+
+  /// No description provided for @archiveBinaryBlockOffsetsHaveGaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive binary block offsets have gaps, overlaps or exceed limits.'**
+  String get archiveBinaryBlockOffsetsHaveGaps;
+
+  /// No description provided for @tooManyArchiveBinaryBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many archive binary blocks.'**
+  String get tooManyArchiveBinaryBlocks;
+
+  /// No description provided for @theArchiveBinaryBlocksDontCover.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive binary blocks don\'t cover the full payload.'**
+  String get theArchiveBinaryBlocksDontCover;
+
+  /// No description provided for @duplicateArchiveBinaryObjectId.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate archive binary object_id.'**
+  String get duplicateArchiveBinaryObjectId;
+
+  /// No description provided for @invalidArchiveConflictResolutionOutboxLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive conflict resolution/outbox link.'**
+  String get invalidArchiveConflictResolutionOutboxLink;
+
+  /// No description provided for @invalidArchiveConflictOrderWatermarkOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive conflict order, watermark or uniqueness.'**
+  String get invalidArchiveConflictOrderWatermarkOr;
+
+  /// No description provided for @theArchiveCreatedAtIsntAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive created_at isn\'t an RFC3339 time.'**
+  String get theArchiveCreatedAtIsntAn;
+
+  /// No description provided for @invalidArchiveEpochKeyBinaryBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive epoch key binary block.'**
+  String get invalidArchiveEpochKeyBinaryBlock;
+
+  /// No description provided for @theArchiveEpochKeyBlockDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive epoch key block doesn\'t match the signed descriptor.'**
+  String get theArchiveEpochKeyBlockDoesnt;
+
+  /// No description provided for @archiveEpochKeyKeyDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive epoch key {key} doesn\'t match this device\'s key.'**
+  String archiveEpochKeyKeyDoesntMatch(String key);
+
+  /// No description provided for @theArchiveGraveyardCountDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive graveyard count doesn\'t match the snapshot tombstones.'**
+  String get theArchiveGraveyardCountDoesntMatch;
+
+  /// No description provided for @theArchiveGraveyardDoesntMatchThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive graveyard doesn\'t match the verified tombstones.'**
+  String get theArchiveGraveyardDoesntMatchThe;
+
+  /// No description provided for @invalidArchiveKeyEnvelopeContextOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive key envelope context or uniqueness.'**
+  String get invalidArchiveKeyEnvelopeContextOr;
+
+  /// No description provided for @invalidArchiveKeyEnvelopeSealingFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive key envelope sealing format.'**
+  String get invalidArchiveKeyEnvelopeSealingFormat;
+
+  /// No description provided for @invalidArchiveKeyEnvelopeSignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive key envelope signature.'**
+  String get invalidArchiveKeyEnvelopeSignature;
+
+  /// No description provided for @invalidArchiveLocalPendingSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive local_pending schema.'**
+  String get invalidArchiveLocalPendingSchema;
+
+  /// No description provided for @theArchiveMembershipDoesntIncludeThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive membership doesn\'t include the current account.'**
+  String get theArchiveMembershipDoesntIncludeThe;
+
+  /// No description provided for @theArchiveMembershipIsntAValid.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive membership isn\'t a valid prefix of the current Vault chain.'**
+  String get theArchiveMembershipIsntAValid;
+
+  /// No description provided for @theArchiveMembershipIsNewerThan.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive membership is newer than the current Vault chain.'**
+  String get theArchiveMembershipIsNewerThan;
+
+  /// No description provided for @theArchiveObjectBlockSetDiffers.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive object block set differs from the verified object_refs.'**
+  String get theArchiveObjectBlockSetDiffers;
+
+  /// No description provided for @theArchiveOutboxBaseEnvelopeIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive outbox base envelope is missing its base revision.'**
+  String get theArchiveOutboxBaseEnvelopeIs;
+
+  /// No description provided for @anArchiveOutboxDeviceSeqIs.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive outbox device_seq is out of the safe integer range.'**
+  String get anArchiveOutboxDeviceSeqIs;
+
+  /// No description provided for @invalidArchiveOutboxState.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive outbox state.'**
+  String get invalidArchiveOutboxState;
+
+  /// No description provided for @anArchiveRevisionIsDuplicatedOr.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive revision is duplicated or its base chain isn\'t continuous.'**
+  String get anArchiveRevisionIsDuplicatedOr;
+
+  /// No description provided for @anArchiveSignedEnvelopeIsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive signed envelope is missing its header.'**
+  String get anArchiveSignedEnvelopeIsMissing;
+
+  /// No description provided for @invalidArchiveSnapshotCursorGeneration.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive snapshot cursor/generation.'**
+  String get invalidArchiveSnapshotCursorGeneration;
+
+  /// No description provided for @anArchiveTombstoneDoesntMatchThe.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive tombstone doesn\'t match the latest history record.'**
+  String get anArchiveTombstoneDoesntMatchThe;
+
+  /// No description provided for @unsupportedArchiveVaultRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported archive vault_role.'**
+  String get unsupportedArchiveVaultRole;
+
+  /// No description provided for @invalidArchiveRevisionOrderOrWatermark.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive revision order or watermark.'**
+  String get invalidArchiveRevisionOrderOrWatermark;
+
+  /// No description provided for @theArchiveConflictBaseRevisionDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive conflict base revision doesn\'t exist.'**
+  String get theArchiveConflictBaseRevisionDoesnt;
+
+  /// No description provided for @anArchiveConflictEnvelopeHasNo.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive conflict envelope has no signed header.'**
+  String get anArchiveConflictEnvelopeHasNo;
+
+  /// No description provided for @anArchiveConflictResolutionPointsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive conflict resolution points to an invalid target.'**
+  String get anArchiveConflictResolutionPointsTo;
+
+  /// No description provided for @duplicateExternalDeviceOutboxConflictId.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate external-device outbox conflict ID in the archive.'**
+  String get duplicateExternalDeviceOutboxConflictId;
+
+  /// No description provided for @archiveFieldKeyIsMissingOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive field {key} is missing or invalid.'**
+  String archiveFieldKeyIsMissingOr(String key);
+
+  /// No description provided for @invalidArchiveFieldType.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive field type.'**
+  String get invalidArchiveFieldType;
+
+  /// No description provided for @anArchiveObjectIdLengthOr.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive object ID, length or SHA-256 failed pre-apply verification; nothing was uploaded or written to the local database.'**
+  String get anArchiveObjectIdLengthOr;
+
+  /// No description provided for @sha256MismatchForArchiveObject.
+  ///
+  /// In en, this message translates to:
+  /// **'SHA-256 mismatch for archive object {objectId}.'**
+  String sha256MismatchForArchiveObject(String objectId);
+
+  /// No description provided for @theNumberOfEncryptedObjectsReferenced.
+  ///
+  /// In en, this message translates to:
+  /// **'The number of encrypted objects referenced by the archive exceeds the limit.'**
+  String get theNumberOfEncryptedObjectsReferenced;
+
+  /// No description provided for @theArchiveMustBeBoundTo.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive must be bound to one exporting device\'s key envelope set.'**
+  String get theArchiveMustBeBoundTo;
+
+  /// No description provided for @unsupportedArchiveLocalConflictKindState.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported archive local conflict kind/state.'**
+  String get unsupportedArchiveLocalConflictKindState;
+
+  /// No description provided for @invalidLinkBetweenArchiveLocalConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid link between archive local conflict resolution state and outbox.'**
+  String get invalidLinkBetweenArchiveLocalConflict;
+
+  /// No description provided for @duplicateArchiveLocalConflictId.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate archive local conflict_id.'**
+  String get duplicateArchiveLocalConflictId;
+
+  /// No description provided for @theArchivesLocalOutboxBaseRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive\'s local outbox base_revision can\'t be verified.'**
+  String get theArchivesLocalOutboxBaseRevision;
+
+  /// No description provided for @theArchivesLocalOutboxMetadataIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive\'s local outbox metadata is invalid or duplicated.'**
+  String get theArchivesLocalOutboxMetadataIs;
+
+  /// No description provided for @theArchiveFormatFieldsAreInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive format fields are invalid or differ from the current service space/Vault.'**
+  String get theArchiveFormatFieldsAreInvalid;
+
+  /// No description provided for @anArchiveRecordDeviceSeqIs.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive record device_seq is out of the safe range.'**
+  String get anArchiveRecordDeviceSeqIs;
+
+  /// No description provided for @anArchiveDevicePublicKeyIs.
+  ///
+  /// In en, this message translates to:
+  /// **'An archive device public key is invalid or duplicated.'**
+  String get anArchiveDevicePublicKeyIs;
+
+  /// No description provided for @archiveDeviceDirectoryKeyDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive device directory {key} doesn\'t match the current Vault directory.'**
+  String archiveDeviceDirectoryKeyDoesntMatch(String key);
+
+  /// No description provided for @invalidArchiveDeviceDirectoryOrMembership.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid archive device directory or membership chain format.'**
+  String get invalidArchiveDeviceDirectoryOrMembership;
+
+  /// No description provided for @theCurrentVaultMembershipChainIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault membership chain is invalid.'**
+  String get theCurrentVaultMembershipChainIs;
+
+  /// No description provided for @theCurrentVaultDeviceIsntUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault/device isn\'t unlocked, so an archive can\'t be created.'**
+  String get theCurrentVaultDeviceIsntUnlocked;
+
+  /// No description provided for @thisDeviceHasNoVaultEpoch.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has no Vault epoch key to export.'**
+  String get thisDeviceHasNoVaultEpoch;
+
+  /// No description provided for @theCurrentDevicesKeyEnvelopeSource.
+  ///
+  /// In en, this message translates to:
+  /// **'The current device\'s key envelope source or context couldn\'t be verified.'**
+  String get theCurrentDevicesKeyEnvelopeSource;
+
+  /// No description provided for @theCurrentAccountIsntInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The current account isn\'t in the latest signed membership.'**
+  String get theCurrentAccountIsntInThe;
+
+  /// No description provided for @theSnapshotExceedsTheArchiveCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'The snapshot exceeds the archive capacity (100,000 records); no archive was created.'**
+  String get theSnapshotExceedsTheArchiveCapacity;
+
+  /// No description provided for @collectingAndCheckingEncryptedObjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Collecting and checking encrypted objects'**
+  String get collectingAndCheckingEncryptedObjects;
+
+  /// No description provided for @theTombstoneGraveyardCouldntBeRebuilt.
+  ///
+  /// In en, this message translates to:
+  /// **'The tombstone graveyard couldn\'t be rebuilt from the pinned history.'**
+  String get theTombstoneGraveyardCouldntBeRebuilt;
+
+  /// No description provided for @theLastSnapshotPageStillContains.
+  ///
+  /// In en, this message translates to:
+  /// **'The last snapshot page still contains a continuation cursor.'**
+  String get theLastSnapshotPageStillContains;
+
+  /// No description provided for @duplicateServerKeyEnvelopeContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate server key envelope context.'**
+  String get duplicateServerKeyEnvelopeContext;
+
+  /// No description provided for @serverObjectObjectidConflictsWithThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Server object {objectId} conflicts with the archive content; the immutable object won\'t be overwritten.'**
+  String serverObjectObjectidConflictsWithThe(String objectId);
+
+  /// No description provided for @theServerSnapshotItemCountDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot item_count doesn\'t match the paged manifest count.'**
+  String get theServerSnapshotItemCountDoesnt;
+
+  /// No description provided for @theServerSnapshotItemCountDoesnt2.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot item_count doesn\'t match the full manifest count.'**
+  String get theServerSnapshotItemCountDoesnt2;
+
+  /// No description provided for @theServerSnapshotItemCountIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot item_count is inconsistent between pages.'**
+  String get theServerSnapshotItemCountIs;
+
+  /// No description provided for @invalidServerSnapshotItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid server snapshot item_count.'**
+  String get invalidServerSnapshotItemCount;
+
+  /// No description provided for @theServerSnapshotItemCountIs2.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot item_count is invalid or changed.'**
+  String get theServerSnapshotItemCountIs2;
+
+  /// No description provided for @theServerSnapshotPageManifestHas.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot page manifest has too many entries.'**
+  String get theServerSnapshotPageManifestHas;
+
+  /// No description provided for @invalidServerSnapshotPageBoundaryOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid server snapshot page boundary or manifest format.'**
+  String get invalidServerSnapshotPageBoundaryOr;
+
+  /// No description provided for @theServerSnapshotContainsInvalidRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot contains invalid records.'**
+  String get theServerSnapshotContainsInvalidRecords;
+
+  /// No description provided for @theServerSnapshotReturnedAnEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot returned an empty page before completing.'**
+  String get theServerSnapshotReturnedAnEmpty;
+
+  /// No description provided for @theServerSnapshotManifestExceedsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot manifest exceeds the client\'s 64 MiB limit.'**
+  String get theServerSnapshotManifestExceedsThe;
+
+  /// No description provided for @theServerSnapshotContinuationCursorIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The server snapshot continuation cursor is empty, repeated or invalid.'**
+  String get theServerSnapshotContinuationCursorIs;
+
+  /// No description provided for @aLocalConflictKindStateIs.
+  ///
+  /// In en, this message translates to:
+  /// **'A local conflict kind/state is invalid or duplicated.'**
+  String get aLocalConflictKindStateIs;
+
+  /// No description provided for @invalidLinkToTheLocalConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid link to the local conflict resolution state.'**
+  String get invalidLinkToTheLocalConflict;
+
+  /// No description provided for @invalidLocalConflictResolutionOutboxLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid local conflict resolution/outbox link.'**
+  String get invalidLocalConflictResolutionOutboxLink;
+
+  /// No description provided for @invalidLocalEpochKeyIdentifierValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid local epoch key identifier: {valueValue}'**
+  String invalidLocalEpochKeyIdentifierValuevalue(String valueValue);
+
+  /// No description provided for @theLocalOutboxBaseEnvelopeDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The local outbox base envelope doesn\'t match the revision.'**
+  String get theLocalOutboxBaseEnvelopeDoesnt;
+
+  /// No description provided for @theLocalOutboxBaseRevisionCant.
+  ///
+  /// In en, this message translates to:
+  /// **'The local outbox base_revision can\'t be verified for archiving.'**
+  String get theLocalOutboxBaseRevisionCant;
+
+  /// No description provided for @aLocalOutboxRevisionIdIs.
+  ///
+  /// In en, this message translates to:
+  /// **'A local outbox revision_id is missing or duplicated.'**
+  String get aLocalOutboxRevisionIdIs;
+
+  /// No description provided for @theLocalOutboxMetadataDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The local outbox metadata doesn\'t match the signature header.'**
+  String get theLocalOutboxMetadataDoesntMatch;
+
+  /// No description provided for @theLocalOutboxContainsADuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'The local outbox contains a duplicate op_id.'**
+  String get theLocalOutboxContainsADuplicate;
+
+  /// No description provided for @theLocalOutboxStateCantSafely.
+  ///
+  /// In en, this message translates to:
+  /// **'The local outbox state can\'t safely round-trip through an archive.'**
+  String get theLocalOutboxStateCantSafely;
+
+  /// No description provided for @localOutboxConflictsExceedTheArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Local outbox/conflicts exceed the archive entry limit.'**
+  String get localOutboxConflictsExceedTheArchive;
+
+  /// No description provided for @thisDevicesEpochKeysDontFully.
+  ///
+  /// In en, this message translates to:
+  /// **'This device\'s epoch keys don\'t fully match the key envelope set.'**
+  String get thisDevicesEpochKeysDontFully;
+
+  /// No description provided for @thisDevicesPublicKeyDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This device\'s public key doesn\'t match the server Vault directory, so it can\'t export.'**
+  String get thisDevicesPublicKeyDoesntMatch;
+
+  /// No description provided for @thisDevicesIdentityCouldntBeMatched.
+  ///
+  /// In en, this message translates to:
+  /// **'This device\'s identity couldn\'t be matched to the current Vault device directory.'**
+  String get thisDevicesIdentityCouldntBeMatched;
+
+  /// No description provided for @checkingArchiveConflictBranchFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive conflict branch fields'**
+  String get checkingArchiveConflictBranchFields;
+
+  /// No description provided for @checkingArchiveConflictFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive conflict fields'**
+  String get checkingArchiveConflictFields;
+
+  /// No description provided for @checkingArchiveManifestFieldTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive manifest field types'**
+  String get checkingArchiveManifestFieldTypes;
+
+  /// No description provided for @checkingArchiveManifestEntryLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive manifest entry limits'**
+  String get checkingArchiveManifestEntryLimits;
+
+  /// No description provided for @checkingArchiveManifestIdentityAndRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive manifest identity and role'**
+  String get checkingArchiveManifestIdentityAndRole;
+
+  /// No description provided for @checkingArchiveManifestTopLevelFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive manifest top-level fields'**
+  String get checkingArchiveManifestTopLevelFields;
+
+  /// No description provided for @checkingArchiveMembershipFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive membership fields'**
+  String get checkingArchiveMembershipFields;
+
+  /// No description provided for @checkingArchiveOutboxFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive outbox fields'**
+  String get checkingArchiveOutboxFields;
+
+  /// No description provided for @checkingArchiveRevisionFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive revision fields'**
+  String get checkingArchiveRevisionFields;
+
+  /// No description provided for @checkingArchiveSnapshotHeadFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive snapshot head fields'**
+  String get checkingArchiveSnapshotHeadFields;
+
+  /// No description provided for @checkingArchiveSnapshotSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive snapshot schema'**
+  String get checkingArchiveSnapshotSchema;
+
+  /// No description provided for @checkingArchiveDeviceDirectoryFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking archive device directory fields'**
+  String get checkingArchiveDeviceDirectoryFields;
+
+  /// No description provided for @theSignedObjectRefsDontMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The signed object_refs don\'t match the encrypted plaintext manifest.'**
+  String get theSignedObjectRefsDontMatch;
+
+  /// No description provided for @decryptingTheArchiveContainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrypting the archive container'**
+  String get decryptingTheArchiveContainer;
+
+  /// No description provided for @aRecordEnvelopeIsMissingIts.
+  ///
+  /// In en, this message translates to:
+  /// **'A record envelope is missing its signature header.'**
+  String get aRecordEnvelopeIsMissingIts;
+
+  /// No description provided for @theRecordSignerEpochDoesntBelong.
+  ///
+  /// In en, this message translates to:
+  /// **'The record signer/epoch doesn\'t belong to that membership version.'**
+  String get theRecordSignerEpochDoesntBelong;
+
+  /// No description provided for @theBaseRevisionChainForRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'The base_revision chain for record {recordId} isn\'t continuous.'**
+  String theBaseRevisionChainForRecord(String recordId);
+
+  /// No description provided for @trustCouldntBeEstablishedForThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust couldn\'t be established for the record\'s signer or key epoch.'**
+  String get trustCouldntBeEstablishedForThe;
+
+  /// No description provided for @theRecordSignatureHeaderDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The record signature header doesn\'t match the archive index.'**
+  String get theRecordSignatureHeaderDoesntMatch;
+
+  /// No description provided for @invalidDeviceSigningKeyLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid device signing key length.'**
+  String get invalidDeviceSigningKeyLength;
+
+  /// No description provided for @theHistoryDirectoryOfDeviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'The history directory of device {id} conflicts with the current Vault directory.'**
+  String theHistoryDirectoryOfDeviceId(String id);
+
+  /// No description provided for @readingEveryHistoryPageOfThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading every history page of the pinned snapshot'**
+  String get readingEveryHistoryPageOfThe;
+
+  /// No description provided for @readingTheArchiveManifestAndBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the archive manifest and binary blocks'**
+  String get readingTheArchiveManifestAndBinary;
+
+  /// No description provided for @verifyingArchiveKeyEnvelopesAndEpoch.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying archive key envelopes and epoch keys'**
+  String get verifyingArchiveKeyEnvelopesAndEpoch;
+
+  /// No description provided for @verifyingArchiveEncryptedObjectBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying archive encrypted object blocks'**
+  String get verifyingArchiveEncryptedObjectBlocks;
+
+  /// No description provided for @verifyingArchiveHistoryConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying archive history conflicts'**
+  String get verifyingArchiveHistoryConflicts;
+
+  /// No description provided for @verifyingArchiveHistoryRevisions.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying archive history revisions'**
+  String get verifyingArchiveHistoryRevisions;
+
+  /// No description provided for @verifyingTheArchivesLocalOutboxAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying the archive\'s local outbox and conflict branches'**
+  String get verifyingTheArchivesLocalOutboxAnd;
+
+  /// No description provided for @verifyingArchiveFormatAndTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying archive format and target'**
+  String get verifyingArchiveFormatAndTarget;
+
+  /// No description provided for @verifyingArchiveDeviceSequenceWatermarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying archive device sequence watermarks'**
+  String get verifyingArchiveDeviceSequenceWatermarks;
+
+  /// No description provided for @verifyingTheMemberSignatureChainAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying the member signature chain and device trust'**
+  String get verifyingTheMemberSignatureChainAnd;
+
+  /// No description provided for @verifyingSignaturesKeyEpochsAndObject.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying signatures, key epochs and object references'**
+  String get verifyingSignaturesKeyEpochsAndObject;
+
+  /// No description provided for @verifyingTheDeviceDirectoryAndSigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying the device directory and signed membership chain'**
+  String get verifyingTheDeviceDirectoryAndSigned;
+
+  /// No description provided for @attachmentsAreLimitedTo1Gib.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments are limited to 1 GiB.'**
+  String get attachmentsAreLimitedTo1Gib;
+
+  /// No description provided for @theVaultHasNoActiveDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault has no active device capability reports.'**
+  String get theVaultHasNoActiveDevice;
+
+  /// No description provided for @theVaultHasNoActiveDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault has no active devices that can read attachment v2.'**
+  String get theVaultHasNoActiveDevices;
+
+  /// No description provided for @theServerDoesNotSupportSigned.
+  ///
+  /// In en, this message translates to:
+  /// **'The server does not support signed device capability reports required for v2 attachments.'**
+  String get theServerDoesNotSupportSigned;
+
+  /// No description provided for @theServerReturnedAnInvalidVault.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned an invalid Vault device inventory; v2 upload was blocked.'**
+  String get theServerReturnedAnInvalidVault;
+
+  /// No description provided for @thisClientCannotAuthenticateOtherDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'This client cannot authenticate other devices’ signed capability reports; v2 upload was blocked.'**
+  String get thisClientCannotAuthenticateOtherDevices;
+
+  /// No description provided for @thisDeviceCapabilityReportCouldNot.
+  ///
+  /// In en, this message translates to:
+  /// **'This device capability report could not be published; no attachment data was staged.'**
+  String get thisDeviceCapabilityReportCouldNot;
+
+  /// No description provided for @thisDeviceHasNotPublishedIts.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has not published its signed attachment capability report.'**
+  String get thisDeviceHasNotPublishedIts;
+
+  /// No description provided for @thisPlatformCannotSafelySaveAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'This platform cannot safely save attachments above 256 MiB; no attachment data was staged.'**
+  String get thisPlatformCannotSafelySaveAttachments;
+
+  /// No description provided for @someDevicesInTheVaultDont.
+  ///
+  /// In en, this message translates to:
+  /// **'Some devices in the Vault don\'t support this attachment size.'**
+  String get someDevicesInTheVaultDont;
+
+  /// No description provided for @v2PreflightIsOnlyRequiredAbove.
+  ///
+  /// In en, this message translates to:
+  /// **'v2 preflight is only required above 256 MiB.'**
+  String get v2PreflightIsOnlyRequiredAbove;
+
+  /// No description provided for @devicenameHasNoValidSignedReport.
+  ///
+  /// In en, this message translates to:
+  /// **'{deviceName} has no valid signed report for 1 GiB attachment records; update or remove that active device before enabling v2.'**
+  String devicenameHasNoValidSignedReport(String deviceName);
+
+  /// No description provided for @theDownloadedAttachmentCiphertextDigestOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The downloaded attachment ciphertext digest or length doesn\'t match.'**
+  String get theDownloadedAttachmentCiphertextDigestOr;
+
+  /// No description provided for @differentAttachmentsReferenceTheSameObject.
+  ///
+  /// In en, this message translates to:
+  /// **'Different attachments reference the same object.'**
+  String get differentAttachmentsReferenceTheSameObject;
+
+  /// No description provided for @hostObjectRefsMustBeUnique.
+  ///
+  /// In en, this message translates to:
+  /// **'Host object_refs must be unique lowercase UUIDs in strictly ascending order.'**
+  String get hostObjectRefsMustBeUnique;
+
+  /// No description provided for @hostObjectRefsMustBeAn.
+  ///
+  /// In en, this message translates to:
+  /// **'Host object_refs must be an array of at most 1024 items.'**
+  String get hostObjectRefsMustBeAn;
+
+  /// No description provided for @duplicateHostAttachmentBlobId.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate host attachment blob ID.'**
+  String get duplicateHostAttachmentBlobId;
+
+  /// No description provided for @invalidHostAttachmentManifestFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid host attachment manifest format.'**
+  String get invalidHostAttachmentManifestFormat;
+
+  /// No description provided for @theHostAttachmentManifestExceedsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The host attachment manifest exceeds the 32 KiB storage limit.'**
+  String get theHostAttachmentManifestExceedsThe;
+
+  /// No description provided for @localIntegrityVerificationOfTheEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Local integrity verification of the encrypted attachment object failed.'**
+  String get localIntegrityVerificationOfTheEncrypted;
+
+  /// No description provided for @theEncryptedAttachmentManifestDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The encrypted attachment manifest doesn\'t match object_refs.'**
+  String get theEncryptedAttachmentManifestDoesntMatch;
+
+  /// No description provided for @invalidPersistedUploadChunkSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid persisted upload chunk size.'**
+  String get invalidPersistedUploadChunkSize;
+
+  /// No description provided for @invalidPersistedUploadProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid persisted upload progress.'**
+  String get invalidPersistedUploadProgress;
+
+  /// No description provided for @integrityVerificationOfAPersistedAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrity verification of a persisted attachment ciphertext chunk failed.'**
+  String get integrityVerificationOfAPersistedAttachment;
+
+  /// No description provided for @theServerReturnedAnInvalidUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned an invalid upload reservation.'**
+  String get theServerReturnedAnInvalidUpload;
+
+  /// No description provided for @anAttachmentObjectAlreadyOnThe.
+  ///
+  /// In en, this message translates to:
+  /// **'An attachment object already on the server doesn\'t match the persisted ciphertext.'**
+  String get anAttachmentObjectAlreadyOnThe;
+
+  /// No description provided for @theServerAttachmentUploadReceiptDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The server attachment upload receipt doesn\'t match the ciphertext object.'**
+  String get theServerAttachmentUploadReceiptDoesnt;
+
+  /// No description provided for @integrityVerificationOfTheLocalAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrity verification of the local attachment ciphertext waiting for upload failed.'**
+  String get integrityVerificationOfTheLocalAttachment;
+
+  /// No description provided for @theLocalAttachmentObjectWaitingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'The local attachment object waiting for upload is missing.'**
+  String get theLocalAttachmentObjectWaitingFor;
+
+  /// No description provided for @theLocalAttachmentEncryptionDirectoryIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The local attachment encryption directory is missing or failed integrity verification.'**
+  String get theLocalAttachmentEncryptionDirectoryIs;
+
+  /// No description provided for @thisV2AttachmentExceeds256Mib.
+  ///
+  /// In en, this message translates to:
+  /// **'This v2 attachment exceeds 256 MiB; this client doesn\'t implement bounded decryption and streaming save yet.'**
+  String get thisV2AttachmentExceeds256Mib;
+
+  /// No description provided for @thisHostsAttachmentObjectReferencesExceed.
+  ///
+  /// In en, this message translates to:
+  /// **'This host\'s attachment object references exceed the 1024 limit.'**
+  String get thisHostsAttachmentObjectReferencesExceed;
+
+  /// No description provided for @theAttachmentIsntInThisHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment isn\'t in this host\'s encrypted manifest.'**
+  String get theAttachmentIsntInThisHosts;
+
+  /// No description provided for @theAttachmentObjectIdDuplicatesAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment object ID duplicates an existing host reference.'**
+  String get theAttachmentObjectIdDuplicatesAn;
+
+  /// No description provided for @theTotalAttachmentPlaintextLengthExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'The total attachment plaintext length exceeds the manifest declaration.'**
+  String get theTotalAttachmentPlaintextLengthExceeds;
+
+  /// No description provided for @attachmentPlaintextDigestOrTotalLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment plaintext digest or total length verification failed.'**
+  String get attachmentPlaintextDigestOrTotalLength;
+
+  /// No description provided for @theComSerialConsoleRequiresThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The COM serial Console requires the Windows client.'**
+  String get theComSerialConsoleRequiresThe;
+
+  /// No description provided for @theBrowserCantStartALocal.
+  ///
+  /// In en, this message translates to:
+  /// **'The browser can\'t start a local shell directly; use the desktop client.'**
+  String get theBrowserCantStartALocal;
+
+  /// No description provided for @theSerialInputQueueIsFull.
+  ///
+  /// In en, this message translates to:
+  /// **'\n[The serial input queue is full; this input wasn\'t sent. Send input in smaller batches.]\n'**
+  String get theSerialInputQueueIsFull;
+
+  /// No description provided for @couldntStartTheSerialConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'\n[Couldn\'t start the serial Console]\n'**
+  String get couldntStartTheSerialConsole;
+
+  /// No description provided for @theSerialConsoleFailedToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'The serial Console failed to start.'**
+  String get theSerialConsoleFailedToStart;
+
+  /// No description provided for @theSerialPortDoesntSupportThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The serial port doesn\'t support this configuration.'**
+  String get theSerialPortDoesntSupportThis;
+
+  /// No description provided for @serialWriteFailedOrTheDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial write failed or the device was disconnected.'**
+  String get serialWriteFailedOrTheDevice;
+
+  /// No description provided for @serialWriteTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial write timed out.'**
+  String get serialWriteTimedOut;
+
+  /// No description provided for @invalidSerialPortOrBaudRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid serial port or baud rate.'**
+  String get invalidSerialPortOrBaudRate;
+
+  /// No description provided for @serialReadFailedOrTheDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial read failed or the device was disconnected.'**
+  String get serialReadFailedOrTheDevice;
+
+  /// No description provided for @serialInputExceedsTheLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial input exceeds the limit.'**
+  String get serialInputExceedsTheLimit;
+
+  /// No description provided for @couldntOpenItemWindowsGetlasterrorCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open {item} (Windows {GetLastError}). Check the serial port name and whether it\'s in use.'**
+  String couldntOpenItemWindowsGetlasterrorCheck(Object item, int GetLastError);
+
+  /// No description provided for @couldntReadTheSerialPortConfiguration.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the serial port configuration.'**
+  String get couldntReadTheSerialPortConfiguration;
+
+  /// No description provided for @unsupportedAttachmentManifestFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported attachment manifest format.'**
+  String get unsupportedAttachmentManifestFormat;
+
+  /// No description provided for @invalidAttachmentMimeTypeFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment MIME type format.'**
+  String get invalidAttachmentMimeTypeFormat;
+
+  /// No description provided for @invalidAttachmentBlobIdFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment blob ID format.'**
+  String get invalidAttachmentBlobIdFormat;
+
+  /// No description provided for @invalidAttachmentEncryptionDirectoryFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment encryption directory format.'**
+  String get invalidAttachmentEncryptionDirectoryFormat;
+
+  /// No description provided for @attachmentEncryptionDirectoryAuthenticationOrParsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment encryption directory authentication or parsing failed.'**
+  String get attachmentEncryptionDirectoryAuthenticationOrParsing;
+
+  /// No description provided for @theAttachmentEncryptionDirectoryExceedsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment encryption directory exceeds the size limit.'**
+  String get theAttachmentEncryptionDirectoryExceedsThe;
+
+  /// No description provided for @invalidAttachmentBlockFieldFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment block field format.'**
+  String get invalidAttachmentBlockFieldFormat;
+
+  /// No description provided for @theAttachmentBlockCountDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment block count doesn\'t match the file length.'**
+  String get theAttachmentBlockCountDoesntMatch;
+
+  /// No description provided for @invalidAttachmentBlockCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment block count.'**
+  String get invalidAttachmentBlockCount;
+
+  /// No description provided for @theNumberOfAttachmentBlocksExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'The number of attachment blocks exceeds the v2 format limit.'**
+  String get theNumberOfAttachmentBlocksExceeds;
+
+  /// No description provided for @theNumberOfAttachmentBlocksExceeds2.
+  ///
+  /// In en, this message translates to:
+  /// **'The number of attachment blocks exceeds the current format limit.'**
+  String get theNumberOfAttachmentBlocksExceeds2;
+
+  /// No description provided for @invalidAttachmentBlockEntryFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment block entry format.'**
+  String get invalidAttachmentBlockEntryFormat;
+
+  /// No description provided for @invalidAttachmentBlockManifestFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment block manifest format.'**
+  String get invalidAttachmentBlockManifestFormat;
+
+  /// No description provided for @attachmentBlockAuthenticationFailedTheFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment block authentication failed; the file may have been tampered with.'**
+  String get attachmentBlockAuthenticationFailedTheFile;
+
+  /// No description provided for @attachmentBlockOrderLengthOrUniqueness.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment block order, length or uniqueness verification failed.'**
+  String get attachmentBlockOrderLengthOrUniqueness;
+
+  /// No description provided for @theAttachmentSizeIsOutsideThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment size is outside the range the client supports.'**
+  String get theAttachmentSizeIsOutsideThe;
+
+  /// No description provided for @attachmentIntegrityOrFinalLengthVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment integrity or final length verification failed.'**
+  String get attachmentIntegrityOrFinalLengthVerification;
+
+  /// No description provided for @theAttachmentCiphertextObjectIsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment ciphertext object is missing.'**
+  String get theAttachmentCiphertextObjectIsMissing;
+
+  /// No description provided for @attachmentCiphertextDigestOrLengthVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment ciphertext digest or length verification failed.'**
+  String get attachmentCiphertextDigestOrLengthVerification;
+
+  /// No description provided for @invalidAttachmentCiphertextLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment ciphertext length.'**
+  String get invalidAttachmentCiphertextLength;
+
+  /// No description provided for @invalidAttachmentKeyFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment key format.'**
+  String get invalidAttachmentKeyFormat;
+
+  /// No description provided for @theAttachmentObjectIdIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment object ID is invalid or duplicated.'**
+  String get theAttachmentObjectIdIsInvalid;
+
+  /// No description provided for @invalidAttachmentFileNameOrMime.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment file name or MIME type format.'**
+  String get invalidAttachmentFileNameOrMime;
+
+  /// No description provided for @invalidAttachmentFileNameFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment file name format.'**
+  String get invalidAttachmentFileNameFormat;
+
+  /// No description provided for @attachmentPlaintextBlockLengthVerificationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment plaintext block length verification failed.'**
+  String get attachmentPlaintextBlockLengthVerificationFailed;
+
+  /// No description provided for @invalidAttachmentPlaintextDigestFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment plaintext digest format.'**
+  String get invalidAttachmentPlaintextDigestFormat;
+
+  /// No description provided for @invalidAttachmentManifestEntryFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment manifest entry format.'**
+  String get invalidAttachmentManifestEntryFormat;
+
+  /// No description provided for @theAttachmentSourceReturnsOnlyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment source returns only empty blocks.'**
+  String get theAttachmentSourceReturnsOnlyEmpty;
+
+  /// No description provided for @theAttachmentSourceKeepsReturningEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment source keeps returning empty blocks at the end of the file.'**
+  String get theAttachmentSourceKeepsReturningEmpty;
+
+  /// No description provided for @theAttachmentSourceEndedEarlyIts.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment source ended early; its length doesn\'t match the file info.'**
+  String get theAttachmentSourceEndedEarlyIts;
+
+  /// No description provided for @anAttachmentSourceBlockExceedsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'An attachment source block exceeds the 4 MiB read limit.'**
+  String get anAttachmentSourceBlockExceedsThe;
+
+  /// No description provided for @theAttachmentSourceLengthExceedsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment source length exceeds the file info.'**
+  String get theAttachmentSourceLengthExceedsThe;
+
+  /// No description provided for @invalidAttachmentDirectoryNonceFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment directory nonce format.'**
+  String get invalidAttachmentDirectoryNonceFormat;
+
+  /// No description provided for @theAttachmentDirectoryBlockCountDoesnt.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment directory block count doesn\'t match the descriptor.'**
+  String get theAttachmentDirectoryBlockCountDoesnt;
+
+  /// No description provided for @attachmentDirectoryBlockOrderLengthOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment directory block order, length or uniqueness verification failed.'**
+  String get attachmentDirectoryBlockOrderLengthOr;
+
+  /// No description provided for @invalidAttachmentDirectoryCiphertextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment directory ciphertext size.'**
+  String get invalidAttachmentDirectoryCiphertextSize;
+
+  /// No description provided for @attachmentDirectoryCiphertextDigestOrLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment directory ciphertext digest or length verification failed.'**
+  String get attachmentDirectoryCiphertextDigestOrLength;
+
+  /// No description provided for @invalidAttachmentDirectoryCiphertextLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment directory ciphertext length.'**
+  String get invalidAttachmentDirectoryCiphertextLength;
+
+  /// No description provided for @invalidAttachmentDirectoryObjectIdFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment directory object ID format.'**
+  String get invalidAttachmentDirectoryObjectIdFormat;
+
+  /// No description provided for @invalidAttachmentDirectoryDigestFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid attachment directory digest format.'**
+  String get invalidAttachmentDirectoryDigestFormat;
+
+  /// No description provided for @theAttachmentExceedsThe1Gib.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment exceeds the 1 GiB client size limit.'**
+  String get theAttachmentExceedsThe1Gib;
+
+  /// No description provided for @theAttachmentExceedsThe256Mib.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment exceeds the 256 MiB client size limit.'**
+  String get theAttachmentExceedsThe256Mib;
+
+  /// No description provided for @theShareRequestIsMalformedOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The share request is malformed or comes from a different server instance.'**
+  String get theShareRequestIsMalformedOr;
+
+  /// No description provided for @invalidShareRequestAccountIdentifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid share request account identifier.'**
+  String get invalidShareRequestAccountIdentifier;
+
+  /// No description provided for @invalidDeviceSelfProofPublicKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid device self-proof public key or signature length.'**
+  String get invalidDeviceSelfProofPublicKey;
+
+  /// No description provided for @invalidDeviceSelfProofFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid device self-proof fields.'**
+  String get invalidDeviceSelfProofFields;
+
+  /// No description provided for @invalidDeviceSelfProofSignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid device self-proof signature.'**
+  String get invalidDeviceSelfProofSignature;
+
+  /// No description provided for @invalidDeviceSelfProofAccountIdentifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid device self-proof account identifier.'**
+  String get invalidDeviceSelfProofAccountIdentifier;
+
+  /// No description provided for @remoteDesktopConnectionFailedCodeLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop connection failed (code {last}). Check credentials, certificate trust and gateway logs.'**
+  String remoteDesktopConnectionFailedCodeLast(String last);
+
+  /// No description provided for @remoteDesktopDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop disconnected.'**
+  String get remoteDesktopDisconnected;
+
+  /// No description provided for @resolutionAndScaling.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution and scaling'**
+  String get resolutionAndScaling;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @theServerDoesntSupportResizingOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'The server doesn\'t support resizing; only local scaling is possible.'**
+  String get theServerDoesntSupportResizingOnly;
+
+  /// No description provided for @theServerSupportsLiveResizingDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'The server supports live resizing (display control channel).'**
+  String get theServerSupportsLiveResizingDisplay;
+
+  /// No description provided for @theServerSupportsResizingExtendeddesktopsize.
+  ///
+  /// In en, this message translates to:
+  /// **'The server supports resizing (ExtendedDesktopSize).'**
+  String get theServerSupportsResizingExtendeddesktopsize;
+
+  /// No description provided for @theServerDoesntOfferDisplayControl.
+  ///
+  /// In en, this message translates to:
+  /// **'The server doesn\'t offer display control; a new resolution takes effect after reconnecting.'**
+  String get theServerDoesntOfferDisplayControl;
+
+  /// No description provided for @waitingForTheServerToReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the server to report whether it supports resizing…'**
+  String get waitingForTheServerToReport;
+
+  /// No description provided for @thisSessionUsesAllLocalMonitors.
+  ///
+  /// In en, this message translates to:
+  /// **'This session uses all local monitors; the remote resolution is determined by the monitor layout.'**
+  String get thisSessionUsesAllLocalMonitors;
+
+  /// No description provided for @scalesThisWindowOnlyTheRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Scales this window only; the remote resolution doesn\'t change.'**
+  String get scalesThisWindowOnlyTheRemote;
+
+  /// No description provided for @actualSize11Scrollable.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual size (1:1, scrollable)'**
+  String get actualSize11Scrollable;
+
+  /// No description provided for @width.
+  ///
+  /// In en, this message translates to:
+  /// **'Width'**
+  String get width;
+
+  /// No description provided for @serverDefaultDontRequestAResize.
+  ///
+  /// In en, this message translates to:
+  /// **'Server default (don\'t request a resize)'**
+  String get serverDefaultDontRequestAResize;
+
+  /// No description provided for @localDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Local display'**
+  String get localDisplay;
+
+  /// No description provided for @custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get custom;
+
+  /// No description provided for @remoteResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote resolution'**
+  String get remoteResolution;
+
+  /// No description provided for @fitToWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit to window'**
+  String get fitToWindow;
+
+  /// No description provided for @height.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get height;
+
+  /// No description provided for @clipboardIsLimitedTo64Kib.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard is limited to 64 KiB'**
+  String get clipboardIsLimitedTo64Kib;
+
+  /// No description provided for @invalidRdpOptionsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid RDP options: {message}'**
+  String invalidRdpOptionsMessage(String message);
+
+  /// No description provided for @remoteDesktopConnectionClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop connection closed.'**
+  String get remoteDesktopConnectionClosed;
+
+  /// No description provided for @remoteDesktopSetupTimedOutCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop setup timed out. Check the gateway and target.'**
+  String get remoteDesktopSetupTimedOutCheck;
+
+  /// No description provided for @remoteDesktopStreamFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop stream failed.'**
+  String get remoteDesktopStreamFailed;
+
+  /// No description provided for @unableToConnectCheckTheDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to connect. Check the desktop gateway, Relay policy, credentials and certificate trust.'**
+  String get unableToConnectCheckTheDesktop;
+
+  /// No description provided for @theHostSettingsChangedReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'The host settings changed. Reconnect.'**
+  String get theHostSettingsChangedReconnect;
+
+  /// No description provided for @theResolutionSettingAppliesToThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The resolution setting applies to this session only; it couldn\'t be saved to the host.'**
+  String get theResolutionSettingAppliesToThis;
+
+  /// No description provided for @inAMultiMonitorSessionThe.
+  ///
+  /// In en, this message translates to:
+  /// **'In a multi-monitor session, the resolution is set by this computer\'s monitors; turn off \"Use all monitors\" to set it.'**
+  String get inAMultiMonitorSessionThe;
+
+  /// No description provided for @stoppedRequestingAResizeTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped requesting a resize; the server keeps its current resolution.'**
+  String get stoppedRequestingAResizeTheServer;
+
+  /// No description provided for @theInstalledRdpEngineDoesntSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'The installed RDP engine doesn\'t support this host\'s RDP options; connected with default settings.'**
+  String get theInstalledRdpEngineDoesntSupport;
+
+  /// No description provided for @couldntConnectToTheLocalGuacd.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to the local guacd (127.0.0.1:4822). Start the gateway or use a signed-in cloud workspace.'**
+  String get couldntConnectToTheLocalGuacd;
+
+  /// No description provided for @theServerDoesntAcceptThisResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'The server doesn\'t accept this resolution.'**
+  String get theServerDoesntAcceptThisResolution;
+
+  /// No description provided for @theServerDoesntSupportResizingOnly2.
+  ///
+  /// In en, this message translates to:
+  /// **'The server doesn\'t support resizing; only local scaling is available.'**
+  String get theServerDoesntSupportResizingOnly2;
+
+  /// No description provided for @theServerRefusedTheResize.
+  ///
+  /// In en, this message translates to:
+  /// **'The server refused the resize.'**
+  String get theServerRefusedTheResize;
+
+  /// No description provided for @theServerDoesntOfferDynamicResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'The server doesn\'t offer dynamic resolution; the new resolution takes effect after reconnecting.'**
+  String get theServerDoesntOfferDynamicResolution;
+
+  /// No description provided for @theServerLacksTheResourcesFor.
+  ///
+  /// In en, this message translates to:
+  /// **'The server lacks the resources for this resolution.'**
+  String get theServerLacksTheResourcesFor;
+
+  /// No description provided for @thisRdpCertificateWasntTrustedThe.
+  ///
+  /// In en, this message translates to:
+  /// **'This RDP certificate wasn\'t trusted; the connection was cancelled.'**
+  String get thisRdpCertificateWasntTrustedThe;
+
+  /// No description provided for @thisVncServerDoesntSupportResizing.
+  ///
+  /// In en, this message translates to:
+  /// **'This VNC server doesn\'t support resizing (ExtendedDesktopSize wasn\'t negotiated); only local scaling is available. The setting was kept.'**
+  String get thisVncServerDoesntSupportResizing;
+
+  /// No description provided for @clipboardTextIsTurnedOffFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard text is turned off for this host.'**
+  String get clipboardTextIsTurnedOffFor;
+
+  /// No description provided for @thisHostCantSaveCertificates.
+  ///
+  /// In en, this message translates to:
+  /// **'This host can\'t save certificates.'**
+  String get thisHostCantSaveCertificates;
+
+  /// No description provided for @thisClientCantProvideJoinThe.
+  ///
+  /// In en, this message translates to:
+  /// **'This client can\'t provide: {join}. The other options apply as usual.'**
+  String thisClientCantProvideJoinThe(String join);
+
+  /// No description provided for @theCertificateCouldntBeSavedThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The certificate couldn\'t be saved. The host may have been changed or the workspace locked; try again or reconnect.'**
+  String get theCertificateCouldntBeSavedThe;
+
+  /// No description provided for @couldntSaveRemoteFilesError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save remote files: {error}'**
+  String couldntSaveRemoteFilesError(Object error);
+
+  /// No description provided for @invalidRemoteDesktopHostSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid remote desktop host settings.'**
+  String get invalidRemoteDesktopHostSettings;
+
+  /// No description provided for @invalidRemoteDesktopImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid remote desktop image.'**
+  String get invalidRemoteDesktopImage;
+
+  /// No description provided for @theRemoteDesktopConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote desktop connection failed.'**
+  String get theRemoteDesktopConnectionFailed;
+
+  /// No description provided for @theRemoteDesktopConnectionClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote desktop connection closed.'**
+  String get theRemoteDesktopConnectionClosed;
+
+  /// No description provided for @theRemoteDesktopConnectionTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote desktop connection timed out. Check the target address and network.'**
+  String get theRemoteDesktopConnectionTimedOut;
+
+  /// No description provided for @rdpCertificateFingerprintChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'RDP certificate fingerprint changed'**
+  String get rdpCertificateFingerprintChanged;
+
+  /// No description provided for @saveRemoteClipboardFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Save remote clipboard files'**
+  String get saveRemoteClipboardFiles;
+
+  /// No description provided for @saveRemoteClipboardFiles2.
+  ///
+  /// In en, this message translates to:
+  /// **'Save remote clipboard files…'**
+  String get saveRemoteClipboardFiles2;
+
+  /// No description provided for @saveRemoteClipboardFilesFilecountFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Save remote clipboard files ({fileCount, plural, =1{1 file} other{{fileCount} files}}, {formatTransferBytes})…'**
+  String saveRemoteClipboardFilesFilecountFiles(
+    int fileCount,
+    String formatTransferBytes,
+  );
+
+  /// No description provided for @trustAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust and save'**
+  String get trustAndSave;
+
+  /// No description provided for @trustThisRdpCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust this RDP certificate?'**
+  String get trustThisRdpCertificate;
+
+  /// No description provided for @resolutionAndScaling2.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution and scaling…'**
+  String get resolutionAndScaling2;
+
+  /// No description provided for @sendCtrlAltDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Ctrl+Alt+Delete'**
+  String get sendCtrlAltDelete;
+
+  /// No description provided for @sendLocallyCopiedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Send locally copied files'**
+  String get sendLocallyCopiedFiles;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @openInNewWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in new window'**
+  String get openInNewWindow;
+
+  /// No description provided for @copyRemoteClipboardText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy remote clipboard text'**
+  String get copyRemoteClipboardText;
+
+  /// No description provided for @savedCountItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {count, plural, =1{1 item} other{{count} items}}.'**
+  String savedCountItems(int count);
+
+  /// No description provided for @savedCountItemsAndPlacedThem.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {count, plural, =1{1 item} other{{count} items}} and placed them on this computer\'s clipboard, ready to paste.'**
+  String savedCountItemsAndPlacedThem(int count);
+
+  /// No description provided for @savedSha256.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved SHA-256'**
+  String get savedSha256;
+
+  /// No description provided for @currentCertificateSha256.
+  ///
+  /// In en, this message translates to:
+  /// **'Current certificate SHA-256'**
+  String get currentCertificateSha256;
+
+  /// No description provided for @couldntSendClipboardText.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send clipboard text.'**
+  String get couldntSendClipboardText;
+
+  /// No description provided for @updateAndConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Update and connect'**
+  String get updateAndConnect;
+
+  /// No description provided for @theServerCertificateDiffersFromThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The server certificate differs from the saved record. Verify the new fingerprint; after confirming, this host\'s trust record is updated and the connection continues.'**
+  String get theServerCertificateDiffersFromThe;
+
+  /// No description provided for @thereAreNoCopiedFilesOn.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no copied files on this computer\'s clipboard.'**
+  String get thereAreNoCopiedFilesOn;
+
+  /// No description provided for @saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get saving;
+
+  /// No description provided for @savingRemoteFilesDoneTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving remote files {done}/{total}'**
+  String savingRemoteFilesDoneTotal(int done, int total);
+
+  /// No description provided for @thisCertificateIsntTrustedYetVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'This certificate isn\'t trusted yet. Verify the fingerprint; after confirming, it\'s saved to this host and the connection continues.'**
+  String get thisCertificateIsntTrustedYetVerify;
+
+  /// No description provided for @oneWindowPerMonitor.
+  ///
+  /// In en, this message translates to:
+  /// **'One window per monitor'**
+  String get oneWindowPerMonitor;
+
+  /// No description provided for @pasteLocalClipboardText.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste local clipboard text'**
+  String get pasteLocalClipboardText;
+
+  /// No description provided for @remoteDesktopMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop menu'**
+  String get remoteDesktopMenu;
+
+  /// No description provided for @chooseFilesForTheRemoteClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose files for the remote clipboard…'**
+  String get chooseFilesForTheRemoteClipboard;
+
+  /// No description provided for @theRdpCertificateIsntTrustedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'The RDP certificate isn\'t trusted yet; its SHA-256 fingerprint needs confirmation.'**
+  String get theRdpCertificateIsntTrustedYet;
+
+  /// No description provided for @folderNestingIsTooDeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder nesting is too deep'**
+  String get folderNestingIsTooDeep;
+
+  /// No description provided for @noFilesToSend.
+  ///
+  /// In en, this message translates to:
+  /// **'No files to send'**
+  String get noFilesToSend;
+
+  /// No description provided for @notARegularFileOrFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a regular file or folder: {name}'**
+  String notARegularFileOrFolder(String name);
+
+  /// No description provided for @tooManyFilesForTheClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many files for the clipboard'**
+  String get tooManyFilesForTheClipboard;
+
+  /// No description provided for @unsupportedOrDuplicateFileNameName.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported or duplicate file name: {name}'**
+  String unsupportedOrDuplicateFileNameName(String name);
+
+  /// No description provided for @fileTooLargeRelativepath.
+  ///
+  /// In en, this message translates to:
+  /// **'File too large: {relativePath}'**
+  String fileTooLargeRelativepath(String relativePath);
+
+  /// No description provided for @theTotalSizeOfTheRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'The total size of the remote files exceeds the limit.'**
+  String get theTotalSizeOfTheRemote;
+
+  /// No description provided for @rdpTlsHandshakeFailed20008No.
+  ///
+  /// In en, this message translates to:
+  /// **'RDP TLS handshake failed (20008). No verifiable certificate was received; check the target port and TLS configuration.'**
+  String get rdpTlsHandshakeFailed20008No;
+
+  /// No description provided for @theRdpSessionDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'The RDP session disconnected.'**
+  String get theRdpSessionDisconnected;
+
+  /// No description provided for @invalidRdpImageSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid RDP image size.'**
+  String get invalidRdpImageSize;
+
+  /// No description provided for @theRdpEngineCantBeLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'The RDP engine can\'t be loaded. Install the full Windows client.'**
+  String get theRdpEngineCantBeLoaded;
+
+  /// No description provided for @theRdpEngineIsTooOld.
+  ///
+  /// In en, this message translates to:
+  /// **'The RDP engine is too old to apply this host\'s RDP options. Install the full client update.'**
+  String get theRdpEngineIsTooOld;
+
+  /// No description provided for @rdpConnectionFailedToradixstringCheckThe.
+  ///
+  /// In en, this message translates to:
+  /// **'RDP connection failed ({toRadixString}). Check the address, user name and password.'**
+  String rdpConnectionFailedToradixstringCheckThe(String toRadixString);
+
+  /// No description provided for @theRdpConfigurationIsInvalidOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The RDP configuration is invalid or the engine failed to initialize.'**
+  String get theRdpConfigurationIsInvalidOr;
+
+  /// No description provided for @placedCountFilesOnTheRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Placed {count, plural, =1{1 file} other{{count} files}} on the remote clipboard; paste on the remote side.'**
+  String placedCountFilesOnTheRemote(int count);
+
+  /// No description provided for @theCurrentRdpEngineDoesntSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'The current RDP engine doesn\'t support the file clipboard.'**
+  String get theCurrentRdpEngineDoesntSupport;
+
+  /// No description provided for @couldntSendFilesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send files: {message}'**
+  String couldntSendFilesMessage(String message);
+
+  /// No description provided for @couldntStartTheRdpEngineCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the RDP engine. Check the client installation.'**
+  String get couldntStartTheRdpEngineCheck;
+
+  /// No description provided for @couldntReadTheSelectedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the selected files.'**
+  String get couldntReadTheSelectedFiles;
+
+  /// No description provided for @theTargetRdpSessionDoesntHave.
+  ///
+  /// In en, this message translates to:
+  /// **'The target RDP session doesn\'t have the file clipboard enabled, or this host turned it off.'**
+  String get theTargetRdpSessionDoesntHave;
+
+  /// No description provided for @theTargetRdpSessionDoesntHave2.
+  ///
+  /// In en, this message translates to:
+  /// **'The target RDP session doesn\'t have the text clipboard enabled.'**
+  String get theTargetRdpSessionDoesntHave2;
+
+  /// No description provided for @theRemoteClipboardHasNoFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote clipboard has no files to save.'**
+  String get theRemoteClipboardHasNoFiles;
+
+  /// No description provided for @anUnsafeFileNameOnThe.
+  ///
+  /// In en, this message translates to:
+  /// **'An unsafe file name on the remote clipboard was ignored.'**
+  String get anUnsafeFileNameOnThe;
+
+  /// No description provided for @theRemoteFilesCouldntBeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote files couldn\'t be saved.'**
+  String get theRemoteFilesCouldntBeSaved;
+
+  /// No description provided for @sshHostsDontHaveRemoteDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH hosts don\'t have remote desktop display settings.'**
+  String get sshHostsDontHaveRemoteDesktop;
+
+  /// No description provided for @theHostChangedTheResolutionSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'The host changed; the resolution setting wasn\'t saved.'**
+  String get theHostChangedTheResolutionSetting;
+
+  /// No description provided for @theHostOrCertificateTrustChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The host or certificate trust changed. Reconnect.'**
+  String get theHostOrCertificateTrustChanged;
+
+  /// No description provided for @theHostsRdpOptionsWereSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The host\'s RDP options were saved by a newer version; the resolution setting wasn\'t saved.'**
+  String get theHostsRdpOptionsWereSaved;
+
+  /// No description provided for @theHostsVncDisplaySettingsWere.
+  ///
+  /// In en, this message translates to:
+  /// **'The host\'s VNC display settings were saved by a newer version; the resolution setting wasn\'t saved.'**
+  String get theHostsVncDisplaySettingsWere;
+
+  /// No description provided for @couldntSaveTheCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the certificate.'**
+  String get couldntSaveTheCertificate;
+
+  /// No description provided for @atMostMaxdrivesRedirectedFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {maxDrives} redirected folders'**
+  String atMostMaxdrivesRedirectedFolders(int maxDrives);
+
+  /// No description provided for @atMostMaxusbdevicesUsbDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {maxUsbDevices} USB devices'**
+  String atMostMaxusbdevicesUsbDevices(int maxUsbDevices);
+
+  /// No description provided for @driveFolderMustBeAnAbsolute.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive folder must be an absolute path'**
+  String get driveFolderMustBeAnAbsolute;
+
+  /// No description provided for @driveNameMustBe131.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive name must be 1–31 letters, digits, spaces, _ or -'**
+  String get driveNameMustBe131;
+
+  /// No description provided for @monitorLayoutExceedsRdpLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor layout exceeds RDP limits'**
+  String get monitorLayoutExceedsRdpLimits;
+
+  /// No description provided for @redirectedFolderNamesMustBeUnique.
+  ///
+  /// In en, this message translates to:
+  /// **'Redirected folder names must be unique'**
+  String get redirectedFolderNamesMustBeUnique;
+
+  /// No description provided for @usbDevicesMustBeUniqueVendor.
+  ///
+  /// In en, this message translates to:
+  /// **'USB devices must be unique vendor:product hex IDs'**
+  String get usbDevicesMustBeUniqueVendor;
+
+  /// No description provided for @unsupportedRdpDisplayScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported RDP display scale'**
+  String get unsupportedRdpDisplayScale;
+
+  /// No description provided for @addFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add folder'**
+  String get addFolder;
+
+  /// No description provided for @allPrinters.
+  ///
+  /// In en, this message translates to:
+  /// **'All printers'**
+  String get allPrinters;
+
+  /// No description provided for @defaultPrinter.
+  ///
+  /// In en, this message translates to:
+  /// **'Default printer'**
+  String get defaultPrinter;
+
+  /// No description provided for @displayClipboardAndLocalResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Display, clipboard and local resources'**
+  String get displayClipboardAndLocalResources;
+
+  /// No description provided for @doNotPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not play'**
+  String get doNotPlay;
+
+  /// No description provided for @eachMonitorCanBeOpenedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Each monitor can be opened in its own window'**
+  String get eachMonitorCanBeOpenedIn;
+
+  /// No description provided for @leaveOnRemoteComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave on remote computer'**
+  String get leaveOnRemoteComputer;
+
+  /// No description provided for @off2.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get off2;
+
+  /// No description provided for @onlyDevicesAlreadyUsingTheWinusb.
+  ///
+  /// In en, this message translates to:
+  /// **'Only devices already using the WinUSB driver. No driver is installed.'**
+  String get onlyDevicesAlreadyUsingTheWinusb;
+
+  /// No description provided for @playOnThisComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Play on this computer'**
+  String get playOnThisComputer;
+
+  /// No description provided for @printers.
+  ///
+  /// In en, this message translates to:
+  /// **'Printers'**
+  String get printers;
+
+  /// No description provided for @rdpOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'RDP options'**
+  String get rdpOptions;
+
+  /// No description provided for @redirectedFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Redirected folders'**
+  String get redirectedFolders;
+
+  /// No description provided for @remoteAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote audio'**
+  String get remoteAudio;
+
+  /// No description provided for @remoteDisplayScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote display scale'**
+  String get remoteDisplayScale;
+
+  /// No description provided for @removeFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove folder'**
+  String get removeFolder;
+
+  /// No description provided for @requiresAMatchingPrinterDriverOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires a matching printer driver on the remote computer'**
+  String get requiresAMatchingPrinterDriverOn;
+
+  /// No description provided for @requiresCameraRedirectionSupportOnThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires camera redirection support on the server'**
+  String get requiresCameraRedirectionSupportOnThe;
+
+  /// No description provided for @resolutionAndLocalScaling.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution and local scaling'**
+  String get resolutionAndLocalScaling;
+
+  /// No description provided for @savedRdpOptionsWereWrittenBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved RDP options were written by a newer version and are ignored. Saving replaces them.'**
+  String get savedRdpOptionsWereWrittenBy;
+
+  /// No description provided for @usbDevicesVendorProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'USB devices (vendor:product)'**
+  String get usbDevicesVendorProduct;
+
+  /// No description provided for @vncDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'VNC display'**
+  String get vncDisplay;
+
+  /// No description provided for @theRemoteDesktopInTheMain.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote desktop in the main window was closed or disconnected.'**
+  String get theRemoteDesktopInTheMain;
+
+  /// No description provided for @remoteDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop'**
+  String get remoteDesktop;
+
+  /// No description provided for @closeThisMonitorWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Close this monitor window'**
+  String get closeThisMonitorWindow;
+
+  /// No description provided for @couldntOpenTheRemoteDesktopWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the remote desktop window. Go back to the main window and try again.'**
+  String get couldntOpenTheRemoteDesktopWindow;
+
+  /// No description provided for @titleMonitorValuevalueValuevalue2.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} · Monitor {valueValue}{valueValue2}'**
+  String titleMonitorValuevalueValuevalue2(
+    String title,
+    int valueValue,
+    String valueValue2,
+  );
+
+  /// No description provided for @primary.
+  ///
+  /// In en, this message translates to:
+  /// **'(primary)'**
+  String get primary;
+
+  /// No description provided for @aHostCanHaveAtMost2.
+  ///
+  /// In en, this message translates to:
+  /// **'A Host can have at most {maxHostPortForwardProfiles} port forward profiles'**
+  String aHostCanHaveAtMost2(int maxHostPortForwardProfiles);
+
+  /// No description provided for @dynamicForwardingDoesNotHaveA.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic forwarding does not have a fixed destination'**
+  String get dynamicForwardingDoesNotHaveA;
+
+  /// No description provided for @forwardDestinationHostIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward destination host is invalid'**
+  String get forwardDestinationHostIsInvalid;
+
+  /// No description provided for @forwardDestinationPortMustBeBetween.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward destination port must be between 1 and 65535'**
+  String get forwardDestinationPortMustBeBetween;
+
+  /// No description provided for @forwardListenerAddressAndPortMust.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward listener address and port must be unique'**
+  String get forwardListenerAddressAndPortMust;
+
+  /// No description provided for @forwardListenerAddressMustBeLocalhost.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward listener address must be localhost or an IP address'**
+  String get forwardListenerAddressMustBeLocalhost;
+
+  /// No description provided for @forwardListenerPortMustBeBetween.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward listener port must be between 0 and 65535'**
+  String get forwardListenerPortMustBeBetween;
+
+  /// No description provided for @forwardListenersMustBindToLoopback.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward listeners must bind to loopback unless network exposure is confirmed'**
+  String get forwardListenersMustBindToLoopback;
+
+  /// No description provided for @forwardProfileIdIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward profile ID is invalid'**
+  String get forwardProfileIdIsInvalid;
+
+  /// No description provided for @forwardProfileIdsMustBeUnique.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward profile IDs must be unique'**
+  String get forwardProfileIdsMustBeUnique;
+
+  /// No description provided for @forwardProfileNameMustBe1.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward profile name must be 1–64 characters'**
+  String get forwardProfileNameMustBe1;
+
+  /// No description provided for @hostAddressIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Host address is required'**
+  String get hostAddressIsRequired;
+
+  /// No description provided for @hostLoginAndAuthenticationSettingsDo.
+  ///
+  /// In en, this message translates to:
+  /// **'Host login and authentication settings do not match'**
+  String get hostLoginAndAuthenticationSettingsDo;
+
+  /// No description provided for @hostNameIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Host name is required'**
+  String get hostNameIsRequired;
+
+  /// No description provided for @portMustBeBetween1And.
+  ///
+  /// In en, this message translates to:
+  /// **'Port must be between 1 and 65535'**
+  String get portMustBeBetween1And;
+
+  /// No description provided for @rdpCertificateFingerprintMustContain64.
+  ///
+  /// In en, this message translates to:
+  /// **'RDP certificate fingerprint must contain 64 hexadecimal SHA-256 digits'**
+  String get rdpCertificateFingerprintMustContain64;
+
+  /// No description provided for @remoteDesktopsUsePasswordLoginWithout.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktops use password login without SSH routes or forwards'**
+  String get remoteDesktopsUsePasswordLoginWithout;
+
+  /// No description provided for @remoteForwardingTargetsMustUseThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote forwarding targets must use this device loopback unless network exposure is confirmed'**
+  String get remoteForwardingTargetsMustUseThis;
+
+  /// No description provided for @unnamedHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed host'**
+  String get unnamedHost;
+
+  /// No description provided for @untitledSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled snippet'**
+  String get untitledSnippet;
+
+  /// No description provided for @usernameIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Username is required'**
+  String get usernameIsRequired;
+
+  /// No description provided for @enterAValidSshPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid SSH password'**
+  String get enterAValidSshPassword;
+
+  /// No description provided for @enterAValidSshPrivateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid SSH private key and passphrase'**
+  String get enterAValidSshPrivateKey;
+
+  /// No description provided for @aPortNumberIsRequiredAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'A port number is required after -p'**
+  String get aPortNumberIsRequiredAfter;
+
+  /// No description provided for @aUserNameIsRequiredBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'A user name is required before @'**
+  String get aUserNameIsRequiredBefore;
+
+  /// No description provided for @serialFormatConsoleTtyCom3B.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial format: console tty @COM3 -b 115200'**
+  String get serialFormatConsoleTtyCom3B;
+
+  /// No description provided for @invalidHostOrUserNameFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid host or user name format'**
+  String get invalidHostOrUserNameFormat;
+
+  /// No description provided for @onlyUserHostAndPPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Only [user@]host and -p port are supported; shell arguments are never executed'**
+  String get onlyUserHostAndPPort;
+
+  /// No description provided for @dontSpecifyThePortBothIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t specify the port both in the address and with -p'**
+  String get dontSpecifyThePortBothIn;
+
+  /// No description provided for @openLocalConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'Open local Console'**
+  String get openLocalConsole;
+
+  /// No description provided for @formatVerbValuevalueHostPValuevalue2.
+  ///
+  /// In en, this message translates to:
+  /// **'Format: {verb} {valueValue}host -p {valueValue2}'**
+  String formatVerbValuevalueHostPValuevalue2(
+    String verb,
+    String valueValue,
+    int valueValue2,
+  );
+
+  /// No description provided for @baudRateFormatB115200.
+  ///
+  /// In en, this message translates to:
+  /// **'Baud rate format: -b 115200'**
+  String get baudRateFormatB115200;
+
+  /// No description provided for @baudRateMustBe504000000.
+  ///
+  /// In en, this message translates to:
+  /// **'Baud rate must be 50–4000000'**
+  String get baudRateMustBe504000000;
+
+  /// No description provided for @thePortCanOnlyBeSpecified.
+  ///
+  /// In en, this message translates to:
+  /// **'The port can only be specified once'**
+  String get thePortCanOnlyBeSpecified;
+
+  /// No description provided for @portMustBe165535.
+  ///
+  /// In en, this message translates to:
+  /// **'Port must be 1–65535'**
+  String get portMustBe165535;
+
+  /// No description provided for @enterAValidSerialPortFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid serial port, for example console tty @COM3'**
+  String get enterAValidSerialPortFor;
+
+  /// No description provided for @connectAddressBaudrateBaud8n1.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect {address} · {baudRate} baud · 8N1'**
+  String connectAddressBaudrateBaud8n1(String address, int baudRate);
+
+  /// No description provided for @theActivePaneIsntInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The active pane isn\'t in the split.'**
+  String get theActivePaneIsntInThe;
+
+  /// No description provided for @invalidWindowSetHostPathOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set host, path or protocol.'**
+  String get invalidWindowSetHostPathOr;
+
+  /// No description provided for @theWindowSetHasTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'The window set has too many sessions.'**
+  String get theWindowSetHasTooMany;
+
+  /// No description provided for @invalidWindowSetSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set split.'**
+  String get invalidWindowSetSplit;
+
+  /// No description provided for @invalidWindowSetList.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set list.'**
+  String get invalidWindowSetList;
+
+  /// No description provided for @invalidWindowSetNameOrSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set name or session.'**
+  String get invalidWindowSetNameOrSession;
+
+  /// No description provided for @windowSetIsNestedTooDeeply.
+  ///
+  /// In en, this message translates to:
+  /// **'Window set is nested too deeply.'**
+  String get windowSetIsNestedTooDeeply;
+
+  /// No description provided for @aHostInThisWindowSet.
+  ///
+  /// In en, this message translates to:
+  /// **'A host in this window set no longer exists or its protocol changed. Delete the set and save it again.'**
+  String get aHostInThisWindowSet;
+
+  /// No description provided for @windowSetDataIsTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Window set data is too large.'**
+  String get windowSetDataIsTooLarge;
+
+  /// No description provided for @invalidWindowSetCountOrIdentifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set count or identifier.'**
+  String get invalidWindowSetCountOrIdentifier;
+
+  /// No description provided for @invalidWindowSetFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set format.'**
+  String get invalidWindowSetFormat;
+
+  /// No description provided for @invalidWindowSetNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set node.'**
+  String get invalidWindowSetNode;
+
+  /// No description provided for @invalidWindowSetPaneReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set pane reference.'**
+  String get invalidWindowSetPaneReference;
+
+  /// No description provided for @invalidWindowSetPane.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set pane.'**
+  String get invalidWindowSetPane;
+
+  /// No description provided for @hostTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Host tags'**
+  String get hostTags;
+
+  /// No description provided for @addAUserDirectiveBeforeImporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a User directive before importing this Host.'**
+  String get addAUserDirectiveBeforeImporting;
+
+  /// No description provided for @commandDirectivesAreNeverExecutedThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Command directives are never executed; this Host will not be imported.'**
+  String get commandDirectivesAreNeverExecutedThis;
+
+  /// No description provided for @identityfileIsNotReadOrImported.
+  ///
+  /// In en, this message translates to:
+  /// **'IdentityFile is not read or imported. Add the key as a Credential separately.'**
+  String get identityfileIsNotReadOrImported;
+
+  /// No description provided for @identityfileNeedsOneValueThisHost.
+  ///
+  /// In en, this message translates to:
+  /// **'IdentityFile needs one value; this Host will not be imported.'**
+  String get identityfileNeedsOneValueThisHost;
+
+  /// No description provided for @theConfigFileExceedsThe1.
+  ///
+  /// In en, this message translates to:
+  /// **'The config file exceeds the 1 MiB import limit.'**
+  String get theConfigFileExceedsThe1;
+
+  /// No description provided for @theConfigFileHasTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'The config file has too many lines to review safely.'**
+  String get theConfigFileHasTooMany;
+
+  /// No description provided for @thisDirectiveNeedsExactlyOneValue.
+  ///
+  /// In en, this message translates to:
+  /// **'This directive needs exactly one value.'**
+  String get thisDirectiveNeedsExactlyOneValue;
+
+  /// No description provided for @thisValueIsInvalidOrUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This value is invalid or unsupported.'**
+  String get thisValueIsInvalidOrUnsupported;
+
+  /// No description provided for @atermiusRemoteDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Atermius · Remote desktop'**
+  String get atermiusRemoteDesktop;
+
+  /// No description provided for @atermiusTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Atermius · Terminal'**
+  String get atermiusTerminal;
+
+  /// No description provided for @atermiusNeedsReliablePersistentBrowserStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Atermius needs reliable persistent browser storage to keep offline data and multi-tab sync safe. Use a browser that supports OPFS or shared IndexedDB, allow this site to use local storage in a normal (non-private) window, and try again.'**
+  String get atermiusNeedsReliablePersistentBrowserStorage;
+
+  /// No description provided for @chooseAWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a workspace'**
+  String get chooseAWorkspace;
+
+  /// No description provided for @conflictingWindowRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflicting window requests.'**
+  String get conflictingWindowRequests;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
+
+  /// No description provided for @createOrUnlockAnEncryptedHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Create or unlock an encrypted Host and Credential vault. No account, server connection, or cross-device sync.'**
+  String get createOrUnlockAnEncryptedHost;
+
+  /// No description provided for @localProfileStorageIsUnavailableServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile storage is unavailable. Server mode can still be used if its storage backend is supported.'**
+  String get localProfileStorageIsUnavailableServer;
+
+  /// No description provided for @localOnlyProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Local-only profile'**
+  String get localOnlyProfile;
+
+  /// No description provided for @openLocally.
+  ///
+  /// In en, this message translates to:
+  /// **'Open locally'**
+  String get openLocally;
+
+  /// No description provided for @opening.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening…'**
+  String get opening;
+
+  /// No description provided for @serverAccountAndSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Server account and sync'**
+  String get serverAccountAndSync;
+
+  /// No description provided for @serverProfilesSyncEncryptedDataAcross.
+  ///
+  /// In en, this message translates to:
+  /// **'Server profiles sync encrypted data across your devices. Local-only profiles stay on this browser or device and are not synced.'**
+  String get serverProfilesSyncEncryptedDataAcross;
+
+  /// No description provided for @useYourSelfHostedServerAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your self-hosted server account and synchronized Vault.'**
+  String get useYourSelfHostedServerAccount;
+
+  /// No description provided for @workspaceSwitchCouldNotBeCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace switch could not be completed.'**
+  String get workspaceSwitchCouldNotBeCompleted;
+
+  /// No description provided for @theSecurityComponentsOrLocalStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'The security components or local storage couldn\'t start. Make sure the deployment files are complete and that the browser allows this site to use local storage, then try again.'**
+  String get theSecurityComponentsOrLocalStorage;
+
+  /// No description provided for @workspaceMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace menu'**
+  String get workspaceMenu;
+
+  /// No description provided for @workspaceModeSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace mode settings'**
+  String get workspaceModeSettings;
+
+  /// No description provided for @couldntSaveOrSwitchTheWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save or switch the workspace mode. Check local storage and try again.'**
+  String get couldntSaveOrSwitchTheWorkspace;
+
+  /// No description provided for @couldntInitializeTheSecureWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t initialize the secure workspace'**
+  String get couldntInitializeTheSecureWorkspace;
+
+  /// No description provided for @couldntOpenTheCloudWorkspaceOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the cloud workspace or save the workspace mode. Check local storage and try again.'**
+  String get couldntOpenTheCloudWorkspaceOr;
+
+  /// No description provided for @couldntOpenLocalProfileStorageAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open local profile storage. Allow this site to use persistent storage, then try again.'**
+  String get couldntOpenLocalProfileStorageAllow;
+
+  /// No description provided for @couldntVerifyTheSeparateWindowTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t verify the separate window. Try again from the original window.'**
+  String get couldntVerifyTheSeparateWindowTry;
+
+  /// No description provided for @aLocalStorageWriteWasInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'A local storage write was interrupted. Free up storage space and close other Atermius tabs for this site, then reload the page to recover and try again.'**
+  String get aLocalStorageWriteWasInterrupted;
+
+  /// No description provided for @preparingSecureWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing secure workspace'**
+  String get preparingSecureWorkspace;
+
+  /// No description provided for @checkingLocalEncryptedStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking local encrypted storage.'**
+  String get checkingLocalEncryptedStorage;
+
+  /// No description provided for @reloadPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload page'**
+  String get reloadPage;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @supportedBrowserStorageRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Supported browser storage required'**
+  String get supportedBrowserStorageRequired;
+
+  /// No description provided for @supportedBrowserStorageIsRequiredCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Supported browser storage is required. Check persistent storage permission and try again.'**
+  String get supportedBrowserStorageIsRequiredCheck;
+
+  /// No description provided for @someFileWindowsArentUnlockedAre.
+  ///
+  /// In en, this message translates to:
+  /// **'Some file windows aren\'t unlocked, are switching, or don\'t have a position yet; wait and save again.'**
+  String get someFileWindowsArentUnlockedAre;
+
+  /// No description provided for @theRemotePathIsntARegular.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote path isn\'t a regular file: {path}'**
+  String theRemotePathIsntARegular(String path);
+
+  /// No description provided for @scpFileListingRequiresTheSftp.
+  ///
+  /// In en, this message translates to:
+  /// **'SCP file listing requires the SFTP directory channel of this SSH connection. Check whether the server has SFTP enabled.'**
+  String get scpFileListingRequiresTheSftp;
+
+  /// No description provided for @theFileActionFailedCheckThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The file action failed. Check the SSH/SFTP connection and folder permissions.'**
+  String get theFileActionFailedCheckThe;
+
+  /// No description provided for @invalidRemoteFolderPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid remote folder path.'**
+  String get invalidRemoteFolderPath;
+
+  /// No description provided for @theSshSftpSessionIsClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH/SFTP session is closed.'**
+  String get theSshSftpSessionIsClosed;
+
+  /// No description provided for @onlyRegularFilesCanBeDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Only regular files can be downloaded.'**
+  String get onlyRegularFilesCanBeDownloaded;
+
+  /// No description provided for @onlySizeBoundedRegularFilesCan.
+  ///
+  /// In en, this message translates to:
+  /// **'Only size-bounded regular files can be streamed.'**
+  String get onlySizeBoundedRegularFilesCan;
+
+  /// No description provided for @invalidFileNameFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid file name format.'**
+  String get invalidFileNameFormat;
+
+  /// No description provided for @theFileExceedsThisPlatformsSftp.
+  ///
+  /// In en, this message translates to:
+  /// **'The file exceeds this platform\'s SFTP upload size limit.'**
+  String get theFileExceedsThisPlatformsSftp;
+
+  /// No description provided for @couldntSafelyCreateTheRemoteFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t safely create the remote file. It may already exist, or the current user lacks write permission; existing files aren\'t overwritten. ({error})'**
+  String couldntSafelyCreateTheRemoteFile(Object error);
+
+  /// No description provided for @invalidFolderNameFormat2.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid folder name format.'**
+  String get invalidFolderNameFormat2;
+
+  /// No description provided for @invalidRemoteFileNameFormat2.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid remote file name format.'**
+  String get invalidRemoteFileNameFormat2;
+
+  /// No description provided for @theRemoteFileExceedsTheLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote file exceeds the local download size limit.'**
+  String get theRemoteFileExceedsTheLocal;
+
+  /// No description provided for @theRemoteFileExceedsTheStreaming.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote file exceeds the streaming download size limit.'**
+  String get theRemoteFileExceedsTheStreaming;
+
+  /// No description provided for @theRemotePathIsntASize.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote path isn\'t a size-bounded regular file.'**
+  String get theRemotePathIsntASize;
+
+  /// No description provided for @theRemotePathIsntARegular2.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote path isn\'t a regular file.'**
+  String get theRemotePathIsntARegular2;
+
+  /// No description provided for @theRemotePathIsNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote path is no longer a regular file.'**
+  String get theRemotePathIsNoLonger;
+
+  /// No description provided for @anotherForwardAlreadyUsesThisListener.
+  ///
+  /// In en, this message translates to:
+  /// **'Another forward already uses this listener address and port.'**
+  String get anotherForwardAlreadyUsesThisListener;
+
+  /// No description provided for @couldNotStartThisForwardCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start this forward. Check port availability and the SSH server forwarding policy.'**
+  String get couldNotStartThisForwardCheck;
+
+  /// No description provided for @forwardStartWasCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward start was cancelled.'**
+  String get forwardStartWasCancelled;
+
+  /// No description provided for @sshConnectionClosedWhileForwardingWas.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH connection closed while forwarding was starting'**
+  String get sshConnectionClosedWhileForwardingWas;
+
+  /// No description provided for @sshPortForwardingIsUnavailableHere.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH port forwarding is unavailable here.'**
+  String get sshPortForwardingIsUnavailableHere;
+
+  /// No description provided for @sshPortForwardingRuntimeIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH port forwarding runtime is unavailable in this platform.'**
+  String get sshPortForwardingRuntimeIsUnavailable;
+
+  /// No description provided for @theSshConnectionForThisForward.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH connection for this forward has ended. Reconnect first.'**
+  String get theSshConnectionForThisForward;
+
+  /// No description provided for @theForwardProfileIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The forward profile is invalid.'**
+  String get theForwardProfileIsInvalid;
+
+  /// No description provided for @theForwardStoppedUnexpectedly.
+  ///
+  /// In en, this message translates to:
+  /// **'The forward stopped unexpectedly.'**
+  String get theForwardStoppedUnexpectedly;
+
+  /// No description provided for @thisSshPortForwardProfileIs.
+  ///
+  /// In en, this message translates to:
+  /// **'This SSH port forward profile is already active.'**
+  String get thisSshPortForwardProfileIs;
+
+  /// No description provided for @addressBindaddressIsNotAvailableOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Address {bindAddress} is not available on this device.'**
+  String addressBindaddressIsNotAvailableOn(String bindAddress);
+
+  /// No description provided for @connectionLimitSshportforwardmaxconnectionsReachedNewClients.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection limit ({sshPortForwardMaxConnections}) reached; new clients are refused until others close.'**
+  String connectionLimitSshportforwardmaxconnectionsReachedNewClients(
+    int sshPortForwardMaxConnections,
+  );
+
+  /// No description provided for @couldNotOpenAnSshChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open an SSH channel to {target}.'**
+  String couldNotOpenAnSshChannel(String target);
+
+  /// No description provided for @portEndpointIsAlreadyInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Port {endpoint} is already in use on this device.'**
+  String portEndpointIsAlreadyInUse(String endpoint);
+
+  /// No description provided for @theSshConnectionIsNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH connection is no longer available.'**
+  String get theSshConnectionIsNoLonger;
+
+  /// No description provided for @theSshServerCouldNotConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server could not connect to {target}.'**
+  String theSshServerCouldNotConnect(String target);
+
+  /// No description provided for @theSshServerDeniedForwardingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server denied forwarding to {target} (administratively prohibited).'**
+  String theSshServerDeniedForwardingTo(String target);
+
+  /// No description provided for @theSshServerDidNotAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server did not answer the remote forward request in time. A late listener will be cancelled; if the server does not confirm that, the SSH connection is closed.'**
+  String get theSshServerDidNotAnswer;
+
+  /// No description provided for @theSshServerDidNotConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server did not confirm remote forward removal.'**
+  String get theSshServerDidNotConfirm;
+
+  /// No description provided for @theSshServerIsOutOf.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server is out of resources for new channels.'**
+  String get theSshServerIsOutOf;
+
+  /// No description provided for @theSshServerRefusedAChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server refused a channel to {target}.'**
+  String theSshServerRefusedAChannel(String target);
+
+  /// No description provided for @theDeviceSocksListenerStoppedUnexpectedly.
+  ///
+  /// In en, this message translates to:
+  /// **'The device SOCKS listener stopped unexpectedly.'**
+  String get theDeviceSocksListenerStoppedUnexpectedly;
+
+  /// No description provided for @theDeviceListenerStoppedUnexpectedly.
+  ///
+  /// In en, this message translates to:
+  /// **'The device listener stopped unexpectedly.'**
+  String get theDeviceListenerStoppedUnexpectedly;
+
+  /// No description provided for @thisDeviceCouldNotListenOn.
+  ///
+  /// In en, this message translates to:
+  /// **'This device could not listen on {endpoint}.'**
+  String thisDeviceCouldNotListenOn(String endpoint);
+
+  /// No description provided for @thisDeviceRefusedToListenOn.
+  ///
+  /// In en, this message translates to:
+  /// **'This device refused to listen on {endpoint} (permission denied; low ports or a reserved port range may be blocked).'**
+  String thisDeviceRefusedToListenOn(String endpoint);
+
+  /// No description provided for @timedOutOpeningAnSshChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out opening an SSH channel to {target}.'**
+  String timedOutOpeningAnSshChannel(String target);
+
+  /// No description provided for @thisBrowserBuildCannotOpenTcp.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser build cannot open TCP listeners or outbound sockets, so SSH port forwarding cannot run here. Profiles still sync for desktop and mobile apps.'**
+  String get thisBrowserBuildCannotOpenTcp;
+
+  /// No description provided for @theSshRelayOriginDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH relay origin doesn\'t match the server configuration. Ask an administrator to check the public site address.'**
+  String get theSshRelayOriginDoesntMatch;
+
+  /// No description provided for @theSshRelayTargetMustBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH relay target must be a valid IP address and port; the server relay doesn\'t accept DNS host names.'**
+  String get theSshRelayTargetMustBe;
+
+  /// No description provided for @theSshRelayTicketExpiredStart.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH relay ticket expired. Start the connection again.'**
+  String get theSshRelayTicketExpiredStart;
+
+  /// No description provided for @tooManySshRelayRequestsTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many SSH relay requests. Try again later.'**
+  String get tooManySshRelayRequestsTry;
+
+  /// No description provided for @theSshRelayConnectionTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH relay connection timed out. Check server availability, the network and the target address.'**
+  String get theSshRelayConnectionTimedOut;
+
+  /// No description provided for @theSshHostKeyDiffersFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH host key differs from the saved fingerprint; the connection was rejected. Verify the new fingerprint over a trusted channel before updating trust.'**
+  String get theSshHostKeyDiffersFrom;
+
+  /// No description provided for @sshHostKeyVerificationFailedThe.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host key verification failed; the connection was rejected. Check the server identity and connection path.'**
+  String get sshHostKeyVerificationFailedThe;
+
+  /// No description provided for @sshAuthenticatedButTheTerminalSession.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH authenticated, but the terminal session couldn\'t be opened.'**
+  String get sshAuthenticatedButTheTerminalSession;
+
+  /// No description provided for @sshHandshakeFailedCheckTheSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH handshake failed. Check the SSH server and relay connection.'**
+  String get sshHandshakeFailedCheckTheSsh;
+
+  /// No description provided for @theSshPrivateKeyCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH private key couldn\'t be parsed or the passphrase is wrong. Check the key format and passphrase.'**
+  String get theSshPrivateKeyCouldntBe;
+
+  /// No description provided for @theSshNetworkConnectionWasInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH network connection was interrupted. Check the relay and target server.'**
+  String get theSshNetworkConnectionWasInterrupted;
+
+  /// No description provided for @sshAuthenticationFailedCheckTheUser.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH authentication failed. Check the user name, password or private key.'**
+  String get sshAuthenticationFailedCheckTheUser;
+
+  /// No description provided for @theSshConnectionDroppedBeforeAuthentication.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH connection dropped before authentication finished. Check the network and server, then try again.'**
+  String get theSshConnectionDroppedBeforeAuthentication;
+
+  /// No description provided for @theUntrustedSshHostKeyWas.
+  ///
+  /// In en, this message translates to:
+  /// **'The untrusted SSH host key was rejected and the connection was cancelled.'**
+  String get theUntrustedSshHostKeyWas;
+
+  /// No description provided for @couldntEstablishTheSshRelayWebsocket.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t establish the SSH relay WebSocket. Check the instance HTTPS/WSS address, relay origin settings and network, then try again.'**
+  String get couldntEstablishTheSshRelayWebsocket;
+
+  /// No description provided for @theServerRelayPolicyRejectedThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The server relay policy rejected this target address or port. Ask an administrator to check the SSH target allowlist.'**
+  String get theServerRelayPolicyRejectedThis;
+
+  /// No description provided for @theServerHasntEnabledTheSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'The server hasn\'t enabled the SSH relay. Ask an administrator to configure the relay and target networks.'**
+  String get theServerHasntEnabledTheSsh;
+
+  /// No description provided for @localStorageNeedsRecoveryReadingEditing2.
+  ///
+  /// In en, this message translates to:
+  /// **'Local storage needs recovery. Reading, editing and syncing this database are paused; close all Atermius tabs and reopen to restore the last persisted data.'**
+  String get localStorageNeedsRecoveryReadingEditing2;
+
+  /// No description provided for @invalidWindowSetPreferenceFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid window set preference format.'**
+  String get invalidWindowSetPreferenceFormat;
+
+  /// No description provided for @invalidStagedMigrationCiphertextContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid staged migration ciphertext context.'**
+  String get invalidStagedMigrationCiphertextContext;
+
+  /// No description provided for @invalidStagedMigrationCiphertextFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid staged migration ciphertext format.'**
+  String get invalidStagedMigrationCiphertextFormat;
+
+  /// No description provided for @theServerHasntConfirmedAllMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'The server hasn\'t confirmed all migration records yet.'**
+  String get theServerHasntConfirmedAllMigration;
+
+  /// No description provided for @theMigrationJournalContainsDuplicateOperation.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration journal contains duplicate operation IDs.'**
+  String get theMigrationJournalContainsDuplicateOperation;
+
+  /// No description provided for @theMigrationDestinationOutboxDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration destination outbox doesn\'t match the staged ciphertext.'**
+  String get theMigrationDestinationOutboxDoesntMatch;
+
+  /// No description provided for @theMigrationDestinationOutboxDoesntMatch2.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration destination outbox doesn\'t match the staging journal.'**
+  String get theMigrationDestinationOutboxDoesntMatch2;
+
+  /// No description provided for @aStagedRecordInTheMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'A staged record in the migration destination was deleted.'**
+  String get aStagedRecordInTheMigration;
+
+  /// No description provided for @theMigrationDestinationContainsDuplicateRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration destination contains duplicate record heads.'**
+  String get theMigrationDestinationContainsDuplicateRecord;
+
+  /// No description provided for @theMigrationDestinationRecordDoesntMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration destination record doesn\'t match the staged ciphertext.'**
+  String get theMigrationDestinationRecordDoesntMatch;
+
+  /// No description provided for @theMigrationRecordStillHasUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration record still has unconfirmed outbox operations.'**
+  String get theMigrationRecordStillHasUnconfirmed;
+
+  /// No description provided for @recycleBinSnapshotExpiredBeforeIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Recycle bin snapshot expired before it could be read.'**
+  String get recycleBinSnapshotExpiredBeforeIt;
+
+  /// No description provided for @snapshotExpiredBeforeRecoveryCouldStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot expired before recovery could start.'**
+  String get snapshotExpiredBeforeRecoveryCouldStart;
+
+  /// No description provided for @theServerGenerationChangedSynchronizeBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'The server generation changed; synchronize before restoring.'**
+  String get theServerGenerationChangedSynchronizeBefore;
+
+  /// No description provided for @itemExitItem2.
+  ///
+  /// In en, this message translates to:
+  /// **'{item} · exit {item2}'**
+  String itemExitItem2(Object item, Object item2);
+
+  /// No description provided for @addThisAccountInYourAuthenticator.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this account in your authenticator app, then enter the current six-digit code. The setup secret is temporary and is never saved by this client.'**
+  String get addThisAccountInYourAuthenticator;
+
+  /// No description provided for @authenticatorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator code'**
+  String get authenticatorCode;
+
+  /// No description provided for @disableMfa.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable MFA'**
+  String get disableMfa;
+
+  /// No description provided for @disableTwoFactorSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable two-factor sign-in'**
+  String get disableTwoFactorSignIn;
+
+  /// No description provided for @disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get disabled;
+
+  /// No description provided for @eachCodeCanBeUsedOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Each code can be used once if you lose access to your authenticator. Save them in a password manager or another secure place. This is the only time the full codes are shown; this client does not save or copy them.'**
+  String get eachCodeCanBeUsedOnce;
+
+  /// No description provided for @enabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get enabled;
+
+  /// No description provided for @enterExactlySixDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter exactly six digits.'**
+  String get enterExactlySixDigits;
+
+  /// No description provided for @enterYourCurrentPasswordAndAuthenticator.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current password and authenticator code.'**
+  String get enterYourCurrentPasswordAndAuthenticator;
+
+  /// No description provided for @iSavedTheseCodesSecurely.
+  ///
+  /// In en, this message translates to:
+  /// **'I saved these codes securely'**
+  String get iSavedTheseCodesSecurely;
+
+  /// No description provided for @mfaRecoveryCodesWereRotated.
+  ///
+  /// In en, this message translates to:
+  /// **'MFA recovery codes were rotated.'**
+  String get mfaRecoveryCodesWereRotated;
+
+  /// No description provided for @mfaRecoveryCodesFormattedcodes.
+  ///
+  /// In en, this message translates to:
+  /// **'MFA recovery codes: {formattedCodes}'**
+  String mfaRecoveryCodesFormattedcodes(String formattedCodes);
+
+  /// No description provided for @newRecoveryCodesWereGeneratedBut.
+  ///
+  /// In en, this message translates to:
+  /// **'New recovery codes were generated but were not confirmed as saved. Rotate again to display a replacement set.'**
+  String get newRecoveryCodesWereGeneratedBut;
+
+  /// No description provided for @provisioningUri.
+  ///
+  /// In en, this message translates to:
+  /// **'Provisioning URI'**
+  String get provisioningUri;
+
+  /// No description provided for @refreshMfaStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh MFA status'**
+  String get refreshMfaStatus;
+
+  /// No description provided for @rotateMfaRecoveryCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate MFA recovery codes'**
+  String get rotateMfaRecoveryCodes;
+
+  /// No description provided for @rotateCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate codes'**
+  String get rotateCodes;
+
+  /// No description provided for @rotateRecoveryCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate recovery codes'**
+  String get rotateRecoveryCodes;
+
+  /// No description provided for @saveYourMfaRecoveryCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your MFA recovery codes'**
+  String get saveYourMfaRecoveryCodes;
+
+  /// No description provided for @setUpAuthenticator.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up authenticator'**
+  String get setUpAuthenticator;
+
+  /// No description provided for @setUpAuthenticatorApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up authenticator app'**
+  String get setUpAuthenticatorApp;
+
+  /// No description provided for @setupExpiresTolocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup expires {toLocal}.'**
+  String setupExpiresTolocal(DateTime toLocal);
+
+  /// No description provided for @setupSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup secret'**
+  String get setupSecret;
+
+  /// No description provided for @totpProvisioningUriProvisioninguri.
+  ///
+  /// In en, this message translates to:
+  /// **'TOTP provisioning URI: {provisioningUri}'**
+  String totpProvisioningUriProvisioninguri(String provisioningUri);
+
+  /// No description provided for @totpSetupSecretSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'TOTP setup secret: {secret}'**
+  String totpSetupSecretSecret(String secret);
+
+  /// No description provided for @theLastRecoveryCodesWereNot.
+  ///
+  /// In en, this message translates to:
+  /// **'The last recovery codes were not confirmed as saved. Rotate the codes to display a new set.'**
+  String get theLastRecoveryCodesWereNot;
+
+  /// No description provided for @twoFactorSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in'**
+  String get twoFactorSignIn;
+
+  /// No description provided for @useAnAuthenticatorAppOrA.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an authenticator app or a one-time recovery code as a second sign-in factor. The server stores the TOTP seed encrypted; the client keeps setup secrets and recovery codes only long enough to display them.'**
+  String get useAnAuthenticatorAppOrA;
+
+  /// No description provided for @verifyAndEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify and enable'**
+  String get verifyAndEnable;
+
+  /// No description provided for @youWillBeAbleToSign.
+  ///
+  /// In en, this message translates to:
+  /// **'You will be able to sign in with your master password alone. Your authenticator and unused recovery codes will stop working.'**
+  String get youWillBeAbleToSign;
+
+  /// No description provided for @valuevalueRecoveryCodesRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{valueValue, plural, =1{1 recovery code remaining.} other{{valueValue} recovery codes remaining.}}'**
+  String valuevalueRecoveryCodesRemaining(int valueValue);
+
+  /// No description provided for @aHostChangedAfterThePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'A Host changed after the preview. Reopen the importer and review its latest revision.'**
+  String get aHostChangedAfterThePreview;
+
+  /// No description provided for @aHostWithThisNameWas.
+  ///
+  /// In en, this message translates to:
+  /// **'A Host with this name was saved during review. Reopen the importer to compare it.'**
+  String get aHostWithThisNameWas;
+
+  /// No description provided for @applyTheseInventoryChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply these inventory changes?'**
+  String get applyTheseInventoryChanges;
+
+  /// No description provided for @applyCountChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {count, plural, =1{1 change} other{{count} changes}}'**
+  String applyCountChanges(int count);
+
+  /// No description provided for @applyCountReviewedChangeSTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {count, plural, =1{1 reviewed change} other{{count} reviewed changes}} to encrypted Host records in the active Vault. Missing entries will only be marked stale; no Host will be deleted. Ansible groups are saved as Host tags. Credentials are not imported, and no inventory or SSH command is executed.'**
+  String applyCountReviewedChangeSTo(int count);
+
+  /// No description provided for @chooseInventoryFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose inventory file'**
+  String get chooseInventoryFile;
+
+  /// No description provided for @confirmChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm changes'**
+  String get confirmChanges;
+
+  /// No description provided for @createANewSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new source'**
+  String get createANewSource;
+
+  /// No description provided for @importAnsibleInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Ansible inventory'**
+  String get importAnsibleInventory;
+
+  /// No description provided for @inventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get inventory;
+
+  /// No description provided for @inventoryFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory file'**
+  String get inventoryFile;
+
+  /// No description provided for @inventoryFilesAreLimitedTo1.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory files are limited to 1 MiB.'**
+  String get inventoryFilesAreLimitedTo1;
+
+  /// No description provided for @inventorySource.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory source'**
+  String get inventorySource;
+
+  /// No description provided for @inventorySourcesAreLimitedTo1.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory sources are limited to 1 MiB.'**
+  String get inventorySourcesAreLimitedTo1;
+
+  /// No description provided for @keepManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep manual'**
+  String get keepManual;
+
+  /// No description provided for @markStaleKeepThisHostSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark stale; keep this Host saved'**
+  String get markStaleKeepThisHostSaved;
+
+  /// No description provided for @noHostsWereImportedTheVault.
+  ///
+  /// In en, this message translates to:
+  /// **'No Hosts were imported. The Vault may have changed or a Host could not be saved.'**
+  String get noHostsWereImportedTheVault;
+
+  /// No description provided for @noConcreteHostCandidatesWereFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No concrete Host candidates were found.'**
+  String get noConcreteHostCandidatesWereFound;
+
+  /// No description provided for @pasteOrChooseAStaticIni.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste or choose a static INI/YAML inventory. Dynamic inventory is rejected; this importer never runs scripts, plugins, Ansible, SSH, or network requests. Only reviewed Host connection fields are imported. Credentials and private keys are ignored.'**
+  String get pasteOrChooseAStaticIni;
+
+  /// No description provided for @pastedInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Pasted inventory'**
+  String get pastedInventory;
+
+  /// No description provided for @reviewBlockedThisInventoryCannotBe.
+  ///
+  /// In en, this message translates to:
+  /// **'Review blocked: this inventory cannot be imported.'**
+  String get reviewBlockedThisInventoryCannotBe;
+
+  /// No description provided for @reviewEachFieldConflictManualEdits.
+  ///
+  /// In en, this message translates to:
+  /// **'Review each field conflict. Manual edits are kept by default. Missing entries stay saved and can only be marked stale after explicit selection.'**
+  String get reviewEachFieldConflictManualEdits;
+
+  /// No description provided for @reviewPastedInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Review pasted inventory'**
+  String get reviewPastedInventory;
+
+  /// No description provided for @savedInEncryptedHostMetadataFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved in encrypted Host metadata; file paths are not stored.'**
+  String get savedInEncryptedHostMetadataFile;
+
+  /// No description provided for @sourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source label'**
+  String get sourceLabel;
+
+  /// No description provided for @staticInventoryText.
+  ///
+  /// In en, this message translates to:
+  /// **'Static inventory text'**
+  String get staticInventoryText;
+
+  /// No description provided for @theActiveVaultChangedOrBecame.
+  ///
+  /// In en, this message translates to:
+  /// **'The active Vault changed or became read-only during import.'**
+  String get theActiveVaultChangedOrBecame;
+
+  /// No description provided for @theActiveVaultChangedOrIs.
+  ///
+  /// In en, this message translates to:
+  /// **'The active Vault changed or is not writable; review the inventory again before importing.'**
+  String get theActiveVaultChangedOrIs;
+
+  /// No description provided for @theInventoryCouldNotBeReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory could not be reviewed safely.'**
+  String get theInventoryCouldNotBeReviewed;
+
+  /// No description provided for @theSelectedFileCouldNotBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected file could not be read.'**
+  String get theSelectedFileCouldNotBe;
+
+  /// No description provided for @theSelectedFileCouldNotBe2.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected file could not be reviewed.'**
+  String get theSelectedFileCouldNotBe2;
+
+  /// No description provided for @useInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Use inventory'**
+  String get useInventory;
+
+  /// No description provided for @restoreDeadlineFormat2.
+  ///
+  /// In en, this message translates to:
+  /// **' Restore deadline: {format}.'**
+  String restoreDeadlineFormat2(String format);
+
+  /// No description provided for @n0Auto.
+  ///
+  /// In en, this message translates to:
+  /// **'0 = auto'**
+  String get n0Auto;
+
+  /// No description provided for @n180UnicodeCharactersUniqueWithout.
+  ///
+  /// In en, this message translates to:
+  /// **'1–80 Unicode characters; unique without regard to case.'**
+  String get n180UnicodeCharactersUniqueWithout;
+
+  /// No description provided for @aHostCanHaveAtMost.
+  ///
+  /// In en, this message translates to:
+  /// **'A Host can have at most {maxHostPortForwardProfiles} port forward profiles.'**
+  String aHostCanHaveAtMost(int maxHostPortForwardProfiles);
+
+  /// No description provided for @aConcurrentChangeWasDetectedYour.
+  ///
+  /// In en, this message translates to:
+  /// **'A concurrent change was detected. Your name, membership and policy drafts are preserved.'**
+  String get aConcurrentChangeWasDetectedYour;
+
+  /// No description provided for @aNewEncryptedRevisionWillBe.
+  ///
+  /// In en, this message translates to:
+  /// **'A new encrypted revision will be created against the current remote head. The old branch remains recorded until the server accepts the resolution.'**
+  String get aNewEncryptedRevisionWillBe;
+
+  /// No description provided for @aNewerAtermiusWebBuildIs.
+  ///
+  /// In en, this message translates to:
+  /// **'A newer Atermius Web build is available.'**
+  String get aNewerAtermiusWebBuildIs;
+
+  /// No description provided for @aNewerWebBuildIsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A newer Web build is available. Review the notice above when it is safe to reload.'**
+  String get aNewerWebBuildIsAvailable;
+
+  /// No description provided for @aPreviousRepairAlreadySelectedRetainedrepairid.
+  ///
+  /// In en, this message translates to:
+  /// **'A previous repair already selected {retainedRepairId}. Retry must keep that record until sync confirms the tombstones.'**
+  String aPreviousRepairAlreadySelectedRetainedrepairid(
+    String retainedRepairId,
+  );
+
+  /// No description provided for @aPreviousRepairSelectedRetainedrecordidRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'A previous repair selected {retainedRecordId}. Retry must keep that record until Vault sync confirms the tombstones.'**
+  String aPreviousRepairSelectedRetainedrecordidRetry(String retainedRecordId);
+
+  /// No description provided for @aPreviousRepairSelectedRetainedrecordidRetry2.
+  ///
+  /// In en, this message translates to:
+  /// **'A previous repair selected {retainedRecordId}. Retry must keep this record until Vault sync confirms the tombstones.'**
+  String aPreviousRepairSelectedRetainedrecordidRetry2(String retainedRecordId);
+
+  /// No description provided for @aRandomRecoveryCodeEncryptsA.
+  ///
+  /// In en, this message translates to:
+  /// **'A random recovery code encrypts a separate Recovery identity. That identity stores sealed copies of Vault epoch keys; your account key is not a Vault key. Keep the code outside this device.'**
+  String get aRandomRecoveryCodeEncryptsA;
+
+  /// No description provided for @aSplitWorkspaceNeedsAtLeast.
+  ///
+  /// In en, this message translates to:
+  /// **'A split Workspace needs at least two panes'**
+  String get aSplitWorkspaceNeedsAtLeast;
+
+  /// No description provided for @aUsersEffectiveRelayAccessAlso.
+  ///
+  /// In en, this message translates to:
+  /// **'A user’s effective Relay access also intersects their account policy, every other server group, and the deployment limits.'**
+  String get aUsersEffectiveRelayAccessAlso;
+
+  /// No description provided for @active.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE'**
+  String get active;
+
+  /// No description provided for @apiEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'API endpoint'**
+  String get apiEndpoint;
+
+  /// No description provided for @acceptVaultInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Vault invitation'**
+  String get acceptVaultInvitation;
+
+  /// No description provided for @acceptAndUnlockVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept and unlock Vault'**
+  String get acceptAndUnlockVault;
+
+  /// No description provided for @acceptInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept invitation'**
+  String get acceptInvitation;
+
+  /// No description provided for @acceptedByAdapter7UtcDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted by adapter (7 UTC days)'**
+  String get acceptedByAdapter7UtcDays;
+
+  /// No description provided for @accessExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Access expires'**
+  String get accessExpires;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @accountDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & device'**
+  String get accountDevice;
+
+  /// No description provided for @accountId.
+  ///
+  /// In en, this message translates to:
+  /// **'Account ID'**
+  String get accountId;
+
+  /// No description provided for @accountRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Relay policy'**
+  String get accountRelayPolicy;
+
+  /// No description provided for @accountRelayPolicySaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Relay policy save failed'**
+  String get accountRelayPolicySaveFailed;
+
+  /// No description provided for @accountDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion'**
+  String get accountDeletion;
+
+  /// No description provided for @accountDeletionImmediatelyRevokesAllSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion immediately revokes all sessions and devices. At the server deadline, personal Vaults and account data are purged; your membership and key access to other people’s Vaults are removed. Other members’ shared Vault data is not deleted. An Owner of a shared Vault with other active or invited members must resolve that membership first.'**
+  String get accountDeletionImmediatelyRevokesAllSessions;
+
+  /// No description provided for @accountDeletionScheduledByTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion scheduled by the server.'**
+  String get accountDeletionScheduledByTheServer;
+
+  /// No description provided for @accountDeletionScheduledServerPurgeAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion scheduled. Server purge_after: {accountDeletionPurgeAfter}.'**
+  String accountDeletionScheduledServerPurgeAfter(
+    Object accountDeletionPurgeAfter,
+  );
+
+  /// No description provided for @accountDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Account devices'**
+  String get accountDevices;
+
+  /// No description provided for @accountInvitationCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Account invitation created'**
+  String get accountInvitationCreated;
+
+  /// No description provided for @accountInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Account invitations'**
+  String get accountInvitations;
+
+  /// No description provided for @accountRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery'**
+  String get accountRecovery;
+
+  /// No description provided for @accountRecoveryCodeCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery code: {code}'**
+  String accountRecoveryCodeCode(String code);
+
+  /// No description provided for @accountRecoveryWasDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery was disabled.'**
+  String get accountRecoveryWasDisabled;
+
+  /// No description provided for @accountRevisionRevisionUpdatedFormattime.
+  ///
+  /// In en, this message translates to:
+  /// **'Account revision {revision} · updated {formatTime}'**
+  String accountRevisionRevisionUpdatedFormattime(
+    int revision,
+    String formatTime,
+  );
+
+  /// No description provided for @accountSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Account sessions'**
+  String get accountSessions;
+
+  /// No description provided for @accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get accounts;
+
+  /// No description provided for @actionsForFilename.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions for {filename}'**
+  String actionsForFilename(String filename);
+
+  /// No description provided for @active2.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get active2;
+
+  /// No description provided for @activePaneValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Pane {valueValue}'**
+  String activePaneValuevalue(int valueValue);
+
+  /// No description provided for @activeAccountOnCurrentPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Active account on current page'**
+  String get activeAccountOnCurrentPage;
+
+  /// No description provided for @activeDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Active devices'**
+  String get activeDevices;
+
+  /// No description provided for @activePane.
+  ///
+  /// In en, this message translates to:
+  /// **'Active pane'**
+  String get activePane;
+
+  /// No description provided for @activeSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Active sessions'**
+  String get activeSessions;
+
+  /// No description provided for @actorDeviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Actor device ID'**
+  String get actorDeviceId;
+
+  /// No description provided for @actorUserId.
+  ///
+  /// In en, this message translates to:
+  /// **'Actor user ID'**
+  String get actorUserId;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @addCredentialSecretParameter.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Credential secret parameter'**
+  String get addCredentialSecretParameter;
+
+  /// No description provided for @addAHostFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a host first.'**
+  String get addAHostFirst;
+
+  /// No description provided for @addAPasswordOrPrivateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a password or private-key identity, then link it to a host.'**
+  String get addAPasswordOrPrivateKey;
+
+  /// No description provided for @addCredential2.
+  ///
+  /// In en, this message translates to:
+  /// **'Add credential'**
+  String get addCredential2;
+
+  /// No description provided for @addForwardingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Add forwarding profile'**
+  String get addForwardingProfile;
+
+  /// No description provided for @addParameter.
+  ///
+  /// In en, this message translates to:
+  /// **'Add parameter'**
+  String get addParameter;
+
+  /// No description provided for @addProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Add profile'**
+  String get addProfile;
+
+  /// No description provided for @addThisValueAsTheBearer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this value as the Bearer credential for /api/v1/admin/metrics. It is not stored in this app and cannot be retrieved later.'**
+  String get addThisValueAsTheBearer;
+
+  /// No description provided for @addYourFirstHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first host'**
+  String get addYourFirstHost;
+
+  /// No description provided for @adjustTheSearchOrGroupFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust the search or group filter to see more hosts.'**
+  String get adjustTheSearchOrGroupFilter;
+
+  /// No description provided for @advanceOnlyAfterEachPageIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance only after each page is persisted'**
+  String get advanceOnlyAfterEachPageIs;
+
+  /// No description provided for @afterConfirmationThisFingerprintIsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'After confirmation, this fingerprint is saved as an encrypted record in the current Vault and syncs to its devices. The client rejects later connections when the key changes.'**
+  String get afterConfirmationThisFingerprintIsSaved;
+
+  /// No description provided for @algorithmAlgorithm.
+  ///
+  /// In en, this message translates to:
+  /// **'Algorithm: {algorithm}'**
+  String algorithmAlgorithm(String algorithm);
+
+  /// No description provided for @allActiveVaultDevicesReportSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'All active Vault devices report support for redaction v1.'**
+  String get allActiveVaultDevicesReportSupport;
+
+  /// No description provided for @allowFutureAutomaticPurge.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow future automatic purge?'**
+  String get allowFutureAutomaticPurge;
+
+  /// No description provided for @allowFuturePurge.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow future purge'**
+  String get allowFuturePurge;
+
+  /// No description provided for @allowedCidrNetworks.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed CIDR networks'**
+  String get allowedCidrNetworks;
+
+  /// No description provided for @allowedCidrsOnePerLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed CIDRs (one per line)'**
+  String get allowedCidrsOnePerLine;
+
+  /// No description provided for @allowedPorts.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed ports'**
+  String get allowedPorts;
+
+  /// No description provided for @anEncryptedVaultArchiveCoveringPendingcount.
+  ///
+  /// In en, this message translates to:
+  /// **'An encrypted Vault archive covering {pendingCount, plural, =1{1 pending operation} other{{pendingCount} pending operations}} was exported recently. The outbox remains stored locally and will sync after reload.'**
+  String anEncryptedVaultArchiveCoveringPendingcount(int pendingCount);
+
+  /// No description provided for @anonymousDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous diagnostics'**
+  String get anonymousDiagnostics;
+
+  /// No description provided for @anonymousSyncDiagnosticsExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous sync diagnostics exported.'**
+  String get anonymousSyncDiagnosticsExported;
+
+  /// No description provided for @appliedAppliedInventoryChangeSHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied {applied, plural, =1{1 inventory change} other{{applied} inventory changes}}; Host records are encrypted and queued to sync.'**
+  String appliedAppliedInventoryChangeSHost(int applied);
+
+  /// No description provided for @applyWebUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Web update?'**
+  String get applyWebUpdate;
+
+  /// No description provided for @approvalJsonCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval JSON copied.'**
+  String get approvalJsonCopied;
+
+  /// No description provided for @approveSealKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve & seal keys'**
+  String get approveSealKeys;
+
+  /// No description provided for @approveEnrollment.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve enrollment'**
+  String get approveEnrollment;
+
+  /// No description provided for @approveValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve {valueValue}?'**
+  String approveValuevalue(Object valueValue);
+
+  /// No description provided for @archiveBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive bytes'**
+  String get archiveBytes;
+
+  /// No description provided for @archivePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive password'**
+  String get archivePassword;
+
+  /// No description provided for @archiveSaveWasCanceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive save was canceled.'**
+  String get archiveSaveWasCanceled;
+
+  /// No description provided for @argumentsJsonArray2.
+  ///
+  /// In en, this message translates to:
+  /// **'Arguments (JSON array)'**
+  String get argumentsJsonArray2;
+
+  /// No description provided for @askTheServerOperatorToConfigure.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the server operator to configure the encrypted backup destination and key before enabling a schedule.'**
+  String get askTheServerOperatorToConfigure;
+
+  /// No description provided for @atLeast12CharactersIndependentFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 12 characters. Independent from your account password.'**
+  String get atLeast12CharactersIndependentFrom;
+
+  /// No description provided for @atTheDeadlineTheServerPurges.
+  ///
+  /// In en, this message translates to:
+  /// **'At the deadline the server purges this Vault’s records, history, conflicts, snapshots, encrypted objects, membership and key envelopes. Existing local/offline copies and backups are separate; this action cannot remotely erase them.'**
+  String get atTheDeadlineTheServerPurges;
+
+  /// No description provided for @atTheServerDeadlineRecordsHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'At the server deadline, records, history, conflicts, snapshots, encrypted objects and key envelopes are purged. Offline copies and retained backups are separate and are not remotely erased.'**
+  String get atTheServerDeadlineRecordsHistory;
+
+  /// No description provided for @atermiusWillKeepThisPageAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Atermius will keep this page and its SSH sessions open until you finish the steps below and confirm the reload.'**
+  String get atermiusWillKeepThisPageAnd;
+
+  /// No description provided for @atermiusWillReloadThisPageTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Atermius will reload this page to load the newer self-hosted Web bundle. The page will not switch until you confirm.'**
+  String get atermiusWillReloadThisPageTo;
+
+  /// No description provided for @attemptedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempted at'**
+  String get attemptedAt;
+
+  /// No description provided for @auditLog2.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log'**
+  String get auditLog2;
+
+  /// No description provided for @automaticPurgeConsentRecordedForThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic purge consent recorded for this exact tombstone. Bounded Maintenance may purge it after the restore deadline and other required checks; enabling consent does not purge it immediately. Offline device copies and exports are not removed.'**
+  String get automaticPurgeConsentRecordedForThis;
+
+  /// No description provided for @automaticPurgeConsentValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic purge consent: {valueValue}'**
+  String automaticPurgeConsentValuevalue(String valueValue);
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @backgroundSyncNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Background sync notifications'**
+  String get backgroundSyncNotifications;
+
+  /// No description provided for @backupBucketAccessCheckResultNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup bucket access check result: {notice}'**
+  String backupBucketAccessCheckResultNotice(String notice);
+
+  /// No description provided for @backupCommandFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup command failed'**
+  String get backupCommandFailed;
+
+  /// No description provided for @baseRevisionShortauditidCurrentHeadShortauditid2.
+  ///
+  /// In en, this message translates to:
+  /// **'Base revision: {shortAuditId} · Current head: {shortAuditId2}'**
+  String baseRevisionShortauditidCurrentHeadShortauditid2(
+    String shortAuditId,
+    String shortAuditId2,
+  );
+
+  /// No description provided for @bashNonInteractiveExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Bash non-interactive execution'**
+  String get bashNonInteractiveExecution;
+
+  /// No description provided for @bashNonInteractiveExecutionRequiresA.
+  ///
+  /// In en, this message translates to:
+  /// **'Bash non-interactive execution · requires a POSIX-compatible login shell and Bash'**
+  String get bashNonInteractiveExecutionRequiresA;
+
+  /// No description provided for @bashOnlyEachArgvItemIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Bash only. Each argv item is a literal or parameter reference and is quoted as one shell word.'**
+  String get bashOnlyEachArgvItemIs;
+
+  /// No description provided for @batchCommandExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch command execution'**
+  String get batchCommandExecution;
+
+  /// No description provided for @bindingsAreEncryptedInCurrentvaultnameAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Bindings are encrypted in {currentVaultName} and sync to devices with access to this Vault.'**
+  String bindingsAreEncryptedInCurrentvaultnameAnd(String currentVaultName);
+
+  /// No description provided for @bindingsSyncAsSemanticActionsMod.
+  ///
+  /// In en, this message translates to:
+  /// **'Bindings sync as semantic actions. “mod” resolves locally to Command on Apple platforms and Control elsewhere. A shortcut runs only while a terminal input has focus; the search field keeps normal text and keyboard behavior.'**
+  String get bindingsSyncAsSemanticActionsMod;
+
+  /// No description provided for @bothRevisionsStayEncryptedInLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Both revisions stay encrypted in local storage. Choose the branch to become a new revision based on the current remote head.'**
+  String get bothRevisionsStayEncryptedInLocal;
+
+  /// No description provided for @branchShortauditid.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch {shortAuditId}'**
+  String branchShortauditid(String shortAuditId);
+
+  /// No description provided for @browseFiles2.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse files'**
+  String get browseFiles2;
+
+  /// No description provided for @browseFilesOnValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse files on {valueValue}'**
+  String browseFilesOnValuevalue(String valueValue);
+
+  /// No description provided for @byApprovingThisActiveMemberDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'By approving, this active member device sends sealed key envelopes for every Vault and key epoch it can access. Verify the request and device identity with the person who controls the new browser.'**
+  String get byApprovingThisActiveMemberDevice;
+
+  /// No description provided for @conflictConnectionsBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'CONFLICT — CONNECTIONS BLOCKED'**
+  String get conflictConnectionsBlocked;
+
+  /// No description provided for @currentVault.
+  ///
+  /// In en, this message translates to:
+  /// **'CURRENT VAULT'**
+  String get currentVault;
+
+  /// No description provided for @cancelBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel batch'**
+  String get cancelBatch;
+
+  /// No description provided for @cancelDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel deletion'**
+  String get cancelDeletion;
+
+  /// No description provided for @cancelExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel execution'**
+  String get cancelExecution;
+
+  /// No description provided for @cancelScheduledDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel scheduled deletion?'**
+  String get cancelScheduledDeletion;
+
+  /// No description provided for @cancelThePendingDeletionForVaultname.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel the pending deletion for {vaultName}? Server writes become available again and the encrypted outbox can resume syncing. The cancellation is possible only before {vaultLifecycleDate}.'**
+  String cancelThePendingDeletionForVaultname(
+    String vaultName,
+    String vaultLifecycleDate,
+  );
+
+  /// No description provided for @cancellationRequestedTheActiveCommandMay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation requested. The active command may have started; no later Host will run.'**
+  String get cancellationRequestedTheActiveCommandMay;
+
+  /// No description provided for @cancellationRequestedTheCommandMayAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation requested. The command may already have started; it will not be retried.'**
+  String get cancellationRequestedTheCommandMayAlready;
+
+  /// No description provided for @capabilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Capabilities'**
+  String get capabilities;
+
+  /// No description provided for @changeMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change master password'**
+  String get changeMasterPassword;
+
+  /// No description provided for @changeToRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Change to {role}'**
+  String changeToRole(String role);
+
+  /// No description provided for @changeUsernameFromItemToRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Change {username} from {item} to {role}? This signs a new membership version and rotates the Vault key for every remaining active member device. Pending invitation tokens become invalid and must be reissued. Old key copies cannot be erased remotely.'**
+  String changeUsernameFromItemToRole(
+    String username,
+    Object item,
+    String role,
+  );
+
+  /// No description provided for @changingPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing password…'**
+  String get changingPassword;
+
+  /// No description provided for @checkBucketAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Check bucket access'**
+  String get checkBucketAccess;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// No description provided for @checkingConfiguredBucketAccessWithHeadbucket.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking configured bucket access with HeadBucket…'**
+  String get checkingConfiguredBucketAccessWithHeadbucket;
+
+  /// No description provided for @checkingOnlineDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking online devices…'**
+  String get checkingOnlineDevices;
+
+  /// No description provided for @checkingThisSelfHostedInstanceFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking this self-hosted instance for a newer Web build…'**
+  String get checkingThisSelfHostedInstanceFor;
+
+  /// No description provided for @choose2575.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose 25–75'**
+  String get choose2575;
+
+  /// No description provided for @chooseConnectOnTheLeftTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Connect on the left to start a new session.'**
+  String get chooseConnectOnTheLeftTo;
+
+  /// No description provided for @chooseAHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a Host'**
+  String get chooseAHost;
+
+  /// No description provided for @chooseAHostForPaneValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a Host for Pane {valueValue}'**
+  String chooseAHostForPaneValuevalue(int valueValue);
+
+  /// No description provided for @chooseAHostFromTheActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a Host from the active Vault. The replacement is saved as an encrypted layout update; it will not connect.'**
+  String get chooseAHostFromTheActive;
+
+  /// No description provided for @chooseAHostOnTheLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a host on the left to start an SSH session.'**
+  String get chooseAHostOnTheLeft;
+
+  /// No description provided for @chooseALocalEncryptedArchiveOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a local encrypted archive or its remote replica to prepare a separate copy while the service stays online. Remote bytes are checked against their digest and archive authentication before the stage is published. This action does not activate the copy or replace live data; operators handle any later offline cutover.'**
+  String get chooseALocalEncryptedArchiveOr;
+
+  /// No description provided for @chooseALocalEncryptedArchiveTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a local encrypted archive to prepare a separate copy while the service stays online. The archive is checked again before the stage is published. This action does not activate the copy or replace live data; operators handle any later offline cutover.'**
+  String get chooseALocalEncryptedArchiveTo;
+
+  /// No description provided for @chooseANewMasterPasswordDifferent.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new master password different from the current one.'**
+  String get chooseANewMasterPasswordDifferent;
+
+  /// No description provided for @chooseASourceForEachChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a source for each changed field. The conflict branch is the verified losing version; the current Vault version is the committed head.'**
+  String get chooseASourceForEachChanged;
+
+  /// No description provided for @chooseActiveVaultDevicesThatMay.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose active Vault devices that may observe encrypted terminal output. Observers cannot type or resize the host terminal. This list is fixed for the session; a device only receives output sent after it joins, with no earlier scrollback replay.'**
+  String get chooseActiveVaultDevicesThatMay;
+
+  /// No description provided for @chooseConnectedHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose connected Hosts'**
+  String get chooseConnectedHosts;
+
+  /// No description provided for @chooseHowOftenThisServerCreates.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how often this server creates an encrypted backup. The archive destination and encryption key stay private on the server.'**
+  String get chooseHowOftenThisServerCreates;
+
+  /// No description provided for @chooseOneDeviceAlreadyApprovedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one device already approved for this share. It can type into this SSH session for up to five minutes; the SSH connection stays on this host device.'**
+  String get chooseOneDeviceAlreadyApprovedFor;
+
+  /// No description provided for @chooseTheDefaultPreferenceRecordTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the default preference record to keep'**
+  String get chooseTheDefaultPreferenceRecordTo;
+
+  /// No description provided for @chooseTheDefaultWorkspaceSectionFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the default workspace section for the active Vault. This preference is encrypted before syncing to devices with access to the Vault.'**
+  String get chooseTheDefaultWorkspaceSectionFor;
+
+  /// No description provided for @chooseTheShortcutPreferenceRecordTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the shortcut preference record to keep'**
+  String get chooseTheShortcutPreferenceRecordTo;
+
+  /// No description provided for @chooseTheTerminalFontSizeRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the terminal font-size record to keep'**
+  String get chooseTheTerminalFontSizeRecord;
+
+  /// No description provided for @chooseTheTerminalPaletteSharedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the terminal palette shared by every device authorized for this Vault. The selected palette is stored as an encrypted, allowlisted preference.'**
+  String get chooseTheTerminalPaletteSharedBy;
+
+  /// No description provided for @chooseTheTerminalThemeRecordTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the terminal-theme record to keep'**
+  String get chooseTheTerminalThemeRecordTo;
+
+  /// No description provided for @cleanupPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleanup pending'**
+  String get cleanupPending;
+
+  /// No description provided for @clearLocalHistoryOnlyRemovesThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear local history only removes this device’s rows. It does not delete records already synced to the Vault.'**
+  String get clearLocalHistoryOnlyRemovesThis;
+
+  /// No description provided for @clearThisHostsLocalHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear this host’s local history'**
+  String get clearThisHostsLocalHistory;
+
+  /// No description provided for @closeActiveSshTerminalsBeforeApplying.
+  ///
+  /// In en, this message translates to:
+  /// **'Close active SSH terminals before applying the update.'**
+  String get closeActiveSshTerminalsBeforeApplying;
+
+  /// No description provided for @closeSavedLayoutPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Close saved layout preview'**
+  String get closeSavedLayoutPreview;
+
+  /// No description provided for @color2.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get color2;
+
+  /// No description provided for @commaOrLineSeparatedPortNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma or line separated port numbers.'**
+  String get commaOrLineSeparatedPortNumbers;
+
+  /// No description provided for @commaOrNewlineSeparatedForExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma or newline separated, for example 22, 2222'**
+  String get commaOrNewlineSeparatedForExample;
+
+  /// No description provided for @commandHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Command history'**
+  String get commandHistory;
+
+  /// No description provided for @commandSnippets.
+  ///
+  /// In en, this message translates to:
+  /// **'Command snippets'**
+  String get commandSnippets;
+
+  /// No description provided for @commandSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Command suggestions'**
+  String get commandSuggestions;
+
+  /// No description provided for @commandsAppearHereAfterTheHook.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands appear here after the hook is pasted and a command finishes.'**
+  String get commandsAppearHereAfterTheHook;
+
+  /// No description provided for @commandsRunOneAtATime.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands run one at a time. A failure, non-zero exit, timeout, or unknown result stops the batch; no command is retried.'**
+  String get commandsRunOneAtATime;
+
+  /// No description provided for @compareEachValueAndRecordId.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare each value and record ID. The chosen record ID stays active; the other records are removed with encrypted tombstones.'**
+  String get compareEachValueAndRecordId;
+
+  /// No description provided for @compareThisPublicFingerprintWithAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare this public fingerprint with another device or a trusted administrator over a separate channel to confirm the instance identity.'**
+  String get compareThisPublicFingerprintWithAnother;
+
+  /// No description provided for @comparedWithTheLastVerifiedServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Compared with the last verified server metadata; this value may be stale while offline.'**
+  String get comparedWithTheLastVerifiedServer;
+
+  /// No description provided for @compatibilityReportNotReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Compatibility report · not reported'**
+  String get compatibilityReportNotReported;
+
+  /// No description provided for @compatibilityReportUnverifiedDetailsHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Compatibility report · unverified; details hidden'**
+  String get compatibilityReportUnverifiedDetailsHidden;
+
+  /// No description provided for @completionStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion status unknown'**
+  String get completionStatusUnknown;
+
+  /// No description provided for @concurrentLayoutEditsAreKeptAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Concurrent layout edits are kept as separate encrypted branches. Saving this device branch as a named copy leaves the original conflict open; no pane is connected.'**
+  String get concurrentLayoutEditsAreKeptAs;
+
+  /// No description provided for @confirmAndReAuthenticate.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm and re-authenticate'**
+  String get confirmAndReAuthenticate;
+
+  /// No description provided for @confirmAndRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm and run'**
+  String get confirmAndRun;
+
+  /// No description provided for @confirmAndRunOnCountHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm and run on {count, plural, =1{1 Host} other{{count} Hosts}}'**
+  String confirmAndRunOnCountHosts(int count);
+
+  /// No description provided for @confirmArchivePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm archive password'**
+  String get confirmArchivePassword;
+
+  /// No description provided for @confirmNewMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new master password'**
+  String get confirmNewMasterPassword;
+
+  /// No description provided for @confirmRevokeInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm revoke invitation'**
+  String get confirmRevokeInvitation;
+
+  /// No description provided for @confirmTargetName.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm target: {name}'**
+  String confirmTargetName(String name);
+
+  /// No description provided for @conflictBranches.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict branches'**
+  String get conflictBranches;
+
+  /// No description provided for @conflictResolutionSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict resolution synced.'**
+  String get conflictResolutionSynced;
+
+  /// No description provided for @conflictingSshKeysAreSavedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflicting SSH keys are saved for {join}. Connections are blocked. Revoke every key you do not intend to trust; if neither fingerprint is verified, revoke both, then approve a key only after checking it out of band.'**
+  String conflictingSshKeysAreSavedFor(String join);
+
+  /// No description provided for @conflictingBranchesArePreservedUntilYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflicting branches are preserved until you choose the version to keep.'**
+  String get conflictingBranchesArePreservedUntilYou;
+
+  /// No description provided for @connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connect;
+
+  /// No description provided for @connectAnSshHostToBrowse.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect an SSH host to browse remote files.'**
+  String get connectAnSshHostToBrowse;
+
+  /// No description provided for @connectToNameToOpenAn.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to {name} to open an interactive shell.'**
+  String connectToNameToOpenAn(String name);
+
+  /// No description provided for @connectionSettingsAreKeptAsOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection settings are kept as one tuple. Review the original base and both verified branches, then select one complete tuple. This includes the address, port, SSH username, authentication method, selected Credential, route, proxy, forwarding rules, and host trust settings.'**
+  String get connectionSettingsAreKeptAsOne;
+
+  /// No description provided for @connections.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections'**
+  String get connections;
+
+  /// No description provided for @connectionsToEndpointUsingAlgorithmWill.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections to {endpoint} using {algorithm} will be blocked on devices after this signed revocation syncs. The fingerprint remains in history.'**
+  String connectionsToEndpointUsingAlgorithmWill(
+    String endpoint,
+    String algorithm,
+  );
+
+  /// No description provided for @consumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumed'**
+  String get consumed;
+
+  /// No description provided for @continueToFinalConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to final confirmation'**
+  String get continueToFinalConfirmation;
+
+  /// No description provided for @continueToReAuthenticate.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to re-authenticate'**
+  String get continueToReAuthenticate;
+
+  /// No description provided for @controlActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Control active'**
+  String get controlActive;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @copiedPasteThisCommandIntoThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied. Paste this command into the terminal:'**
+  String get copiedPasteThisCommandIntoThe;
+
+  /// No description provided for @copiesWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Copies waiting'**
+  String get copiesWaiting;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @copyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get copyCode;
+
+  /// No description provided for @copyCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy credential'**
+  String get copyCredential;
+
+  /// No description provided for @copyFailedSelectTheValueManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy failed; select the value manually'**
+  String get copyFailedSelectTheValueManually;
+
+  /// No description provided for @copyInvitationToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy invitation token'**
+  String get copyInvitationToken;
+
+  /// No description provided for @copySignedShareRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy signed share request'**
+  String get copySignedShareRequest;
+
+  /// No description provided for @copyTerminalShareId.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy terminal share ID'**
+  String get copyTerminalShareId;
+
+  /// No description provided for @copyThisOneTimeInvitationToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this one-time invitation token and share it with the intended account holder. It will not be shown again after this dialog closes.'**
+  String get copyThisOneTimeInvitationToken;
+
+  /// No description provided for @copyThisResponseToTheNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this response to the new browser. It contains public identity material and sealed key envelopes, not private keys.'**
+  String get copyThisResponseToTheNew;
+
+  /// No description provided for @copyToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy token'**
+  String get copyToken;
+
+  /// No description provided for @copyingEncryptedArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying encrypted archive'**
+  String get copyingEncryptedArchive;
+
+  /// No description provided for @couldNotClearThisHostsLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear this host’s local history.'**
+  String get couldNotClearThisHostsLocal;
+
+  /// No description provided for @couldNotConfirmInputControlRevocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm input control revocation. The host SSH connection remains active.'**
+  String get couldNotConfirmInputControlRevocation;
+
+  /// No description provided for @couldNotCopyTheSetupCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the setup command. No command was sent to the remote shell.'**
+  String get couldNotCopyTheSetupCommand;
+
+  /// No description provided for @couldNotEnableVaultHistorySync.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not enable Vault history sync. Check that the active Vault is writable and try again.'**
+  String get couldNotEnableVaultHistorySync;
+
+  /// No description provided for @couldNotExportAnonymousSyncDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export anonymous sync diagnostics.'**
+  String get couldNotExportAnonymousSyncDiagnostics;
+
+  /// No description provided for @couldNotGrantInputControlCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not grant input control. Check the session and try again.'**
+  String get couldNotGrantInputControlCheck;
+
+  /// No description provided for @couldNotJoinCheckTheSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not join. Check the session ID and Vault access.'**
+  String get couldNotJoinCheckTheSession;
+
+  /// No description provided for @couldNotLoadTheCurrentHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the current Host: {friendlyError}'**
+  String couldNotLoadTheCurrentHost(String friendlyError);
+
+  /// No description provided for @couldNotRemoveThisForwardingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove this forwarding profile. Check the connection, then sync and retry.'**
+  String get couldNotRemoveThisForwardingProfile;
+
+  /// No description provided for @couldNotSaveForwardingSettingsSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save forwarding settings. Sync and retry; your current settings are unchanged.'**
+  String get couldNotSaveForwardingSettingsSync;
+
+  /// No description provided for @couldNotSaveTerminalFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save terminal font size. Check Vault write access and try again.'**
+  String get couldNotSaveTerminalFontSize;
+
+  /// No description provided for @couldNotSaveTerminalShortcutsCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save terminal shortcuts. Check Vault write access and try again.'**
+  String get couldNotSaveTerminalShortcutsCheck;
+
+  /// No description provided for @couldNotSaveTerminalThemeCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save terminal theme. Check Vault write access and try again.'**
+  String get couldNotSaveTerminalThemeCheck;
+
+  /// No description provided for @couldNotSaveTheReviewedTuple.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the reviewed tuple: {friendlyError}'**
+  String couldNotSaveTheReviewedTuple(String friendlyError);
+
+  /// No description provided for @couldNotSaveThisGroupYour.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this group. Your changes remain in the form; check Vault access and retry.'**
+  String get couldNotSaveThisGroupYour;
+
+  /// No description provided for @couldNotSaveThisPreferenceCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this preference. Check Vault write access and try again.'**
+  String get couldNotSaveThisPreferenceCheck;
+
+  /// No description provided for @couldNotStartOrStopThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start or stop this forward. Check port availability and SSH server forwarding policy.'**
+  String get couldNotStartOrStopThis;
+
+  /// No description provided for @couldNotStartTerminalSharingCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start terminal sharing. Check the Vault and network, then retry.'**
+  String get couldNotStartTerminalSharingCheck;
+
+  /// No description provided for @couldNotTurnOffVaultHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not turn off Vault history sync. Please try again.'**
+  String get couldNotTurnOffVaultHistory;
+
+  /// No description provided for @create2.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create2;
+
+  /// No description provided for @createVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Vault'**
+  String get createVault;
+
+  /// No description provided for @createADedicatedReadOnlyBearer.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a dedicated read-only Bearer credential for GET /api/v1/admin/metrics. The secret is shown once and never saved by this app.'**
+  String get createADedicatedReadOnlyBearer;
+
+  /// No description provided for @createAGroupToOrganizeRelated.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a group to organize related servers.'**
+  String get createAGroupToOrganizeRelated;
+
+  /// No description provided for @createAnotherVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Create another Vault'**
+  String get createAnotherVault;
+
+  /// No description provided for @createCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Create credential'**
+  String get createCredential;
+
+  /// No description provided for @createEncryptedVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Create encrypted Vault'**
+  String get createEncryptedVault;
+
+  /// No description provided for @createGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create group'**
+  String get createGroup;
+
+  /// No description provided for @createInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Create invitation'**
+  String get createInvitation;
+
+  /// No description provided for @createRemoteFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Create remote folder'**
+  String get createRemoteFolder;
+
+  /// No description provided for @createResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Create resolution'**
+  String get createResolution;
+
+  /// No description provided for @createSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Create snippet'**
+  String get createSnippet;
+
+  /// No description provided for @createSplitWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Create split Workspace'**
+  String get createSplitWorkspace;
+
+  /// No description provided for @createUsernameBoundInvitationsAndReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Create username-bound invitations and review their status.'**
+  String get createUsernameBoundInvitationsAndReview;
+
+  /// No description provided for @createYourFirstGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first group'**
+  String get createYourFirstGroup;
+
+  /// No description provided for @createYourFirstHostAndAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first host and attach a client-side encrypted SSH credential. Nothing here is sample or demo data.'**
+  String get createYourFirstHostAndAttach;
+
+  /// No description provided for @created.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get created;
+
+  /// No description provided for @createdAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created at'**
+  String get createdAt;
+
+  /// No description provided for @createdFormattimeUpdatedFormattime2.
+  ///
+  /// In en, this message translates to:
+  /// **'Created {formatTime} · updated {formatTime2}'**
+  String createdFormattimeUpdatedFormattime2(
+    String formatTime,
+    String formatTime2,
+  );
+
+  /// No description provided for @createdFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Created · {format}'**
+  String createdFormat(String format);
+
+  /// No description provided for @createsAV2RoomInputStays.
+  ///
+  /// In en, this message translates to:
+  /// **'Creates a v2 room. Input stays off until you grant one approved device a lease of up to five minutes.'**
+  String get createsAV2RoomInputStays;
+
+  /// No description provided for @credential.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential'**
+  String get credential;
+
+  /// No description provided for @credentialActionsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential actions: {name}'**
+  String credentialActionsName(String name);
+
+  /// No description provided for @credentialMergeSavedAndSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential merge saved and syncing'**
+  String get credentialMergeSavedAndSyncing;
+
+  /// No description provided for @credentialName2.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential name'**
+  String get credentialName2;
+
+  /// No description provided for @credentialReferenceNameMustPointTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential reference {name} must point to a password Credential'**
+  String credentialReferenceNameMustPointTo(String name);
+
+  /// No description provided for @credentialReferenceNameWasNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential reference {name} was not found in this Vault'**
+  String credentialReferenceNameWasNotFound(String name);
+
+  /// No description provided for @credentialSelectionProxySettingsForwardingDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential selection, proxy settings, forwarding details, and host trust material are masked. They are preserved from the selected branch.'**
+  String get credentialSelectionProxySettingsForwardingDetails;
+
+  /// No description provided for @credentialStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential status'**
+  String get credentialStatus;
+
+  /// No description provided for @credentialValuesAreSentOnlyThrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential values are sent only through the encrypted SSH exec channel. The remote program receives them as arguments and may expose them to processes running as the same remote user.'**
+  String get credentialValuesAreSentOnlyThrough;
+
+  /// No description provided for @credentialNameUsernameValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential: {name}; {username}; {valueValue}'**
+  String credentialNameUsernameValuevalue(
+    String name,
+    String username,
+    String valueValue,
+  );
+
+  /// No description provided for @currentVault2.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Vault'**
+  String get currentVault2;
+
+  /// No description provided for @currentAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Current account'**
+  String get currentAccount;
+
+  /// No description provided for @currentAccountValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Current account: {valueValue}'**
+  String currentAccountValuevalue(String valueValue);
+
+  /// No description provided for @currentDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Current device'**
+  String get currentDevice;
+
+  /// No description provided for @currentHeadShortauditid.
+  ///
+  /// In en, this message translates to:
+  /// **'Current head: {shortAuditId}'**
+  String currentHeadShortauditid(String shortAuditId);
+
+  /// No description provided for @currentMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current master password'**
+  String get currentMasterPassword;
+
+  /// No description provided for @currentSignedInAccountAdministrativeActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Current signed-in account · administrative actions hidden'**
+  String get currentSignedInAccountAdministrativeActions;
+
+  /// No description provided for @cursorPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Cursor policy'**
+  String get cursorPolicy;
+
+  /// No description provided for @deletionScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETION SCHEDULED'**
+  String get deletionScheduled;
+
+  /// No description provided for @deadLettered.
+  ///
+  /// In en, this message translates to:
+  /// **'Dead-lettered'**
+  String get deadLettered;
+
+  /// No description provided for @defaultLabel2.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get defaultLabel2;
+
+  /// No description provided for @defaultSshCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Default SSH credential'**
+  String get defaultSshCredential;
+
+  /// No description provided for @defaultSectionSectionlabelRecordIdId.
+  ///
+  /// In en, this message translates to:
+  /// **'Default section: {sectionLabel}; Record ID: {id}; Revision: {revisionLabel}'**
+  String defaultSectionSectionlabelRecordIdId(
+    String sectionLabel,
+    String id,
+    String revisionLabel,
+  );
+
+  /// No description provided for @defaultWorkspaceSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Default workspace section'**
+  String get defaultWorkspaceSection;
+
+  /// No description provided for @defaultDefaultvalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Default: {defaultValue}'**
+  String defaultDefaultvalue(Object defaultValue);
+
+  /// No description provided for @delete2.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete2;
+
+  /// No description provided for @deleteForwardingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete forwarding profile'**
+  String get deleteForwardingProfile;
+
+  /// No description provided for @deleteGroup3.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group'**
+  String get deleteGroup3;
+
+  /// No description provided for @deleteGroup4.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group?'**
+  String get deleteGroup4;
+
+  /// No description provided for @deleteServerManagedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete server-managed group'**
+  String get deleteServerManagedGroup;
+
+  /// No description provided for @deleteServerManagedGroup2.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete server-managed group?'**
+  String get deleteServerManagedGroup2;
+
+  /// No description provided for @deleteThisItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this item?'**
+  String get deleteThisItem;
+
+  /// No description provided for @deletingAccountAdministrativeActionsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting account · administrative actions unavailable'**
+  String get deletingAccountAdministrativeActionsUnavailable;
+
+  /// No description provided for @deletingThisVaultStartsTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting this Vault starts the server configured grace period. Members become read-only immediately; the exact purge deadline is returned by the server.'**
+  String get deletingThisVaultStartsTheServer;
+
+  /// No description provided for @deletionCanceledPendingEncryptedSyncCan.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion canceled; pending encrypted sync can resume.'**
+  String get deletionCanceledPendingEncryptedSyncCan;
+
+  /// No description provided for @deletionRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion requested'**
+  String get deletionRequested;
+
+  /// No description provided for @deletionScheduledByTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion scheduled by the server.'**
+  String get deletionScheduledByTheServer;
+
+  /// No description provided for @deletionScheduledServerPurgeAfterVaultlifecycledate.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion scheduled. Server purge after {vaultLifecycleDate}.'**
+  String deletionScheduledServerPurgeAfterVaultlifecycledate(
+    String vaultLifecycleDate,
+  );
+
+  /// No description provided for @deliveryHistoryIsUnavailableOnThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery history is unavailable on this server.'**
+  String get deliveryHistoryIsUnavailableOnThis;
+
+  /// No description provided for @deliveryWindowUtc.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery window (UTC)'**
+  String get deliveryWindowUtc;
+
+  /// No description provided for @deploymentCidrLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Deployment CIDR limits'**
+  String get deploymentCidrLimits;
+
+  /// No description provided for @deploymentPortLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Deployment port limits'**
+  String get deploymentPortLimits;
+
+  /// No description provided for @deploymentRelayAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Deployment relay availability'**
+  String get deploymentRelayAvailability;
+
+  /// No description provided for @destinationOnSshTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination on SSH target'**
+  String get destinationOnSshTarget;
+
+  /// No description provided for @destinationOnThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination on this device'**
+  String get destinationOnThisDevice;
+
+  /// No description provided for @deviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Device ID'**
+  String get deviceId;
+
+  /// No description provided for @deviceSocksListenerAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Device SOCKS listener address'**
+  String get deviceSocksListenerAddress;
+
+  /// No description provided for @deviceAccessRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Device access revoked'**
+  String get deviceAccessRevoked;
+
+  /// No description provided for @deviceApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Device approved'**
+  String get deviceApproved;
+
+  /// No description provided for @deviceCapabilitySignerIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Device capability signer is invalid.'**
+  String get deviceCapabilitySignerIsInvalid;
+
+  /// No description provided for @deviceCompatibilityReportIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Device compatibility report is invalid.'**
+  String get deviceCompatibilityReportIsInvalid;
+
+  /// No description provided for @deviceListenerAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Device listener address'**
+  String get deviceListenerAddress;
+
+  /// No description provided for @deviceRevoked3.
+  ///
+  /// In en, this message translates to:
+  /// **'Device revoked'**
+  String get deviceRevoked3;
+
+  /// No description provided for @deviceSubstring.
+  ///
+  /// In en, this message translates to:
+  /// **'Device {substring}'**
+  String deviceSubstring(String substring);
+
+  /// No description provided for @devicesActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices active'**
+  String get devicesActive;
+
+  /// No description provided for @diagnosticsExportCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics export cancelled.'**
+  String get diagnosticsExportCancelled;
+
+  /// No description provided for @direction.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction'**
+  String get direction;
+
+  /// No description provided for @directory.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory'**
+  String get directory;
+
+  /// No description provided for @directoryIsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory is empty'**
+  String get directoryIsEmpty;
+
+  /// No description provided for @disableAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable account'**
+  String get disableAccount;
+
+  /// No description provided for @disableAccountRecovery2.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable account recovery'**
+  String get disableAccountRecovery2;
+
+  /// No description provided for @disableAccountRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable account recovery?'**
+  String get disableAccountRecovery;
+
+  /// No description provided for @disableAccount2.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable account?'**
+  String get disableAccount2;
+
+  /// No description provided for @disableOrReEnableAccountsAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable or re-enable accounts and revoke their active sessions.'**
+  String get disableOrReEnableAccountsAnd;
+
+  /// No description provided for @disableRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable recovery'**
+  String get disableRecovery;
+
+  /// No description provided for @disableUsernameServerSessionsWillBe.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable {username}? Server sessions will be revoked and they will not be able to sign in again. Cached device data will not be erased, and existing direct SSH connections may continue until their SSH servers close them.'**
+  String disableUsernameServerSessionsWillBe(String username);
+
+  /// No description provided for @disabledByPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled by policy'**
+  String get disabledByPolicy;
+
+  /// No description provided for @discardIsolatedCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard isolated copy'**
+  String get discardIsolatedCopy;
+
+  /// No description provided for @discardIsolatedRestoreCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard isolated restore copy?'**
+  String get discardIsolatedRestoreCopy;
+
+  /// No description provided for @discarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Discarded'**
+  String get discarded;
+
+  /// No description provided for @disconnect2.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get disconnect2;
+
+  /// No description provided for @disconnected2.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get disconnected2;
+
+  /// No description provided for @disconnectedRecursivePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected recursive preview'**
+  String get disconnectedRecursivePreview;
+
+  /// No description provided for @disconnectedConnectTabsExplicitly.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected · connect tabs explicitly'**
+  String get disconnectedConnectTabsExplicitly;
+
+  /// No description provided for @disconnectedDirectionlabelFirstpercentSecondpercentPanecountPanes.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected · {directionLabel} · {firstPercent}/{secondPercent} · {paneCount, plural, =1{1 pane} other{{paneCount} panes}} · Connect panes explicitly'**
+  String disconnectedDirectionlabelFirstpercentSecondpercentPanecountPanes(
+    String directionLabel,
+    int firstPercent,
+    int secondPercent,
+    int paneCount,
+  );
+
+  /// No description provided for @done2.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done2;
+
+  /// No description provided for @download2.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download2;
+
+  /// No description provided for @due.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get due;
+
+  /// No description provided for @duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get duplicate;
+
+  /// No description provided for @duplicateWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate workspace'**
+  String get duplicateWorkspace;
+
+  /// No description provided for @dynamicSocks5.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic SOCKS5'**
+  String get dynamicSocks5;
+
+  /// No description provided for @dynamicSocks5Bind.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic SOCKS5 · {bind}'**
+  String dynamicSocks5Bind(String bind);
+
+  /// No description provided for @dynamicForwardingIsALoopbackOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic forwarding is a loopback-only SOCKS5 CONNECT proxy without SOCKS authentication. Use it only on a trusted device.'**
+  String get dynamicForwardingIsALoopbackOnly;
+
+  /// No description provided for @eachDeviceKeepsItsPrivateSigning.
+  ///
+  /// In en, this message translates to:
+  /// **'Each device keeps its private signing and encryption keys locally. Approval sends only opaque sealed envelopes containing each Vault key epoch that this device can access. Never approve an enrollment you did not request.'**
+  String get eachDeviceKeepsItsPrivateSigning;
+
+  /// No description provided for @eachSelectedHostReceivesReferencedCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Each selected Host receives referenced Credential secrets through its encrypted SSH exec channel. The remote program receives them as arguments and may expose them to processes running as the same remote user.'**
+  String get eachSelectedHostReceivesReferencedCredential;
+
+  /// No description provided for @edit2.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit2;
+
+  /// No description provided for @editVaultQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Vault quota'**
+  String get editVaultQuota;
+
+  /// No description provided for @editCommandSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit command snippet'**
+  String get editCommandSnippet;
+
+  /// No description provided for @editCredential2.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit credential'**
+  String get editCredential2;
+
+  /// No description provided for @editForwardingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit forwarding profile'**
+  String get editForwardingProfile;
+
+  /// No description provided for @editGroup2.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit group'**
+  String get editGroup2;
+
+  /// No description provided for @editHostGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit host group'**
+  String get editHostGroup;
+
+  /// No description provided for @editQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit quota'**
+  String get editQuota;
+
+  /// No description provided for @editText2.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit text'**
+  String get editText2;
+
+  /// No description provided for @editableCeilingValuevalueCidrsSummarizePorts.
+  ///
+  /// In en, this message translates to:
+  /// **'Editable ceiling: {valueValue} · CIDRs: {summarize} · ports: {summarize2}'**
+  String editableCeilingValuevalueCidrsSummarizePorts(
+    String valueValue,
+    String summarize,
+    String summarize2,
+  );
+
+  /// No description provided for @editorCanEditVaultRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Editor · can edit Vault records'**
+  String get editorCanEditVaultRecords;
+
+  /// No description provided for @effectiveSshRelayService.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective SSH relay service'**
+  String get effectiveSshRelayService;
+
+  /// No description provided for @effectiveGroupStateValuevalueCidrsSummarize.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective group state: {valueValue} · CIDRs: {summarize} · ports: {summarize2}'**
+  String effectiveGroupStateValuevalueCidrsSummarize(
+    String valueValue,
+    String summarize,
+    String summarize2,
+  );
+
+  /// No description provided for @effectiveStateValuevalueCidrsSummarizePorts.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective state: {valueValue} · CIDRs: {summarize} · ports: {summarize2}'**
+  String effectiveStateValuevalueCidrsSummarizePorts(
+    String valueValue,
+    String summarize,
+    String summarize2,
+  );
+
+  /// No description provided for @enableBashCommandHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Bash command history'**
+  String get enableBashCommandHistory;
+
+  /// No description provided for @enableBashIntegration.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Bash integration'**
+  String get enableBashIntegration;
+
+  /// No description provided for @enableRelayForThisAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Relay for this account'**
+  String get enableRelayForThisAccount;
+
+  /// No description provided for @enableRelayForThisGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Relay for this group'**
+  String get enableRelayForThisGroup;
+
+  /// No description provided for @enableSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable SSH relay'**
+  String get enableSshRelay;
+
+  /// No description provided for @enableVaultSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Vault sync'**
+  String get enableVaultSync;
+
+  /// No description provided for @enableAndCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable and copy'**
+  String get enableAndCopy;
+
+  /// No description provided for @enableHostApprovedInputControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable host-approved input control'**
+  String get enableHostApprovedInputControl;
+
+  /// No description provided for @enableScheduledBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable scheduled backups'**
+  String get enableScheduledBackups;
+
+  /// No description provided for @enabledForThisDeviceTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled for this device. The server sends only a generic sync hint.'**
+  String get enabledForThisDeviceTheServer;
+
+  /// No description provided for @enablingSyncUploadsUpTo500.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabling sync uploads up to 500 existing local commands for hosts in the active Vault, then uploads future commands. Commands are encrypted with the active Vault key, and any Vault member with access can read them. Turning sync off cancels queued commands that have not been sent. Commands already sent or committed may still arrive and remain in the Vault.'**
+  String get enablingSyncUploadsUpTo500;
+
+  /// No description provided for @encryptVaultArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypt Vault archive'**
+  String get encryptVaultArchive;
+
+  /// No description provided for @encryptedVaultArchiveSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted Vault archive saved.'**
+  String get encryptedVaultArchiveSaved;
+
+  /// No description provided for @encryptedArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted archive'**
+  String get encryptedArchive;
+
+  /// No description provided for @encryptedArchiveBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted archive bytes'**
+  String get encryptedArchiveBytes;
+
+  /// No description provided for @encryptedBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted backup'**
+  String get encryptedBackup;
+
+  /// No description provided for @encryptedBackupsAreCreatedOnThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted backups are created on the server after the operator configures owner-only ATERMIUS_BACKUP_ARCHIVE_DIR and ATERMIUS_BACKUP_KEY_FILE paths outside the instance data directory. No archive or key paths are sent by this client.'**
+  String get encryptedBackupsAreCreatedOnThe;
+
+  /// No description provided for @encryptedObjectBlocksCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted object blocks: {count}'**
+  String encryptedObjectBlocksCount(int count);
+
+  /// No description provided for @encryptedRecordsImmutableRetriesAndRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted records, immutable retries and recovery checkpoints for this Vault.'**
+  String get encryptedRecordsImmutableRetriesAndRecovery;
+
+  /// No description provided for @encryptedWithTheActiveVaultKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted with the active Vault key. Members with access can read it. Turning sync off cancels unsent queued commands; sent or committed commands may still arrive and remain in the Vault.'**
+  String get encryptedWithTheActiveVaultKey;
+
+  /// No description provided for @encryptionKeyFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption key fingerprint'**
+  String get encryptionKeyFingerprint;
+
+  /// No description provided for @encryptionKeyFingerprintSha256.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption key fingerprint · SHA-256'**
+  String get encryptionKeyFingerprintSha256;
+
+  /// No description provided for @enrollmentJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Enrollment JSON'**
+  String get enrollmentJson;
+
+  /// No description provided for @enrollmentJsonIsNotValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enrollment JSON is not valid.'**
+  String get enrollmentJsonIsNotValid;
+
+  /// No description provided for @enterAWorkspaceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a Workspace name'**
+  String get enterAWorkspaceName;
+
+  /// No description provided for @enterAQuotaFrom1Byte.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a quota from 1 byte through 1 TiB.'**
+  String get enterAQuotaFrom1Byte;
+
+  /// No description provided for @enterASupportedNonReservedChord.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a supported, non-reserved chord such as mod+alt+shift+f. Each chord must be valid and unique.'**
+  String get enterASupportedNonReservedChord;
+
+  /// No description provided for @enterAWholeNumberFrom1.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number from 1 to 720.'**
+  String get enterAWholeNumberFrom1;
+
+  /// No description provided for @enterAWholeNumberPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole-number percent'**
+  String get enterAWholeNumberPercent;
+
+  /// No description provided for @enterRequiredValuesToPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter required values to preview.'**
+  String get enterRequiredValuesToPreview;
+
+  /// No description provided for @enterTheCurrentMasterPasswordAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the current master password (at least 12 characters).'**
+  String get enterTheCurrentMasterPasswordAt;
+
+  /// No description provided for @enterTheSessionUuidProvidedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the session UUID provided by the host. This opens a separate read-only terminal and does not create an SSH connection.'**
+  String get enterTheSessionUuidProvidedBy;
+
+  /// No description provided for @epochKeyVersionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Epoch key versions: {count}'**
+  String epochKeyVersionsCount(int count);
+
+  /// No description provided for @eventId.
+  ///
+  /// In en, this message translates to:
+  /// **'Event ID'**
+  String get eventId;
+
+  /// No description provided for @everyActiveVaultDeviceMustSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Every active Vault device must support redaction v1 before this record can be purged. Upgrade or retire unsupported devices, then retry.'**
+  String get everyActiveVaultDeviceMustSupport;
+
+  /// No description provided for @everyRoleChangeAndRevocationCommits.
+  ///
+  /// In en, this message translates to:
+  /// **'Every role change and revocation commits a signed membership update with a new key epoch. The Owner and all retained active member devices receive the new key.'**
+  String get everyRoleChangeAndRevocationCommits;
+
+  /// No description provided for @executionMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution mode'**
+  String get executionMode;
+
+  /// No description provided for @executionPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution preview'**
+  String get executionPreview;
+
+  /// No description provided for @existingShellLabelShell2.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing shell label: {shell}'**
+  String existingShellLabelShell2(String shell);
+
+  /// No description provided for @exitCodeExitcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit code: {exitCode}'**
+  String exitCodeExitcode(Object exitCode);
+
+  /// No description provided for @exitExitstatusCompletedat.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit {exitStatus} · {completedAt}'**
+  String exitExitstatusCompletedat(int exitStatus, String completedAt);
+
+  /// No description provided for @expectedAJsonArray.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected a JSON array'**
+  String get expectedAJsonArray;
+
+  /// No description provided for @expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get expired;
+
+  /// No description provided for @expires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires'**
+  String get expires;
+
+  /// No description provided for @exportArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Export archive'**
+  String get exportArchive;
+
+  /// No description provided for @exportDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Export diagnostics'**
+  String get exportDiagnostics;
+
+  /// No description provided for @exportTheFixedServerHistoryCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Export the fixed server history, current tombstones, local outbox/conflict branches and encrypted object blocks. A separate archive password protects the file with Argon2id and XChaCha20-Poly1305.'**
+  String get exportTheFixedServerHistoryCurrent;
+
+  /// No description provided for @failed2.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get failed2;
+
+  /// No description provided for @failureCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure category'**
+  String get failureCategory;
+
+  /// No description provided for @favorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get favorite;
+
+  /// No description provided for @file.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get file;
+
+  /// No description provided for @filterCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter commands'**
+  String get filterCommands;
+
+  /// No description provided for @fingerprintsApprovedDuringSshConnectionAre.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprints approved during SSH connection are encrypted in this Vault and sync to its devices. Revocation is also encrypted and leaves the approval history visible. Old device-only pins are not imported as Vault trust.'**
+  String get fingerprintsApprovedDuringSshConnectionAre;
+
+  /// No description provided for @finish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get finish;
+
+  /// No description provided for @finishedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished at'**
+  String get finishedAt;
+
+  /// No description provided for @firstChild.
+  ///
+  /// In en, this message translates to:
+  /// **'First child (%)'**
+  String get firstChild;
+
+  /// No description provided for @focus.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get focus;
+
+  /// No description provided for @folderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name'**
+  String get folderName;
+
+  /// No description provided for @forExample104000.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: 10.40.0.0/16'**
+  String get forExample104000;
+
+  /// No description provided for @forwardType.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward type'**
+  String get forwardType;
+
+  /// No description provided for @freeFormScriptLegacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Free-form script (legacy)'**
+  String get freeFormScriptLegacy;
+
+  /// No description provided for @futureAutomaticPurgeConsentWithdrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Future automatic purge consent withdrawn.'**
+  String get futureAutomaticPurgeConsentWithdrawn;
+
+  /// No description provided for @generatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated at'**
+  String get generatedAt;
+
+  /// No description provided for @generation.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation'**
+  String get generation;
+
+  /// No description provided for @generationCheckpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation checkpoint'**
+  String get generationCheckpoint;
+
+  /// No description provided for @generationMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation matches'**
+  String get generationMatches;
+
+  /// No description provided for @generationMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation mismatch'**
+  String get generationMismatch;
+
+  /// No description provided for @go.
+  ///
+  /// In en, this message translates to:
+  /// **'Go'**
+  String get go;
+
+  /// No description provided for @goToPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to path'**
+  String get goToPath;
+
+  /// No description provided for @goToRemotePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to remote path'**
+  String get goToRemotePath;
+
+  /// No description provided for @grantFor5Minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant for 5 minutes'**
+  String get grantFor5Minutes;
+
+  /// No description provided for @grantInputControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant input control'**
+  String get grantInputControl;
+
+  /// No description provided for @groupRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Relay policy'**
+  String get groupRelayPolicy;
+
+  /// No description provided for @groupActionsName2.
+  ///
+  /// In en, this message translates to:
+  /// **'Group actions: {name}'**
+  String groupActionsName2(String name);
+
+  /// No description provided for @groupName3.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupName3;
+
+  /// No description provided for @groupRevisionRevisionMembershipRevisionMembershiprevision.
+  ///
+  /// In en, this message translates to:
+  /// **'Group revision {revision} · membership revision {membershipRevision} · policy revision {revision2}'**
+  String groupRevisionRevisionMembershipRevisionMembershiprevision(
+    int revision,
+    int membershipRevision,
+    int revision2,
+  );
+
+  /// No description provided for @groupGroupname.
+  ///
+  /// In en, this message translates to:
+  /// **'Group: {groupName}'**
+  String groupGroupname(Object groupName);
+
+  /// No description provided for @headShortauditid.
+  ///
+  /// In en, this message translates to:
+  /// **'Head {shortAuditId}'**
+  String headShortauditid(String shortAuditId);
+
+  /// No description provided for @hideRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Relay policy'**
+  String get hideRelayPolicy;
+
+  /// No description provided for @hidePasswordSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password secret'**
+  String get hidePasswordSecret;
+
+  /// No description provided for @hideSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide sessions'**
+  String get hideSessions;
+
+  /// No description provided for @host.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get host;
+
+  /// No description provided for @hostConnectionSettingsReviewedAndQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Host connection settings reviewed and queued to sync.'**
+  String get hostConnectionSettingsReviewedAndQueued;
+
+  /// No description provided for @hostGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Host groups'**
+  String get hostGroups;
+
+  /// No description provided for @hostIsNoLongerAvailableSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Host is no longer available; sync and retry.'**
+  String get hostIsNoLongerAvailableSync;
+
+  /// No description provided for @hostUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Host unavailable'**
+  String get hostUnavailable;
+
+  /// No description provided for @hostPaneValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Host · Pane {valueValue}'**
+  String hostPaneValuevalue(int valueValue);
+
+  /// No description provided for @hostApprovedTerminalInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Host-approved terminal input'**
+  String get hostApprovedTerminalInput;
+
+  /// No description provided for @hostNameUsernameEndpointValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Host: {name}; {username}@{endpoint}{valueValue}'**
+  String hostNameUsernameEndpointValuevalue(
+    String name,
+    String username,
+    String endpoint,
+    String valueValue,
+  );
+
+  /// No description provided for @hostsWithoutAnOverrideInheritThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosts without an override inherit the nearest Group default.'**
+  String get hostsWithoutAnOverrideInheritThe;
+
+  /// No description provided for @iStoredThisCodeSecurely.
+  ///
+  /// In en, this message translates to:
+  /// **'I stored this code securely'**
+  String get iStoredThisCodeSecurely;
+
+  /// No description provided for @iUnderstandBoundedMaintenanceMayPurge.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand bounded Maintenance may purge this tombstone after its restore deadline and required checks.'**
+  String get iUnderstandBoundedMaintenanceMayPurge;
+
+  /// No description provided for @iUnderstandThisPermanentlyRemovesThe.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand this permanently removes the record from active server state.'**
+  String get iUnderstandThisPermanentlyRemovesThe;
+
+  /// No description provided for @iveSavedIt.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve saved it'**
+  String get iveSavedIt;
+
+  /// No description provided for @idle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get idle;
+
+  /// No description provided for @ifCopyingIsUnavailableSelectThe.
+  ///
+  /// In en, this message translates to:
+  /// **'If copying is unavailable, select the value above.'**
+  String get ifCopyingIsUnavailableSelectThe;
+
+  /// No description provided for @ifYouOwnASharedVault.
+  ///
+  /// In en, this message translates to:
+  /// **'If you own a shared Vault with other active or invited members, the server rejects deletion; ownership is not transferred. During the grace period you can cancel from the login page using your account name and master password, then sign in again. Save an encrypted archive before continuing.'**
+  String get ifYouOwnASharedVault;
+
+  /// No description provided for @importSshConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Import SSH config'**
+  String get importSshConfig;
+
+  /// No description provided for @importArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Import archive'**
+  String get importArchive;
+
+  /// No description provided for @importToThisVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Import to this Vault'**
+  String get importToThisVault;
+
+  /// No description provided for @importVerifiedVaultArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Import verified Vault archive?'**
+  String get importVerifiedVaultArchive;
+
+  /// No description provided for @importedImportedHostSRecordsAre.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {imported, plural, =1{1 Host} other{{imported} Hosts}}; records are encrypted and queued to sync.'**
+  String importedImportedHostSRecordsAre(int imported);
+
+  /// No description provided for @includesTheInstanceAccountAndEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes the instance, account and every assigned server group.'**
+  String get includesTheInstanceAccountAndEvery;
+
+  /// No description provided for @inputControlOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Input control: off'**
+  String get inputControlOff;
+
+  /// No description provided for @inputControlRevoking.
+  ///
+  /// In en, this message translates to:
+  /// **'Input control: revoking'**
+  String get inputControlRevoking;
+
+  /// No description provided for @inputControlControllerlabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Input control: {controllerLabel}'**
+  String inputControlControllerlabel(Object controllerLabel);
+
+  /// No description provided for @inputIsEncryptedToTheHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Input is encrypted to the host and expires with the host-approved lease. Resize remains disabled; only live output is available.'**
+  String get inputIsEncryptedToTheHost;
+
+  /// No description provided for @installationWideEventsSeparateFromAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Installation-wide events, separate from account and Vault audit pages.'**
+  String get installationWideEventsSeparateFromAccount;
+
+  /// No description provided for @instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance'**
+  String get instance;
+
+  /// No description provided for @instanceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance ID'**
+  String get instanceId;
+
+  /// No description provided for @instanceVaultQuotas.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance Vault quotas'**
+  String get instanceVaultQuotas;
+
+  /// No description provided for @instanceAccountsAndSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance accounts and sessions'**
+  String get instanceAccountsAndSessions;
+
+  /// No description provided for @instanceAdminAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance admin audit'**
+  String get instanceAdminAudit;
+
+  /// No description provided for @instanceAdminOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance admin overview'**
+  String get instanceAdminOverview;
+
+  /// No description provided for @instanceBackupStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance backup status'**
+  String get instanceBackupStatus;
+
+  /// No description provided for @instanceJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance jobs'**
+  String get instanceJobs;
+
+  /// No description provided for @instanceRevisionRevisionUpdatedFormattime.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance revision {revision} · updated {formatTime}'**
+  String instanceRevisionRevisionUpdatedFormattime(
+    int revision,
+    String formatTime,
+  );
+
+  /// No description provided for @instanceSigningKeyFingerprintSha256.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance signing key fingerprint · SHA-256'**
+  String get instanceSigningKeyFingerprintSha256;
+
+  /// No description provided for @instanceWideBootstrapAndNetworkPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance-wide bootstrap and network policy are managed by the self-hosted server operator.'**
+  String get instanceWideBootstrapAndNetworkPolicy;
+
+  /// No description provided for @interrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Interrupted'**
+  String get interrupted;
+
+  /// No description provided for @interruptedRetryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Interrupted · retry pending'**
+  String get interruptedRetryPending;
+
+  /// No description provided for @intervalInHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Interval in hours'**
+  String get intervalInHours;
+
+  /// No description provided for @invalidFontSizeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid font-size value'**
+  String get invalidFontSizeValue;
+
+  /// No description provided for @invalidToken7UtcDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid token (7 UTC days)'**
+  String get invalidToken7UtcDays;
+
+  /// No description provided for @inventoryEntryStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory entry stale'**
+  String get inventoryEntryStale;
+
+  /// No description provided for @invitationCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation created'**
+  String get invitationCreated;
+
+  /// No description provided for @invitationExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation expired'**
+  String get invitationExpired;
+
+  /// No description provided for @invitationExpiresInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation expires in days'**
+  String get invitationExpiresInDays;
+
+  /// No description provided for @invitationExpiresFormattedexpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation expires {formattedExpiry}'**
+  String invitationExpiresFormattedexpiry(String formattedExpiry);
+
+  /// No description provided for @invitationNeedsReissue.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation needs reissue'**
+  String get invitationNeedsReissue;
+
+  /// No description provided for @invitationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation pending'**
+  String get invitationPending;
+
+  /// No description provided for @invitationToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation token'**
+  String get invitationToken;
+
+  /// No description provided for @invitationTokenCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation token copied.'**
+  String get invitationTokenCopied;
+
+  /// No description provided for @invitationUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation username'**
+  String get invitationUsername;
+
+  /// No description provided for @inviteMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite member'**
+  String get inviteMember;
+
+  /// No description provided for @inviteToCurrentvaultname.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite to {currentVaultName}'**
+  String inviteToCurrentvaultname(String currentVaultName);
+
+  /// No description provided for @issueAccountInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue account invitation'**
+  String get issueAccountInvitation;
+
+  /// No description provided for @issueCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue category'**
+  String get issueCategory;
+
+  /// No description provided for @join.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get join;
+
+  /// No description provided for @joinASharedTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a shared terminal'**
+  String get joinASharedTerminal;
+
+  /// No description provided for @joinHostGrantedControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Join host-granted control'**
+  String get joinHostGrantedControl;
+
+  /// No description provided for @keepVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Vault'**
+  String get keepVault;
+
+  /// No description provided for @keepAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep access'**
+  String get keepAccess;
+
+  /// No description provided for @keepAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep account'**
+  String get keepAccount;
+
+  /// No description provided for @keepCurrentOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep current Owner'**
+  String get keepCurrentOwner;
+
+  /// No description provided for @keepRepeatableCommandsInTheSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep repeatable commands in the same encrypted vault as your hosts.'**
+  String get keepRepeatableCommandsInTheSame;
+
+  /// No description provided for @keepScheduledDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep scheduled deletion'**
+  String get keepScheduledDeletion;
+
+  /// No description provided for @keepSelectedBindingsAndRemoveDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep selected bindings and remove duplicates'**
+  String get keepSelectedBindingsAndRemoveDuplicates;
+
+  /// No description provided for @keepSelectedFontSizeAndRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep selected font size and remove duplicates'**
+  String get keepSelectedFontSizeAndRemove;
+
+  /// No description provided for @keepSelectedRecordAndRemoveDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep selected record and remove duplicates'**
+  String get keepSelectedRecordAndRemoveDuplicates;
+
+  /// No description provided for @keepSelectedThemeAndRemoveDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep selected theme and remove duplicates'**
+  String get keepSelectedThemeAndRemoveDuplicates;
+
+  /// No description provided for @keepThisDeviceVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this device version'**
+  String get keepThisDeviceVersion;
+
+  /// No description provided for @keepThisDeviceVersion2.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this device version?'**
+  String get keepThisDeviceVersion2;
+
+  /// No description provided for @keyPassphraseOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Key passphrase (optional)'**
+  String get keyPassphraseOptional;
+
+  /// No description provided for @keyUpdateNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Key update needed'**
+  String get keyUpdateNeeded;
+
+  /// No description provided for @knownHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Known Host'**
+  String get knownHost;
+
+  /// No description provided for @lastChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Last changed'**
+  String get lastChanged;
+
+  /// No description provided for @lastPull.
+  ///
+  /// In en, this message translates to:
+  /// **'Last pull'**
+  String get lastPull;
+
+  /// No description provided for @lastRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Last run'**
+  String get lastRun;
+
+  /// No description provided for @lastRunStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Last run status'**
+  String get lastRunStatus;
+
+  /// No description provided for @lastSuccessfulSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last successful sync'**
+  String get lastSuccessfulSync;
+
+  /// No description provided for @lastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated'**
+  String get lastUpdated;
+
+  /// No description provided for @lastVerifiedServerShortkey.
+  ///
+  /// In en, this message translates to:
+  /// **'Last verified server: {shortKey}'**
+  String lastVerifiedServerShortkey(String shortKey);
+
+  /// No description provided for @latestCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest copy'**
+  String get latestCopy;
+
+  /// No description provided for @leased.
+  ///
+  /// In en, this message translates to:
+  /// **'Leased'**
+  String get leased;
+
+  /// No description provided for @leaveSharedTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave shared terminal'**
+  String get leaveSharedTerminal;
+
+  /// No description provided for @loadRelayPolicies.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Relay policies'**
+  String get loadRelayPolicies;
+
+  /// No description provided for @loadVaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Vaults'**
+  String get loadVaults;
+
+  /// No description provided for @loadAccountInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Load account invitations'**
+  String get loadAccountInvitations;
+
+  /// No description provided for @loadAccountsToAddMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Load accounts to add members'**
+  String get loadAccountsToAddMembers;
+
+  /// No description provided for @loadAdminAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Load admin accounts'**
+  String get loadAdminAccounts;
+
+  /// No description provided for @loadAdminAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Load admin audit'**
+  String get loadAdminAudit;
+
+  /// No description provided for @loadBackupSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Load backup schedule'**
+  String get loadBackupSchedule;
+
+  /// No description provided for @loadBackupStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Load backup status'**
+  String get loadBackupStatus;
+
+  /// No description provided for @loadInstanceJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Load instance jobs'**
+  String get loadInstanceJobs;
+
+  /// No description provided for @loadOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Load overview'**
+  String get loadOverview;
+
+  /// No description provided for @loadPushHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Load push health'**
+  String get loadPushHealth;
+
+  /// No description provided for @loadRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Load relay policy'**
+  String get loadRelayPolicy;
+
+  /// No description provided for @loadReplicationStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Load replication status'**
+  String get loadReplicationStatus;
+
+  /// No description provided for @loadRestoreSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Load restore sources'**
+  String get loadRestoreSources;
+
+  /// No description provided for @loadServerManagedGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Load server-managed groups'**
+  String get loadServerManagedGroups;
+
+  /// No description provided for @loadStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Load status'**
+  String get loadStatus;
+
+  /// No description provided for @loadingSshRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading SSH relay policy…'**
+  String get loadingSshRelayPolicy;
+
+  /// No description provided for @loadingAccountAndInstancePolicyRevisions.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading account and instance policy revisions…'**
+  String get loadingAccountAndInstancePolicyRevisions;
+
+  /// No description provided for @loadingAccountInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading account invitations…'**
+  String get loadingAccountInvitations;
+
+  /// No description provided for @loadingAccountSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading account sessions…'**
+  String get loadingAccountSessions;
+
+  /// No description provided for @loadingBackupSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading backup schedule…'**
+  String get loadingBackupSchedule;
+
+  /// No description provided for @loadingEncryptedArchiveSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading encrypted archive sources…'**
+  String get loadingEncryptedArchiveSources;
+
+  /// No description provided for @loadingGroupMembershipAndRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading group membership and Relay policy…'**
+  String get loadingGroupMembershipAndRelayPolicy;
+
+  /// No description provided for @loadingServerManagedGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading server-managed groups…'**
+  String get loadingServerManagedGroups;
+
+  /// No description provided for @local.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get local;
+
+  /// No description provided for @localArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Local archive'**
+  String get localArchive;
+
+  /// No description provided for @localDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Local device'**
+  String get localDevice;
+
+  /// No description provided for @localEditsAreEncryptedAndCommitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Local edits are encrypted and committed to the persistent outbox before any network request. A retry reuses the same operation IDs and ciphertext. The server never receives credentials or the Vault key.'**
+  String get localEditsAreEncryptedAndCommitted;
+
+  /// No description provided for @localEncryptedArchiveUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Local encrypted archive unavailable'**
+  String get localEncryptedArchiveUnavailable;
+
+  /// No description provided for @localRevisionItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Local revision  {item}'**
+  String localRevisionItem(Object item);
+
+  /// No description provided for @localBindDestinationaddressDestinationport.
+  ///
+  /// In en, this message translates to:
+  /// **'Local · {bind} → {destinationAddress}:{destinationPort}'**
+  String localBindDestinationaddressDestinationport(
+    String bind,
+    Object destinationAddress,
+    Object destinationPort,
+  );
+
+  /// No description provided for @localOnlyProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Local-only profiles'**
+  String get localOnlyProfiles;
+
+  /// No description provided for @lockWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock workspace'**
+  String get lockWorkspace;
+
+  /// No description provided for @loopbackOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Loopback only'**
+  String get loopbackOnly;
+
+  /// No description provided for @maintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get maintenance;
+
+  /// No description provided for @maintenanceRunsTheConfiguredRetentionAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance runs the configured retention and expired-object cleanup pass. The server reports which instance actions are available.'**
+  String get maintenanceRunsTheConfiguredRetentionAnd;
+
+  /// No description provided for @makeEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Make editor'**
+  String get makeEditor;
+
+  /// No description provided for @makeViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Make viewer'**
+  String get makeViewer;
+
+  /// No description provided for @makeUsernameTheSoleOwnerYour.
+  ///
+  /// In en, this message translates to:
+  /// **'Make {username} the sole Owner. Your account will remain an active editor. This action signs a new membership version and rotates the Vault key for every active member device in one atomic update. Pending invitation tokens will become invalid and must be reissued. The new Owner will be able to manage members and delete the Vault.'**
+  String makeUsernameTheSoleOwnerYour(String username);
+
+  /// No description provided for @manageVaultMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Vault members'**
+  String get manageVaultMembers;
+
+  /// No description provided for @masterPasswordIsUsedOnlyFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password is used only for client-side key derivation.'**
+  String get masterPasswordIsUsedOnlyFor;
+
+  /// No description provided for @maxSshRelayConnectionsPerUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Max SSH relay connections per user'**
+  String get maxSshRelayConnectionsPerUser;
+
+  /// No description provided for @maxRelayConnectionsPerUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Max relay connections per user'**
+  String get maxRelayConnectionsPerUser;
+
+  /// No description provided for @memberEffectiveRelayAccessValuevalueCidrs.
+  ///
+  /// In en, this message translates to:
+  /// **'Member effective Relay access: {valueValue} · CIDRs: {summarize} · ports: {summarize2}'**
+  String memberEffectiveRelayAccessValuevalueCidrs(
+    String valueValue,
+    String summarize,
+    String summarize2,
+  );
+
+  /// No description provided for @members.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get members;
+
+  /// No description provided for @membersCurrentvaultname.
+  ///
+  /// In en, this message translates to:
+  /// **'Members · {currentVaultName}'**
+  String membersCurrentvaultname(String currentVaultName);
+
+  /// No description provided for @mergePasswordFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge password fields'**
+  String get mergePasswordFields;
+
+  /// No description provided for @migrationVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration version'**
+  String get migrationVersion;
+
+  /// No description provided for @missingHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing Host'**
+  String get missingHost;
+
+  /// No description provided for @moveEncryptedLocalHostsCredentialsGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Move encrypted local Hosts, Credentials, Groups, Snippets, and supported workspace preferences into a new empty sync Vault. The local profile stays intact; migration pauses local edits until every staged record is confirmed by the server.'**
+  String get moveEncryptedLocalHostsCredentialsGroups;
+
+  /// No description provided for @moveOrUnassignHostcountHostS.
+  ///
+  /// In en, this message translates to:
+  /// **'Move or unassign {hostCount, plural, =1{1 host} other{{hostCount} hosts}} and {childCount, plural, =1{1 child group} other{{childCount} child groups}} before deleting “{name}”.'**
+  String moveOrUnassignHostcountHostS(
+    int hostCount,
+    int childCount,
+    String name,
+  );
+
+  /// No description provided for @name2.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name2;
+
+  /// No description provided for @needsMoreVaultKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs more Vault keys'**
+  String get needsMoreVaultKeys;
+
+  /// No description provided for @needsOperatorAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs operator attention'**
+  String get needsOperatorAttention;
+
+  /// No description provided for @networkUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Network unavailable'**
+  String get networkUnavailable;
+
+  /// No description provided for @newSshCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'New SSH credential'**
+  String get newSshCredential;
+
+  /// No description provided for @newArchivePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New archive password'**
+  String get newArchivePassword;
+
+  /// No description provided for @newCommandSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'New command snippet'**
+  String get newCommandSnippet;
+
+  /// No description provided for @newDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'New device'**
+  String get newDevice;
+
+  /// No description provided for @newFirstChild.
+  ///
+  /// In en, this message translates to:
+  /// **'New first child (%)'**
+  String get newFirstChild;
+
+  /// No description provided for @newFolder2.
+  ///
+  /// In en, this message translates to:
+  /// **'New folder'**
+  String get newFolder2;
+
+  /// No description provided for @newGroup2.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get newGroup2;
+
+  /// No description provided for @newHostGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New host group'**
+  String get newHostGroup;
+
+  /// No description provided for @newMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New master password'**
+  String get newMasterPassword;
+
+  /// No description provided for @newServerGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'New server group name'**
+  String get newServerGroupName;
+
+  /// No description provided for @newSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'New snippet'**
+  String get newSnippet;
+
+  /// No description provided for @newSplitSideBySide.
+  ///
+  /// In en, this message translates to:
+  /// **'New split: side by side'**
+  String get newSplitSideBySide;
+
+  /// No description provided for @newSplitStacked.
+  ///
+  /// In en, this message translates to:
+  /// **'New split: stacked'**
+  String get newSplitStacked;
+
+  /// No description provided for @newTab.
+  ///
+  /// In en, this message translates to:
+  /// **'New tab'**
+  String get newTab;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @nextAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Next accounts'**
+  String get nextAccounts;
+
+  /// No description provided for @nextInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Next invitations'**
+  String get nextInvitations;
+
+  /// No description provided for @nextRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Next run'**
+  String get nextRun;
+
+  /// No description provided for @nextSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Next sessions'**
+  String get nextSessions;
+
+  /// No description provided for @noCliOrServerTriggeredBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'No CLI or server-triggered backup attempt recorded.'**
+  String get noCliOrServerTriggeredBackup;
+
+  /// No description provided for @noVaultIsCurrentlyAvailableTo.
+  ///
+  /// In en, this message translates to:
+  /// **'No Vault is currently available to this device. Accept an invitation to restore access, or create an independent encrypted Vault.'**
+  String get noVaultIsCurrentlyAvailableTo;
+
+  /// No description provided for @noVaultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No Vaults found.'**
+  String get noVaultsFound;
+
+  /// No description provided for @noVaultsOnThisPage.
+  ///
+  /// In en, this message translates to:
+  /// **'No Vaults on this page.'**
+  String get noVaultsOnThisPage;
+
+  /// No description provided for @noAccessibleVaults.
+  ///
+  /// In en, this message translates to:
+  /// **'No accessible Vaults'**
+  String get noAccessibleVaults;
+
+  /// No description provided for @noAccountInvitationsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account invitations found.'**
+  String get noAccountInvitationsFound;
+
+  /// No description provided for @noAccountsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts found.'**
+  String get noAccountsFound;
+
+  /// No description provided for @noAccountsOnThisPage.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts on this page.'**
+  String get noAccountsOnThisPage;
+
+  /// No description provided for @noActiveSshSession.
+  ///
+  /// In en, this message translates to:
+  /// **'No active SSH session'**
+  String get noActiveSshSession;
+
+  /// No description provided for @noActiveVaultDeviceReportsAre.
+  ///
+  /// In en, this message translates to:
+  /// **'No active Vault device reports are available.'**
+  String get noActiveVaultDeviceReportsAre;
+
+  /// No description provided for @noActiveCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'No active credential'**
+  String get noActiveCredential;
+
+  /// No description provided for @noCheckpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'No checkpoint'**
+  String get noCheckpoint;
+
+  /// No description provided for @noCommandEventsReceivedYetPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'No command events received yet. Paste the copied setup command into an interactive Bash shell and press Enter.'**
+  String get noCommandEventsReceivedYetPaste;
+
+  /// No description provided for @noCredentialsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'No credentials saved'**
+  String get noCredentialsSaved;
+
+  /// No description provided for @noDefaultCredential2.
+  ///
+  /// In en, this message translates to:
+  /// **'No default credential'**
+  String get noDefaultCredential2;
+
+  /// No description provided for @noDeletedRecordsInThisVault.
+  ///
+  /// In en, this message translates to:
+  /// **'No deleted records in this Vault.'**
+  String get noDeletedRecordsInThisVault;
+
+  /// No description provided for @noDeviceListLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'No device list loaded'**
+  String get noDeviceListLoaded;
+
+  /// No description provided for @noDevicesOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices online'**
+  String get noDevicesOnline;
+
+  /// No description provided for @noForwardingProfilesSavedForThis.
+  ///
+  /// In en, this message translates to:
+  /// **'No forwarding profiles saved for this Host.'**
+  String get noForwardingProfilesSavedForThis;
+
+  /// No description provided for @noHostGroupsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No host groups yet'**
+  String get noHostGroupsYet;
+
+  /// No description provided for @noHostKeysHaveBeenApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'No host keys have been approved in this Vault.'**
+  String get noHostKeysHaveBeenApproved;
+
+  /// No description provided for @noHostsSavedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No hosts saved yet'**
+  String get noHostsSavedYet;
+
+  /// No description provided for @noInstanceAdminAuditEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No instance admin audit events.'**
+  String get noInstanceAdminAuditEvents;
+
+  /// No description provided for @noInstanceJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'No instance jobs.'**
+  String get noInstanceJobs;
+
+  /// No description provided for @noInvitationsOnThisPage.
+  ///
+  /// In en, this message translates to:
+  /// **'No invitations on this page.'**
+  String get noInvitationsOnThisPage;
+
+  /// No description provided for @noJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'No jobs'**
+  String get noJobs;
+
+  /// No description provided for @noMatchingHosts2.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching hosts'**
+  String get noMatchingHosts2;
+
+  /// No description provided for @noMatchingSingleLineCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching single-line commands.'**
+  String get noMatchingSingleLineCommands;
+
+  /// No description provided for @noMembersWereReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'No members were returned.'**
+  String get noMembersWereReturned;
+
+  /// No description provided for @noNewerBundleIsAvailableAt.
+  ///
+  /// In en, this message translates to:
+  /// **'No newer bundle is available at this address yet. Update the self-hosted Web assets, then check again.'**
+  String get noNewerBundleIsAvailableAt;
+
+  /// No description provided for @noOpenConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'No open conflicts'**
+  String get noOpenConflicts;
+
+  /// No description provided for @noOtherActiveVaultDevicesCan.
+  ///
+  /// In en, this message translates to:
+  /// **'No other active Vault devices can receive this terminal share.'**
+  String get noOtherActiveVaultDevicesCan;
+
+  /// No description provided for @noPushProviderSnapshotIsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No push provider snapshot is available.'**
+  String get noPushProviderSnapshotIsAvailable;
+
+  /// No description provided for @noRemoteCopyAttemptRecordedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No remote copy attempt recorded yet.'**
+  String get noRemoteCopyAttemptRecordedYet;
+
+  /// No description provided for @noResult.
+  ///
+  /// In en, this message translates to:
+  /// **'No result'**
+  String get noResult;
+
+  /// No description provided for @noSavedWorkspaces.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved workspaces'**
+  String get noSavedWorkspaces;
+
+  /// No description provided for @noScheduledBackupRunsRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled backup runs recorded'**
+  String get noScheduledBackupRunsRecorded;
+
+  /// No description provided for @noServerManagedGroupsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No server-managed groups yet.'**
+  String get noServerManagedGroupsYet;
+
+  /// No description provided for @noSessionsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions found.'**
+  String get noSessionsFound;
+
+  /// No description provided for @noSessionsOnThisPage.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions on this page.'**
+  String get noSessionsOnThisPage;
+
+  /// No description provided for @noSnippetsYet2.
+  ///
+  /// In en, this message translates to:
+  /// **'No snippets yet'**
+  String get noSnippetsYet2;
+
+  /// No description provided for @noSupportedEncryptedArchivesAreAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No supported encrypted archives are available on this page.'**
+  String get noSupportedEncryptedArchivesAreAvailable;
+
+  /// No description provided for @noVerifiedCandidateIsAvailableRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'No verified candidate is available. Retry Vault sync; malformed repair state remains locked.'**
+  String get noVerifiedCandidateIsAvailableRetry;
+
+  /// No description provided for @noVerifiedCandidateIsAvailableRetry2.
+  ///
+  /// In en, this message translates to:
+  /// **'No verified candidate is available. Retry a Vault sync; malformed repair state remains locked.'**
+  String get noVerifiedCandidateIsAvailableRetry2;
+
+  /// No description provided for @noVerifiedCandidateIsAvailableRetry3.
+  ///
+  /// In en, this message translates to:
+  /// **'No verified candidate is available. Retry a Vault sync; malformed repair state stays locked for manual recovery.'**
+  String get noVerifiedCandidateIsAvailableRetry3;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// No description provided for @notConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get notConfigured;
+
+  /// No description provided for @notScheduledYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not scheduled yet'**
+  String get notScheduledYet;
+
+  /// No description provided for @notStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started'**
+  String get notStarted;
+
+  /// No description provided for @owner.
+  ///
+  /// In en, this message translates to:
+  /// **'OWNER'**
+  String get owner;
+
+  /// No description provided for @observerState.
+  ///
+  /// In en, this message translates to:
+  /// **'Observer {state}'**
+  String observerState(String state);
+
+  /// No description provided for @occurredAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Occurred at'**
+  String get occurredAt;
+
+  /// No description provided for @offByDefaultEnablingUploadsUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Off by default. Enabling uploads up to 500 existing local commands for hosts in this Vault and future commands.'**
+  String get offByDefaultEnablingUploadsUp;
+
+  /// No description provided for @offSiteEncryptedBackupCopies.
+  ///
+  /// In en, this message translates to:
+  /// **'Off-site encrypted backup copies'**
+  String get offSiteEncryptedBackupCopies;
+
+  /// No description provided for @offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offline;
+
+  /// No description provided for @offlineDeviceCopiesAndExportsAre.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline device copies and exports are not removed.'**
+  String get offlineDeviceCopiesAndExportsAre;
+
+  /// No description provided for @offlineDeviceCopiesAndRetainedBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline device copies and retained backups are not remotely erased.'**
+  String get offlineDeviceCopiesAndRetainedBackups;
+
+  /// No description provided for @offlineFirstCiphertextOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline-first, ciphertext-only'**
+  String get offlineFirstCiphertextOnly;
+
+  /// No description provided for @oneCanonicalNetworkCidrPerLine.
+  ///
+  /// In en, this message translates to:
+  /// **'One canonical network CIDR per line.'**
+  String get oneCanonicalNetworkCidrPerLine;
+
+  /// No description provided for @oneTimePrometheusScrapeCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time Prometheus scrape credential'**
+  String get oneTimePrometheusScrapeCredential;
+
+  /// No description provided for @oneTimeInvitationToken.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time invitation token'**
+  String get oneTimeInvitationToken;
+
+  /// No description provided for @oneTimeToken.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time token'**
+  String get oneTimeToken;
+
+  /// No description provided for @onlineDeviceStatusCouldNotBe.
+  ///
+  /// In en, this message translates to:
+  /// **'Online device status could not be loaded: {vaultPresenceError}'**
+  String onlineDeviceStatusCouldNotBe(Object vaultPresenceError);
+
+  /// No description provided for @onlineStatusUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Online status unavailable'**
+  String get onlineStatusUnavailable;
+
+  /// No description provided for @onlyASignedEnrollmentFromAn.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a signed enrollment from an active device can join this account. Devices receive sealed keys for accessible Vaults, if any.'**
+  String get onlyASignedEnrollmentFromAn;
+
+  /// No description provided for @onlyAlreadyConnectedSshSessionsAre.
+  ///
+  /// In en, this message translates to:
+  /// **'Only already-connected SSH sessions are available. Select at least two Hosts; each will be reviewed before any command is sent.'**
+  String get onlyAlreadyConnectedSshSessionsAre;
+
+  /// No description provided for @openSettingsDataAndMigrationTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings → Data and migration to export an encrypted archive'**
+  String get openSettingsDataAndMigrationTo;
+
+  /// No description provided for @openTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Terminal'**
+  String get openTerminal;
+
+  /// No description provided for @openTerminalChooseAHostAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Terminal, choose a host and connect. SFTP uses the same verified SSH transport.'**
+  String get openTerminalChooseAHostAnd;
+
+  /// No description provided for @openVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Vault'**
+  String get openVault;
+
+  /// No description provided for @openAVaultToReadOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a Vault to read or save synced preferences.'**
+  String get openAVaultToReadOr;
+
+  /// No description provided for @openAVaultToReadOr2.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a Vault to read or save these synced preferences.'**
+  String get openAVaultToReadOr2;
+
+  /// No description provided for @openAVaultToReadOr3.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a Vault to read or save this synced preference.'**
+  String get openAVaultToReadOr3;
+
+  /// No description provided for @openANewTerminalTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a new terminal tab'**
+  String get openANewTerminalTab;
+
+  /// No description provided for @openActiveTerminals.
+  ///
+  /// In en, this message translates to:
+  /// **'Open active terminals'**
+  String get openActiveTerminals;
+
+  /// No description provided for @openConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Open conflicts'**
+  String get openConflicts;
+
+  /// No description provided for @openTerminal2.
+  ///
+  /// In en, this message translates to:
+  /// **'Open terminal'**
+  String get openTerminal2;
+
+  /// No description provided for @optionalBackgroundSyncHintsForThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional background sync hints for this device. iOS prefers APNs when available.'**
+  String get optionalBackgroundSyncHintsForThis;
+
+  /// No description provided for @organizeYourHostsIntoGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize your hosts into groups.'**
+  String get organizeYourHostsIntoGroups;
+
+  /// No description provided for @otherSyncIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Other sync issue'**
+  String get otherSyncIssue;
+
+  /// No description provided for @outboxItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Outbox items'**
+  String get outboxItems;
+
+  /// No description provided for @outputIsEncryptedForThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Output is encrypted for this device. Input and resize controls stay disabled until the host explicitly grants this device control. Earlier scrollback is unavailable.'**
+  String get outputIsEncryptedForThisDevice;
+
+  /// No description provided for @ownerAccountId.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner account ID'**
+  String get ownerAccountId;
+
+  /// No description provided for @ownerUserId.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner user ID'**
+  String get ownerUserId;
+
+  /// No description provided for @pemPrivateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'PEM private key'**
+  String get pemPrivateKey;
+
+  /// No description provided for @private.
+  ///
+  /// In en, this message translates to:
+  /// **'PRIVATE'**
+  String get private;
+
+  /// No description provided for @pageValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {valueValue}'**
+  String pageValuevalue(int valueValue);
+
+  /// No description provided for @paneValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Pane {valueValue}'**
+  String paneValuevalue(int valueValue);
+
+  /// No description provided for @paneValuevalueValuevalue2.
+  ///
+  /// In en, this message translates to:
+  /// **'Pane {valueValue} · {valueValue2}'**
+  String paneValuevalueValuevalue2(int valueValue, String valueValue2);
+
+  /// No description provided for @paneValuevalueValuevalue2Valuevalue3.
+  ///
+  /// In en, this message translates to:
+  /// **'Pane {valueValue} · {valueValue2} · {valueValue3}'**
+  String paneValuevalueValuevalue2Valuevalue3(
+    int valueValue,
+    String valueValue2,
+    String valueValue3,
+  );
+
+  /// No description provided for @paneValuevalueValuevalue22.
+  ///
+  /// In en, this message translates to:
+  /// **'Pane {valueValue} · {valueValue2}%'**
+  String paneValuevalueValuevalue22(int valueValue, int valueValue2);
+
+  /// No description provided for @parameterDefinitionsJsonArray2.
+  ///
+  /// In en, this message translates to:
+  /// **'Parameter definitions (JSON array)'**
+  String get parameterDefinitionsJsonArray2;
+
+  /// No description provided for @parameterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Parameter name'**
+  String get parameterName;
+
+  /// No description provided for @parentGroup2.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent group'**
+  String get parentGroup2;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @passwordCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Password Credential'**
+  String get passwordCredential;
+
+  /// No description provided for @passwordFieldMergeIsNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'Password field merge is no longer available. Use the verified branch actions instead.'**
+  String get passwordFieldMergeIsNoLonger;
+
+  /// No description provided for @passwordSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Password secret'**
+  String get passwordSecret;
+
+  /// No description provided for @passwordsPrivateKeysAndPassphrasesAre.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords, private keys and passphrases are encrypted on this device before sync. Plaintext secrets are only used in an unlocked session.'**
+  String get passwordsPrivateKeysAndPassphrasesAre;
+
+  /// No description provided for @pasteThePublicRequestFromThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the public request from the new browser. Private keys are never included.'**
+  String get pasteThePublicRequestFromThe;
+
+  /// No description provided for @pasteTheRecipientsSignedPublicDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the recipient’s signed public Device Card. The account must already exist on this instance and the card must match the active device that will accept the invite.'**
+  String get pasteTheRecipientsSignedPublicDevice;
+
+  /// No description provided for @pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pending;
+
+  /// No description provided for @permanentPurgeAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanent purge after'**
+  String get permanentPurgeAfter;
+
+  /// No description provided for @permanentPurgeBecomesAvailableAfterThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanent purge becomes available after this deadline.'**
+  String get permanentPurgeBecomesAvailableAfterThis;
+
+  /// No description provided for @permanentPurgeIsUnavailableBecauseThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanent purge is unavailable because this server did not provide a restore deadline.'**
+  String get permanentPurgeIsUnavailableBecauseThis;
+
+  /// No description provided for @permanentlyDeleteNameItsMembershipAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete “{name}”, its membership and Relay policy? Unused Relay tickets for its members will be revoked, and active sessions granted by this group will close after policy recheck.'**
+  String permanentlyDeleteNameItsMembershipAnd(String name);
+
+  /// No description provided for @permanentlyPurge.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently purge'**
+  String get permanentlyPurge;
+
+  /// No description provided for @permanentlyPurgeThisRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently purge this record?'**
+  String get permanentlyPurgeThisRecord;
+
+  /// No description provided for @policyRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'Policy revision'**
+  String get policyRevision;
+
+  /// No description provided for @policyRevisionRevisionInstanceRevisionInstancepolicyrevision.
+  ///
+  /// In en, this message translates to:
+  /// **'Policy revision {revision} · instance revision {instancePolicyRevision} · updated {formatTime}'**
+  String policyRevisionRevisionInstanceRevisionInstancepolicyrevision(
+    int revision,
+    int instancePolicyRevision,
+    String formatTime,
+  );
+
+  /// No description provided for @port.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get port;
+
+  /// No description provided for @portableEncryptedVaultArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Portable encrypted Vault archive'**
+  String get portableEncryptedVaultArchive;
+
+  /// No description provided for @preference.
+  ///
+  /// In en, this message translates to:
+  /// **'Preference'**
+  String get preference;
+
+  /// No description provided for @preflightFailedBeforeAnyTargetReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight failed before any target received a command.'**
+  String get preflightFailedBeforeAnyTargetReceived;
+
+  /// No description provided for @prepareIsolatedCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepare isolated copy'**
+  String get prepareIsolatedCopy;
+
+  /// No description provided for @prepareIsolatedRestoreCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepare isolated restore copy'**
+  String get prepareIsolatedRestoreCopy;
+
+  /// No description provided for @prepareIsolatedRestoreCopy2.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepare isolated restore copy?'**
+  String get prepareIsolatedRestoreCopy2;
+
+  /// No description provided for @prepared.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepared'**
+  String get prepared;
+
+  /// No description provided for @preparingIsolatedCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing isolated copy'**
+  String get preparingIsolatedCopy;
+
+  /// No description provided for @preparingLocalEncryptedArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing local encrypted archive'**
+  String get preparingLocalEncryptedArchive;
+
+  /// No description provided for @previewDisconnectedLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview disconnected layout'**
+  String get previewDisconnectedLayout;
+
+  /// No description provided for @previewMemberEffectiveRelayAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview member effective Relay access'**
+  String get previewMemberEffectiveRelayAccess;
+
+  /// No description provided for @previewOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview only'**
+  String get previewOnly;
+
+  /// No description provided for @previewStructuredCommandsOrReviewAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview structured commands, or review and confirm scripts before sending them to an active terminal.'**
+  String get previewStructuredCommandsOrReviewAnd;
+
+  /// No description provided for @previous.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get previous;
+
+  /// No description provided for @previousAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous accounts'**
+  String get previousAccounts;
+
+  /// No description provided for @previousInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous invitations'**
+  String get previousInvitations;
+
+  /// No description provided for @previousSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous sessions'**
+  String get previousSessions;
+
+  /// No description provided for @privateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Private key'**
+  String get privateKey;
+
+  /// No description provided for @privateSigningAndEncryptionKeysStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Private signing and encryption keys stay in this device secure store.'**
+  String get privateSigningAndEncryptionKeysStay;
+
+  /// No description provided for @profileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile name'**
+  String get profileName;
+
+  /// No description provided for @profilesAreEncryptedAndSyncWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Profiles are encrypted and sync with the Vault. This browser cannot open the local TCP listeners required to run port forwarding.'**
+  String get profilesAreEncryptedAndSyncWith;
+
+  /// No description provided for @profilesAreEncryptedInThisHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Profiles are encrypted in this Host and sync with the Vault. Running listeners stay on this device and stop when this SSH tab disconnects.'**
+  String get profilesAreEncryptedInThisHost;
+
+  /// No description provided for @profilesAreEncryptedInsideThisHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Profiles are encrypted inside this Host record and sync with the Vault. Running state and sockets are never synced.'**
+  String get profilesAreEncryptedInsideThisHost;
+
+  /// No description provided for @program2.
+  ///
+  /// In en, this message translates to:
+  /// **'Program'**
+  String get program2;
+
+  /// No description provided for @prometheusRequestsUsingThisCredentialWill.
+  ///
+  /// In en, this message translates to:
+  /// **'Prometheus requests using this credential will stop working immediately. You can create a replacement later.'**
+  String get prometheusRequestsUsingThisCredentialWill;
+
+  /// No description provided for @prometheusScrapeCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Prometheus scrape credential'**
+  String get prometheusScrapeCredential;
+
+  /// No description provided for @protocol.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol'**
+  String get protocol;
+
+  /// No description provided for @protocolVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol version'**
+  String get protocolVersion;
+
+  /// No description provided for @providerAdapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider adapter'**
+  String get providerAdapter;
+
+  /// No description provided for @publicDeviceCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Device Card'**
+  String get publicDeviceCard;
+
+  /// No description provided for @publicDeviceCardJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Device Card JSON'**
+  String get publicDeviceCardJson;
+
+  /// No description provided for @pushIsABestEffortWake.
+  ///
+  /// In en, this message translates to:
+  /// **'Push is a best-effort wake-up hint. It does not prove delivery or synchronization.'**
+  String get pushIsABestEffortWake;
+
+  /// No description provided for @pushProviderHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Push provider health'**
+  String get pushProviderHealth;
+
+  /// No description provided for @queuedNotTrusted.
+  ///
+  /// In en, this message translates to:
+  /// **'QUEUED — NOT TRUSTED'**
+  String get queuedNotTrusted;
+
+  /// No description provided for @queueApprovalAndStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue approval and stop'**
+  String get queueApprovalAndStop;
+
+  /// No description provided for @queued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get queued;
+
+  /// No description provided for @quota.
+  ///
+  /// In en, this message translates to:
+  /// **'Quota'**
+  String get quota;
+
+  /// No description provided for @quotaInBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Quota in bytes'**
+  String get quotaInBytes;
+
+  /// No description provided for @readOnly2.
+  ///
+  /// In en, this message translates to:
+  /// **'READ ONLY'**
+  String get readOnly2;
+
+  /// No description provided for @reissueRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'REISSUE REQUIRED'**
+  String get reissueRequired;
+
+  /// No description provided for @revoked2.
+  ///
+  /// In en, this message translates to:
+  /// **'REVOKED'**
+  String get revoked2;
+
+  /// No description provided for @reAuthenticateToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-authenticate to cancel'**
+  String get reAuthenticateToCancel;
+
+  /// No description provided for @reEnterAccountMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter account master password'**
+  String get reEnterAccountMasterPassword;
+
+  /// No description provided for @readOnlyGracePeriodAllMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only grace period · All members can keep reading; writes and member changes are paused. You can create a separately password-protected encrypted archive in Settings.'**
+  String get readOnlyGracePeriodAllMembers;
+
+  /// No description provided for @readOnlyInstanceIdentityUsageAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only instance identity, usage and relay policy.'**
+  String get readOnlyInstanceIdentityUsageAnd;
+
+  /// No description provided for @readOnlyProviderConfigurationAggregateQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only provider configuration, aggregate queue counts, and adapter outcomes.'**
+  String get readOnlyProviderConfigurationAggregateQueue;
+
+  /// No description provided for @ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get ready;
+
+  /// No description provided for @rebuildSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuild snapshot'**
+  String get rebuildSnapshot;
+
+  /// No description provided for @rebuildingSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuilding snapshot'**
+  String get rebuildingSnapshot;
+
+  /// No description provided for @rebuildingSnapshot2.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuilding snapshot…'**
+  String get rebuildingSnapshot2;
+
+  /// No description provided for @reconnectObserver.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect observer'**
+  String get reconnectObserver;
+
+  /// No description provided for @record.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get record;
+
+  /// No description provided for @recordIdIdRevisionRevisionlabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Record ID: {id}\nRevision: {revisionLabel}'**
+  String recordIdIdRevisionRevisionlabel(String id, String revisionLabel);
+
+  /// No description provided for @recordIdIdRevisionValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Record ID: {id}\nRevision: {valueValue}'**
+  String recordIdIdRevisionValuevalue(String id, String valueValue);
+
+  /// No description provided for @recordConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'Record consent'**
+  String get recordConsent;
+
+  /// No description provided for @recordPermanentlyRemovedFromActiveServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Record permanently removed from active server state. Offline device copies and retained backups are not erased.'**
+  String get recordPermanentlyRemovedFromActiveServer;
+
+  /// No description provided for @recordsAndConflictsRemainEncryptedExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Records and conflicts remain encrypted. Existing local branches and other Vaults are preserved. Cross-space migration and ID remapping are not supported.'**
+  String get recordsAndConflictsRemainEncryptedExisting;
+
+  /// No description provided for @recordsAreDecryptedOnlyOnThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Records are decrypted only on this device. Restore creates a new signed revision if the same tombstone is still current.'**
+  String get recordsAreDecryptedOnlyOnThis;
+
+  /// No description provided for @recoveryDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery details'**
+  String get recoveryDetails;
+
+  /// No description provided for @recoveryInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery in progress'**
+  String get recoveryInProgress;
+
+  /// No description provided for @recoveryIsEnabledButThisCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery is enabled, but this code was not confirmed as stored. Rotate it now to display a fresh code.'**
+  String get recoveryIsEnabledButThisCode;
+
+  /// No description provided for @recoveryIsStatusCoveredcontextsOfRequiredcontexts.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery is {status}. {coveredContexts} of {requiredContexts} current contexts are covered; this device will retry missing keys in the background.'**
+  String recoveryIsStatusCoveredcontextsOfRequiredcontexts(
+    String status,
+    int coveredContexts,
+    int requiredContexts,
+  );
+
+  /// No description provided for @recoveryRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery required'**
+  String get recoveryRequired;
+
+  /// No description provided for @recoveryRequiredSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery required · Syncing…'**
+  String get recoveryRequiredSyncing;
+
+  /// No description provided for @recycleBin.
+  ///
+  /// In en, this message translates to:
+  /// **'Recycle bin'**
+  String get recycleBin;
+
+  /// No description provided for @recycleBinRecordDisplaynameIdSubstring.
+  ///
+  /// In en, this message translates to:
+  /// **'Recycle bin record: {displayName}, ID {substring}, {automaticPurgeConsentText}, {restoreDeadlineSemantics}'**
+  String recycleBinRecordDisplaynameIdSubstring(
+    String displayName,
+    String substring,
+    String automaticPurgeConsentText,
+    String restoreDeadlineSemantics,
+  );
+
+  /// No description provided for @redactionProofItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Redaction proof  {item}'**
+  String redactionProofItem(Object item);
+
+  /// No description provided for @redactionReadiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Redaction readiness'**
+  String get redactionReadiness;
+
+  /// No description provided for @refresh2.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh2;
+
+  /// No description provided for @refreshVaultList.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Vault list'**
+  String get refreshVaultList;
+
+  /// No description provided for @refreshVaultStates.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Vault states'**
+  String get refreshVaultStates;
+
+  /// No description provided for @refreshAccountInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh account invitations'**
+  String get refreshAccountInvitations;
+
+  /// No description provided for @refreshAccountSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh account sessions'**
+  String get refreshAccountSessions;
+
+  /// No description provided for @refreshAdminAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh admin accounts'**
+  String get refreshAdminAccounts;
+
+  /// No description provided for @refreshAdminAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh admin audit'**
+  String get refreshAdminAudit;
+
+  /// No description provided for @refreshBackupStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh backup status'**
+  String get refreshBackupStatus;
+
+  /// No description provided for @refreshDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh devices'**
+  String get refreshDevices;
+
+  /// No description provided for @refreshExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh expires'**
+  String get refreshExpires;
+
+  /// No description provided for @refreshInstanceJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh instance jobs'**
+  String get refreshInstanceJobs;
+
+  /// No description provided for @refreshKeyCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh key coverage'**
+  String get refreshKeyCoverage;
+
+  /// No description provided for @refreshMembersAndOnlineDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh members and online devices'**
+  String get refreshMembersAndOnlineDevices;
+
+  /// No description provided for @refreshOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh overview'**
+  String get refreshOverview;
+
+  /// No description provided for @refreshPushHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh push health'**
+  String get refreshPushHealth;
+
+  /// No description provided for @refreshReadiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh readiness'**
+  String get refreshReadiness;
+
+  /// No description provided for @refreshRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh relay policy'**
+  String get refreshRelayPolicy;
+
+  /// No description provided for @refreshReplicationStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh replication status'**
+  String get refreshReplicationStatus;
+
+  /// No description provided for @refreshRestoreSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh restore sources'**
+  String get refreshRestoreSources;
+
+  /// No description provided for @refreshRestoreStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh restore status'**
+  String get refreshRestoreStatus;
+
+  /// No description provided for @refreshSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh schedule'**
+  String get refreshSchedule;
+
+  /// No description provided for @refreshServerManagedGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh server-managed groups'**
+  String get refreshServerManagedGroups;
+
+  /// No description provided for @refreshStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh status'**
+  String get refreshStatus;
+
+  /// No description provided for @refreshToLoadApprovedDevicesFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh to load approved devices from the server.'**
+  String get refreshToLoadApprovedDevicesFrom;
+
+  /// No description provided for @registeredEndpoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered endpoints'**
+  String get registeredEndpoints;
+
+  /// No description provided for @reject2.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject2;
+
+  /// No description provided for @relayCidrs.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay CIDRs'**
+  String get relayCidrs;
+
+  /// No description provided for @relayAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay available'**
+  String get relayAvailable;
+
+  /// No description provided for @relayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay policy'**
+  String get relayPolicy;
+
+  /// No description provided for @relayPorts.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay ports'**
+  String get relayPorts;
+
+  /// No description provided for @relayUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay unavailable'**
+  String get relayUnavailable;
+
+  /// No description provided for @reloadAccountAndInstanceRelayPolicies.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload account and instance Relay policies'**
+  String get reloadAccountAndInstanceRelayPolicies;
+
+  /// No description provided for @reloadFirstPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload first page'**
+  String get reloadFirstPage;
+
+  /// No description provided for @reloadGroupAndInstancePoliciesKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload group and instance policies, keep drafts'**
+  String get reloadGroupAndInstancePoliciesKeep;
+
+  /// No description provided for @reloadLatestGroupKeepDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload latest group, keep drafts'**
+  String get reloadLatestGroupKeepDrafts;
+
+  /// No description provided for @reloadLatestPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload latest policy'**
+  String get reloadLatestPolicy;
+
+  /// No description provided for @reloadLatestPolicyKeepDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload latest policy, keep draft'**
+  String get reloadLatestPolicyKeepDraft;
+
+  /// No description provided for @remote.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote'**
+  String get remote;
+
+  /// No description provided for @remoteSshListenerAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote SSH listener address'**
+  String get remoteSshListenerAddress;
+
+  /// No description provided for @remoteArchiveIntegrityMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote archive integrity mismatch'**
+  String get remoteArchiveIntegrityMismatch;
+
+  /// No description provided for @remoteCompletionUnknownNotRetried.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote completion unknown · not retried'**
+  String get remoteCompletionUnknownNotRetried;
+
+  /// No description provided for @remoteCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote copy failed'**
+  String get remoteCopyFailed;
+
+  /// No description provided for @remoteCopyVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote copy verified'**
+  String get remoteCopyVerified;
+
+  /// No description provided for @remoteCredentialsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote credentials unavailable'**
+  String get remoteCredentialsUnavailable;
+
+  /// No description provided for @remoteFilesEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote files · {endpoint}'**
+  String remoteFilesEndpoint(Object endpoint);
+
+  /// No description provided for @remoteHeadIsAbsent.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote head is absent'**
+  String get remoteHeadIsAbsent;
+
+  /// No description provided for @remotePath2.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote path'**
+  String get remotePath2;
+
+  /// No description provided for @remotePathSftppath.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote path: {sftpPath}'**
+  String remotePathSftppath(String sftpPath);
+
+  /// No description provided for @remoteReplica.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote replica'**
+  String get remoteReplica;
+
+  /// No description provided for @remoteReplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote replication'**
+  String get remoteReplication;
+
+  /// No description provided for @remoteRevisionItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote revision {item}'**
+  String remoteRevisionItem(Object item);
+
+  /// No description provided for @remoteStorageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote storage unavailable'**
+  String get remoteStorageUnavailable;
+
+  /// No description provided for @remoteSshBindDeviceDestinationaddressDestinationport.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote · SSH {bind} → device {destinationAddress}:{destinationPort}'**
+  String remoteSshBindDeviceDestinationaddressDestinationport(
+    String bind,
+    Object destinationAddress,
+    Object destinationPort,
+  );
+
+  /// No description provided for @removePaneValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Pane {valueValue}'**
+  String removePaneValuevalue(int valueValue);
+
+  /// No description provided for @removeFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove favorite'**
+  String get removeFavorite;
+
+  /// No description provided for @removeReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove reference'**
+  String get removeReference;
+
+  /// No description provided for @removeTmuxSessionReference2.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove tmux session reference'**
+  String get removeTmuxSessionReference2;
+
+  /// No description provided for @removeTmuxSessionReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove tmux session reference?'**
+  String get removeTmuxSessionReference;
+
+  /// No description provided for @removeUsernameFromGroupDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {username} from group draft'**
+  String removeUsernameFromGroupDraft(String username);
+
+  /// No description provided for @rename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get rename;
+
+  /// No description provided for @renameWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename workspace'**
+  String get renameWorkspace;
+
+  /// No description provided for @repairAHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair a Host'**
+  String get repairAHost;
+
+  /// No description provided for @repairAGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair a group'**
+  String get repairAGroup;
+
+  /// No description provided for @repairIsNotConfirmedYetSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair is not confirmed yet. Sync the active Vault and retry with the same record ID.'**
+  String get repairIsNotConfirmedYetSync;
+
+  /// No description provided for @replaceHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace Host'**
+  String get replaceHost;
+
+  /// No description provided for @replaceMissingHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace missing Host'**
+  String get replaceMissingHost;
+
+  /// No description provided for @requestedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested at'**
+  String get requestedAt;
+
+  /// No description provided for @requiredTextValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Required text value'**
+  String get requiredTextValue;
+
+  /// No description provided for @reservedUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved uploads'**
+  String get reservedUploads;
+
+  /// No description provided for @resetToInherit.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to inherit'**
+  String get resetToInherit;
+
+  /// No description provided for @resolutionSavedOnThisDeviceWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution saved on this device; waiting for sync confirmation.'**
+  String get resolutionSavedOnThisDeviceWaiting;
+
+  /// No description provided for @resolveOrDiscardThisRecordsOutstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve or discard this record’s outstanding conflict before permanently purging it.'**
+  String get resolveOrDiscardThisRecordsOutstanding;
+
+  /// No description provided for @resourceIdHmacSha256.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource ID (HMAC-SHA-256)'**
+  String get resourceIdHmacSha256;
+
+  /// No description provided for @resourceType.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource type'**
+  String get resourceType;
+
+  /// No description provided for @responseValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Response {valueValue}'**
+  String responseValuevalue(int valueValue);
+
+  /// No description provided for @responsesAreSentOnlyForThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Responses are sent only for this SSH authentication and are not saved.'**
+  String get responsesAreSentOnlyForThis;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @restoreDeadlinePassedAccordingToThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore deadline passed according to this device clock; the server makes the final decision.'**
+  String get restoreDeadlinePassedAccordingToThis;
+
+  /// No description provided for @restoreDeadlineFormat3.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore deadline {format}'**
+  String restoreDeadlineFormat3(String format);
+
+  /// No description provided for @restoreDeadlineFormatTheServerChecks.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore deadline: {format}. The server checks this deadline again when you confirm.'**
+  String restoreDeadlineFormatTheServerChecks(String format);
+
+  /// No description provided for @restoreDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore defaults'**
+  String get restoreDefaults;
+
+  /// No description provided for @restoreIsRestrictedToTheSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore is restricted to the same server space and Vault. Server-purged data is not included; store the downloaded archive and password separately from this device.'**
+  String get restoreIsRestrictedToTheSame;
+
+  /// No description provided for @restorePreparesAnIsolatedCopyWhile.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore prepares an isolated copy while the service stays online. Operators handle any later offline cutover.'**
+  String get restorePreparesAnIsolatedCopyWhile;
+
+  /// No description provided for @restoreStaging.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore staging'**
+  String get restoreStaging;
+
+  /// No description provided for @restoreStagingAdminrestorejobstatuslabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore staging · {adminRestoreJobStatusLabel}'**
+  String restoreStagingAdminrestorejobstatuslabel(
+    String adminRestoreJobStatusLabel,
+  );
+
+  /// No description provided for @restoreThisRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this record?'**
+  String get restoreThisRecord;
+
+  /// No description provided for @restoreUsernameInGroupDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore {username} in group draft'**
+  String restoreUsernameInGroupDraft(String username);
+
+  /// No description provided for @result.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get result;
+
+  /// No description provided for @resumeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume session'**
+  String get resumeSession;
+
+  /// No description provided for @resumeTmuxSession2.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume tmux session'**
+  String get resumeTmuxSession2;
+
+  /// No description provided for @resumeTmuxSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume tmux session?'**
+  String get resumeTmuxSession;
+
+  /// No description provided for @retry2.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry2;
+
+  /// No description provided for @retryAccountInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry account invitations'**
+  String get retryAccountInvitations;
+
+  /// No description provided for @retryAccountList.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry account list'**
+  String get retryAccountList;
+
+  /// No description provided for @retryAndVerifyRepair.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry and verify repair'**
+  String get retryAndVerifyRepair;
+
+  /// No description provided for @retryBackupRequestSafely.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry backup request safely'**
+  String get retryBackupRequestSafely;
+
+  /// No description provided for @retryDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry discard'**
+  String get retryDiscard;
+
+  /// No description provided for @retryDiscardSafely.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry discard safely'**
+  String get retryDiscardSafely;
+
+  /// No description provided for @retryGroupDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry group details'**
+  String get retryGroupDetails;
+
+  /// No description provided for @retryGroupList.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry group list'**
+  String get retryGroupList;
+
+  /// No description provided for @retryPasswordChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry password change'**
+  String get retryPasswordChange;
+
+  /// No description provided for @retryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry pending'**
+  String get retryPending;
+
+  /// No description provided for @retryQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry queued'**
+  String get retryQueued;
+
+  /// No description provided for @retryRequestSafely.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry request safely'**
+  String get retryRequestSafely;
+
+  /// No description provided for @retryScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry scheduled'**
+  String get retryScheduled;
+
+  /// No description provided for @retrySessionList.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry session list'**
+  String get retrySessionList;
+
+  /// No description provided for @retryWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry waiting'**
+  String get retryWaiting;
+
+  /// No description provided for @retryableFailure7UtcDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Retryable failure (7 UTC days)'**
+  String get retryableFailure7UtcDays;
+
+  /// No description provided for @revealPasswordSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal password secret'**
+  String get revealPasswordSecret;
+
+  /// No description provided for @reviewHostConnectionSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Host connection settings'**
+  String get reviewHostConnectionSettings;
+
+  /// No description provided for @reviewAndRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and run'**
+  String get reviewAndRun;
+
+  /// No description provided for @reviewBatchCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Review batch command'**
+  String get reviewBatchCommand;
+
+  /// No description provided for @reviewCommandExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Review command execution'**
+  String get reviewCommandExecution;
+
+  /// No description provided for @reviewCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Review current version'**
+  String get reviewCurrentVersion;
+
+  /// No description provided for @reviewDeviceEnrollment.
+  ///
+  /// In en, this message translates to:
+  /// **'Review device enrollment'**
+  String get reviewDeviceEnrollment;
+
+  /// No description provided for @reviewEachSynchronizedBindingAndRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Review each synchronized binding and record ID. Duplicate records are removed with encrypted tombstones.'**
+  String get reviewEachSynchronizedBindingAndRecord;
+
+  /// No description provided for @reviewKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Review keys'**
+  String get reviewKeys;
+
+  /// No description provided for @reviewLocalProfileMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'Review local profile migration'**
+  String get reviewLocalProfileMigration;
+
+  /// No description provided for @reviewOnCountConnectedHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Review on {count, plural, =1{1 connected Host} other{{count} connected Hosts}}'**
+  String reviewOnCountConnectedHosts(int count);
+
+  /// No description provided for @reviewThePaletteAndRecordId.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the palette and record ID. The selected record stays active; duplicates are removed with encrypted tombstones.'**
+  String get reviewThePaletteAndRecordId;
+
+  /// No description provided for @reviewTheSizeAndRecordId.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the size and record ID. The selected record ID stays active; other records are removed with encrypted tombstones.'**
+  String get reviewTheSizeAndRecordId;
+
+  /// No description provided for @reviewTrustedDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Review trusted devices'**
+  String get reviewTrustedDevices;
+
+  /// No description provided for @reviewUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Review update'**
+  String get reviewUpdate;
+
+  /// No description provided for @reviewCountHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Review {count, plural, =1{1 Host} other{{count} Hosts}}'**
+  String reviewCountHosts(int count);
+
+  /// No description provided for @revokePrometheusScrapeCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke Prometheus scrape credential?'**
+  String get revokePrometheusScrapeCredential;
+
+  /// No description provided for @revokeSshHostKeyTrustFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke SSH host-key trust for {endpoint} ({fingerprint})'**
+  String revokeSshHostKeyTrustFor(String endpoint, String fingerprint);
+
+  /// No description provided for @revokeSshHostKeyTrust2.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke SSH host-key trust?'**
+  String get revokeSshHostKeyTrust2;
+
+  /// No description provided for @revokeAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke access'**
+  String get revokeAccess;
+
+  /// No description provided for @revokeAccountInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke account invitation?'**
+  String get revokeAccountInvitation;
+
+  /// No description provided for @revokeAllSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke all sessions'**
+  String get revokeAllSessions;
+
+  /// No description provided for @revokeAllSessions2.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke all sessions?'**
+  String get revokeAllSessions2;
+
+  /// No description provided for @revokeAndRotateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke and rotate key'**
+  String get revokeAndRotateKey;
+
+  /// No description provided for @revokeCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke credential'**
+  String get revokeCredential;
+
+  /// No description provided for @revokeDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke device'**
+  String get revokeDevice;
+
+  /// No description provided for @revokeDevice2.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke device?'**
+  String get revokeDevice2;
+
+  /// No description provided for @revokeEveryActiveSessionForUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke every active session for {username}? Their next request from those sessions will require a new sign-in.'**
+  String revokeEveryActiveSessionForUsername(String username);
+
+  /// No description provided for @revokeInputControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke input control'**
+  String get revokeInputControl;
+
+  /// No description provided for @revokeInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke invitation'**
+  String get revokeInvitation;
+
+  /// No description provided for @revokeInvitation2.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke invitation?'**
+  String get revokeInvitation2;
+
+  /// No description provided for @revokeMemberAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke member access?'**
+  String get revokeMemberAccess;
+
+  /// No description provided for @revokeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke session'**
+  String get revokeSession;
+
+  /// No description provided for @revokeSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke sessions'**
+  String get revokeSessions;
+
+  /// No description provided for @revokeTheSessionOnDevicenameFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke the session on {deviceName} for {username}?'**
+  String revokeTheSessionOnDevicenameFor(String deviceName, String username);
+
+  /// No description provided for @revokeThisSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke this session?'**
+  String get revokeThisSession;
+
+  /// No description provided for @revokeTrust2.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke trust'**
+  String get revokeTrust2;
+
+  /// No description provided for @revoked3.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get revoked3;
+
+  /// No description provided for @revokedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked at'**
+  String get revokedAt;
+
+  /// No description provided for @revokedFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked {format}'**
+  String revokedFormat(String format);
+
+  /// No description provided for @revokedFormat2.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked · {format}'**
+  String revokedFormat2(String format);
+
+  /// No description provided for @role.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get role;
+
+  /// No description provided for @rotatePrometheusScrapeCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate Prometheus scrape credential?'**
+  String get rotatePrometheusScrapeCredential;
+
+  /// No description provided for @rotateCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate credential'**
+  String get rotateCredential;
+
+  /// No description provided for @rotateKeyAndChangeRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate key and change role?'**
+  String get rotateKeyAndChangeRole;
+
+  /// No description provided for @rotateRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate recovery code'**
+  String get rotateRecoveryCode;
+
+  /// No description provided for @rotationImmediatelyInvalidatesTheCurrentCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotation immediately invalidates the current credential. Update the Prometheus scrape configuration after copying the new value; it will be shown only once.'**
+  String get rotationImmediatelyInvalidatesTheCurrentCredential;
+
+  /// No description provided for @runEncryptedBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Run encrypted backup'**
+  String get runEncryptedBackup;
+
+  /// No description provided for @runMaintenanceNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Run maintenance now'**
+  String get runMaintenanceNow;
+
+  /// No description provided for @running.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get running;
+
+  /// No description provided for @runningOnceThroughANonPty.
+  ///
+  /// In en, this message translates to:
+  /// **'Running once through a non-PTY SSH exec channel. Output is limited to 64 KiB.'**
+  String get runningOnceThroughANonPty;
+
+  /// No description provided for @scpUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'SCP upload…'**
+  String get scpUpload;
+
+  /// No description provided for @scpDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'SCP download…'**
+  String get scpDownload;
+
+  /// No description provided for @scpFileManager.
+  ///
+  /// In en, this message translates to:
+  /// **'SCP file manager'**
+  String get scpFileManager;
+
+  /// No description provided for @sftpFileBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'SFTP file browser'**
+  String get sftpFileBrowser;
+
+  /// No description provided for @sftpFileManager.
+  ///
+  /// In en, this message translates to:
+  /// **'SFTP file manager'**
+  String get sftpFileManager;
+
+  /// No description provided for @socks5ConnectOnlyNoSocksUser.
+  ///
+  /// In en, this message translates to:
+  /// **'SOCKS5 CONNECT only, no SOCKS user authentication. The proxy listens on this device loopback address.'**
+  String get socks5ConnectOnlyNoSocksUser;
+
+  /// No description provided for @sshRelayConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH Relay connected'**
+  String get sshRelayConnected;
+
+  /// No description provided for @sshTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH Terminal'**
+  String get sshTerminal;
+
+  /// No description provided for @sshAuthenticationChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH authentication challenge'**
+  String get sshAuthenticationChallenge;
+
+  /// No description provided for @sshConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH connected'**
+  String get sshConnected;
+
+  /// No description provided for @sshConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH connecting'**
+  String get sshConnecting;
+
+  /// No description provided for @sshConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH connection failed'**
+  String get sshConnectionFailed;
+
+  /// No description provided for @sshCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH credentials'**
+  String get sshCredentials;
+
+  /// No description provided for @sshDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH disconnected'**
+  String get sshDisconnected;
+
+  /// No description provided for @sshExecFailedAfterDispatchThe.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH exec failed after dispatch. The command may have started; its remote completion is unknown. It was not retried.'**
+  String get sshExecFailedAfterDispatchThe;
+
+  /// No description provided for @sshHostKeyChangesAreRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host key changes are rejected after first verified trust.'**
+  String get sshHostKeyChangesAreRejected;
+
+  /// No description provided for @sshHostKeyFingerprintFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host key fingerprint: {fingerprint}'**
+  String sshHostKeyFingerprintFingerprint(String fingerprint);
+
+  /// No description provided for @sshHostKeyTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host-key trust'**
+  String get sshHostKeyTrust;
+
+  /// No description provided for @sshPortForwarding.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH port forwarding'**
+  String get sshPortForwarding;
+
+  /// No description provided for @sshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH relay'**
+  String get sshRelay;
+
+  /// No description provided for @sshRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH relay policy'**
+  String get sshRelayPolicy;
+
+  /// No description provided for @sshSessionIsDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH session is disconnected.'**
+  String get sshSessionIsDisconnected;
+
+  /// No description provided for @sshTerminalInput.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH terminal input'**
+  String get sshTerminalInput;
+
+  /// No description provided for @sshUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH username'**
+  String get sshUsername;
+
+  /// No description provided for @sshHostTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host trust'**
+  String get sshHostTrust;
+
+  /// No description provided for @sameOnBothBranchesValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Same on both branches · {valueValue}'**
+  String sameOnBothBranchesValuevalue(String valueValue);
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @saveConflictBranchAsWorkspaceCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save conflict branch as workspace copy'**
+  String get saveConflictBranchAsWorkspaceCopy;
+
+  /// No description provided for @saveCurrentTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Save current tabs'**
+  String get saveCurrentTabs;
+
+  /// No description provided for @saveEncryptedCredential2.
+  ///
+  /// In en, this message translates to:
+  /// **'Save encrypted credential'**
+  String get saveEncryptedCredential2;
+
+  /// No description provided for @saveEncryptedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Save encrypted group'**
+  String get saveEncryptedGroup;
+
+  /// No description provided for @saveEncryptedProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save encrypted profile'**
+  String get saveEncryptedProfile;
+
+  /// No description provided for @saveGroupOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Save group override'**
+  String get saveGroupOverride;
+
+  /// No description provided for @saveLocalLayoutAsNamedCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save local layout as named copy'**
+  String get saveLocalLayoutAsNamedCopy;
+
+  /// No description provided for @saveMembership.
+  ///
+  /// In en, this message translates to:
+  /// **'Save membership'**
+  String get saveMembership;
+
+  /// No description provided for @saveMergedCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Save merged Credential'**
+  String get saveMergedCredential;
+
+  /// No description provided for @saveOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Save override'**
+  String get saveOverride;
+
+  /// No description provided for @saveQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'Save quota'**
+  String get saveQuota;
+
+  /// No description provided for @saveRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save relay policy'**
+  String get saveRelayPolicy;
+
+  /// No description provided for @saveReviewedTuple.
+  ///
+  /// In en, this message translates to:
+  /// **'Save reviewed tuple'**
+  String get saveReviewedTuple;
+
+  /// No description provided for @saveSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Save schedule'**
+  String get saveSchedule;
+
+  /// No description provided for @saveShortcuts2.
+  ///
+  /// In en, this message translates to:
+  /// **'Save shortcuts'**
+  String get saveShortcuts2;
+
+  /// No description provided for @saveSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save snippet'**
+  String get saveSnippet;
+
+  /// No description provided for @saveSplitWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Save split Workspace'**
+  String get saveSplitWorkspace;
+
+  /// No description provided for @saveSyncedPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Save synced preference'**
+  String get saveSyncedPreference;
+
+  /// No description provided for @saveTerminalColorTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Save terminal color theme'**
+  String get saveTerminalColorTheme;
+
+  /// No description provided for @saveTerminalFontSize2.
+  ///
+  /// In en, this message translates to:
+  /// **'Save terminal font size'**
+  String get saveTerminalFontSize2;
+
+  /// No description provided for @saveThisCredentialNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this credential now'**
+  String get saveThisCredentialNow;
+
+  /// No description provided for @saveWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Save workspace'**
+  String get saveWorkspace;
+
+  /// No description provided for @savedAsItemThisPreferenceIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as {item}. This preference is encrypted in the active Vault and will sync to its authorized devices.'**
+  String savedAsItemThisPreferenceIs(Object item);
+
+  /// No description provided for @savedCheckpointShortkey.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved checkpoint: {shortKey}'**
+  String savedCheckpointShortkey(String shortKey);
+
+  /// No description provided for @savedSettingsCanOnlyNarrowThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved settings can only narrow the immutable limits configured by the server operator.'**
+  String get savedSettingsCanOnlyNarrowThe;
+
+  /// No description provided for @savedWorkspaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved workspaces'**
+  String get savedWorkspaces;
+
+  /// No description provided for @savedFontsizePxThisEncryptedPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {fontSize} px. This encrypted preference will sync to devices with access to this Vault.'**
+  String savedFontsizePxThisEncryptedPreference(int fontSize);
+
+  /// No description provided for @savedLabelThisEncryptedPreferenceWill.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {label}. This encrypted preference will sync to devices with access to this Vault.'**
+  String savedLabelThisEncryptedPreferenceWill(String label);
+
+  /// No description provided for @savingAndPreviewingDoNotConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving and previewing do not connect. Choose any pane, then split it to add another Host leaf.'**
+  String get savingAndPreviewingDoNotConnect;
+
+  /// No description provided for @scheduleVaultDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule Vault deletion'**
+  String get scheduleVaultDeletion;
+
+  /// No description provided for @scheduleVaultDeletion2.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule Vault deletion?'**
+  String get scheduleVaultDeletion2;
+
+  /// No description provided for @scheduleAccountDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule account deletion'**
+  String get scheduleAccountDeletion;
+
+  /// No description provided for @scheduleAccountDeletion2.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule account deletion?'**
+  String get scheduleAccountDeletion2;
+
+  /// No description provided for @scheduleDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule deletion'**
+  String get scheduleDeletion;
+
+  /// No description provided for @scheduledEncryptedBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled encrypted backups'**
+  String get scheduledEncryptedBackups;
+
+  /// No description provided for @scheduledFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled for'**
+  String get scheduledFor;
+
+  /// No description provided for @scriptBody2.
+  ///
+  /// In en, this message translates to:
+  /// **'Script body'**
+  String get scriptBody2;
+
+  /// No description provided for @searchThisHostsCompletedCommandsPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Search this Host’s completed commands, plain Bash Snippets, and local Bash command names. Selecting a suggestion types one line at the current terminal cursor; it never presses Enter.'**
+  String get searchThisHostsCompletedCommandsPlain;
+
+  /// No description provided for @searchValuevalueScrollback.
+  ///
+  /// In en, this message translates to:
+  /// **'Search {valueValue} scrollback'**
+  String searchValuevalueScrollback(String valueValue);
+
+  /// No description provided for @secureTerminalWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure terminal workspace'**
+  String get secureTerminalWorkspace;
+
+  /// No description provided for @securityPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Security policy'**
+  String get securityPolicy;
+
+  /// No description provided for @selectAnActiveVaultBeforeEnabling.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an active Vault before enabling sync.'**
+  String get selectAnActiveVaultBeforeEnabling;
+
+  /// No description provided for @selectFirstHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Select first host'**
+  String get selectFirstHost;
+
+  /// No description provided for @selectedArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected archive'**
+  String get selectedArchive;
+
+  /// No description provided for @selectedServerManagedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected server-managed group'**
+  String get selectedServerManagedGroup;
+
+  /// No description provided for @selectedStateValuevalueCidrsSummarizePorts.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected state: {valueValue} · CIDRs: {summarize} · ports: {summarize2}'**
+  String selectedStateValuevalueCidrsSummarizePorts(
+    String valueValue,
+    String summarize,
+    String summarize2,
+  );
+
+  /// No description provided for @sendANewInvitationFromSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new invitation from Settings > Invite member.'**
+  String get sendANewInvitationFromSettings;
+
+  /// No description provided for @sendResponses.
+  ///
+  /// In en, this message translates to:
+  /// **'Send responses'**
+  String get sendResponses;
+
+  /// No description provided for @serverBackupConfigurationNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Server backup configuration not ready'**
+  String get serverBackupConfigurationNotReady;
+
+  /// No description provided for @serverBackupConfigurationReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Server backup configuration ready'**
+  String get serverBackupConfigurationReady;
+
+  /// No description provided for @serverGenerationUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Server generation unknown'**
+  String get serverGenerationUnknown;
+
+  /// No description provided for @serverSpaceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Server space ID'**
+  String get serverSpaceId;
+
+  /// No description provided for @serverSpaceServerspaceid.
+  ///
+  /// In en, this message translates to:
+  /// **'Server space: {serverSpaceId}'**
+  String serverSpaceServerspaceid(String serverSpaceId);
+
+  /// No description provided for @serverManagedAccessGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Server-managed access groups'**
+  String get serverManagedAccessGroups;
+
+  /// No description provided for @serverManagedGroupActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Server-managed group action failed'**
+  String get serverManagedGroupActionFailed;
+
+  /// No description provided for @serverManagedGroupSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Server-managed group save failed'**
+  String get serverManagedGroupSaveFailed;
+
+  /// No description provided for @serverLocalConflictBranchesConflictcount.
+  ///
+  /// In en, this message translates to:
+  /// **'Server/local conflict branches: {conflictCount}'**
+  String serverLocalConflictBranchesConflictcount(int conflictCount);
+
+  /// No description provided for @sessionId.
+  ///
+  /// In en, this message translates to:
+  /// **'Session ID'**
+  String get sessionId;
+
+  /// No description provided for @setTheIntervalBelowThenSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the interval below, then save your changes.'**
+  String get setTheIntervalBelowThenSave;
+
+  /// No description provided for @setTheSharedTerminalTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the shared terminal text size for this Vault. Allowed sizes: {join} px. Default: {defaultTerminalFontSize} px.'**
+  String setTheSharedTerminalTextSize(String join, int defaultTerminalFontSize);
+
+  /// No description provided for @setUpAccountRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up account recovery'**
+  String get setUpAccountRecovery;
+
+  /// No description provided for @setUpRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up recovery'**
+  String get setUpRecovery;
+
+  /// No description provided for @shareThisTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this terminal'**
+  String get shareThisTerminal;
+
+  /// No description provided for @sharedTerminalOutputReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared terminal output, read only'**
+  String get sharedTerminalOutputReadOnly;
+
+  /// No description provided for @sharedTerminalHostApprovedControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared terminal · host-approved control'**
+  String get sharedTerminalHostApprovedControl;
+
+  /// No description provided for @sharedTerminalReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared terminal · read only'**
+  String get sharedTerminalReadOnly;
+
+  /// No description provided for @shellLabel2.
+  ///
+  /// In en, this message translates to:
+  /// **'Shell label'**
+  String get shellLabel2;
+
+  /// No description provided for @shellLabelShellSentToThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Shell label: {shell} · sent to the active SSH PTY'**
+  String shellLabelShellSentToThe(String shell);
+
+  /// No description provided for @showingCountLocalArchivesOnThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {count, plural, =1{1 local archive} other{{count} local archives}} on this page'**
+  String showingCountLocalArchivesOnThis(int count);
+
+  /// No description provided for @showingFirstLastOfAdmincountAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {first}–{last} of {adminCount} accounts'**
+  String showingFirstLastOfAdmincountAccounts(
+    int first,
+    int last,
+    String adminCount,
+  );
+
+  /// No description provided for @showingFirstLastOfAdmincountInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {first}–{last} of {adminCount} invitations'**
+  String showingFirstLastOfAdmincountInvitations(
+    int first,
+    int last,
+    String adminCount,
+  );
+
+  /// No description provided for @showingFirstLastOfAdmincountSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {first}–{last} of {adminCount} sessions'**
+  String showingFirstLastOfAdmincountSessions(
+    int first,
+    int last,
+    String adminCount,
+  );
+
+  /// No description provided for @showingStartEndOfAdmincountVaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {start}–{end} of {adminCount} Vaults'**
+  String showingStartEndOfAdmincountVaults(
+    int start,
+    int end,
+    String adminCount,
+  );
+
+  /// No description provided for @showingValuevalueValuevalue2OfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {valueValue}–{valueValue2} of {total}'**
+  String showingValuevalueValuevalue2OfTotal(
+    int valueValue,
+    int valueValue2,
+    int total,
+  );
+
+  /// No description provided for @showsTheLatestCompletedBackupAttempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the latest completed backup attempt recorded by this server. The size can be unknown when an archive is no longer available to this node. This does not confirm that the archive still exists or that an isolated restore will succeed.'**
+  String get showsTheLatestCompletedBackupAttempt;
+
+  /// No description provided for @sideBySide.
+  ///
+  /// In en, this message translates to:
+  /// **'Side by side'**
+  String get sideBySide;
+
+  /// No description provided for @sideBySideLeftRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Side by side (left/right)'**
+  String get sideBySideLeftRight;
+
+  /// No description provided for @signAndCreateInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign and create invitation'**
+  String get signAndCreateInvitation;
+
+  /// No description provided for @signInNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in needed'**
+  String get signInNeeded;
+
+  /// No description provided for @signedVaultShareRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed Vault share request'**
+  String get signedVaultShareRequest;
+
+  /// No description provided for @signedShareRequestCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed share request copied.'**
+  String get signedShareRequestCopied;
+
+  /// No description provided for @signingKeyFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing key fingerprint'**
+  String get signingKeyFingerprint;
+
+  /// No description provided for @signingKeyFingerprintSha256.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing key fingerprint · SHA-256'**
+  String get signingKeyFingerprintSha256;
+
+  /// No description provided for @snapshotExceedsClientLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot exceeds client limit'**
+  String get snapshotExceedsClientLimit;
+
+  /// No description provided for @snapshotGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot generated'**
+  String get snapshotGenerated;
+
+  /// No description provided for @snapshotLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot limit reached'**
+  String get snapshotLimitReached;
+
+  /// No description provided for @snapshotNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot needed'**
+  String get snapshotNeeded;
+
+  /// No description provided for @snapshotSizeLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot size limit'**
+  String get snapshotSizeLimit;
+
+  /// No description provided for @snapshotVerificationIsInProgressLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot verification is in progress. Local edits are paused; the existing cache and outbox remain intact until the full manifest verifies.'**
+  String get snapshotVerificationIsInProgressLocal;
+
+  /// No description provided for @snippet2.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet'**
+  String get snippet2;
+
+  /// No description provided for @snippetScriptIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet script is required'**
+  String get snippetScriptIsRequired;
+
+  /// No description provided for @snippetTitleIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet title is required'**
+  String get snippetTitleIsRequired;
+
+  /// No description provided for @snippetTitle3.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet: {title}'**
+  String snippetTitle3(String title);
+
+  /// No description provided for @source.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get source;
+
+  /// No description provided for @splitWorkspaceSavedEncryptedToThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Workspace saved encrypted to this Vault.'**
+  String get splitWorkspaceSavedEncryptedToThis;
+
+  /// No description provided for @splitControlsCountDividersEachRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'Split controls · {count, plural, =1{1 divider} other{{count} dividers}} · each ratio sizes the first child'**
+  String splitControlsCountDividersEachRatio(int count);
+
+  /// No description provided for @splitSelectedPane.
+  ///
+  /// In en, this message translates to:
+  /// **'Split selected pane'**
+  String get splitSelectedPane;
+
+  /// No description provided for @splitValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Split {valueValue}'**
+  String splitValuevalue(int valueValue);
+
+  /// No description provided for @splitValuevalueAxisFirstpercentValuevalue2.
+  ///
+  /// In en, this message translates to:
+  /// **'Split {valueValue} · {axis} · {firstPercent}/{valueValue2}'**
+  String splitValuevalueAxisFirstpercentValuevalue2(
+    int valueValue,
+    String axis,
+    int firstPercent,
+    int valueValue2,
+  );
+
+  /// No description provided for @splitFirstpercentSecondpercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Split · {firstPercent}/{secondPercent}'**
+  String splitFirstpercentSecondpercent(int firstPercent, int secondPercent);
+
+  /// No description provided for @stacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Stacked'**
+  String get stacked;
+
+  /// No description provided for @stackedTopBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Stacked (top/bottom)'**
+  String get stackedTopBottom;
+
+  /// No description provided for @stageId.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage ID'**
+  String get stageId;
+
+  /// No description provided for @startForwarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Start forwarding'**
+  String get startForwarding;
+
+  /// No description provided for @startResumableSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start resumable session'**
+  String get startResumableSession;
+
+  /// No description provided for @startResumableTmuxSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start resumable tmux session?'**
+  String get startResumableTmuxSession;
+
+  /// No description provided for @startSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start session'**
+  String get startSession;
+
+  /// No description provided for @startSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Start sharing'**
+  String get startSharing;
+
+  /// No description provided for @startedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Started at'**
+  String get startedAt;
+
+  /// No description provided for @stopAuthentication.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop authentication'**
+  String get stopAuthentication;
+
+  /// No description provided for @stopForwarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop forwarding'**
+  String get stopForwarding;
+
+  /// No description provided for @stopLocalCapture.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop local capture'**
+  String get stopLocalCapture;
+
+  /// No description provided for @stopTerminalSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop terminal sharing'**
+  String get stopTerminalSharing;
+
+  /// No description provided for @stopThisForwardBeforeEditingIts.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop this forward before editing its profile.'**
+  String get stopThisForwardBeforeEditingIts;
+
+  /// No description provided for @storeYourRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Store your recovery code'**
+  String get storeYourRecoveryCode;
+
+  /// No description provided for @stored.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored'**
+  String get stored;
+
+  /// No description provided for @storedData.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored data'**
+  String get storedData;
+
+  /// No description provided for @structuredBashCommand2.
+  ///
+  /// In en, this message translates to:
+  /// **'Structured Bash command'**
+  String get structuredBashCommand2;
+
+  /// No description provided for @submitBackupRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit backup request'**
+  String get submitBackupRequest;
+
+  /// No description provided for @submittingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitting backup…'**
+  String get submittingBackup;
+
+  /// No description provided for @succeeded2.
+  ///
+  /// In en, this message translates to:
+  /// **'Succeeded'**
+  String get succeeded2;
+
+  /// No description provided for @syncCommandHistoryToVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync command history to Vault'**
+  String get syncCommandHistoryToVault;
+
+  /// No description provided for @syncCommandHistoryToThisVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync command history to this Vault?'**
+  String get syncCommandHistoryToThisVault;
+
+  /// No description provided for @syncError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync error'**
+  String get syncError;
+
+  /// No description provided for @syncHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync health'**
+  String get syncHealth;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncNow;
+
+  /// No description provided for @syncPendingChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync pending changes'**
+  String get syncPendingChanges;
+
+  /// No description provided for @syncServiceError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync service error'**
+  String get syncServiceError;
+
+  /// No description provided for @syncStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync status'**
+  String get syncStatus;
+
+  /// No description provided for @syncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing'**
+  String get syncing;
+
+  /// No description provided for @thisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'THIS DEVICE'**
+  String get thisDevice;
+
+  /// No description provided for @tabValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab {valueValue}'**
+  String tabValuevalue(int valueValue);
+
+  /// No description provided for @tabValuevalueMissingHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab {valueValue} · Missing Host'**
+  String tabValuevalueMissingHost(int valueValue);
+
+  /// No description provided for @tabValuevalueName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab {valueValue} · {name}'**
+  String tabValuevalueName(int valueValue, String name);
+
+  /// No description provided for @tagsSeparatedByCommas.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags, separated by commas'**
+  String get tagsSeparatedByCommas;
+
+  /// No description provided for @targetValuevalueOfCountValuevalue2.
+  ///
+  /// In en, this message translates to:
+  /// **'Target {valueValue} of {count}: {valueValue2}'**
+  String targetValuevalueOfCountValuevalue2(
+    int valueValue,
+    int count,
+    String valueValue2,
+  );
+
+  /// No description provided for @targetValuevalueHostnameEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Target {valueValue}: {hostName} · {endpoint}'**
+  String targetValuevalueHostnameEndpoint(
+    int valueValue,
+    String hostName,
+    String endpoint,
+  );
+
+  /// No description provided for @targetHostnameEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Target: {hostName} · {endpoint}'**
+  String targetHostnameEndpoint(String hostName, String endpoint);
+
+  /// No description provided for @targetsRunSequentiallyNoTargetStarts.
+  ///
+  /// In en, this message translates to:
+  /// **'Targets run sequentially. No target starts until this full review is confirmed. The batch stops at the first non-zero or unknown result and never retries.'**
+  String get targetsRunSequentiallyNoTargetStarts;
+
+  /// No description provided for @terminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal'**
+  String get terminal;
+
+  /// No description provided for @terminalColorTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal color theme'**
+  String get terminalColorTheme;
+
+  /// No description provided for @terminalFontSize3.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal font size'**
+  String get terminalFontSize3;
+
+  /// No description provided for @terminalFontSizeValuevaluePxRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal font size: {valueValue} px; Record ID: {id}; Revision: {revisionLabel}'**
+  String terminalFontSizeValuevaluePxRecord(
+    Object valueValue,
+    String id,
+    String revisionLabel,
+  );
+
+  /// No description provided for @terminalHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal history'**
+  String get terminalHistory;
+
+  /// No description provided for @terminalKeyboardShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal keyboard shortcuts'**
+  String get terminalKeyboardShortcuts;
+
+  /// No description provided for @terminalPanesCountMaxworkspacepanes.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal panes · {count}/{maxWorkspacePanes}'**
+  String terminalPanesCountMaxworkspacepanes(int count, int maxWorkspacePanes);
+
+  /// No description provided for @terminalSharePhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal share {phase}'**
+  String terminalSharePhase(String phase);
+
+  /// No description provided for @terminalThemeThemelabelRecordIdId.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal theme: {themeLabel}; Record ID: {id}; Revision: {valueValue}'**
+  String terminalThemeThemelabelRecordIdId(
+    String themeLabel,
+    String id,
+    String valueValue,
+  );
+
+  /// No description provided for @theHostConflictCanNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host conflict can no longer be reviewed safely.'**
+  String get theHostConflictCanNoLonger;
+
+  /// No description provided for @theSshServerGatewayportsSettingMay.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server GatewayPorts setting may widen this loopback bind request. Verify the server configuration before using remote forwarding.'**
+  String get theSshServerGatewayportsSettingMay;
+
+  /// No description provided for @theSshServerRequestedTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server requested too many responses. Authentication was stopped.'**
+  String get theSshServerRequestedTooMany;
+
+  /// No description provided for @theVaultChangedReopenPortForwarding.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault changed; reopen port forwarding.'**
+  String get theVaultChangedReopenPortForwarding;
+
+  /// No description provided for @theVaultOrOneOfThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The Vault or one of the selected Hosts is no longer available.'**
+  String get theVaultOrOneOfThe;
+
+  /// No description provided for @theArchiveHasPassedSignatureMembership.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive has passed signature, membership, envelope, object hash and schema checks. Import merges into this Vault only. Missing encrypted objects may be uploaded to this same Vault; the import does not include session tokens or device private keys. Outbox entries authored by another device stay as local conflicts and are not replayed with this device identity.'**
+  String get theArchiveHasPassedSignatureMembership;
+
+  /// No description provided for @theCommittedHostChangedAfterThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The committed Host changed after this preview. No edit was staged; review the latest head before choosing again.'**
+  String get theCommittedHostChangedAfterThis;
+
+  /// No description provided for @theCommittedHostChangedReviewIts.
+  ///
+  /// In en, this message translates to:
+  /// **'The committed Host changed. Review its latest connection settings before merging.'**
+  String get theCommittedHostChangedReviewIts;
+
+  /// No description provided for @theCommittedVaultVersionChangedReview.
+  ///
+  /// In en, this message translates to:
+  /// **'The committed Vault version changed. Review it again before merging.'**
+  String get theCommittedVaultVersionChangedReview;
+
+  /// No description provided for @theCredentialIsNoLongerAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential is no longer available in this session. If the rotation completed, rotate again after checking the status to receive a new one-time value.'**
+  String get theCredentialIsNoLongerAvailable;
+
+  /// No description provided for @theCurrentVaultVersionChangedWhile.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Vault version changed while you were reviewing. Your selections were cleared. Review the current version before choosing again.'**
+  String get theCurrentVaultVersionChangedWhile;
+
+  /// No description provided for @theDefaultPreferenceWasConfirmedAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'The default preference was confirmed after Vault sync.'**
+  String get theDefaultPreferenceWasConfirmedAfter;
+
+  /// No description provided for @theDeploymentGateIsAvailableWith.
+  ///
+  /// In en, this message translates to:
+  /// **'The deployment gate is available with ATERMIUS_RELAY_ENABLED=true. Effective authorization always remains limited by the configured CIDRs and ports.'**
+  String get theDeploymentGateIsAvailableWith;
+
+  /// No description provided for @theExportContainsARandomReport.
+  ///
+  /// In en, this message translates to:
+  /// **'The export contains a random report ID, a fixed error code, client version, sync counts and dates rounded to UTC days. It never includes Vault records, account details, server addresses or device identifiers.'**
+  String get theExportContainsARandomReport;
+
+  /// No description provided for @theFullScriptIsReviewedBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'The full script is reviewed before sending to the active PTY.'**
+  String get theFullScriptIsReviewedBefore;
+
+  /// No description provided for @theLastResponseWasNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The last response was not confirmed. The server may already have changed the password. Retry sends the exact same request; no password is stored for retry. Remember the new password. Signing out clears this retry request.'**
+  String get theLastResponseWasNotConfirmed;
+
+  /// No description provided for @theLocalBranchAndItsOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'The local branch and its original CAS base stay encrypted in local storage. The snapshot has no current remote head for this record; keeping the local branch will create a new root revision.'**
+  String get theLocalBranchAndItsOriginal;
+
+  /// No description provided for @theLocalLayoutBranchWasSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The local layout branch was saved as a new encrypted workspace.'**
+  String get theLocalLayoutBranchWasSaved;
+
+  /// No description provided for @theOperatingSystemWillAskFor.
+  ///
+  /// In en, this message translates to:
+  /// **'The operating system will ask for notification permission only when you turn this on. Vault data still syncs through the authenticated WebSocket or polling path.'**
+  String get theOperatingSystemWillAskFor;
+
+  /// No description provided for @theOptInRemoteBashHook.
+  ///
+  /// In en, this message translates to:
+  /// **'The opt-in remote Bash hook stores up to 500 completed commands in encrypted device-local storage. The remote host can forge OSC entries. Password prompts are not read, but secrets typed as command text may be captured. Stop local capture ignores new events; run \"atermius_off\" in Bash or close the shell to stop the hook.'**
+  String get theOptInRemoteBashHook;
+
+  /// No description provided for @thePasswordStaysInThisForm.
+  ///
+  /// In en, this message translates to:
+  /// **'The password stays in this form and is never sent.'**
+  String get thePasswordStaysInThisForm;
+
+  /// No description provided for @thePendingInvitationForUsernameWill.
+  ///
+  /// In en, this message translates to:
+  /// **'The pending invitation for {username} will no longer be accepted.'**
+  String thePendingInvitationForUsernameWill(String username);
+
+  /// No description provided for @thePreviousCodeWasNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The previous code was not confirmed as stored. Rotate recovery to show a replacement code.'**
+  String get thePreviousCodeWasNotConfirmed;
+
+  /// No description provided for @theSavedPolicyExceedsTheCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved policy exceeds the current deployment ceilings. Effective authorization remains restricted by the current limits. Narrow the CIDRs and ports below before saving; ATERMIUS_RELAY_ENABLED=true is also required for the relay service to run.'**
+  String get theSavedPolicyExceedsTheCurrent;
+
+  /// No description provided for @theSavedPolicyRemainsSelectedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved policy remains selected as enabled, but the effective relay service is unavailable while the deployment gate is off. ATERMIUS_RELAY_ENABLED=true is required; turn off the selection before saving other changes. The Web UI cannot change this gate.'**
+  String get theSavedPolicyRemainsSelectedAs;
+
+  /// No description provided for @theSecretIsReadFromThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The secret is read from the encrypted Credential when you run this Snippet; it is never copied into the Snippet record or preview.'**
+  String get theSecretIsReadFromThe;
+
+  /// No description provided for @theSelectedDefaultPreferenceWasConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected default preference was confirmed after Vault sync.'**
+  String get theSelectedDefaultPreferenceWasConfirmed;
+
+  /// No description provided for @theSelectedShortcutBindingsWereConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected shortcut bindings were confirmed after Vault sync.'**
+  String get theSelectedShortcutBindingsWereConfirmed;
+
+  /// No description provided for @theSelectedTerminalFontSizeWas.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected terminal font size was confirmed after Vault sync.'**
+  String get theSelectedTerminalFontSizeWas;
+
+  /// No description provided for @theSelectedTerminalThemeWasConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected terminal theme was confirmed after Vault sync.'**
+  String get theSelectedTerminalThemeWasConfirmed;
+
+  /// No description provided for @theServerCanCopyEncryptedInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'The server can copy encrypted instance archives to an operator-configured S3-compatible target. The destination and credentials remain on the server. The access check performs HeadBucket only; it does not verify uploads, multipart operations, restore, or provider-wide interoperability.'**
+  String get theServerCanCopyEncryptedInstance;
+
+  /// No description provided for @theServerDeploymentGateMustAlso.
+  ///
+  /// In en, this message translates to:
+  /// **'The server deployment gate must also be enabled.'**
+  String get theServerDeploymentGateMustAlso;
+
+  /// No description provided for @theServerDidNotRequestA.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not request a response.'**
+  String get theServerDidNotRequestA;
+
+  /// No description provided for @theServerFirstValidatesThatThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The server first validates that this copy and its receipt belong to this restore job. It leaves the files untouched if it cannot verify them. Confirmed cleanup permanently removes only this isolated copy; the source encrypted archive and active service data remain unchanged. You can prepare another isolated copy from the source archive later.'**
+  String get theServerFirstValidatesThatThis;
+
+  /// No description provided for @theServerReceivesPasswordDerivedVerifiers.
+  ///
+  /// In en, this message translates to:
+  /// **'The server receives password-derived verifiers and a newly encrypted account-key envelope. Your master password and account key stay on this device.'**
+  String get theServerReceivesPasswordDerivedVerifiers;
+
+  /// No description provided for @theServerRequiresANewerWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'The server requires a newer Web client protocol.'**
+  String get theServerRequiresANewerWeb;
+
+  /// No description provided for @theServerRequiresANewerClient.
+  ///
+  /// In en, this message translates to:
+  /// **'The server requires a newer client protocol. Confirm that the deployed Web bundle is the intended compatible release.'**
+  String get theServerRequiresANewerClient;
+
+  /// No description provided for @theServerRestorePeriodHasNot2.
+  ///
+  /// In en, this message translates to:
+  /// **'The server restore period has not ended.{deadlineText} Refresh the recycle bin and try again later.'**
+  String theServerRestorePeriodHasNot2(String deadlineText);
+
+  /// No description provided for @theServerWillDeleteTheEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'The server will delete the encrypted recovery package and all recovery keyboxes. You will need an approved device to set it up again.'**
+  String get theServerWillDeleteTheEncrypted;
+
+  /// No description provided for @theServerWillStartItsConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'The server will start its configured grace period. All active members immediately become read-only, while reads remain available until the server deadline. Create and store a portable encrypted archive separately before the deadline; this client restores only to the same server space and Vault. The server returns the exact purge time after confirmation.'**
+  String get theServerWillStartItsConfigured;
+
+  /// No description provided for @theServiceStaysOnlineWhileIt.
+  ///
+  /// In en, this message translates to:
+  /// **'The service stays online while it prepares a separate copy from the selected local archive. This records a restore job and audit event in the live database and uses the maintenance lock, but does not change active account, Vault, session, or generation data. It does not activate or replace live data. The worker checks the archive again before publishing the isolated stage.'**
+  String get theServiceStaysOnlineWhileIt;
+
+  /// No description provided for @theServiceStaysOnlineWhileIt2.
+  ///
+  /// In en, this message translates to:
+  /// **'The service stays online while it prepares a separate copy. This records a restore job and audit event in the live database and uses the maintenance lock, but does not change active account, Vault, session, or generation data. It does not activate or replace live data. The worker checks the chosen local or remote archive again before publishing the isolated stage.'**
+  String get theServiceStaysOnlineWhileIt2;
+
+  /// No description provided for @theShareExpiresAfter15Minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'The share expires after 15 minutes. Terminal output and host resize events are encrypted for each selected device.'**
+  String get theShareExpiresAfter15Minutes;
+
+  /// No description provided for @theSyncCursorExpiredOrThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The sync cursor expired or the server generation changed. Rebuild the cache from a verified snapshot; pending local operations are preserved and compared against remote heads.'**
+  String get theSyncCursorExpiredOrThe;
+
+  /// No description provided for @theTerminalChangedBeforeTheSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal changed before the suggestion could be inserted. Reopen suggestions and try again.'**
+  String get theTerminalChangedBeforeTheSuggestion;
+
+  /// No description provided for @theUpdateCheckCouldNotConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The update check could not confirm the current Web build.'**
+  String get theUpdateCheckCouldNotConfirm;
+
+  /// No description provided for @theseInstanceGroupsControlSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'These instance groups control SSH Relay access. They are separate from encrypted Workspace groups and do not contain Vault data.'**
+  String get theseInstanceGroupsControlSshRelay;
+
+  /// No description provided for @thisGroupDefaultIsUnavailableChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'This Group default is unavailable. Choose no default or a valid credential.'**
+  String get thisGroupDefaultIsUnavailableChoose;
+
+  /// No description provided for @thisHostConflictHasNoSafely.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host conflict has no safely reviewable connection tuple. Use the verified branch actions instead.'**
+  String get thisHostConflictHasNoSafely;
+
+  /// No description provided for @thisSshKeyIsNotTrusted.
+  ///
+  /// In en, this message translates to:
+  /// **'This SSH key is not trusted for {endpoint}. Compare its fingerprint with a trusted channel before accepting it.'**
+  String thisSshKeyIsNotTrusted(String endpoint);
+
+  /// No description provided for @thisVaultIsReadOnlyFor.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault is read-only for the current account. Reads remain available where the server permits. A portable encrypted archive can be created from Settings.'**
+  String get thisVaultIsReadOnlyFor;
+
+  /// No description provided for @thisVaultIsReadOnlyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault is read-only. Member changes are unavailable.'**
+  String get thisVaultIsReadOnlyMember;
+
+  /// No description provided for @thisVaultIsReadOnlyYou.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault is read-only. You can view the preference but cannot change it.'**
+  String get thisVaultIsReadOnlyYou;
+
+  /// No description provided for @thisVaultIsReadOnlyYou2.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault is read-only. You can view the shared shortcuts but cannot change them.'**
+  String get thisVaultIsReadOnlyYou2;
+
+  /// No description provided for @thisVaultIsReadOnlyYou3.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault is read-only. You can view the shared terminal color theme but cannot change it.'**
+  String get thisVaultIsReadOnlyYou3;
+
+  /// No description provided for @thisVaultIsReadOnlyYou4.
+  ///
+  /// In en, this message translates to:
+  /// **'This Vault is read-only. You can view the shared terminal font size but cannot change it.'**
+  String get thisVaultIsReadOnlyYou4;
+
+  /// No description provided for @thisWebBuildIsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'This Web build is current.'**
+  String get thisWebBuildIsCurrent;
+
+  /// No description provided for @thisAccountHasNoVaultAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has no Vault available on this device. Create a new encrypted Vault, accept an invitation from an existing member, or ask an Owner to restore your access. Existing encrypted data stays separate from any new Vault.'**
+  String get thisAccountHasNoVaultAvailable;
+
+  /// No description provided for @thisAttachesTheCurrentSshPane.
+  ///
+  /// In en, this message translates to:
+  /// **'This attaches the current SSH pane to its saved tmux session. Other attached clients remain connected.'**
+  String get thisAttachesTheCurrentSshPane;
+
+  /// No description provided for @thisCardContainsTheAccountAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'This card contains the account and device public keys plus a self-proof signature. It contains no private key or Vault key. Send it to the Vault owner over a trusted channel.'**
+  String get thisCardContainsTheAccountAnd;
+
+  /// No description provided for @thisCodeIsShownOnceAnyone.
+  ///
+  /// In en, this message translates to:
+  /// **'This code is shown once. Anyone who has it can recover the Vault keys in this account. Store it in a password manager or another secure place. It is never saved by this client.'**
+  String get thisCodeIsShownOnceAnyone;
+
+  /// No description provided for @thisConflictNoLongerSupportsPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'This conflict no longer supports password field merge. Use the verified branch actions instead.'**
+  String get thisConflictNoLongerSupportsPassword;
+
+  /// No description provided for @thisCreatesATmuxSessionOn.
+  ///
+  /// In en, this message translates to:
+  /// **'This creates a tmux session on the current SSH host and saves its reference in this encrypted Workspace.'**
+  String get thisCreatesATmuxSessionOn;
+
+  /// No description provided for @thisDeviceLoopbackOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This device loopback only'**
+  String get thisDeviceLoopbackOnly;
+
+  /// No description provided for @thisExactFingerprintWasRevokedBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'This exact fingerprint was revoked before. Reapproval creates a new encrypted trust record for this Vault and syncs it to its devices. Verify it out of band before continuing.'**
+  String get thisExactFingerprintWasRevokedBefore;
+
+  /// No description provided for @thisFormNeverSubmitsCredentialText.
+  ///
+  /// In en, this message translates to:
+  /// **'This form never submits credential text directly to the server.'**
+  String get thisFormNeverSubmitsCredentialText;
+
+  /// No description provided for @thisGrantsRoleAccessToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'This grants {role} access to all encrypted records in this Vault. The current Vault key is sealed to this device, and the owner signs a new membership version. Verify the account and both fingerprints with the recipient before continuing.'**
+  String thisGrantsRoleAccessToAll(String role);
+
+  /// No description provided for @thisGroupChangedOnAnotherDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This group changed on another device. Sync and reopen it before retrying.'**
+  String get thisGroupChangedOnAnotherDevice;
+
+  /// No description provided for @thisGroupHasNoMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'This group has no members.'**
+  String get thisGroupHasNoMembers;
+
+  /// No description provided for @thisImmediatelyRevokesEverySessionAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'This immediately revokes every session and device. At the server purge deadline, personal Vaults and account data are deleted and your access to shared Vaults is removed. Other members’ shared Vault data is not deleted.'**
+  String get thisImmediatelyRevokesEverySessionAnd;
+
+  /// No description provided for @thisInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'This instance'**
+  String get thisInstance;
+
+  /// No description provided for @thisInvitationWasInvalidatedAfterA.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation was invalidated after a Vault membership change. Send a new invitation from Settings > Invite member.'**
+  String get thisInvitationWasInvalidatedAfterA;
+
+  /// No description provided for @thisInvitationsValidityCouldNotBe.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation\'s validity could not be confirmed. Send a new invitation from Settings > Invite member.'**
+  String get thisInvitationsValidityCouldNotBe;
+
+  /// No description provided for @thisIsABearerTokenShare.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a bearer token. Share it only with the intended recipient through a trusted channel. It is shown once and is bound to the target account and device.'**
+  String get thisIsABearerTokenShare;
+
+  /// No description provided for @thisIsOptInAndBash.
+  ///
+  /// In en, this message translates to:
+  /// **'This is opt-in and Bash-only. It does not edit shell startup files or write remote files. After you copy the command, paste it into the connected shell and press Enter. Completed commands are stored encrypted on this device (up to 500). The remote host can forge entries. Password prompts are not read, but secrets typed as command text may be captured.'**
+  String get thisIsOptInAndBash;
+
+  /// No description provided for @thisMobileAppBuildHasNo.
+  ///
+  /// In en, this message translates to:
+  /// **'This mobile app build has no Firebase project configured. Build with this app’s Firebase options to enable provider token registration. For FCM delivery, the Firebase project must match the server service-account project; iOS APNs delivery uses the server APNs configuration. WebSocket and polling sync remain available.'**
+  String get thisMobileAppBuildHasNo;
+
+  /// No description provided for @thisPasswordIsUsedOnlyTo.
+  ///
+  /// In en, this message translates to:
+  /// **'This password is used only to decrypt this archive.'**
+  String get thisPasswordIsUsedOnlyTo;
+
+  /// No description provided for @thisRecordsConsentForThisExact.
+  ///
+  /// In en, this message translates to:
+  /// **'This records consent for this exact tombstone ({recordDisplayName}) only. When opted in, bounded Maintenance may automatically purge it after its restore deadline and other required checks. Enabling consent does not purge it immediately.'**
+  String thisRecordsConsentForThisExact(String recordDisplayName);
+
+  /// No description provided for @thisRecordsDeletedVersionChangedThe.
+  ///
+  /// In en, this message translates to:
+  /// **'This record’s deleted version changed. The recycle bin is refreshing; review it before trying again.'**
+  String get thisRecordsDeletedVersionChangedThe;
+
+  /// No description provided for @thisRemovesTheEncryptedWorkspaceReference.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the encrypted Workspace reference. It does not stop or delete the remote tmux session.'**
+  String get thisRemovesTheEncryptedWorkspaceReference;
+
+  /// No description provided for @thisRequestBelongsToAnotherAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'This request belongs to another account.'**
+  String get thisRequestBelongsToAnotherAccount;
+
+  /// No description provided for @thisServerBackendDoesNotSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'This server backend does not support permanent record purge yet. No purge was performed.'**
+  String get thisServerBackendDoesNotSupport;
+
+  /// No description provided for @thisServerIsNotCurrentlyAccepting.
+  ///
+  /// In en, this message translates to:
+  /// **'This server is not currently accepting restore requests. The existing isolated stage and live data are unchanged.'**
+  String get thisServerIsNotCurrentlyAccepting;
+
+  /// No description provided for @thisSettingIsEncryptedInCurrentvaultname.
+  ///
+  /// In en, this message translates to:
+  /// **'This setting is encrypted in {currentVaultName} and syncs to devices with access to this Vault.'**
+  String thisSettingIsEncryptedInCurrentvaultname(String currentVaultName);
+
+  /// No description provided for @thisSettingIsStoredAsAn.
+  ///
+  /// In en, this message translates to:
+  /// **'This setting is stored as an encrypted record in {currentVaultName} and syncs with that Vault.'**
+  String thisSettingIsStoredAsAn(String currentVaultName);
+
+  /// No description provided for @thisSignedOutboxBranchCameFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'This signed outbox branch came from another device. Its operation ID and envelope remain preserved locally, but this device will not replay it with a different signing identity. Keeping the local branch will create a new revision signed by this device.'**
+  String get thisSignedOutboxBranchCameFrom;
+
+  /// No description provided for @thisSnapshotExceedsThisClientsLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'This snapshot exceeds this client’s limit of 64 MiB of serialized manifest data or 100,000 heads. The existing cache, checkpoint, and pending outbox are preserved. Repeating recovery will not help; contact the project maintainer for migration guidance.'**
+  String get thisSnapshotExceedsThisClientsLimit;
+
+  /// No description provided for @title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get title;
+
+  /// No description provided for @toEnableSshRelayTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'To enable SSH relay, the server operator must set ATERMIUS_RELAY_ENABLED=true and configure deployment limits. The Web UI cannot change this gate.'**
+  String get toEnableSshRelayTheServer;
+
+  /// No description provided for @topLevelGroup2.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-level group'**
+  String get topLevelGroup2;
+
+  /// No description provided for @transferVaultOwnership.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer Vault ownership?'**
+  String get transferVaultOwnership;
+
+  /// No description provided for @transferAndRotateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer and rotate key'**
+  String get transferAndRotateKey;
+
+  /// No description provided for @transferOwnership.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer ownership'**
+  String get transferOwnership;
+
+  /// No description provided for @trustAfterVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust after verification'**
+  String get trustAfterVerification;
+
+  /// No description provided for @trustedDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted devices'**
+  String get trustedDevices;
+
+  /// No description provided for @typeDeleteToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm'**
+  String get typeDeleteToConfirm;
+
+  /// No description provided for @typeEnableAutomaticPurge.
+  ///
+  /// In en, this message translates to:
+  /// **'Type ENABLE AUTOMATIC PURGE'**
+  String get typeEnableAutomaticPurge;
+
+  /// No description provided for @typeACommandFragmentToSee.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a command fragment to see suggestions.'**
+  String get typeACommandFragmentToSee;
+
+  /// No description provided for @typeVaultnameToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Type “{vaultName}” to confirm'**
+  String typeVaultnameToConfirm(String vaultName);
+
+  /// No description provided for @unableToCheckBackupBucketAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to check backup bucket access: {error}'**
+  String unableToCheckBackupBucketAccess(String error);
+
+  /// No description provided for @unableToDiscardIsolatedRestoreCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to discard isolated restore copy: {error}'**
+  String unableToDiscardIsolatedRestoreCopy(String error);
+
+  /// No description provided for @unableToLoadAccountRelayPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load account Relay policy'**
+  String get unableToLoadAccountRelayPolicy;
+
+  /// No description provided for @unableToLoadMemberEffectiveRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load member effective Relay access'**
+  String get unableToLoadMemberEffectiveRelay;
+
+  /// No description provided for @unableToLoadOffSiteBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load off-site backup status: {error}'**
+  String unableToLoadOffSiteBackup(String error);
+
+  /// No description provided for @unableToLoadRestoreSourcesError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load restore sources: {error}'**
+  String unableToLoadRestoreSourcesError(String error);
+
+  /// No description provided for @unableToLoadScheduledBackupsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load scheduled backups: {error}'**
+  String unableToLoadScheduledBackupsError(String error);
+
+  /// No description provided for @unableToLoadServerManagedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load server-managed group details'**
+  String get unableToLoadServerManagedGroup;
+
+  /// No description provided for @unableToLoadServerManagedGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load server-managed groups'**
+  String get unableToLoadServerManagedGroups;
+
+  /// No description provided for @unableToPrepareIsolatedRestoreCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to prepare isolated restore copy: {error}'**
+  String unableToPrepareIsolatedRestoreCopy(String error);
+
+  /// No description provided for @unableToRefreshRestoreStageStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to refresh restore stage status: {error}'**
+  String unableToRefreshRestoreStageStatus(String error);
+
+  /// No description provided for @unableToReviewPasswordFieldsFriendlyerror.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to review password fields: {friendlyError}'**
+  String unableToReviewPasswordFieldsFriendlyerror(String friendlyError);
+
+  /// No description provided for @unableToSaveScheduledBackupsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save scheduled backups: {error}'**
+  String unableToSaveScheduledBackupsError(String error);
+
+  /// No description provided for @unavailableCredential2.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable Credential'**
+  String get unavailableCredential2;
+
+  /// No description provided for @unavailableCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable credential'**
+  String get unavailableCredential;
+
+  /// No description provided for @unavailableGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable group'**
+  String get unavailableGroup;
+
+  /// No description provided for @unavailableInWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable in Web'**
+  String get unavailableInWeb;
+
+  /// No description provided for @unavailableOnThisNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable on this node'**
+  String get unavailableOnThisNode;
+
+  /// No description provided for @unavailableParentChooseAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable parent; choose again'**
+  String get unavailableParentChooseAgain;
+
+  /// No description provided for @uncommittedOperationsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncommitted operations: {count}'**
+  String uncommittedOperationsCount(int count);
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @unknownPushProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown push provider'**
+  String get unknownPushProvider;
+
+  /// No description provided for @unlockArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock archive'**
+  String get unlockArchive;
+
+  /// No description provided for @unnamedDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed device'**
+  String get unnamedDevice;
+
+  /// No description provided for @unsupportedTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported theme'**
+  String get unsupportedTheme;
+
+  /// No description provided for @unverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Unverified'**
+  String get unverified;
+
+  /// No description provided for @upOneDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Up one directory'**
+  String get upOneDirectory;
+
+  /// No description provided for @updateAndReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Update and reload'**
+  String get updateAndReload;
+
+  /// No description provided for @updateReadinessChangedFinishTheVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Update readiness changed. Finish the visible blocker before confirming.'**
+  String get updateReadinessChangedFinishTheVisible;
+
+  /// No description provided for @updatingThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating this device…'**
+  String get updatingThisDevice;
+
+  /// No description provided for @upload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get upload;
+
+  /// No description provided for @uploadAFileOrCreateA.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a file or create a folder to get started.'**
+  String get uploadAFileOrCreateA;
+
+  /// No description provided for @useAtLeast12CharactersIf.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 12 characters. If the response is lost, the client keeps only the exact retry request in memory, not either password.'**
+  String get useAtLeast12CharactersIf;
+
+  /// No description provided for @useConflictBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Use conflict branch'**
+  String get useConflictBranch;
+
+  /// No description provided for @useCurrentVaultVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Use current Vault version'**
+  String get useCurrentVaultVersion;
+
+  /// No description provided for @useSyncedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Use synced version'**
+  String get useSyncedVersion;
+
+  /// No description provided for @useTheAccountAndApprovedDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the account and approved device named by the invitation. The token is sent in the authenticated request body and is never added to a URL.'**
+  String get useTheAccountAndApprovedDevice;
+
+  /// No description provided for @useTheConflictBranchTuple.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the conflict branch tuple'**
+  String get useTheConflictBranchTuple;
+
+  /// No description provided for @useTheCurrentVaultTuple.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the current Vault tuple'**
+  String get useTheCurrentVaultTuple;
+
+  /// No description provided for @useTheSyncedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the synced version?'**
+  String get useTheSyncedVersion;
+
+  /// No description provided for @userId.
+  ///
+  /// In en, this message translates to:
+  /// **'User ID'**
+  String get userId;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @validatingAllSelectedHostsBeforeSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Validating all selected Hosts before sending the first command.'**
+  String get validatingAllSelectedHostsBeforeSending;
+
+  /// No description provided for @vaultId.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault ID'**
+  String get vaultId;
+
+  /// No description provided for @vaultArchiveImportedAndLocalState.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault archive imported and local state restored.'**
+  String get vaultArchiveImportedAndLocalState;
+
+  /// No description provided for @vaultChangedWhileSavingCheckThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while saving. Check the preference in {startingVaultName}; this active Vault was not marked as saved.'**
+  String vaultChangedWhileSavingCheckThe(String startingVaultName);
+
+  /// No description provided for @vaultChangedWhileSavingCheckThe2.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while saving. Check the shortcut preference in {startingVaultName}; this active Vault was not marked as saved.'**
+  String vaultChangedWhileSavingCheckThe2(String startingVaultName);
+
+  /// No description provided for @vaultChangedWhileSavingTheEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while saving. The encrypted change remains queued in {startingVaultName}; it was not saved to the active Vault.'**
+  String vaultChangedWhileSavingTheEncrypted(String startingVaultName);
+
+  /// No description provided for @vaultChangedWhileSavingTheFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while saving. The font-size change remains queued in {startingVaultName}; it was not saved to the active Vault.'**
+  String vaultChangedWhileSavingTheFont(String startingVaultName);
+
+  /// No description provided for @vaultChangedWhileSavingTheShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while saving. The shortcut change remains queued in {startingVaultName}; it was not saved to the active Vault.'**
+  String vaultChangedWhileSavingTheShortcut(String startingVaultName);
+
+  /// No description provided for @vaultChangedWhileSavingTheTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault changed while saving. The theme change remains queued in {startingVaultName}; it was not saved to the active Vault.'**
+  String vaultChangedWhileSavingTheTheme(String startingVaultName);
+
+  /// No description provided for @vaultDeletionIsScheduledThisVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault deletion is scheduled. This Vault is read-only; server purge after {vaultLifecycleDate}. Pending outbox stays on this device and will resume only if an Owner cancels.'**
+  String vaultDeletionIsScheduledThisVault(String vaultLifecycleDate);
+
+  /// No description provided for @vaultDeletionPendingReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault deletion pending · read-only'**
+  String get vaultDeletionPendingReadOnly;
+
+  /// No description provided for @vaultDeviceNameStatuslabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault device {name}, {statusLabel}'**
+  String vaultDeviceNameStatuslabel(String name, String statusLabel);
+
+  /// No description provided for @vaultIsInItsDeletionGrace.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault is in its deletion grace period. Pull and reads remain available, but conflict uploads and outbox pushes are paused. Use the portable encrypted archive in Settings to make a local backup; the server purges live Vault data at the displayed deadline. {pendingCount, plural, =1{1 pending operation remains} other{{pendingCount} pending operations remain}} encrypted on this device and resume only if the Owner cancels deletion before the deadline.'**
+  String vaultIsInItsDeletionGrace(int pendingCount);
+
+  /// No description provided for @vaultKeyState.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault key state'**
+  String get vaultKeyState;
+
+  /// No description provided for @vaultMetadataAndStorageLimitsEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault metadata and storage limits. Encrypted names and contents are never shown.'**
+  String get vaultMetadataAndStorageLimitsEncrypted;
+
+  /// No description provided for @vaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault name'**
+  String get vaultName;
+
+  /// No description provided for @vaultNameHostsCredentialsAndSnippets.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault name, hosts, credentials and snippets are encrypted before sync.'**
+  String get vaultNameHostsCredentialsAndSnippets;
+
+  /// No description provided for @vaultPreferenceDataNeedsAttentionBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault preference data needs attention before these shortcuts can be changed.'**
+  String get vaultPreferenceDataNeedsAttentionBefore;
+
+  /// No description provided for @vaultPreferenceDataNeedsAttentionBefore2.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault preference data needs attention before this setting can be changed.'**
+  String get vaultPreferenceDataNeedsAttentionBefore2;
+
+  /// No description provided for @vaultRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault role'**
+  String get vaultRole;
+
+  /// No description provided for @vaultStatesRefreshedFromTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault states refreshed from the server.'**
+  String get vaultStatesRefreshedFromTheServer;
+
+  /// No description provided for @vaultSyncIsUnreachableThisConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault sync is unreachable. This confirmation queues the first-seen fingerprint as an encrypted record on this device; the current SSH connection will stop until Vault sync confirms it. Approvals and revocations from other devices cannot be checked while offline.'**
+  String get vaultSyncIsUnreachableThisConfirmation;
+
+  /// No description provided for @vaultVaultid.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {vaultId}'**
+  String vaultVaultid(String vaultId);
+
+  /// No description provided for @vaultConflictResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault conflict resolved'**
+  String get vaultConflictResolved;
+
+  /// No description provided for @vaultDeletionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault deletion cancelled'**
+  String get vaultDeletionCancelled;
+
+  /// No description provided for @vaultDeletionScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault deletion scheduled'**
+  String get vaultDeletionScheduled;
+
+  /// No description provided for @vaultEncryptedDataSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault encrypted data synced'**
+  String get vaultEncryptedDataSynced;
+
+  /// No description provided for @vaultKeyGeneration.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault key generation'**
+  String get vaultKeyGeneration;
+
+  /// No description provided for @vaultKeyRotated.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault key rotated'**
+  String get vaultKeyRotated;
+
+  /// No description provided for @vaultCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault created'**
+  String get vaultCreated;
+
+  /// No description provided for @vaultPurged.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault purged'**
+  String get vaultPurged;
+
+  /// No description provided for @vaultOwnershipTransferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault ownership transferred'**
+  String get vaultOwnershipTransferred;
+
+  /// No description provided for @vaultScopedAuditIsAvailableOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault-scoped audit is available only to the Owner and Editors of the current Vault; your current permissions don\'t return Vault events.'**
+  String get vaultScopedAuditIsAvailableOnly;
+
+  /// No description provided for @vaultSyncedPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault-synced preferences'**
+  String get vaultSyncedPreferences;
+
+  /// No description provided for @vaultVaultid2.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault: {vaultId}'**
+  String vaultVaultid2(String vaultId);
+
+  /// No description provided for @vaultVaultname.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault: {vaultName}'**
+  String vaultVaultname(String vaultName);
+
+  /// No description provided for @vaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaults'**
+  String get vaults;
+
+  /// No description provided for @verifiedCapabilitiesReportRevisionRevisionRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified capabilities · report revision {revision}\nRecord schema ≤ {maxRecordSchema} · attachment formats {attachmentVersions} · attachment limit {formatAdminBytes}'**
+  String verifiedCapabilitiesReportRevisionRevisionRecord(
+    int revision,
+    int maxRecordSchema,
+    String attachmentVersions,
+    String formatAdminBytes,
+  );
+
+  /// No description provided for @verifiedRevisionsRecordcount.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified revisions: {recordCount}'**
+  String verifiedRevisionsRecordcount(int recordCount);
+
+  /// No description provided for @verifySshHostKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify SSH host key'**
+  String get verifySshHostKey;
+
+  /// No description provided for @verifyAndDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify and discard'**
+  String get verifyAndDiscard;
+
+  /// No description provided for @verifyAndReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify and review'**
+  String get verifyAndReview;
+
+  /// No description provided for @verifyArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify archive'**
+  String get verifyArchive;
+
+  /// No description provided for @viaJumpHostJumphostname.
+  ///
+  /// In en, this message translates to:
+  /// **'Via Jump Host: {jumpHostName}'**
+  String viaJumpHostJumphostname(Object jumpHostName);
+
+  /// No description provided for @viewVaultMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'View Vault members'**
+  String get viewVaultMembers;
+
+  /// No description provided for @viewCommandHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'View command history'**
+  String get viewCommandHistory;
+
+  /// No description provided for @viewSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'View sessions'**
+  String get viewSessions;
+
+  /// No description provided for @viewerReadOnlyVaultAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewer · read-only Vault access'**
+  String get viewerReadOnlyVaultAccess;
+
+  /// No description provided for @workspace2.
+  ///
+  /// In en, this message translates to:
+  /// **'WORKSPACE'**
+  String get workspace2;
+
+  /// No description provided for @waitForVaultSyncOrRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for Vault sync or recovery to finish before changing members.'**
+  String get waitForVaultSyncOrRecovery;
+
+  /// No description provided for @waitForVaultSynchronizationOrRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for Vault synchronization or recovery to finish.'**
+  String get waitForVaultSynchronizationOrRecovery;
+
+  /// No description provided for @waitingForRemoteCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for remote copy'**
+  String get waitingForRemoteCopy;
+
+  /// No description provided for @waitingToSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to sync'**
+  String get waitingToSync;
+
+  /// No description provided for @webApplicationUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Web application updates'**
+  String get webApplicationUpdates;
+
+  /// No description provided for @wholeHoursFrom1To720.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole hours from 1 to 720'**
+  String get wholeHoursFrom1To720;
+
+  /// No description provided for @withdrawConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw consent'**
+  String get withdrawConsent;
+
+  /// No description provided for @workspace3.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get workspace3;
+
+  /// No description provided for @workspaceActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace actions'**
+  String get workspaceActions;
+
+  /// No description provided for @workspaceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace name'**
+  String get workspaceName;
+
+  /// No description provided for @workspaceSavedEncryptedToThisVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace saved encrypted to this Vault.'**
+  String get workspaceSavedEncryptedToThisVault;
+
+  /// No description provided for @youHaveReadOnlyAccessTo.
+  ///
+  /// In en, this message translates to:
+  /// **'You have read-only access to this Vault.'**
+  String get youHaveReadOnlyAccessTo;
+
+  /// No description provided for @activePane2.
+  ///
+  /// In en, this message translates to:
+  /// **'active pane'**
+  String get activePane2;
+
+  /// No description provided for @eGGrep.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. grep'**
+  String get eGGrep;
+
+  /// No description provided for @redactedDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'redacted draft'**
+  String get redactedDraft;
+
+  /// No description provided for @actionFriendlyerror.
+  ///
+  /// In en, this message translates to:
+  /// **'{action}: {friendlyError}'**
+  String actionFriendlyerror(String action, String friendlyError);
+
+  /// No description provided for @countGroupParentRelationshipSAre.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Group parent relationship is} other{{count} Group parent relationships are}} missing or cyclic. Edit an affected Group and choose a valid parent or Top-level group.'**
+  String countGroupParentRelationshipSAre(int count);
+
+  /// No description provided for @countHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 host} other{{count} hosts}}'**
+  String countHosts(int count);
+
+  /// No description provided for @countOfCount2VaultKeyContexts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {count2} Vault key contexts have recovery boxes.'**
+  String countOfCount2VaultKeyContexts(int count, int count2);
+
+  /// No description provided for @countSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 suggestion} other{{count} suggestions}}'**
+  String countSuggestions(int count);
+
+  /// No description provided for @countTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 tab} other{{count} tabs}}'**
+  String countTabs(int count);
+
+  /// No description provided for @countTargetSReportedAKnown.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 target reported a known result} other{{count} targets reported a known result}}; {count2} remote completion unknown; {count3} stopped before dispatch; {count4} not started.'**
+  String countTargetSReportedAKnown(
+    int count,
+    int count2,
+    int count3,
+    int count4,
+  );
+
+  /// No description provided for @countPendingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending review'**
+  String countPendingReview(int count);
+
+  /// No description provided for @displaynameAndItsEncryptedPayloadsWill.
+  ///
+  /// In en, this message translates to:
+  /// **'{displayName} and its encrypted payloads will be removed from active server state. This cannot be undone from the app.'**
+  String displaynameAndItsEncryptedPayloadsWill(String displayName);
+
+  /// No description provided for @displaynameWillBeRestoredFromIts.
+  ///
+  /// In en, this message translates to:
+  /// **'{displayName} will be restored from its last verified live revision. This only succeeds while the matching tombstone is still the current server head.'**
+  String displaynameWillBeRestoredFromIts(String displayName);
+
+  /// No description provided for @filenameWillBeRemovedFromThe.
+  ///
+  /// In en, this message translates to:
+  /// **'{filename} will be removed from the remote host.'**
+  String filenameWillBeRemovedFromThe(String filename);
+
+  /// No description provided for @itemSigningKeyShortkey.
+  ///
+  /// In en, this message translates to:
+  /// **'{item}\nSigning key · {shortKey}'**
+  String itemSigningKeyShortkey(Object item, String shortKey);
+
+  /// No description provided for @labelforIdSubstringDeletedFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'{labelFor} · ID {substring} · Deleted {format}'**
+  String labelforIdSubstringDeletedFormat(
+    String labelFor,
+    String substring,
+    String format,
+  );
+
+  /// No description provided for @membercountMembersValuevalueRevisionRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'{memberCount, plural, =1{1 member} other{{memberCount} members}} · {valueValue} · revision {revision}'**
+  String membercountMembersValuevalueRevisionRevision(
+    int memberCount,
+    String valueValue,
+    int revision,
+  );
+
+  /// No description provided for @missingcountMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{missingCount} missing'**
+  String missingcountMissing(int missingCount);
+
+  /// No description provided for @nameWillLoseAccountAccessAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will lose account access, and its active sessions will be revoked.'**
+  String nameWillLoseAccountAccessAnd(String name);
+
+  /// No description provided for @nameValuevaluePasswordHiddenFromPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {valueValue} · password hidden from preview'**
+  String nameValuevaluePasswordHiddenFromPreview(
+    String name,
+    String valueValue,
+  );
+
+  /// No description provided for @pendingcountEncryptedLocalChangeSAre.
+  ///
+  /// In en, this message translates to:
+  /// **'{pendingCount, plural, =1{1 encrypted local change is} other{{pendingCount} encrypted local changes are}} still in the outbox. They will not be pushed while the Vault is read-only; they remain on this browser and can resume syncing only if deletion is canceled before the deadline.'**
+  String pendingcountEncryptedLocalChangeSAre(int pendingCount);
+
+  /// No description provided for @roleKeyEpochActivekeyepochMembershipMembershipversion.
+  ///
+  /// In en, this message translates to:
+  /// **'{role} · key epoch {activeKeyEpoch} · membership {membershipVersion}'**
+  String roleKeyEpochActivekeyepochMembershipMembershipversion(
+    String role,
+    String activeKeyEpoch,
+    String membershipVersion,
+  );
+
+  /// No description provided for @tolocalExitExitstatus.
+  ///
+  /// In en, this message translates to:
+  /// **'{toLocal} · exit {exitStatus}'**
+  String tolocalExitExitstatus(DateTime toLocal, int exitStatus);
+
+  /// No description provided for @unavailablerecordcountEncryptedRecordSCouldNot.
+  ///
+  /// In en, this message translates to:
+  /// **'{unavailableRecordCount, plural, =1{1 encrypted record} other{{unavailableRecordCount} encrypted records}} could not be verified with the current Vault key/device directory or decoded as a supported record. Their ciphertext remains stored locally and is hidden from trusted data.'**
+  String unavailablerecordcountEncryptedRecordSCouldNot(
+    int unavailableRecordCount,
+  );
+
+  /// No description provided for @unresolvedconflictcountNeedsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{unresolvedConflictCount} needs review'**
+  String unresolvedconflictcountNeedsReview(int unresolvedConflictCount);
+
+  /// No description provided for @valuevalueMoreDeviceSNeedReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{valueValue, plural, =1{1 more device needs review.} other{{valueValue} more devices need review.}}'**
+  String valuevalueMoreDeviceSNeedReview(int valueValue);
+
+  /// No description provided for @valuevalueUsernameAndRotateTheVault.
+  ///
+  /// In en, this message translates to:
+  /// **'{valueValue} {username} and rotate the Vault key for every remaining active member device? The removed account receives no new key. Existing old copies cannot be erased remotely. Other pending invitation tokens become invalid and must be reissued.'**
+  String valuevalueUsernameAndRotateTheVault(
+    String valueValue,
+    String username,
+  );
+
+  /// No description provided for @configuredMeansThisServerProcessLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'“Configured” means this server process loaded the provider adapter; it does not confirm connectivity or worker liveness. Push is a best-effort wake-up hint, not proof of delivery or sync; authenticated WebSocket or polling remains the source of truth.'**
+  String get configuredMeansThisServerProcessLoaded;
+
+  /// No description provided for @previousPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get previousPage;
+
+  /// No description provided for @lastArchiveVerificationFailedAtArchivefailurephase.
+  ///
+  /// In en, this message translates to:
+  /// **'Last archive verification failed at: {archiveFailurePhase}'**
+  String lastArchiveVerificationFailedAtArchivefailurephase(
+    Object archiveFailurePhase,
+  );
+
+  /// No description provided for @nextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get nextPage;
+
+  /// No description provided for @doesntExist.
+  ///
+  /// In en, this message translates to:
+  /// **'Doesn\'t exist'**
+  String get doesntExist;
+
+  /// No description provided for @masterPasswordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password changed'**
+  String get masterPasswordChanged;
+
+  /// No description provided for @couldntChangeTheMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change the master password'**
+  String get couldntChangeTheMasterPassword;
+
+  /// No description provided for @hosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosts'**
+  String get hosts;
+
+  /// No description provided for @onlyTheHostIdTabOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the Host ID, tab order, split direction and split ratio are synced. Credentials, running SSH sessions, terminal output, SFTP paths and file state are never written to workspace records.'**
+  String get onlyTheHostIdTabOrder;
+
+  /// No description provided for @retryFromTheFirstPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry from the first page'**
+  String get retryFromTheFirstPage;
+
+  /// No description provided for @saveAndConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and connect'**
+  String get saveAndConnect;
+
+  /// No description provided for @saveCurrentWindowLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Save current window layout'**
+  String get saveCurrentWindowLayout;
+
+  /// No description provided for @saveTheCurrentTerminalTabsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the current terminal tabs to preview the same layout on other authorized devices.'**
+  String get saveTheCurrentTerminalTabsTo;
+
+  /// No description provided for @keepTheCurrentCommittedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the current committed version?'**
+  String get keepTheCurrentCommittedVersion;
+
+  /// No description provided for @keepCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep current version'**
+  String get keepCurrentVersion;
+
+  /// No description provided for @couldntKeepTheCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t keep the current version'**
+  String get couldntKeepTheCurrentVersion;
+
+  /// No description provided for @vaultsAndMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaults and members'**
+  String get vaultsAndMembers;
+
+  /// No description provided for @change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get change;
+
+  /// No description provided for @openOneOrMoreTabsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Open one or more tabs on the Terminal page first, then save them as a named layout.'**
+  String get openOneOrMoreTabsOn;
+
+  /// No description provided for @conflictResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict resolved.'**
+  String get conflictResolved;
+
+  /// No description provided for @setTheTerminalFontSizeColors2.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the terminal font size, colors and shortcuts separately; they sync with the current Vault.'**
+  String get setTheTerminalFontSizeColors2;
+
+  /// No description provided for @branchsOriginalBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch\'s original base'**
+  String get branchsOriginalBase;
+
+  /// No description provided for @branchNotVerifiedYetKeptRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch not verified yet; kept read-only'**
+  String get branchNotVerifiedYetKeptRead;
+
+  /// No description provided for @branchSavedOnThisDeviceWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch saved on this device, waiting for sync confirmation.'**
+  String get branchSavedOnThisDeviceWaiting;
+
+  /// No description provided for @branchSavedEncryptedOnThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch saved encrypted on this device, waiting for sync confirmation.'**
+  String get branchSavedEncryptedOnThisDevice;
+
+  /// No description provided for @branchSequenceSeqValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch sequence {seq} · {valueValue}'**
+  String branchSequenceSeqValuevalue(String seq, String valueValue);
+
+  /// No description provided for @branchActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch actions'**
+  String get branchActions;
+
+  /// No description provided for @branchVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch version'**
+  String get branchVersion;
+
+  /// No description provided for @groupLayoutReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Group layout reset.'**
+  String get groupLayoutReset;
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @encryptedSessionUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted session unlocked'**
+  String get encryptedSessionUnlocked;
+
+  /// No description provided for @namedTerminalLayoutsSyncEncryptedIncluding.
+  ///
+  /// In en, this message translates to:
+  /// **'Named terminal layouts sync encrypted, including tab order or split direction and ratio. Previews never connect; each pane needs its own Connect confirmation.'**
+  String get namedTerminalLayoutsSyncEncryptedIncluding;
+
+  /// No description provided for @encryptedBackupJobSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted backup job submitted'**
+  String get encryptedBackupJobSubmitted;
+
+  /// No description provided for @readOnlyViewOfCommittedAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only view of committed account and current Vault admin actions; SSH commands, host names and credentials aren\'t recorded.'**
+  String get readOnlyViewOfCommittedAccount;
+
+  /// No description provided for @syncAndConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync and conflicts'**
+  String get syncAndConflicts;
+
+  /// No description provided for @snippets.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippets'**
+  String get snippets;
+
+  /// No description provided for @completedCommandsAreRecordedAfterEnabling2.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed commands are recorded after enabling Bash integration in Recording settings; input at password prompts isn\'t captured.'**
+  String get completedCommandsAreRecordedAfterEnabling2;
+
+  /// No description provided for @working.
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get working;
+
+  /// No description provided for @backupRestoreAndMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup, restore and maintenance'**
+  String get backupRestoreAndMaintenance;
+
+  /// No description provided for @backupCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup completed'**
+  String get backupCompleted;
+
+  /// No description provided for @multiFactorRecoveryCodesRotated.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-factor recovery codes rotated'**
+  String get multiFactorRecoveryCodesRotated;
+
+  /// No description provided for @instanceOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance overview'**
+  String get instanceOverview;
+
+  /// No description provided for @instanceAdminInvitationRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance admin invitation revoked'**
+  String get instanceAdminInvitationRevoked;
+
+  /// No description provided for @instanceAdminInvitationIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance admin invitation issued'**
+  String get instanceAdminInvitationIssued;
+
+  /// No description provided for @instanceMaintenanceJobSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance maintenance job submitted'**
+  String get instanceMaintenanceJobSubmitted;
+
+  /// No description provided for @auditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log'**
+  String get auditLog;
+
+  /// No description provided for @auditRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit records'**
+  String get auditRecords;
+
+  /// No description provided for @importAndExportEncryptedArchivesOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Import and export encrypted archives, or migrate local profiles.'**
+  String get importAndExportEncryptedArchivesOr;
+
+  /// No description provided for @notVerifiedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified yet'**
+  String get notVerifiedYet;
+
+  /// No description provided for @properties.
+  ///
+  /// In en, this message translates to:
+  /// **'Properties'**
+  String get properties;
+
+  /// No description provided for @workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get workspace;
+
+  /// No description provided for @workspaceLayouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace layouts'**
+  String get workspaceLayouts;
+
+  /// No description provided for @theCurrentWindowLayoutForThis.
+  ///
+  /// In en, this message translates to:
+  /// **'The current window layout for this group was saved.'**
+  String get theCurrentWindowLayoutForThis;
+
+  /// No description provided for @multiFactorAuthenticationTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-factor authentication turned off'**
+  String get multiFactorAuthenticationTurnedOff;
+
+  /// No description provided for @memberInvitationCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Member invitation created'**
+  String get memberInvitationCreated;
+
+  /// No description provided for @deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get deleted;
+
+  /// No description provided for @deletedValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {valueValue}'**
+  String deletedValuevalue(String valueValue);
+
+  /// No description provided for @bashRecordingIsOnUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Bash recording is on (up to 500 entries). Click to insert, press Enter to run.'**
+  String get bashRecordingIsOnUpTo;
+
+  /// No description provided for @multiFactorAuthenticationEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-factor authentication enabled'**
+  String get multiFactorAuthenticationEnabled;
+
+  /// No description provided for @processedBranchesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed branches · {count}'**
+  String processedBranchesCount(int count);
+
+  /// No description provided for @multiFactorSignInStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-factor sign-in started'**
+  String get multiFactorSignInStarted;
+
+  /// No description provided for @committed.
+  ///
+  /// In en, this message translates to:
+  /// **'Committed'**
+  String get committed;
+
+  /// No description provided for @committedAdminActionsAppearHereNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Committed admin actions appear here. New events aren\'t inserted into the page cursor you\'re browsing.'**
+  String get committedAdminActionsAppearHereNew;
+
+  /// No description provided for @sshRelayConnectionTicketIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH Relay connection ticket issued'**
+  String get sshRelayConnectionTicketIssued;
+
+  /// No description provided for @resolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get resolved;
+
+  /// No description provided for @signedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out'**
+  String get signedOut;
+
+  /// No description provided for @multiFactorAuthenticationWasResetAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-factor authentication was reset after archive restore'**
+  String get multiFactorAuthenticationWasResetAfter;
+
+  /// No description provided for @currentVault3.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Vault'**
+  String get currentVault3;
+
+  /// No description provided for @hostsCantBeAddedInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosts can\'t be added in the current workspace.'**
+  String get hostsCantBeAddedInThe;
+
+  /// No description provided for @showingEventsForCurrentvaultnameSwitchingThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing events for {currentVaultName}. Switching the Vault at the top reloads from the first page.'**
+  String showingEventsForCurrentvaultnameSwitchingThe(String currentVaultName);
+
+  /// No description provided for @currentServerVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Current server version'**
+  String get currentServerVersion;
+
+  /// No description provided for @theCurrentServerVersionIsCommitted.
+  ///
+  /// In en, this message translates to:
+  /// **'The current server version is committed. It\'s recorded as the choice for this conflict; the old branch isn\'t re-uploaded and no new record version is created.'**
+  String get theCurrentServerVersionIsCommitted;
+
+  /// No description provided for @theCurrentVersionChangedChooseAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'The current version changed; choose again'**
+  String get theCurrentVersionChangedChooseAgain;
+
+  /// No description provided for @theCurrentVersionIsCommittedWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'The current version is committed, waiting for the server to confirm the conflict resolution.'**
+  String get theCurrentVersionIsCommittedWaiting;
+
+  /// No description provided for @thisWindowHasNoSshLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'This window has no SSH layout to save.'**
+  String get thisWindowHasNoSshLayout;
+
+  /// No description provided for @noAuditRecordsInTheCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'No audit records in the current scope'**
+  String get noAuditRecordsInTheCurrent;
+
+  /// No description provided for @yourCurrentRoleCantViewThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current role can\'t view the Vault audit'**
+  String get yourCurrentRoleCantViewThe;
+
+  /// No description provided for @restore3.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore3;
+
+  /// No description provided for @recoveryKeyDeviceEnvelopesUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery key device envelopes updated'**
+  String get recoveryKeyDeviceEnvelopesUpdated;
+
+  /// No description provided for @succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Succeeded'**
+  String get succeeded;
+
+  /// No description provided for @memberPermissionsChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Member permissions changed'**
+  String get memberPermissionsChanged;
+
+  /// No description provided for @membershipVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership version'**
+  String get membershipVersion;
+
+  /// No description provided for @memberAccessRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Member access revoked'**
+  String get memberAccessRevoked;
+
+  /// No description provided for @memberInvitationAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Member invitation accepted'**
+  String get memberInvitationAccepted;
+
+  /// No description provided for @theSelectedBranchIsCommittedWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected branch is committed, waiting for the server to confirm the conflict resolution.'**
+  String get theSelectedBranchIsCommittedWaiting;
+
+  /// No description provided for @theSelectedVersionIsCommittedWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected version is committed, waiting for the server to confirm the conflict resolution.'**
+  String get theSelectedVersionIsCommittedWaiting;
+
+  /// No description provided for @dataAndMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'Data and migration'**
+  String get dataAndMigration;
+
+  /// No description provided for @files.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get files;
+
+  /// No description provided for @theHostSpecifiedByTheFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The host specified by the file window is unavailable.'**
+  String get theHostSpecifiedByTheFile;
+
+  /// No description provided for @fileManager.
+  ///
+  /// In en, this message translates to:
+  /// **'File manager'**
+  String get fileManager;
+
+  /// No description provided for @passwordsAndKeysForNewHosts2.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords and keys for new hosts are set in the host details.'**
+  String get passwordsAndKeysForNewHosts2;
+
+  /// No description provided for @newBranchesSyncAutomaticallyWithConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'New branches sync automatically with conflict notifications; you can also use Sync at the top to check the server inbox.'**
+  String get newBranchesSyncAutomaticallyWithConflict;
+
+  /// No description provided for @newLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get newLabel;
+
+  /// No description provided for @newTouppercaseHost.
+  ///
+  /// In en, this message translates to:
+  /// **'New {toUpperCase} host'**
+  String newTouppercaseHost(String toUpperCase);
+
+  /// No description provided for @newWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'New window'**
+  String get newWindow;
+
+  /// No description provided for @theNewWindowWasntReadyThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The new window wasn\'t ready; the original SSH session stays connected.'**
+  String get theNewWindowWasntReadyThe;
+
+  /// No description provided for @theNewWindowWasntReadyThe2.
+  ///
+  /// In en, this message translates to:
+  /// **'The new window wasn\'t ready; the remote desktop stays in the current window.'**
+  String get theNewWindowWasntReadyThe2;
+
+  /// No description provided for @couldntLoadTheVaultListError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the Vault list: {error}'**
+  String couldntLoadTheVaultListError(String error);
+
+  /// No description provided for @couldntLoadTheSessionListError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the session list: {error}'**
+  String couldntLoadTheSessionListError(String error);
+
+  /// No description provided for @couldntLoadBackupCommandStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load backup command status'**
+  String get couldntLoadBackupCommandStatus;
+
+  /// No description provided for @couldntLoadBackupCommandStatusError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load backup command status: {error}'**
+  String couldntLoadBackupCommandStatusError(String error);
+
+  /// No description provided for @couldntLoadInstanceOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load instance overview'**
+  String get couldntLoadInstanceOverview;
+
+  /// No description provided for @couldntLoadInstanceOverviewError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load instance overview: {error}'**
+  String couldntLoadInstanceOverviewError(String error);
+
+  /// No description provided for @couldntLoadInstanceAdminAuditRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load instance admin audit records'**
+  String get couldntLoadInstanceAdminAuditRecords;
+
+  /// No description provided for @couldntLoadInstanceAdminAuditRecords2.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load instance admin audit records: {error}'**
+  String couldntLoadInstanceAdminAuditRecords2(String error);
+
+  /// No description provided for @couldntLoadAuditRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load audit records'**
+  String get couldntLoadAuditRecords;
+
+  /// No description provided for @couldntLoadPushServiceStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load push service status'**
+  String get couldntLoadPushServiceStatus;
+
+  /// No description provided for @couldntLoadPushServiceStatusError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load push service status: {error}'**
+  String couldntLoadPushServiceStatusError(String error);
+
+  /// No description provided for @couldntLoadTheAdminVaultList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the admin Vault list'**
+  String get couldntLoadTheAdminVaultList;
+
+  /// No description provided for @couldntLoadTheAdminAccountList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the admin account list'**
+  String get couldntLoadTheAdminAccountList;
+
+  /// No description provided for @couldntLoadTheAccountSessionList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the account session list'**
+  String get couldntLoadTheAccountSessionList;
+
+  /// No description provided for @couldntLoadTheAccountListError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the account list: {error}'**
+  String couldntLoadTheAccountListError(String error);
+
+  /// No description provided for @couldntLoadTheAccountInvitationList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the account invitation list'**
+  String get couldntLoadTheAccountInvitationList;
+
+  /// No description provided for @couldntLoadTheInvitationListError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the invitation list: {error}'**
+  String couldntLoadTheInvitationListError(String error);
+
+  /// No description provided for @couldntOpenTheFileWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the file window.'**
+  String get couldntOpenTheFileWindow;
+
+  /// No description provided for @couldntSubmitTheEncryptedBackupJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t submit the encrypted backup job'**
+  String get couldntSubmitTheEncryptedBackupJob;
+
+  /// No description provided for @couldntSubmitTheEncryptedBackupJob2.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t submit the encrypted backup job: {error}'**
+  String couldntSubmitTheEncryptedBackupJob2(String error);
+
+  /// No description provided for @couldntUpdateTheVaultQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the Vault quota'**
+  String get couldntUpdateTheVaultQuota;
+
+  /// No description provided for @couldntUpdateTheVaultQuotaError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the Vault quota: {error}'**
+  String couldntUpdateTheVaultQuotaError(String error);
+
+  /// No description provided for @unreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreadable'**
+  String get unreadable;
+
+  /// No description provided for @couldntReadOrSubmitInstanceJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read or submit instance jobs'**
+  String get couldntReadOrSubmitInstanceJobs;
+
+  /// No description provided for @couldntReadOrSubmitInstanceJobs2.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read or submit instance jobs: {error}'**
+  String couldntReadOrSubmitInstanceJobs2(String error);
+
+  /// No description provided for @legacySharedCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Legacy shared credentials'**
+  String get legacySharedCredentials;
+
+  /// No description provided for @missingPlural11MonitorWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'{missing, plural, =1{1 monitor window couldn\'t open; choose again to retry.} other{{missing} monitor windows couldn\'t open; choose again to retry.}}'**
+  String missingPlural11MonitorWindow(int missing);
+
+  /// No description provided for @theServerProvidedASignedCleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'The server provided a signed cleanup receipt for this record. Pending local changes were isolated as a read-only draft; to avoid recreating the cleaned record, the draft can\'t be kept, merged or uploaded here.'**
+  String get theServerProvidedASignedCleanup;
+
+  /// No description provided for @theServerMarksTheCurrentCommitted.
+  ///
+  /// In en, this message translates to:
+  /// **'The server marks the current committed version as kept without creating a new main record version. Cross-device branches stay as processed history.'**
+  String get theServerMarksTheCurrentCommitted;
+
+  /// No description provided for @serverBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Server branch'**
+  String get serverBranch;
+
+  /// No description provided for @theServerPageContainsSeveralVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'The server page contains several visible scopes; keep paging to find events in the current scope.'**
+  String get theServerPageContainsSeveralVisible;
+
+  /// No description provided for @unknownAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown action'**
+  String get unknownAction;
+
+  /// No description provided for @unknownResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown result'**
+  String get unknownResult;
+
+  /// No description provided for @unknownDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown device'**
+  String get unknownDevice;
+
+  /// No description provided for @localStorageNeedsRecoveryReadingEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Local storage needs recovery. Reading, editing and syncing are paused; close all Atermius tabs and reopen to restore the last persisted data.'**
+  String get localStorageNeedsRecoveryReadingEditing;
+
+  /// No description provided for @notCommittedLocally.
+  ///
+  /// In en, this message translates to:
+  /// **'Not committed locally'**
+  String get notCommittedLocally;
+
+  /// No description provided for @noEventsInThisScopeOn.
+  ///
+  /// In en, this message translates to:
+  /// **'No events in this scope on this page'**
+  String get noEventsInThisScopeOn;
+
+  /// No description provided for @sourceDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Source device'**
+  String get sourceDevice;
+
+  /// No description provided for @viewInstanceAndPushServiceStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'View instance and push service status, and manage monitoring credentials.'**
+  String get viewInstanceAndPushServiceStatus;
+
+  /// No description provided for @viewTheCurrentAccountDevicesAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'View the current account, devices and server information.'**
+  String get viewTheCurrentAccountDevicesAnd;
+
+  /// No description provided for @reviewInstanceActionsAndAccessAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Review instance actions and access audit records.'**
+  String get reviewInstanceActionsAndAccessAudit;
+
+  /// No description provided for @reviewTrustedHostKeysAndTheir.
+  ///
+  /// In en, this message translates to:
+  /// **'Review trusted host keys and their changes.'**
+  String get reviewTrustedHostKeysAndTheir;
+
+  /// No description provided for @refreshCredentialReplayDetectedTheRelated.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh credential replay detected; the related sessions were revoked'**
+  String get refreshCredentialReplayDetectedTheRelated;
+
+  /// No description provided for @readingVaultList.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Vault list…'**
+  String get readingVaultList;
+
+  /// No description provided for @readingInstanceJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading instance jobs…'**
+  String get readingInstanceJobs;
+
+  /// No description provided for @readingInstanceOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading instance overview…'**
+  String get readingInstanceOverview;
+
+  /// No description provided for @readingInstanceAdminAuditRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading instance admin audit records…'**
+  String get readingInstanceAdminAuditRecords;
+
+  /// No description provided for @readingAuditRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading audit records…'**
+  String get readingAuditRecords;
+
+  /// No description provided for @readingOffSiteBackupStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading off-site backup status…'**
+  String get readingOffSiteBackupStatus;
+
+  /// No description provided for @readingPushServiceStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading push service status…'**
+  String get readingPushServiceStatus;
+
+  /// No description provided for @readingTheLatestBackupCommandStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the latest backup command status…'**
+  String get readingTheLatestBackupCommandStatus;
+
+  /// No description provided for @readingAdminAccountList.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading admin account list…'**
+  String get readingAdminAccountList;
+
+  /// No description provided for @thisGroupHasNoConnectableSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'This group has no connectable SSH hosts.'**
+  String get thisGroupHasNoConnectableSsh;
+
+  /// No description provided for @eachGroupLayoutCanConnectUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Each group layout can connect up to 32 hosts. Split the group and try again.'**
+  String get eachGroupLayoutCanConnectUp;
+
+  /// No description provided for @noPendingCrossDeviceBranches.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending cross-device branches'**
+  String get noPendingCrossDeviceBranches;
+
+  /// No description provided for @browseFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse files'**
+  String get browseFiles;
+
+  /// No description provided for @addGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add group'**
+  String get addGroup;
+
+  /// No description provided for @versionCommittedWaitingForTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Version committed, waiting for the server to confirm the resolution'**
+  String get versionCommittedWaitingForTheServer;
+
+  /// No description provided for @signInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in failed'**
+  String get signInFailed;
+
+  /// No description provided for @signedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get signedIn;
+
+  /// No description provided for @confirmKeptVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm kept version'**
+  String get confirmKeptVersion;
+
+  /// No description provided for @windowSetSavedEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Window set saved encrypted.'**
+  String get windowSetSavedEncrypted;
+
+  /// No description provided for @windowSetOpenedCountCount2Sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Window set opened {count}/{count2} sessions; {failures, plural, =1{1 couldn\'t connect} other{{failures} couldn\'t connect}}.'**
+  String windowSetOpenedCountCount2Sessions(
+    int count,
+    int count2,
+    int failures,
+  );
+
+  /// No description provided for @pageValuevalue2.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {valueValue}'**
+  String pageValuevalue2(int valueValue);
+
+  /// No description provided for @waitingForThisDeviceToSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for this device to sync the selected version'**
+  String get waitingForThisDeviceToSync;
+
+  /// No description provided for @manageTheMasterPasswordTwoFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage the master password, two-factor sign-in, recovery and account deletion.'**
+  String get manageTheMasterPasswordTwoFactor;
+
+  /// No description provided for @manageVaultsMembersAndInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Vaults, members and invitations.'**
+  String get manageVaultsMembersAndInvitations;
+
+  /// No description provided for @adminBackupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin backup failed'**
+  String get adminBackupFailed;
+
+  /// No description provided for @adminBackupInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin backup interrupted'**
+  String get adminBackupInterrupted;
+
+  /// No description provided for @adminBackupCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin backup completed'**
+  String get adminBackupCompleted;
+
+  /// No description provided for @adminBackupStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin backup started'**
+  String get adminBackupStarted;
+
+  /// No description provided for @anAdministratorDiscardedTheIsolatedRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator discarded the isolated restore copy'**
+  String get anAdministratorDiscardedTheIsolatedRestore;
+
+  /// No description provided for @anAdministratorDisabledTheAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator disabled the account'**
+  String get anAdministratorDisabledTheAccount;
+
+  /// No description provided for @anAdministratorCreatedAnSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator created an SSH Relay access group'**
+  String get anAdministratorCreatedAnSshRelay;
+
+  /// No description provided for @anAdministratorDeletedAnSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator deleted an SSH Relay access group'**
+  String get anAdministratorDeletedAnSshRelay;
+
+  /// No description provided for @anAdministratorEnabledTheAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator enabled the account'**
+  String get anAdministratorEnabledTheAccount;
+
+  /// No description provided for @anAdministratorRevokedThePrometheusScrape.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator revoked the Prometheus scrape credential'**
+  String get anAdministratorRevokedThePrometheusScrape;
+
+  /// No description provided for @anAdministratorRevokedAnAccountSession.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator revoked an account session'**
+  String get anAdministratorRevokedAnAccountSession;
+
+  /// No description provided for @anAdministratorRevokedAllOfThe.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator revoked all of the account\'s sessions'**
+  String get anAdministratorRevokedAllOfThe;
+
+  /// No description provided for @anAdministratorChangedSshRelayAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator changed SSH Relay access group membership'**
+  String get anAdministratorChangedSshRelayAccess;
+
+  /// No description provided for @anAdministratorChangedTheSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator changed the SSH Relay access group policy'**
+  String get anAdministratorChangedTheSshRelay;
+
+  /// No description provided for @anAdministratorChangedTheVaultQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator changed the Vault quota'**
+  String get anAdministratorChangedTheVaultQuota;
+
+  /// No description provided for @anAdministratorChangedTheScheduledBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator changed the scheduled backup'**
+  String get anAdministratorChangedTheScheduledBackup;
+
+  /// No description provided for @anAdministratorUpdatedTheSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator updated the SSH Relay policy'**
+  String get anAdministratorUpdatedTheSshRelay;
+
+  /// No description provided for @anAdministratorRequestedABackup.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator requested a backup'**
+  String get anAdministratorRequestedABackup;
+
+  /// No description provided for @anAdministratorRequestedARestoreJob.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator requested a restore job'**
+  String get anAdministratorRequestedARestoreJob;
+
+  /// No description provided for @anAdministratorRequestedAMaintenanceJob.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator requested a maintenance job'**
+  String get anAdministratorRequestedAMaintenanceJob;
+
+  /// No description provided for @anAdministratorRotatedThePrometheusScrape.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator rotated the Prometheus scrape credential'**
+  String get anAdministratorRotatedThePrometheusScrape;
+
+  /// No description provided for @anAdministratorRenamedAnSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator renamed an SSH Relay access group'**
+  String get anAdministratorRenamedAnSshRelay;
+
+  /// No description provided for @anAdministratorResetTheSshRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator reset the SSH Relay access group policy'**
+  String get anAdministratorResetTheSshRelay;
+
+  /// No description provided for @adminRestoreJobFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin restore job failed'**
+  String get adminRestoreJobFailed;
+
+  /// No description provided for @adminRestoreJobInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin restore job interrupted'**
+  String get adminRestoreJobInterrupted;
+
+  /// No description provided for @adminRestoreJobCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin restore job completed'**
+  String get adminRestoreJobCompleted;
+
+  /// No description provided for @adminRestoreJobStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin restore job started'**
+  String get adminRestoreJobStarted;
+
+  /// No description provided for @adminMaintenanceJobFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin maintenance job failed'**
+  String get adminMaintenanceJobFailed;
+
+  /// No description provided for @adminMaintenanceJobInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin maintenance job interrupted'**
+  String get adminMaintenanceJobInterrupted;
+
+  /// No description provided for @adminMaintenanceJobCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin maintenance job completed'**
+  String get adminMaintenanceJobCompleted;
+
+  /// No description provided for @adminMaintenanceJobStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin maintenance job started'**
+  String get adminMaintenanceJobStarted;
+
+  /// No description provided for @adminAccountActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin account action failed'**
+  String get adminAccountActionFailed;
+
+  /// No description provided for @adminAccountInvitationActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin account invitation action failed'**
+  String get adminAccountInvitationActionFailed;
+
+  /// No description provided for @manageBackupsAndRestoreCopiesAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage backups and restore copies, and check instance maintenance jobs.'**
+  String get manageBackupsAndRestoreCopiesAnd;
+
+  /// No description provided for @manageInstanceAccountsInvitationsRelayGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage instance accounts, invitations, relay groups and connection policies.'**
+  String get manageInstanceAccountsInvitationsRelayGroups;
+
+  /// No description provided for @manageNotificationsAndClientUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage notifications and client updates.'**
+  String get manageNotificationsAndClientUpdates;
+
+  /// No description provided for @theBranchAndTheCurrentRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'The branch and the current record are verified, then this device re-signs and syncs it. The original encrypted branch is kept.'**
+  String get theBranchAndTheCurrentRecord;
+
+  /// No description provided for @terminal2.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal'**
+  String get terminal2;
+
+  /// No description provided for @terminalAndShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal and shortcuts'**
+  String get terminalAndShortcuts;
+
+  /// No description provided for @maintenanceJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance jobs'**
+  String get maintenanceJobs;
+
+  /// No description provided for @editGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit group'**
+  String get editGroup;
+
+  /// No description provided for @letExternalAiAccessTheCurrent2.
+  ///
+  /// In en, this message translates to:
+  /// **'Let external AI access the current workspace.'**
+  String get letExternalAiAccessTheCurrent2;
+
+  /// No description provided for @theRecordChangedAgainDuringCommit.
+  ///
+  /// In en, this message translates to:
+  /// **'The record changed again during commit. Check the current version and choose again.'**
+  String get theRecordChangedAgainDuringCommit;
+
+  /// No description provided for @theRecordChangedCheckTheCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'The record changed. Check the current version and choose again.'**
+  String get theRecordChangedCheckTheCurrent;
+
+  /// No description provided for @devices.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get devices;
+
+  /// No description provided for @deviceApproved2.
+  ///
+  /// In en, this message translates to:
+  /// **'Device approved'**
+  String get deviceApproved2;
+
+  /// No description provided for @deviceRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Device revoked'**
+  String get deviceRevoked;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @account2.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account2;
+
+  /// No description provided for @accountShortauditidDeviceShortauditid2Valuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Account {shortAuditId}  ·  Device {shortAuditId2}  ·  {valueValue}'**
+  String accountShortauditidDeviceShortauditid2Valuevalue(
+    String shortAuditId,
+    String shortAuditId2,
+    String valueValue,
+  );
+
+  /// No description provided for @accountAndDeviceInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Account and device information'**
+  String get accountAndDeviceInformation;
+
+  /// No description provided for @accountsAndAccessPolicies.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts and access policies'**
+  String get accountsAndAccessPolicies;
+
+  /// No description provided for @accountEventsAreStillVisibleOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Account events are still visible. Only the Owner and Editors of this Vault can view Vault-scoped records.'**
+  String get accountEventsAreStillVisibleOnly;
+
+  /// No description provided for @accountSessionUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Account session unlocked'**
+  String get accountSessionUnlocked;
+
+  /// No description provided for @accountCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created'**
+  String get accountCreated;
+
+  /// No description provided for @accountSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Account security'**
+  String get accountSecurity;
+
+  /// No description provided for @multiFactorAuthenticationWasResetAfter2.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-factor authentication was reset after account recovery'**
+  String get multiFactorAuthenticationWasResetAfter2;
+
+  /// No description provided for @accountRecoveryKeyRotated.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery key rotated'**
+  String get accountRecoveryKeyRotated;
+
+  /// No description provided for @accountRecoveryDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery disabled'**
+  String get accountRecoveryDisabled;
+
+  /// No description provided for @accountRecoveryEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery enabled'**
+  String get accountRecoveryEnabled;
+
+  /// No description provided for @accountRecoveryCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery completed'**
+  String get accountRecoveryCompleted;
+
+  /// No description provided for @accountActionFailedError.
+  ///
+  /// In en, this message translates to:
+  /// **'Account action failed: {error}'**
+  String accountActionFailedError(String error);
+
+  /// No description provided for @accountDataCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Account data cleared'**
+  String get accountDataCleared;
+
+  /// No description provided for @accountDeletionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion cancelled'**
+  String get accountDeletionCancelled;
+
+  /// No description provided for @accountDeletionScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion scheduled'**
+  String get accountDeletionScheduled;
+
+  /// No description provided for @crossDeviceConflictInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Cross-device conflict inbox'**
+  String get crossDeviceConflictInbox;
+
+  /// No description provided for @theCrossDeviceBranchIsntVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'The cross-device branch isn\'t verified yet; action and server version details are hidden.'**
+  String get theCrossDeviceBranchIsntVerified;
+
+  /// No description provided for @thisDeviceDecryptsTheVerifiedBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'This device decrypts the verified branch, re-signs it with this device\'s identity, then performs a CAS commit against the currently cached version. The original branch ciphertext is kept; the inbox shows this conflict until the commit or server resolution is confirmed.'**
+  String get thisDeviceDecryptsTheVerifiedBranch;
+
+  /// No description provided for @concurrentBranchesSubmittedToTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Concurrent branches submitted to the server by other devices are shown here. They can be selected only after signature, Vault ownership and key generation are verified; viewing the inbox doesn\'t rewrite the current record.'**
+  String get concurrentBranchesSubmittedToTheServer;
+
+  /// No description provided for @remoteDesktop2.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop'**
+  String get remoteDesktop2;
+
+  /// No description provided for @connect2.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connect2;
+
+  /// No description provided for @connectEverySshHostInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect every SSH host in the group and restore the layout'**
+  String get connectEverySshHostInThe;
+
+  /// No description provided for @chooseTheWorkspaceModeAndThe2.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the workspace mode and the page that opens by default.'**
+  String get chooseTheWorkspaceModeAndThe2;
+
+  /// No description provided for @choiceSavedOnThisDeviceWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Choice saved on this device, waiting for sync confirmation.'**
+  String get choiceSavedOnThisDeviceWaiting;
+
+  /// No description provided for @choiceSavedTheInboxUpdatesAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Choice saved; the inbox updates after the next sync.'**
+  String get choiceSavedTheInboxUpdatesAfter;
+
+  /// No description provided for @choiceSavedEncryptedOnThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Choice saved encrypted on this device, waiting for sync confirmation.'**
+  String get choiceSavedEncryptedOnThisDevice;
+
+  /// No description provided for @choiceSavedEncryptedOnThisDevice2.
+  ///
+  /// In en, this message translates to:
+  /// **'Choice saved encrypted on this device and waiting to sync; you can retry once the network is back.'**
+  String get choiceSavedEncryptedOnThisDevice2;
+
+  /// No description provided for @notificationsAndUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications and updates'**
+  String get notificationsAndUpdates;
+
+  /// No description provided for @invitationActionFailedError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation action failed: {error}'**
+  String invitationActionFailedError(String error);
+
+  /// No description provided for @couldntAdoptTheBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t adopt the branch'**
+  String get couldntAdoptTheBranch;
+
+  /// No description provided for @adoptTheVerifiedDeviceBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Adopt the verified device branch?'**
+  String get adoptTheVerifiedDeviceBranch;
+
+  /// No description provided for @adoptThisBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Adopt this branch'**
+  String get adoptThisBranch;
+
+  /// No description provided for @reSignAndSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-sign and sync'**
+  String get reSignAndSync;
+
+  /// No description provided for @resetLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset layout'**
+  String get resetLayout;
+
+  /// No description provided for @attachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get attachments;
+
+  /// No description provided for @needsANewChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a new choice'**
+  String get needsANewChoice;
+
+  /// No description provided for @aDeviceKeyPairIsGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'A device key pair is generated and saved only in this browser. Send the public request to a device that is already approved.'**
+  String get aDeviceKeyPairIsGenerated;
+
+  /// No description provided for @aPrivateSshWorkspaceThatSyncs.
+  ///
+  /// In en, this message translates to:
+  /// **'A private SSH workspace that syncs encrypted connections, credentials and snippets across your devices.'**
+  String get aPrivateSshWorkspaceThatSyncs;
+
+  /// No description provided for @aTrustedDeviceSignsEnvelopesFor.
+  ///
+  /// In en, this message translates to:
+  /// **'A trusted device signs envelopes for each new device.'**
+  String get aTrustedDeviceSignsEnvelopesFor;
+
+  /// No description provided for @accountEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Account email'**
+  String get accountEmail;
+
+  /// No description provided for @accountName.
+  ///
+  /// In en, this message translates to:
+  /// **'Account name'**
+  String get accountName;
+
+  /// No description provided for @accountRecoveredSignInWithThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovered. Sign in with the new master password.'**
+  String get accountRecoveredSignInWithThe;
+
+  /// No description provided for @accountRecoveredSignInWithYour.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovered. Sign in with your new master password.'**
+  String get accountRecoveredSignInWithYour;
+
+  /// No description provided for @addThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this device'**
+  String get addThisDevice;
+
+  /// No description provided for @approveEveryDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve every device'**
+  String get approveEveryDevice;
+
+  /// No description provided for @cancelRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel recovery'**
+  String get cancelRecovery;
+
+  /// No description provided for @cancelScheduledAccountDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel scheduled account deletion'**
+  String get cancelScheduledAccountDeletion;
+
+  /// No description provided for @cancelSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel sign-in'**
+  String get cancelSignIn;
+
+  /// No description provided for @changeServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Change server'**
+  String get changeServer;
+
+  /// No description provided for @commitRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Commit recovery'**
+  String get commitRecovery;
+
+  /// No description provided for @confirmFingerprintAndContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm fingerprint and continue'**
+  String get confirmFingerprintAndContinue;
+
+  /// No description provided for @confirmMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm master password'**
+  String get confirmMasterPassword;
+
+  /// No description provided for @connectSecurely.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect securely'**
+  String get connectSecurely;
+
+  /// No description provided for @connectToYourServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to your server'**
+  String get connectToYourServer;
+
+  /// No description provided for @copyThisEnrollmentJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this enrollment JSON'**
+  String get copyThisEnrollmentJson;
+
+  /// No description provided for @createInvitedAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create invited account'**
+  String get createInvitedAccount;
+
+  /// No description provided for @createOwnerAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create owner account'**
+  String get createOwnerAccount;
+
+  /// No description provided for @deviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Device name'**
+  String get deviceName;
+
+  /// No description provided for @emailOnTheInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Email on the invitation'**
+  String get emailOnTheInvitation;
+
+  /// No description provided for @emailOrUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Email or username'**
+  String get emailOrUsername;
+
+  /// No description provided for @encryptedOutboxKeepsEditsSafeBetween.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted outbox keeps edits safe between connections.'**
+  String get encryptedOutboxKeepsEditsSafeBetween;
+
+  /// No description provided for @endToEndEncryptedVault.
+  ///
+  /// In en, this message translates to:
+  /// **'End-to-end encrypted vault'**
+  String get endToEndEncryptedVault;
+
+  /// No description provided for @enterAValidRecoveryCodeAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid recovery code and matching new master password.'**
+  String get enterAValidRecoveryCodeAnd;
+
+  /// No description provided for @enterTheUrlOfYourSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the URL of your self-hosted Atermius instance.'**
+  String get enterTheUrlOfYourSelf;
+
+  /// No description provided for @fingerprintReturnedByThisServerSha.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint returned by this server · SHA-256'**
+  String get fingerprintReturnedByThisServerSha;
+
+  /// No description provided for @fingerprintReturnedByThisServerSha2.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint returned by this server · SHA-256: {candidateFingerprint}'**
+  String fingerprintReturnedByThisServerSha2(String candidateFingerprint);
+
+  /// No description provided for @firstVault.
+  ///
+  /// In en, this message translates to:
+  /// **'First Vault'**
+  String get firstVault;
+
+  /// No description provided for @generateRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate request'**
+  String get generateRequest;
+
+  /// No description provided for @haveAnInstanceInvitationCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Have an instance invitation? Create account'**
+  String get haveAnInstanceInvitationCreateAccount;
+
+  /// No description provided for @importApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Import approval'**
+  String get importApproval;
+
+  /// No description provided for @importApprovedDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Import approved device'**
+  String get importApprovedDevice;
+
+  /// No description provided for @importDeviceKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Import device keys'**
+  String get importDeviceKeys;
+
+  /// No description provided for @instanceInvitationToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance invitation token'**
+  String get instanceInvitationToken;
+
+  /// No description provided for @masterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password'**
+  String get masterPassword;
+
+  /// No description provided for @masterPassword12Characters.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password · 12+ characters'**
+  String get masterPassword12Characters;
+
+  /// No description provided for @newAccountRecoveryCodeCode.
+  ///
+  /// In en, this message translates to:
+  /// **'New account recovery code: {code}'**
+  String newAccountRecoveryCodeCode(String code);
+
+  /// No description provided for @newDeviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'New device name'**
+  String get newDeviceName;
+
+  /// No description provided for @newMasterPassword12Characters.
+  ///
+  /// In en, this message translates to:
+  /// **'New master password · 12+ characters'**
+  String get newMasterPassword12Characters;
+
+  /// No description provided for @offlineFirstSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline-first sync'**
+  String get offlineFirstSync;
+
+  /// No description provided for @onlyYourUnlockedDevicesCanRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Only your unlocked devices can read saved data.'**
+  String get onlyYourUnlockedDevicesCanRead;
+
+  /// No description provided for @ownerEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner email'**
+  String get ownerEmail;
+
+  /// No description provided for @pasteApprovalJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste approval JSON'**
+  String get pasteApprovalJson;
+
+  /// No description provided for @personalVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal vault'**
+  String get personalVault;
+
+  /// No description provided for @previouslyTrustedFingerprintSha256.
+  ///
+  /// In en, this message translates to:
+  /// **'Previously trusted fingerprint · SHA-256'**
+  String get previouslyTrustedFingerprintSha256;
+
+  /// No description provided for @previouslyTrustedFingerprintSha256Pinnedfingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Previously trusted fingerprint · SHA-256: {pinnedFingerprint}'**
+  String previouslyTrustedFingerprintSha256Pinnedfingerprint(
+    String pinnedFingerprint,
+  );
+
+  /// No description provided for @recoverAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover account'**
+  String get recoverAccount;
+
+  /// No description provided for @recoverAccountWithRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover account with recovery code'**
+  String get recoverAccountWithRecoveryCode;
+
+  /// No description provided for @recoveredDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovered device'**
+  String get recoveredDevice;
+
+  /// No description provided for @recoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery code'**
+  String get recoveryCode;
+
+  /// No description provided for @recoveryWasCancelledNoAccountChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery was cancelled. No account changes were committed.'**
+  String get recoveryWasCancelledNoAccountChanges;
+
+  /// No description provided for @remoteServersRequireHttpsHttpIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote servers require HTTPS. HTTP is allowed only for localhost, 127.0.0.1 or ::1 development.'**
+  String get remoteServersRequireHttpsHttpIs;
+
+  /// No description provided for @requestThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Request this device'**
+  String get requestThisDevice;
+
+  /// No description provided for @restoredServerIdentityNeedsConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored server identity needs confirmation'**
+  String get restoredServerIdentityNeedsConfirmation;
+
+  /// No description provided for @retryRecoveryCompletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry recovery completion'**
+  String get retryRecoveryCompletion;
+
+  /// No description provided for @selfHosted.
+  ///
+  /// In en, this message translates to:
+  /// **'SELF-HOSTED'**
+  String get selfHosted;
+
+  /// No description provided for @secretsAreEncryptedInThisClient.
+  ///
+  /// In en, this message translates to:
+  /// **'Secrets are encrypted in this client before sync.'**
+  String get secretsAreEncryptedInThisClient;
+
+  /// No description provided for @serverUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get serverUrl;
+
+  /// No description provided for @setUpYourPrivateVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your private vault'**
+  String get setUpYourPrivateVault;
+
+  /// No description provided for @signInAndUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in and unlock'**
+  String get signInAndUnlock;
+
+  /// No description provided for @storeTheNewRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Store the new recovery code'**
+  String get storeTheNewRecoveryCode;
+
+  /// No description provided for @theBootstrapTokenIsOneUse.
+  ///
+  /// In en, this message translates to:
+  /// **'The bootstrap token is one-use. The server never receives your master password or the generated Vault key.'**
+  String get theBootstrapTokenIsOneUse;
+
+  /// No description provided for @theFirstAccountCreatesItsVault.
+  ///
+  /// In en, this message translates to:
+  /// **'The first account creates its Vault key on this device.'**
+  String get theFirstAccountCreatesItsVault;
+
+  /// No description provided for @theServerReturnedADifferentSigning.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned a different signing key for the same instance. Compare the candidate fingerprint with an administrator or another trusted device over a separate channel. No account login or authentication request is sent before you confirm.'**
+  String get theServerReturnedADifferentSigning;
+
+  /// No description provided for @thisOneUseInvitationIsBound.
+  ///
+  /// In en, this message translates to:
+  /// **'This one-use invitation is bound to the email shown above. The server never receives your master password or the generated Vault key.'**
+  String get thisOneUseInvitationIsBound;
+
+  /// No description provided for @thisReplacesTheOldCodeStore.
+  ///
+  /// In en, this message translates to:
+  /// **'This replaces the old code. Store it outside this device; it cannot be shown again.'**
+  String get thisReplacesTheOldCodeStore;
+
+  /// No description provided for @typeTheCandidateFingerprintExactly.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the candidate fingerprint exactly'**
+  String get typeTheCandidateFingerprintExactly;
+
+  /// No description provided for @unlockYourWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock your workspace'**
+  String get unlockYourWorkspace;
+
+  /// No description provided for @useARecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a recovery code'**
+  String get useARecoveryCode;
+
+  /// No description provided for @useAuthenticatorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Use authenticator code'**
+  String get useAuthenticatorCode;
+
+  /// No description provided for @useTheAccountNameAndMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the account name and master password. This recovery does not restore a session; sign in again afterward.'**
+  String get useTheAccountNameAndMaster;
+
+  /// No description provided for @useTheSaved256BitRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the saved 256-bit recovery code to restore Vault key access and enroll this device. Choose a new master password. The server never receives the recovery code or plaintext Vault keys.'**
+  String get useTheSaved256BitRecovery;
+
+  /// No description provided for @verifyAndUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify and unlock'**
+  String get verifyAndUnlock;
+
+  /// No description provided for @verifyRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify recovery code'**
+  String get verifyRecoveryCode;
+
+  /// No description provided for @verifyYourIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your identity'**
+  String get verifyYourIdentity;
+
+  /// No description provided for @yourPasswordUnlocksTheAccountKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password unlocks the account key locally.'**
+  String get yourPasswordUnlocksTheAccountKey;
+
+  /// No description provided for @yourServersYourKeysYourWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Your servers.\nYour keys.\nYour workspace.'**
+  String get yourServersYourKeysYourWorkspace;
+
+  /// No description provided for @theMasterPasswordsDontMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The master passwords don\'t match'**
+  String get theMasterPasswordsDontMatch;
+
+  /// No description provided for @couldntCancelAccountDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t cancel account deletion'**
+  String get couldntCancelAccountDeletion;
+
+  /// No description provided for @couldntConnectToTheServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to the server'**
+  String get couldntConnectToTheServer;
+
+  /// No description provided for @registrationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration failed'**
+  String get registrationFailed;
+
+  /// No description provided for @requestJsonCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Request JSON copied'**
+  String get requestJsonCopied;
+
+  /// No description provided for @browserStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser storage'**
+  String get browserStorage;
+
+  /// No description provided for @checkAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get checkAgain;
+
+  /// No description provided for @checkingPersistentStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking persistent storage…'**
+  String get checkingPersistentStorage;
+
+  /// No description provided for @checkingStorageUsageEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking storage usage estimate…'**
+  String get checkingStorageUsageEstimate;
+
+  /// No description provided for @estimatedUsageFormatbytesOfFormatbytes2For.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated usage: {formatBytes} of {formatBytes2} for this site'**
+  String estimatedUsageFormatbytesOfFormatbytes2For(
+    String formatBytes,
+    String formatBytes2,
+  );
+
+  /// No description provided for @persistentStorageCanReduceAutomaticEviction.
+  ///
+  /// In en, this message translates to:
+  /// **'Persistent storage can reduce automatic eviction, but it does not replace backups.'**
+  String get persistentStorageCanReduceAutomaticEviction;
+
+  /// No description provided for @persistentStorageIsEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Persistent storage is enabled'**
+  String get persistentStorageIsEnabled;
+
+  /// No description provided for @persistentStorageIsNotEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Persistent storage is not enabled'**
+  String get persistentStorageIsNotEnabled;
+
+  /// No description provided for @persistentStorageStatusIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Persistent storage status is unavailable'**
+  String get persistentStorageStatusIsUnavailable;
+
+  /// No description provided for @requestPersistentStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Request persistent storage'**
+  String get requestPersistentStorage;
+
+  /// No description provided for @storageUsageEstimateIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage usage estimate is unavailable'**
+  String get storageUsageEstimateIsUnavailable;
+
+  /// No description provided for @theBrowserCouldNotConfirmPersistent.
+  ///
+  /// In en, this message translates to:
+  /// **'The browser could not confirm persistent storage status.'**
+  String get theBrowserCouldNotConfirmPersistent;
+
+  /// No description provided for @theBrowserCurrentlyReportsPersistentStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'The browser currently reports persistent storage is enabled.'**
+  String get theBrowserCurrentlyReportsPersistentStorage;
+
+  /// No description provided for @theBrowserDidNotEnablePersistent.
+  ///
+  /// In en, this message translates to:
+  /// **'The browser did not enable persistent storage.'**
+  String get theBrowserDidNotEnablePersistent;
+
+  /// No description provided for @theRequestReturnedSuccessButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The request returned success, but the browser still reports storage is not persistent.'**
+  String get theRequestReturnedSuccessButThe;
+
+  /// No description provided for @theRequestReturnedSuccessButThe2.
+  ///
+  /// In en, this message translates to:
+  /// **'The request returned success, but the current persistence status could not be verified.'**
+  String get theRequestReturnedSuccessButThe2;
+
+  /// No description provided for @pendingcountEncryptedChangeSAreWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{pendingCount, plural, =1{1 encrypted change is} other{{pendingCount} encrypted changes are}} waiting in this browser’s local outbox. The server has not acknowledged them; clearing this site’s browser data before sync removes them from this browser.'**
+  String pendingcountEncryptedChangeSAreWaiting(int pendingCount);
+
+  /// No description provided for @roundGib.
+  ///
+  /// In en, this message translates to:
+  /// **'{round} GiB'**
+  String roundGib(int round);
+
+  /// No description provided for @roundKib.
+  ///
+  /// In en, this message translates to:
+  /// **'{round} KiB'**
+  String roundKib(int round);
+
+  /// No description provided for @roundMib.
+  ///
+  /// In en, this message translates to:
+  /// **'{round} MiB'**
+  String roundMib(int round);
+
+  /// No description provided for @fileWorkspaceIsClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'File workspace is closed.'**
+  String get fileWorkspaceIsClosed;
+
+  /// No description provided for @theSavedGroupLayoutIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved group layout is invalid. Reset the layout and try again.'**
+  String get theSavedGroupLayoutIsInvalid;
+
+  /// No description provided for @invalidGroupSessionMapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid group session mapping.'**
+  String get invalidGroupSessionMapping;
+
+  /// No description provided for @aGroupLayoutNeeds1To.
+  ///
+  /// In en, this message translates to:
+  /// **'A group layout needs 1 to 32 SSH hosts.'**
+  String get aGroupLayoutNeeds1To;
+
+  /// No description provided for @invalidLayoutHostsOrMoreThan.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid layout hosts or more than 32 panes.'**
+  String get invalidLayoutHostsOrMoreThan;
+
+  /// No description provided for @invalidLayoutRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid layout ratio.'**
+  String get invalidLayoutRatio;
+
+  /// No description provided for @thisWindowHasNoSshSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'This window has no SSH sessions for this group.'**
+  String get thisWindowHasNoSshSessions;
+
+  /// No description provided for @upTo32PanesCanBe.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 32 panes can be saved.'**
+  String get upTo32PanesCanBe;
+
+  /// No description provided for @attachFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach file'**
+  String get attachFile;
+
+  /// No description provided for @attachmentDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment download'**
+  String get attachmentDownload;
+
+  /// No description provided for @attachmentUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment upload'**
+  String get attachmentUpload;
+
+  /// No description provided for @attachmentsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments · {name}'**
+  String attachmentsName(String name);
+
+  /// No description provided for @cancel2.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel2;
+
+  /// No description provided for @chooseAFileToAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a file to attach…'**
+  String get chooseAFileToAttach;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @discardDownloadedCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard downloaded copy'**
+  String get discardDownloadedCopy;
+
+  /// No description provided for @discardOrphanTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard orphan transfer'**
+  String get discardOrphanTransfer;
+
+  /// No description provided for @downloadAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Download attachment'**
+  String get downloadAttachment;
+
+  /// No description provided for @downloadUnavailableAboveFormatsize.
+  ///
+  /// In en, this message translates to:
+  /// **'Download unavailable above {formatSize}'**
+  String downloadUnavailableAboveFormatsize(String formatSize);
+
+  /// No description provided for @downloadingAndVerifyingAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading and verifying attachment…'**
+  String get downloadingAndVerifyingAttachment;
+
+  /// No description provided for @encryptingAndTransferring.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypting and transferring…'**
+  String get encryptingAndTransferring;
+
+  /// No description provided for @filesAreEncryptedOnThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Files are encrypted on this device before upload. Names, types, file keys and file contents stay inside the encrypted host record.'**
+  String get filesAreEncryptedOnThisDevice;
+
+  /// No description provided for @noAttachmentsSavedForThisHost.
+  ///
+  /// In en, this message translates to:
+  /// **'No attachments saved for this host.'**
+  String get noAttachmentsSavedForThisHost;
+
+  /// No description provided for @preparingAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing attachment…'**
+  String get preparingAttachment;
+
+  /// No description provided for @removeAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove attachment'**
+  String get removeAttachment;
+
+  /// No description provided for @removeAttachmentFromThisHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove attachment from this host?'**
+  String get removeAttachmentFromThisHost;
+
+  /// No description provided for @removeFromHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from host'**
+  String get removeFromHost;
+
+  /// No description provided for @removeFilenameFromTheCurrentEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {fileName} from the current encrypted host record? Earlier host revisions may retain their attachment references until server retention cleanup.'**
+  String removeFilenameFromTheCurrentEncrypted(String fileName);
+
+  /// No description provided for @removingAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing attachment…'**
+  String get removingAttachment;
+
+  /// No description provided for @resumeDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume download'**
+  String get resumeDownload;
+
+  /// No description provided for @resumeUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume upload'**
+  String get resumeUpload;
+
+  /// No description provided for @resumingEncryptedUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Resuming encrypted upload…'**
+  String get resumingEncryptedUpload;
+
+  /// No description provided for @saveCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Save cancelled.'**
+  String get saveCancelled;
+
+  /// No description provided for @saveCancelledTheVerifiedEncryptedDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Save cancelled. The verified encrypted download is kept for retry.'**
+  String get saveCancelledTheVerifiedEncryptedDownload;
+
+  /// No description provided for @savingDecryptedAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving decrypted attachment…'**
+  String get savingDecryptedAttachment;
+
+  /// No description provided for @thisFileCannotBeLoadedInto.
+  ///
+  /// In en, this message translates to:
+  /// **'This file cannot be loaded into client memory. Try a smaller file.'**
+  String get thisFileCannotBeLoadedInto;
+
+  /// No description provided for @transferTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer tasks'**
+  String get transferTasks;
+
+  /// No description provided for @valuevalueMoreTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'{valueValue, plural, =1{1 more task} other{{valueValue} more tasks}}'**
+  String valuevalueMoreTasks(int valueValue);
+
+  /// No description provided for @addAHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a host'**
+  String get addAHost;
+
+  /// No description provided for @authentication.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication'**
+  String get authentication;
+
+  /// No description provided for @directConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct connection'**
+  String get directConnection;
+
+  /// No description provided for @displayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get displayName;
+
+  /// No description provided for @editHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit host'**
+  String get editHost;
+
+  /// No description provided for @editPrivateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit private key'**
+  String get editPrivateKey;
+
+  /// No description provided for @group.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get group;
+
+  /// No description provided for @hidePrivateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide private key'**
+  String get hidePrivateKey;
+
+  /// No description provided for @hostnameOrIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Hostname or IP'**
+  String get hostnameOrIp;
+
+  /// No description provided for @jumpHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump Host'**
+  String get jumpHost;
+
+  /// No description provided for @loginDetailsBelongToThisHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Login details belong to this Host and are encrypted with it.'**
+  String get loginDetailsBelongToThisHost;
+
+  /// No description provided for @noGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'No group'**
+  String get noGroup;
+
+  /// No description provided for @noKeyEntered.
+  ///
+  /// In en, this message translates to:
+  /// **'No key entered'**
+  String get noKeyEntered;
+
+  /// No description provided for @pinTheCertificateFingerprintSuppliedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin the certificate fingerprint supplied by your administrator.'**
+  String get pinTheCertificateFingerprintSuppliedBy;
+
+  /// No description provided for @rdpCertificateSha256Optional.
+  ///
+  /// In en, this message translates to:
+  /// **'RDP certificate SHA-256 (optional)'**
+  String get rdpCertificateSha256Optional;
+
+  /// No description provided for @routeThroughUpTo8Hosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Route through up to 8 Hosts before opening this Host.'**
+  String get routeThroughUpTo8Hosts;
+
+  /// No description provided for @saveEncryptedHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Save encrypted host'**
+  String get saveEncryptedHost;
+
+  /// No description provided for @separateTagsWithCommas.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate tags with commas.'**
+  String get separateTagsWithCommas;
+
+  /// No description provided for @tags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tags;
+
+  /// No description provided for @thisSavedGroupIsUnavailableChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'This saved Group is unavailable. Choose No group to clear it.'**
+  String get thisSavedGroupIsUnavailableChoose;
+
+  /// No description provided for @thisSavedJumpHostIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This saved Jump Host is unavailable, forms a cycle, or would exceed 8 hops. Choose Direct connection or a valid Host to repair it.'**
+  String get thisSavedJumpHostIsUnavailable;
+
+  /// No description provided for @unavailableJumpHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable Jump Host'**
+  String get unavailableJumpHost;
+
+  /// No description provided for @signInDetailsAreStoredEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in details are stored encrypted. When connecting, the trusted remote desktop gateway handles the sign-in credentials and the display.'**
+  String get signInDetailsAreStoredEncrypted;
+
+  /// No description provided for @labelPressEnterToConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}  ·  Press Enter to connect'**
+  String labelPressEnterToConnect(String label);
+
+  /// No description provided for @searchHostsOrTypeAnSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'Search hosts, or type an ssh / rdp / vnc / console command'**
+  String get searchHostsOrTypeAnSsh;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @chooseAHostToConnectTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a host to connect to'**
+  String get chooseAHostToConnectTo;
+
+  /// No description provided for @countHosts2.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 host} other{{count} hosts}}'**
+  String countHosts2(int count);
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @closeSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get closeSearch;
+
+  /// No description provided for @allGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'All groups'**
+  String get allGroups;
+
+  /// No description provided for @filterByGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by group'**
+  String get filterByGroup;
+
+  /// No description provided for @searchAndQuickConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Search and quick connect'**
+  String get searchAndQuickConnect;
+
+  /// No description provided for @favorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get favorites;
+
+  /// No description provided for @noMatchingHostsTypeAnSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching hosts. Type an ssh / rdp / vnc command to connect to a new address.'**
+  String get noMatchingHostsTypeAnSsh;
+
+  /// No description provided for @operatingSystemNotIdentifiedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Operating system not identified yet'**
+  String get operatingSystemNotIdentifiedYet;
+
+  /// No description provided for @operatingSystemLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Operating system: {label}'**
+  String operatingSystemLabel(String label);
+
+  /// No description provided for @originalSshSessionConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Original SSH session · connected'**
+  String get originalSshSessionConnected;
+
+  /// No description provided for @tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get tools;
+
+  /// No description provided for @originalSshSessionLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Original SSH session · live'**
+  String get originalSshSessionLive;
+
+  /// No description provided for @filesSftpScp.
+  ///
+  /// In en, this message translates to:
+  /// **'Files · SFTP / SCP'**
+  String get filesSftpScp;
+
+  /// No description provided for @couldntOpenTheTerminalWindowGo.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the terminal window. Go back to the main window and check the connection.'**
+  String get couldntOpenTheTerminalWindowGo;
+
+  /// No description provided for @thisWindowKeepsUsingTheOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'This window keeps using the original SSH session.'**
+  String get thisWindowKeepsUsingTheOriginal;
+
+  /// No description provided for @terminalProperties.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal properties'**
+  String get terminalProperties;
+
+  /// No description provided for @earlierOutputExceedsThisWindowsDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier output exceeds this window\'s display limit. Running commands are not affected.'**
+  String get earlierOutputExceedsThisWindowsDisplay;
+
+  /// No description provided for @connectionLostReturnToTheOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost · return to the original window'**
+  String get connectionLostReturnToTheOriginal;
+
+  /// No description provided for @connectionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost'**
+  String get connectionLost;
+
+  /// No description provided for @sshOutputStreamError.
+  ///
+  /// In en, this message translates to:
+  /// **'\n[SSH output stream error]\n'**
+  String get sshOutputStreamError;
+
+  /// No description provided for @sshConnectionClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'\n[SSH connection closed]\n'**
+  String get sshConnectionClosed;
+
+  /// No description provided for @sshErrorStreamUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'\n[SSH error stream unavailable]\n'**
+  String get sshErrorStreamUnavailable;
+
+  /// No description provided for @anotherOperationIsRunningRetryWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Another operation is running. Retry when it ends.'**
+  String get anotherOperationIsRunningRetryWhen;
+
+  /// No description provided for @bashInputHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Bash input history'**
+  String get bashInputHistory;
+
+  /// No description provided for @console.
+  ///
+  /// In en, this message translates to:
+  /// **'Console'**
+  String get console;
+
+  /// No description provided for @couldNotSaveForwardingSettingsNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save forwarding settings; nothing was changed.'**
+  String get couldNotSaveForwardingSettingsNothing;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @hostHostid.
+  ///
+  /// In en, this message translates to:
+  /// **'Host {hostId}'**
+  String hostHostid(String hostId);
+
+  /// No description provided for @theHostSaveResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host save result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theHostSaveResultCouldntBe;
+
+  /// No description provided for @theHostWasSavedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host was saved, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theHostWasSavedButThe;
+
+  /// No description provided for @theHostWasDeletedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host was deleted, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theHostWasDeletedButThe;
+
+  /// No description provided for @theHostWasChangedByAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host was changed by another operation. Reopen it and try again.'**
+  String get theHostWasChangedByAnother;
+
+  /// No description provided for @theHostWasUpdatedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The Host was updated, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theHostWasUpdatedButThe;
+
+  /// No description provided for @hostActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Host actions'**
+  String get hostActions;
+
+  /// No description provided for @whenAHostDoesntSelectA.
+  ///
+  /// In en, this message translates to:
+  /// **'When a Host doesn\'t select a credential explicitly, the default credential of the nearest ancestor group is used.'**
+  String get whenAHostDoesntSelectA;
+
+  /// No description provided for @localHostRevisionIsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Host revision is missing.'**
+  String get localHostRevisionIsMissing;
+
+  /// No description provided for @localDefaultWorkspacePreferenceIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Local default workspace preference is invalid.'**
+  String get localDefaultWorkspacePreferenceIsInvalid;
+
+  /// No description provided for @localProfileCleanupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile cleanup failed.'**
+  String get localProfileCleanupFailed;
+
+  /// No description provided for @localvaultHostKeyTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'LocalVault host key trust'**
+  String get localvaultHostKeyTrust;
+
+  /// No description provided for @noLocalProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'No local profile.'**
+  String get noLocalProfile;
+
+  /// No description provided for @notStartedFromASingleConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started from a single connected SSH tab. Edit profiles here, then use SSH port forwarding in a connected tab to start them.'**
+  String get notStartedFromASingleConnected;
+
+  /// No description provided for @preferencesCannotBeTheDefaultWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences cannot be the default workspace.'**
+  String get preferencesCannotBeTheDefaultWorkspace;
+
+  /// No description provided for @profilesAreEncryptedInsideThisHost2.
+  ///
+  /// In en, this message translates to:
+  /// **'Profiles are encrypted inside this Host record of the local profile on this device. Running state and sockets are never stored.'**
+  String get profilesAreEncryptedInsideThisHost2;
+
+  /// No description provided for @protectedDeviceKeyUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected device key unavailable.'**
+  String get protectedDeviceKeyUnavailable;
+
+  /// No description provided for @theSshHostKeyChangedOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH host key changed or the trust records conflict; the connection was rejected. Review and revoke the old trust first.'**
+  String get theSshHostKeyChangedOr;
+
+  /// No description provided for @theSshHostKeyWasntApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH host key wasn\'t approved; the connection was rejected.'**
+  String get theSshHostKeyWasntApproved;
+
+  /// No description provided for @sshPrivateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH private key'**
+  String get sshPrivateKey;
+
+  /// No description provided for @sshPortForwarding2.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH port forwarding'**
+  String get sshPortForwarding2;
+
+  /// No description provided for @shellLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Shell label'**
+  String get shellLabel;
+
+  /// No description provided for @snippetChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet changed'**
+  String get snippetChanged;
+
+  /// No description provided for @theLocalProfileChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The local profile changed.'**
+  String get theLocalProfileChanged;
+
+  /// No description provided for @thisHostChangedInAnotherOperation.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host changed in another operation. The list was refreshed; review and retry.'**
+  String get thisHostChangedInAnotherOperation;
+
+  /// No description provided for @webLocalvaultDoesntSupportSshSftp.
+  ///
+  /// In en, this message translates to:
+  /// **'Web LocalVault doesn\'t support SSH / SFTP yet'**
+  String get webLocalvaultDoesntSupportSshSftp;
+
+  /// No description provided for @algorithmFingerprintOriginallyApprovedInArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'{algorithm}\n{fingerprint}\nOriginally approved in archive: {toLocal}'**
+  String algorithmFingerprintOriginallyApprovedInArchive(
+    String algorithm,
+    String fingerprint,
+    DateTime toLocal,
+  );
+
+  /// No description provided for @groupparentlabelHostscountHostsChildrencountSubgroups.
+  ///
+  /// In en, this message translates to:
+  /// **'{groupParentLabel} · {hostsCount, plural, =1{1 Host} other{{hostsCount} Hosts}} · {childrenCount, plural, =1{1 subgroup} other{{childrenCount} subgroups}}'**
+  String groupparentlabelHostscountHostsChildrencountSubgroups(
+    String groupParentLabel,
+    int hostsCount,
+    int childrenCount,
+  );
+
+  /// No description provided for @hostPortPendingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{host}:{port} · pending review'**
+  String hostPortPendingReview(String host, int port);
+
+  /// No description provided for @nameWillBeDeletedFromThis.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" will be deleted from this local profile.'**
+  String nameWillBeDeletedFromThis(String name);
+
+  /// No description provided for @titleWillBeDeletedFromThis.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{title}\" will be deleted from this local profile.'**
+  String titleWillBeDeletedFromThis(String title);
+
+  /// No description provided for @previousMatch2.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous match'**
+  String get previousMatch2;
+
+  /// No description provided for @nextMatch2.
+  ///
+  /// In en, this message translates to:
+  /// **'Next match'**
+  String get nextMatch2;
+
+  /// No description provided for @noDefaultCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'No default credential'**
+  String get noDefaultCredential;
+
+  /// No description provided for @theLocalArchivePassphrasesDontMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive passphrases don\'t match.'**
+  String get theLocalArchivePassphrasesDontMatch;
+
+  /// No description provided for @theMasterPasswordMustBeAt.
+  ///
+  /// In en, this message translates to:
+  /// **'The master password must be at least {minimumPasswordLength} characters.'**
+  String theMasterPasswordMustBeAt(int minimumPasswordLength);
+
+  /// No description provided for @masterPasswordAtLeast12Characters.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password (at least 12 characters)'**
+  String get masterPasswordAtLeast12Characters;
+
+  /// No description provided for @hostsAndSignInDetailsAre.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosts and sign-in details are stored in the local profile'**
+  String get hostsAndSignInDetailsAre;
+
+  /// No description provided for @couldntSaveTheHostCheckThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the host. Check the settings and try again.'**
+  String get couldntSaveTheHostCheckThe;
+
+  /// No description provided for @useTheModAltAndShift.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the mod, alt and shift modifiers; mod means Command on Apple platforms and Control elsewhere. Every shortcut must be unique, and combinations reserved by the browser or operating system can\'t be used.'**
+  String get useTheModAltAndShift;
+
+  /// No description provided for @saveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Save group'**
+  String get saveGroup;
+
+  /// No description provided for @saveEncryptedCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Save encrypted credential'**
+  String get saveEncryptedCredential;
+
+  /// No description provided for @saveEncryptedSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save encrypted snippet'**
+  String get saveEncryptedSnippet;
+
+  /// No description provided for @saveShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Save shortcuts'**
+  String get saveShortcuts;
+
+  /// No description provided for @theSavedGroupLayoutIsInvalid2.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved group layout is invalid. Reset the layout first.'**
+  String get theSavedGroupLayoutIsInvalid2;
+
+  /// No description provided for @saveTerminalTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Save terminal theme'**
+  String get saveTerminalTheme;
+
+  /// No description provided for @saveTerminalFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Save terminal font size'**
+  String get saveTerminalFontSize;
+
+  /// No description provided for @saveDefaultWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Save default workspace'**
+  String get saveDefaultWorkspace;
+
+  /// No description provided for @trustReviewFailedTheExistingSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust review failed. The existing SSH trust state is unchanged; reload and check again.'**
+  String get trustReviewFailedTheExistingSsh;
+
+  /// No description provided for @thePreferenceSaveResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The preference save result couldn\'t be confirmed. Reload before deciding whether to save again.'**
+  String get thePreferenceSaveResultCouldntBe;
+
+  /// No description provided for @preferencesSavedAndApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences saved and applied.'**
+  String get preferencesSavedAndApplied;
+
+  /// No description provided for @preferencesAreSavedEncryptedInThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences are saved encrypted in this local profile.'**
+  String get preferencesAreSavedEncryptedInThis;
+
+  /// No description provided for @preferencesWereChangedByAnotherOperation.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences were changed by another operation and the current values were reloaded. Review them before saving.'**
+  String get preferencesWereChangedByAnotherOperation;
+
+  /// No description provided for @stopConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop connecting'**
+  String get stopConnecting;
+
+  /// No description provided for @stopCapture.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop capture'**
+  String get stopCapture;
+
+  /// No description provided for @otherLocalRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Other local records'**
+  String get otherLocalRecords;
+
+  /// No description provided for @credentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials'**
+  String get credentials;
+
+  /// No description provided for @theCredentialSaveResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential save result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theCredentialSaveResultCouldntBe;
+
+  /// No description provided for @theCredentialDeletionResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential deletion result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theCredentialDeletionResultCouldntBe;
+
+  /// No description provided for @credentialParameterNameMustReferenceA.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential parameter {name} must reference a password credential in this local profile.'**
+  String credentialParameterNameMustReferenceA(String name);
+
+  /// No description provided for @credentialName.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential name'**
+  String get credentialName;
+
+  /// No description provided for @theCredentialNoLongerExistsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential no longer exists. Refresh the list.'**
+  String get theCredentialNoLongerExistsRefresh;
+
+  /// No description provided for @theCredentialWasSavedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential was saved, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theCredentialWasSavedButThe;
+
+  /// No description provided for @theCredentialWasDeletedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential was deleted, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theCredentialWasDeletedButThe;
+
+  /// No description provided for @theCredentialWasChangedByAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential was changed by another operation. Refresh the list and try again.'**
+  String get theCredentialWasChangedByAnother;
+
+  /// No description provided for @theCredentialWasUpdatedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential was updated, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theCredentialWasUpdatedButThe;
+
+  /// No description provided for @credentialActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential actions'**
+  String get credentialActions;
+
+  /// No description provided for @theCredentialUpdateResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The credential update result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theCredentialUpdateResultCouldntBe;
+
+  /// No description provided for @setTheTerminalFontSizeColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the terminal font size, colors and shortcuts separately.'**
+  String get setTheTerminalFontSizeColors;
+
+  /// No description provided for @groupGroupid.
+  ///
+  /// In en, this message translates to:
+  /// **'Group {groupId}'**
+  String groupGroupid(String groupId);
+
+  /// No description provided for @groupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group \"{name}\"'**
+  String groupName(String name);
+
+  /// No description provided for @theGroupIsStillUsedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'The group is still used by subgroups or Hosts. Move or delete them before deleting this group.'**
+  String get theGroupIsStillUsedBy;
+
+  /// No description provided for @theGroupSaveResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The group save result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theGroupSaveResultCouldntBe;
+
+  /// No description provided for @theGroupDeletionResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The group deletion result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theGroupDeletionResultCouldntBe;
+
+  /// No description provided for @groupName2.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupName2;
+
+  /// No description provided for @theGroupWasSavedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The group was saved, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theGroupWasSavedButThe;
+
+  /// No description provided for @theGroupWasDeletedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The group was deleted, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theGroupWasDeletedButThe;
+
+  /// No description provided for @theGroupChangedRefreshAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'The group changed. Refresh and save the layout again.'**
+  String get theGroupChangedRefreshAndSave;
+
+  /// No description provided for @theGroupWasChangedByAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'The group was changed by another operation. Refresh the list and try again.'**
+  String get theGroupWasChangedByAnother;
+
+  /// No description provided for @theGroupWasChangedByAnother2.
+  ///
+  /// In en, this message translates to:
+  /// **'The group was changed by another operation. Reopen it and try again.'**
+  String get theGroupWasChangedByAnother2;
+
+  /// No description provided for @theGroupWasUpdatedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The group was updated, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theGroupWasUpdatedButThe;
+
+  /// No description provided for @groupActionsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group actions: {name}'**
+  String groupActionsName(String name);
+
+  /// No description provided for @theGroupUpdateResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The group update result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theGroupUpdateResultCouldntBe;
+
+  /// No description provided for @groupWindowLayoutSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Group window layout saved.'**
+  String get groupWindowLayoutSaved;
+
+  /// No description provided for @theGroupRecordWasChangedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'The group record was changed by another operation. Refresh the list and try again.'**
+  String get theGroupRecordWasChangedBy;
+
+  /// No description provided for @listView.
+  ///
+  /// In en, this message translates to:
+  /// **'List view'**
+  String get listView;
+
+  /// No description provided for @afterCreatingALocalProfileYou.
+  ///
+  /// In en, this message translates to:
+  /// **'After creating a local profile, you can store Hosts and sign-in credentials encrypted on this device.'**
+  String get afterCreatingALocalProfileYou;
+
+  /// No description provided for @createdFormatdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Created {formatDate}'**
+  String createdFormatdate(String formatDate);
+
+  /// No description provided for @createGroupsToOrganizeHostsGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Create groups to organize Hosts; groups and parent relationships are stored only in this local profile.'**
+  String get createGroupsToOrganizeHostsGroups;
+
+  /// No description provided for @createAndUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Create and unlock'**
+  String get createAndUnlock;
+
+  /// No description provided for @createNewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new profile'**
+  String get createNewProfile;
+
+  /// No description provided for @couldntDeleteTheHostTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the Host. Try again.'**
+  String get couldntDeleteTheHostTryAgain;
+
+  /// No description provided for @deleteHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Host?'**
+  String get deleteHost;
+
+  /// No description provided for @deleteCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete credential'**
+  String get deleteCredential;
+
+  /// No description provided for @deleteCredential2.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete credential?'**
+  String get deleteCredential2;
+
+  /// No description provided for @deleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group'**
+  String get deleteGroup;
+
+  /// No description provided for @deleteGroup2.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group?'**
+  String get deleteGroup2;
+
+  /// No description provided for @deleteSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete snippet'**
+  String get deleteSnippet;
+
+  /// No description provided for @deleteSnippet2.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete snippet?'**
+  String get deleteSnippet2;
+
+  /// No description provided for @couldntSaveHistoryCommandsInMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save history; commands in memory can still be viewed this time. Check local storage.'**
+  String get couldntSaveHistoryCommandsInMemory;
+
+  /// No description provided for @previousParentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous parent unavailable'**
+  String get previousParentUnavailable;
+
+  /// No description provided for @previousDefaultCredentialUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous default credential unavailable'**
+  String get previousDefaultCredentialUnavailable;
+
+  /// No description provided for @argumentList.
+  ///
+  /// In en, this message translates to:
+  /// **'Argument list'**
+  String get argumentList;
+
+  /// No description provided for @parameterDefinitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Parameter definitions'**
+  String get parameterDefinitions;
+
+  /// No description provided for @parameterDefinitionsJsonArray.
+  ///
+  /// In en, this message translates to:
+  /// **'Parameter definitions (JSON array)'**
+  String get parameterDefinitionsJsonArray;
+
+  /// No description provided for @argumentsJsonArray.
+  ///
+  /// In en, this message translates to:
+  /// **'Arguments (JSON array)'**
+  String get argumentsJsonArray;
+
+  /// No description provided for @windowfailuresPlural11MoreWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'{windowFailures, plural, =1{1 more window or position couldn\'t be restored.} other{{windowFailures} more windows or positions couldn\'t be restored.}}'**
+  String windowfailuresPlural11MoreWindow(int windowFailures);
+
+  /// No description provided for @onlyContinueAfterVerifyingTheFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only continue after verifying the fingerprint over a trusted channel. Once confirmed, this device creates a new local trust record for the following endpoint:\n\n{host}:{port}\n{algorithm}\n{fingerprint}\n\nAn old approval in the archive doesn\'t authorize connections by itself.'**
+  String onlyContinueAfterVerifyingTheFingerprint(
+    String host,
+    int port,
+    String algorithm,
+    String fingerprint,
+  );
+
+  /// No description provided for @afterEnablingCopyTheSetupCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'After enabling, copy the setup command, paste it into the current Bash and press Enter. Only completed commands are recorded; input at password prompts isn\'t captured, but secrets typed in commands may still be recorded. History is saved encrypted in this device\'s Profile, up to 500 entries / 48 KiB per host. After stopping capture, run atermius_off in Bash to remove the hook.'**
+  String get afterEnablingCopyTheSetupCommand;
+
+  /// No description provided for @enableAndCopySetupCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable and copy setup command'**
+  String get enableAndCopySetupCommand;
+
+  /// No description provided for @completedCommandsAreRecordedAfterEnabling.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed commands are recorded after enabling Bash integration in Recording settings.'**
+  String get completedCommandsAreRecordedAfterEnabling;
+
+  /// No description provided for @reviewAndTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and trust'**
+  String get reviewAndTrust;
+
+  /// No description provided for @reviewSshHostKeysFromThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Review SSH host keys from the archive'**
+  String get reviewSshHostKeysFromThe;
+
+  /// No description provided for @wrongPasswordOrTheLocalProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong password, or the local profile can\'t be unlocked.'**
+  String get wrongPasswordOrTheLocalProfile;
+
+  /// No description provided for @importLocalEncryptedArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Import local encrypted archive'**
+  String get importLocalEncryptedArchive;
+
+  /// No description provided for @exportLocalEncryptedArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Export local encrypted archive'**
+  String get exportLocalEncryptedArchive;
+
+  /// No description provided for @trusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted'**
+  String get trusted;
+
+  /// No description provided for @savingTheLocalEncryptedArchiveWas.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving the local encrypted archive was cancelled.'**
+  String get savingTheLocalEncryptedArchiveWas;
+
+  /// No description provided for @bashRecordingIsOnClickTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Bash recording is on. Click to insert, press Enter to run.'**
+  String get bashRecordingIsOnClickTo;
+
+  /// No description provided for @revoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get revoked;
+
+  /// No description provided for @disconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get disconnected;
+
+  /// No description provided for @theArchiveWasImportedButSome.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive was imported, but some lists couldn\'t be refreshed. Reload the profile.'**
+  String get theArchiveWasImportedButSome;
+
+  /// No description provided for @thereAreTooManySplitsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'There are too many splits to save this group layout.'**
+  String get thereAreTooManySplitsTo;
+
+  /// No description provided for @thisWindowHasNoSessionLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'This window has no session layout for this group.'**
+  String get thisWindowHasNoSessionLayout;
+
+  /// No description provided for @invalidShortcutUseSupportedLetterDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid shortcut: use supported letter, digit or F1–F12 combinations, and make sure every combination is unique.'**
+  String get invalidShortcutUseSupportedLetterDigit;
+
+  /// No description provided for @aShortcutIsInvalidOrDuplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'A shortcut is invalid or duplicated. Fix it before saving.'**
+  String get aShortcutIsInvalidOrDuplicated;
+
+  /// No description provided for @restoreDefaultShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore default shortcuts'**
+  String get restoreDefaultShortcuts;
+
+  /// No description provided for @theSelectedParentGroupNoLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected parent group no longer exists. Refresh the list and try again.'**
+  String get theSelectedParentGroupNoLonger;
+
+  /// No description provided for @openLocalWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Open local workspace'**
+  String get openLocalWorkspace;
+
+  /// No description provided for @executionType.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution type'**
+  String get executionType;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject;
+
+  /// No description provided for @searchTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Search terminal'**
+  String get searchTerminal;
+
+  /// No description provided for @searchTerminalHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Search terminal history'**
+  String get searchTerminalHistory;
+
+  /// No description provided for @revokeSshHostKeyTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke SSH host key trust?'**
+  String get revokeSshHostKeyTrust;
+
+  /// No description provided for @afterRevokingThisKeyForHost.
+  ///
+  /// In en, this message translates to:
+  /// **'After revoking this key for {host}:{port}, later connections must be verified and explicitly approved again.'**
+  String afterRevokingThisKeyForHost(String host, int port);
+
+  /// No description provided for @revokeTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke trust'**
+  String get revokeTrust;
+
+  /// No description provided for @revokingFailedTheTrustStateIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoking failed. The trust state is unchanged; try again.'**
+  String get revokingFailedTheTrustStateIs;
+
+  /// No description provided for @revokeTrustForThisKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke trust for this key'**
+  String get revokeTrustForThisKey;
+
+  /// No description provided for @theFileWindowDidntOpenTry.
+  ///
+  /// In en, this message translates to:
+  /// **'The file window didn\'t open. Try again.'**
+  String get theFileWindowDidntOpenTry;
+
+  /// No description provided for @theHostRequestedByTheFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The host requested by the file window doesn\'t exist.'**
+  String get theHostRequestedByTheFile;
+
+  /// No description provided for @theLocalProfileRequestedByThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The local profile requested by the file window doesn\'t exist.'**
+  String get theLocalProfileRequestedByThe;
+
+  /// No description provided for @textParametersAndPasswordCredentialReferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Text parameters and password credential references use the same structure as server snippets; all bodies and default values are encrypted.'**
+  String get textParametersAndPasswordCredentialReferences;
+
+  /// No description provided for @disconnectCurrentTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect current terminal'**
+  String get disconnectCurrentTerminal;
+
+  /// No description provided for @disconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get disconnect;
+
+  /// No description provided for @passwordsAndKeysForNewHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords and keys for new hosts are set directly in the host details.'**
+  String get passwordsAndKeysForNewHosts;
+
+  /// No description provided for @newGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get newGroup;
+
+  /// No description provided for @theNewWindowDidntOpenThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The new window didn\'t open; the session stays in the current window.'**
+  String get theNewWindowDidntOpenThe;
+
+  /// No description provided for @theNewWindowDidntOpenThe2.
+  ///
+  /// In en, this message translates to:
+  /// **'The new window didn\'t open; the remote desktop stays in the current window.'**
+  String get theNewWindowDidntOpenThe2;
+
+  /// No description provided for @couldntSaveTheGroupLayoutTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the group layout. Try again.'**
+  String get couldntSaveTheGroupLayoutTry;
+
+  /// No description provided for @couldntSaveTheWindowSetCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the window set. Check the name and number of sessions, or unlock again and retry.'**
+  String get couldntSaveTheWindowSetCheck;
+
+  /// No description provided for @couldntCreateTheLocalProfileTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the local profile. Try again.'**
+  String get couldntCreateTheLocalProfileTry;
+
+  /// No description provided for @couldntDeleteTheWindowSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the window set.'**
+  String get couldntDeleteTheWindowSet;
+
+  /// No description provided for @couldntRefreshTheHostListThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh the Host list. The write may have been committed; reload before continuing.'**
+  String get couldntRefreshTheHostListThe;
+
+  /// No description provided for @couldntRefreshTheLocalCredentialList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh the local credential list. The write may have been committed; reload before continuing.'**
+  String get couldntRefreshTheLocalCredentialList;
+
+  /// No description provided for @couldntRefreshTheLocalGroupList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh the local group list. The write may have been committed; reload before continuing.'**
+  String get couldntRefreshTheLocalGroupList;
+
+  /// No description provided for @couldntRefreshTheLocalSnippetList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh the local snippet list. The write may have been committed; reload before continuing.'**
+  String get couldntRefreshTheLocalSnippetList;
+
+  /// No description provided for @couldntStartTheConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the console.'**
+  String get couldntStartTheConsole;
+
+  /// No description provided for @couldntSafelySaveTheDeviceUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t safely save the device unlock key. Check the system secure storage and try again, or create a password-protected profile manually.'**
+  String get couldntSafelySaveTheDeviceUnlock;
+
+  /// No description provided for @couldntExitTheLocalProfileSafely.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t exit the local profile safely. Try again.'**
+  String get couldntExitTheLocalProfileSafely;
+
+  /// No description provided for @couldntImportTheLocalArchiveNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t import the local archive; nothing was partially written to the target profile.'**
+  String get couldntImportTheLocalArchiveNothing;
+
+  /// No description provided for @couldntExportTheLocalProfileTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t export the local profile. Try again; local data is unchanged.'**
+  String get couldntExportTheLocalProfileTry;
+
+  /// No description provided for @couldntOpenANewWindowTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open a new window. Try again.'**
+  String get couldntOpenANewWindowTry;
+
+  /// No description provided for @couldntOpenTheWindowSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the window set.'**
+  String get couldntOpenTheWindowSet;
+
+  /// No description provided for @couldntOpenTheRequestedFileWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the requested file window. Check the connection and host key trust.'**
+  String get couldntOpenTheRequestedFileWindow;
+
+  /// No description provided for @couldntConfirmThatTheTargetProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm that the target profile is empty. Try again.'**
+  String get couldntConfirmThatTheTargetProfile;
+
+  /// No description provided for @couldntReadLocalSshHostKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read local SSH host key trust.'**
+  String get couldntReadLocalSshHostKey;
+
+  /// No description provided for @couldntReadLocalPreferencesTheSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read local preferences. The save may have been committed; reload before continuing.'**
+  String get couldntReadLocalPreferencesTheSave;
+
+  /// No description provided for @couldntReadLocalPreferencesYouCan.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read local preferences. You can retry on the Preferences page.'**
+  String get couldntReadLocalPreferencesYouCan;
+
+  /// No description provided for @couldntReadTheLocalCredentialList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the local credential list. You can retry on the Credentials page.'**
+  String get couldntReadTheLocalCredentialList;
+
+  /// No description provided for @couldntReadTheLocalGroupList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the local group list. You can retry on the Groups page.'**
+  String get couldntReadTheLocalGroupList;
+
+  /// No description provided for @couldntReadTheLocalArchiveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the local archive file. Try again.'**
+  String get couldntReadTheLocalArchiveFile;
+
+  /// No description provided for @couldntReadTheLocalSnippetList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the local snippet list. You can retry on the Snippets page.'**
+  String get couldntReadTheLocalSnippetList;
+
+  /// No description provided for @couldntReadTheLocalProfileList2.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the local profile list. Try again before creating a profile.'**
+  String get couldntReadTheLocalProfileList2;
+
+  /// No description provided for @couldntReadThisHostsSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read this host\'s sign-in details.'**
+  String get couldntReadThisHostsSignIn;
+
+  /// No description provided for @couldntConnectToTheLocalSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to the local SSH Host. Check the network and credentials, then try again.'**
+  String get couldntConnectToTheLocalSsh;
+
+  /// No description provided for @showKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Show key'**
+  String get showKey;
+
+  /// No description provided for @couldntUpdateTheHostTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the host. Try again.'**
+  String get couldntUpdateTheHostTryAgain;
+
+  /// No description provided for @valuevaluePlural11MonitorWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'{valueValue, plural, =1{1 monitor window couldn\'t open; choose again to retry.} other{{valueValue} monitor windows couldn\'t open; choose again to retry.}}'**
+  String valuevaluePlural11MonitorWindow(int valueValue);
+
+  /// No description provided for @localUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Local · unlocked'**
+  String get localUnlocked;
+
+  /// No description provided for @localLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Local · locked'**
+  String get localLocked;
+
+  /// No description provided for @localEncryptedArchiveSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Local encrypted archive saved.'**
+  String get localEncryptedArchiveSaved;
+
+  /// No description provided for @theLocalEncryptedArchiveWasImported.
+  ///
+  /// In en, this message translates to:
+  /// **'The local encrypted archive was imported; each active SSH host key in the archive must be reviewed in Host key trust.'**
+  String get theLocalEncryptedArchiveWasImported;
+
+  /// No description provided for @localArchivePassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Local archive passphrase'**
+  String get localArchivePassphrase;
+
+  /// No description provided for @theLocalArchivePassphraseCanBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive passphrase can be at most 1024 UTF-8 bytes.'**
+  String get theLocalArchivePassphraseCanBe;
+
+  /// No description provided for @theLocalArchiveFileIsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive file is invalid or exceeds the size limit.'**
+  String get theLocalArchiveFileIsInvalid;
+
+  /// No description provided for @theLocalArchiveFileExceedsThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The local archive file exceeds the size limit.'**
+  String get theLocalArchiveFileExceedsThe;
+
+  /// No description provided for @localModeOnlyManagesEncryptedSnippets.
+  ///
+  /// In en, this message translates to:
+  /// **'Local mode only manages encrypted snippets; switch to server sync mode to connect to hosts and run snippets.'**
+  String get localModeOnlyManagesEncryptedSnippets;
+
+  /// No description provided for @localProfile2.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile'**
+  String get localProfile2;
+
+  /// No description provided for @localProfileSubstring2.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile · {substring}'**
+  String localProfileSubstring2(String substring);
+
+  /// No description provided for @localProfileMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile master password'**
+  String get localProfileMasterPassword;
+
+  /// No description provided for @localProfileDataIsMissingOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile data is missing or unreadable. Unlocking was blocked so an empty database isn\'t treated as a valid profile; restore the local data or use a backup.'**
+  String get localProfileDataIsMissingOr;
+
+  /// No description provided for @tagsCommaSeparated.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags (comma-separated)'**
+  String get tagsCommaSeparated;
+
+  /// No description provided for @verifyAndTrustThisKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify and trust this key'**
+  String get verifyAndTrustThisKey;
+
+  /// No description provided for @thisLocalvaultSshRouteIsntSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This LocalVault SSH route isn\'t supported.'**
+  String get thisLocalvaultSshRouteIsntSupported;
+
+  /// No description provided for @thisLocalvaultHasNoSshHost.
+  ///
+  /// In en, this message translates to:
+  /// **'This LocalVault has no SSH host key trust records yet.'**
+  String get thisLocalvaultHasNoSshHost;
+
+  /// No description provided for @thisHostKeyWasRevokedBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'This host key was revoked before'**
+  String get thisHostKeyWasRevokedBefore;
+
+  /// No description provided for @thisCredentialIsStillReferencedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'This credential is still referenced by {credentialReferenceLabel}. Change or remove that reference before deleting it.'**
+  String thisCredentialIsStillReferencedBy(String credentialReferenceLabel);
+
+  /// No description provided for @thisGroupDoesntHaveAnyConnectable.
+  ///
+  /// In en, this message translates to:
+  /// **'This group doesn\'t have any connectable SSH hosts yet.'**
+  String get thisGroupDoesntHaveAnyConnectable;
+
+  /// No description provided for @thisPassphraseIsSeparateFromThe.
+  ///
+  /// In en, this message translates to:
+  /// **'This passphrase is separate from the local profile master password; store it separately. Archive contents are encrypted with Argon2id and XChaCha20-Poly1305.'**
+  String get thisPassphraseIsSeparateFromThe;
+
+  /// No description provided for @thisWorkspaceIsProtectedByThe.
+  ///
+  /// In en, this message translates to:
+  /// **'This workspace is protected by the operating system account\'s secure storage; locking closes the current session.'**
+  String get thisWorkspaceIsProtectedByThe;
+
+  /// No description provided for @thisConsoleIsntSupportedOnThis.
+  ///
+  /// In en, this message translates to:
+  /// **'This console isn\'t supported on this platform.'**
+  String get thisConsoleIsntSupportedOnThis;
+
+  /// No description provided for @eachLayoutCanHaveUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Each layout can have up to 32 SSH hosts. Split it into subgroups.'**
+  String get eachLayoutCanHaveUpTo;
+
+  /// No description provided for @noMatchingHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching hosts'**
+  String get noMatchingHosts;
+
+  /// No description provided for @localvaultInTheBrowserCanManage.
+  ///
+  /// In en, this message translates to:
+  /// **'LocalVault in the browser can manage Hosts and credentials with local encryption, but it can\'t open SSH or SFTP connections here. Return to workspace selection and enter the server workspace to connect to Hosts in a synced Vault through the Web Relay.'**
+  String get localvaultInTheBrowserCanManage;
+
+  /// No description provided for @addHostDetailsToStoreThem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add host details to store them encrypted in this local profile.'**
+  String get addHostDetailsToStoreThem;
+
+  /// No description provided for @addCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Add credential'**
+  String get addCredential;
+
+  /// No description provided for @addLocalCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Add local credential'**
+  String get addLocalCredential;
+
+  /// No description provided for @addLocalGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add local group'**
+  String get addLocalGroup;
+
+  /// No description provided for @addLocalSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add local snippet'**
+  String get addLocalSnippet;
+
+  /// No description provided for @addSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add snippet'**
+  String get addSnippet;
+
+  /// No description provided for @addASignInPasswordOr.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a sign-in password or SSH private key; the ciphertext is stored only in this local profile.'**
+  String get addASignInPasswordOr;
+
+  /// No description provided for @addAScriptOrAStructured.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a script or a structured Bash command; the body is saved only in the encrypted local profile.'**
+  String get addAScriptOrAStructured;
+
+  /// No description provided for @parentGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent group'**
+  String get parentGroup;
+
+  /// No description provided for @theParentGroupNoLongerExists.
+  ///
+  /// In en, this message translates to:
+  /// **'The parent group no longer exists, or this hierarchy would create a cycle. Choose again and retry.'**
+  String get theParentGroupNoLongerExists;
+
+  /// No description provided for @parentMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent missing'**
+  String get parentMissing;
+
+  /// No description provided for @parentName.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent: {name}'**
+  String parentName(String name);
+
+  /// No description provided for @snippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet'**
+  String get snippet;
+
+  /// No description provided for @snippetSnippetid.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet {snippetId}'**
+  String snippetSnippetid(String snippetId);
+
+  /// No description provided for @snippetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet \"{title}\"'**
+  String snippetTitle(String title);
+
+  /// No description provided for @theSnippetSaveResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet save result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theSnippetSaveResultCouldntBe;
+
+  /// No description provided for @theSnippetDeletionResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet deletion result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theSnippetDeletionResultCouldntBe;
+
+  /// No description provided for @theSnippetNoLongerExistsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet no longer exists. Refresh the list.'**
+  String get theSnippetNoLongerExistsRefresh;
+
+  /// No description provided for @theSnippetWasSavedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet was saved, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theSnippetWasSavedButThe;
+
+  /// No description provided for @theSnippetWasDeletedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet was deleted, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theSnippetWasDeletedButThe;
+
+  /// No description provided for @theSnippetWasChangedByAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet was changed by another operation. Refresh the list and try again.'**
+  String get theSnippetWasChangedByAnother;
+
+  /// No description provided for @theSnippetWasUpdatedButThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet was updated, but the list couldn\'t be refreshed. Refresh the list again.'**
+  String get theSnippetWasUpdatedButThe;
+
+  /// No description provided for @snippetActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet actions: {title}'**
+  String snippetActionsTitle(String title);
+
+  /// No description provided for @theSnippetUpdateResultCouldntBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The snippet update result couldn\'t be confirmed. Refresh the list before deciding whether to retry.'**
+  String get theSnippetUpdateResultCouldntBe;
+
+  /// No description provided for @snippetTitle2.
+  ///
+  /// In en, this message translates to:
+  /// **'Snippet title'**
+  String get snippetTitle2;
+
+  /// No description provided for @existingShellLabelShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing shell label: {shell}'**
+  String existingShellLabelShell(String shell);
+
+  /// No description provided for @leaveBlankToKeepTheCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave blank to keep the current key; anything you enter replaces it.'**
+  String get leaveBlankToKeepTheCurrent;
+
+  /// No description provided for @targetHostPortAlgorithmAlgorithmFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Target: {host}:{port}\nAlgorithm: {algorithm}\nFingerprint: {fingerprint}\n\n{valueValue}'**
+  String targetHostPortAlgorithmAlgorithmFingerprint(
+    String host,
+    int port,
+    String algorithm,
+    String fingerprint,
+    String valueValue,
+  );
+
+  /// No description provided for @confirmTrustingThisKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm trusting this key'**
+  String get confirmTrustingThisKey;
+
+  /// No description provided for @confirmLocalArchivePassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm local archive passphrase'**
+  String get confirmLocalArchivePassphrase;
+
+  /// No description provided for @privateKeyPassphraseOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Private key passphrase (optional)'**
+  String get privateKeyPassphraseOptional;
+
+  /// No description provided for @program.
+  ///
+  /// In en, this message translates to:
+  /// **'Program'**
+  String get program;
+
+  /// No description provided for @windowSetSavedSomeSeparateWindows.
+  ///
+  /// In en, this message translates to:
+  /// **'Window set saved; some separate windows don\'t support reading their position.'**
+  String get windowSetSavedSomeSeparateWindows;
+
+  /// No description provided for @windowSetOpenedValuevalueCountSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Window set opened {valueValue}/{count} sessions; {failures, plural, =1{1 couldn\'t connect} other{{failures} couldn\'t connect}}.'**
+  String windowSetOpenedValuevalueCountSessions(
+    int valueValue,
+    int count,
+    int failures,
+  );
+
+  /// No description provided for @portForwarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Port forwarding'**
+  String get portForwarding;
+
+  /// No description provided for @manageSshHostKeyTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage SSH host key trust'**
+  String get manageSshHostKeyTrust;
+
+  /// No description provided for @terminalTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal theme'**
+  String get terminalTheme;
+
+  /// No description provided for @terminalFontSize2.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal font size'**
+  String get terminalFontSize2;
+
+  /// No description provided for @structuredBashCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Structured Bash command'**
+  String get structuredBashCommand;
+
+  /// No description provided for @structuredCommandsSupportBashOnlyHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Structured commands support Bash only; here they\'re only saved encrypted and never run in local mode.'**
+  String get structuredCommandsSupportBashOnlyHere;
+
+  /// No description provided for @continueLabel2.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel2;
+
+  /// No description provided for @editCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit credential'**
+  String get editCredential;
+
+  /// No description provided for @editLocalCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit local credential'**
+  String get editLocalCredential;
+
+  /// No description provided for @editLocalGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit local group'**
+  String get editLocalGroup;
+
+  /// No description provided for @editLocalSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit local snippet'**
+  String get editLocalSnippet;
+
+  /// No description provided for @editSnippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit snippet'**
+  String get editSnippet;
+
+  /// No description provided for @gridView.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid view'**
+  String get gridView;
+
+  /// No description provided for @script.
+  ///
+  /// In en, this message translates to:
+  /// **'Script'**
+  String get script;
+
+  /// No description provided for @scriptShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Script · {shell}'**
+  String scriptShell(String shell);
+
+  /// No description provided for @scriptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Script body'**
+  String get scriptBody;
+
+  /// No description provided for @unlockLocalProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock local profile'**
+  String get unlockLocalProfile;
+
+  /// No description provided for @authenticationType.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication type'**
+  String get authenticationType;
+
+  /// No description provided for @letExternalAiAccessTheCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Let external AI access the current local workspace.'**
+  String get letExternalAiAccessTheCurrent;
+
+  /// No description provided for @setLocalArchivePassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Set local archive passphrase'**
+  String get setLocalArchivePassphrase;
+
+  /// No description provided for @thisPreferenceAlreadyExistsAndThe.
+  ///
+  /// In en, this message translates to:
+  /// **'This preference already exists and the current value was reloaded. Review it before saving.'**
+  String get thisPreferenceAlreadyExistsAndThe;
+
+  /// No description provided for @thisKeyWasRevokedBeforeOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This key was revoked before. Only approve it again after re-verifying the server\'s identity.'**
+  String get thisKeyWasRevokedBeforeOnly;
+
+  /// No description provided for @thisSnippetIdAlreadyExistsCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'This snippet ID already exists. Create it again.'**
+  String get thisSnippetIdAlreadyExistsCreate;
+
+  /// No description provided for @createAnEmptyLocalProfileFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an empty local profile first, then import the archive.'**
+  String get createAnEmptyLocalProfileFirst;
+
+  /// No description provided for @unlockTheLocalProfileFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the local profile first.'**
+  String get unlockTheLocalProfileFirst;
+
+  /// No description provided for @chooseALocalProfileFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a local profile first.'**
+  String get chooseALocalProfileFirst;
+
+  /// No description provided for @unlockTheTargetLocalProfileTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the target local profile to open the file window.'**
+  String get unlockTheTargetLocalProfileTo;
+
+  /// No description provided for @enterTheSshPrivateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the SSH private key.'**
+  String get enterTheSshPrivateKey;
+
+  /// No description provided for @enterACredentialNameAndUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a credential name and user name.'**
+  String get enterACredentialNameAndUser;
+
+  /// No description provided for @enterAPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a password.'**
+  String get enterAPassword;
+
+  /// No description provided for @enterTheLocalProfileMasterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the local profile master password.'**
+  String get enterTheLocalProfileMasterPassword;
+
+  /// No description provided for @enterASnippetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a snippet title.'**
+  String get enterASnippetTitle;
+
+  /// No description provided for @enterTheScriptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the script body.'**
+  String get enterTheScriptBody;
+
+  /// No description provided for @verifyThisFingerprintOverATrusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify this fingerprint over a trusted channel. Once approved, it\'s saved only in the current LocalVault.'**
+  String get verifyThisFingerprintOverATrusted;
+
+  /// No description provided for @enterLocalArchivePassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter local archive passphrase'**
+  String get enterLocalArchivePassphrase;
+
+  /// No description provided for @backToWorkspaceSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to workspace selection'**
+  String get backToWorkspaceSelection;
+
+  /// No description provided for @noHostsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No Hosts yet'**
+  String get noHostsYet;
+
+  /// No description provided for @noCredentialsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No credentials yet'**
+  String get noCredentialsYet;
+
+  /// No description provided for @noGroupsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups yet'**
+  String get noGroupsYet;
+
+  /// No description provided for @noLocalProfilesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No local profiles yet'**
+  String get noLocalProfilesYet;
+
+  /// No description provided for @noSnippetsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No snippets yet'**
+  String get noSnippetsYet;
+
+  /// No description provided for @connectGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect group'**
+  String get connectGroup;
+
+  /// No description provided for @connectionClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection closed'**
+  String get connectionClosed;
+
+  /// No description provided for @connectDirectFromThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect (direct from this device)'**
+  String get connectDirectFromThisDevice;
+
+  /// No description provided for @exitLocalProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit local profile'**
+  String get exitLocalProfile;
+
+  /// No description provided for @chooseTheWorkspaceModeAndThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the workspace mode and the page that opens by default. Settings are saved in the current local profile.'**
+  String get chooseTheWorkspaceModeAndThe;
+
+  /// No description provided for @chooseAProfileToUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a profile to unlock'**
+  String get chooseAProfileToUnlock;
+
+  /// No description provided for @someSeparateWindowsOrWindowPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'Some separate windows or window positions couldn\'t be restored; sessions stay in the current window.'**
+  String get someSeparateWindowsOrWindowPositions;
+
+  /// No description provided for @profileSubstring.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile {substring}'**
+  String profileSubstring(String substring);
+
+  /// No description provided for @profileHostAndCredentialRecordsAre.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile, Host and credential records are protected with a local encryption key.'**
+  String get profileHostAndCredentialRecordsAre;
+
+  /// No description provided for @theProfileWasClosedButAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'The profile was closed, but automatic unlock couldn\'t be revoked. Unlock again and lock it to retry.'**
+  String get theProfileWasClosedButAutomatic;
+
+  /// No description provided for @retryRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry refresh'**
+  String get retryRefresh;
+
+  /// No description provided for @retryReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry reading'**
+  String get retryReading;
+
+  /// No description provided for @retryReadingProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry reading profiles'**
+  String get retryReadingProfiles;
+
+  /// No description provided for @lockAndReturnToProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock and return to profiles'**
+  String get lockAndReturnToProfiles;
+
+  /// No description provided for @lockProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock profile'**
+  String get lockProfile;
+
+  /// No description provided for @hideKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide key'**
+  String get hideKey;
+
+  /// No description provided for @topLevelGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-level group'**
+  String get topLevelGroup;
+
+  /// No description provided for @color.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get color;
+
+  /// No description provided for @firstConnectionUnknownSshHostKey.
+  ///
+  /// In en, this message translates to:
+  /// **'First connection: unknown SSH host key'**
+  String get firstConnectionUnknownSshHostKey;
+
+  /// No description provided for @defaultLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get defaultLabel;
+
+  /// No description provided for @defaultCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Default credential'**
+  String get defaultCredential;
+
+  /// No description provided for @allLocalRecordsArePreflightedBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'All local records are preflighted before the new Vault is created. Unsupported preferences, tombstones, missing references, or attachment object references stop the migration before any server write.'**
+  String get allLocalRecordsArePreflightedBefore;
+
+  /// No description provided for @cancelEmptyPreparation.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel empty preparation'**
+  String get cancelEmptyPreparation;
+
+  /// No description provided for @continueMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue migration'**
+  String get continueMigration;
+
+  /// No description provided for @importedLocalProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported local profiles'**
+  String get importedLocalProfiles;
+
+  /// No description provided for @localProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile'**
+  String get localProfile;
+
+  /// No description provided for @localProfilePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile password'**
+  String get localProfilePassword;
+
+  /// No description provided for @localProfileUnlockedCountResumableMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile unlocked · {count, plural, =1{1 resumable migration} other{{count} resumable migrations}}'**
+  String localProfileUnlockedCountResumableMigration(int count);
+
+  /// No description provided for @localProfileSubstring.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile · {substring}'**
+  String localProfileSubstring(String substring);
+
+  /// No description provided for @lock.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock'**
+  String get lock;
+
+  /// No description provided for @migrateLocalProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Migrate local profiles'**
+  String get migrateLocalProfiles;
+
+  /// No description provided for @migrationCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration completed'**
+  String get migrationCompleted;
+
+  /// No description provided for @migrationNeedsRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration needs recovery'**
+  String get migrationNeedsRecovery;
+
+  /// No description provided for @migrationStoppedLocalSourceKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration stopped · local source kept'**
+  String get migrationStoppedLocalSourceKept;
+
+  /// No description provided for @moveLocalEncryptedRecordsToA.
+  ///
+  /// In en, this message translates to:
+  /// **'Move local encrypted records to a new sync Vault'**
+  String get moveLocalEncryptedRecordsToA;
+
+  /// No description provided for @newSyncVaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'New sync Vault name'**
+  String get newSyncVaultName;
+
+  /// No description provided for @noLocalOnlyProfileExistsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'No local-only profile exists in this browser yet. Create one from the Local profile workspace, add the records you want, then return here.'**
+  String get noLocalOnlyProfileExistsIn;
+
+  /// No description provided for @preflightAndMigrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight and migrate'**
+  String get preflightAndMigrate;
+
+  /// No description provided for @startANewMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new migration'**
+  String get startANewMigration;
+
+  /// No description provided for @stopAndKeepBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop and keep both'**
+  String get stopAndKeepBoth;
+
+  /// No description provided for @stopAndKeepLocalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop and keep local data'**
+  String get stopAndKeepLocalData;
+
+  /// No description provided for @stopMigrationAndKeepLocalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop migration and keep local data?'**
+  String get stopMigrationAndKeepLocalData;
+
+  /// No description provided for @theClientDecryptsAndValidatesEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'The client decrypts and validates every source record, then encrypts it again for the approved server device. The server receives only signed ciphertext. Existing local records remain unchanged, and the local profile is write-frozen until the destination confirms every record.'**
+  String get theClientDecryptsAndValidatesEvery;
+
+  /// No description provided for @theLocalSourceWillBecomeWritable.
+  ///
+  /// In en, this message translates to:
+  /// **'The local source will become writable again and its records will remain unchanged. The destination Vault, committed records, and queued operations will not be deleted or withdrawn; the destination may contain a partial copy.'**
+  String get theLocalSourceWillBecomeWritable;
+
+  /// No description provided for @unlockALocalOnlyProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock a local-only profile'**
+  String get unlockALocalOnlyProfile;
+
+  /// No description provided for @unlockAndValidate.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock and validate'**
+  String get unlockAndValidate;
+
+  /// No description provided for @stagedcountTotalcountEncryptedRecordsStaged.
+  ///
+  /// In en, this message translates to:
+  /// **'{stagedCount} / {totalCount} encrypted records staged'**
+  String stagedcountTotalcountEncryptedRecordsStaged(
+    int stagedCount,
+    int totalCount,
+  );
+
+  /// No description provided for @stageditemcountItemcountEncryptedRecordsStagedTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'{stagedItemCount} / {itemCount} encrypted records staged · target {substring}…'**
+  String stageditemcountItemcountEncryptedRecordsStagedTarget(
+    int stagedItemCount,
+    int itemCount,
+    String substring,
+  );
+
+  /// No description provided for @theSyncServiceIdentityIsntVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'The sync service identity isn\'t verified yet. Sign in again and retry.'**
+  String get theSyncServiceIdentityIsntVerified;
+
+  /// No description provided for @countCount2EncryptedRecordsSafelyStaged.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {count2} encrypted records safely staged.'**
+  String countCount2EncryptedRecordsSafelyStaged(int count, int count2);
+
+  /// No description provided for @destinationDataIsAlreadyStagedThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination data is already staged; this migration can\'t be cancelled.'**
+  String get destinationDataIsAlreadyStagedThis;
+
+  /// No description provided for @couldntStopTheMigrationTheSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t stop the migration. The source data and staged ciphertext are kept; try again or continue the migration.'**
+  String get couldntStopTheMigrationTheSource;
+
+  /// No description provided for @thisMigrationCantBeResumedSafely.
+  ///
+  /// In en, this message translates to:
+  /// **'This migration can\'t be resumed safely. The source data and staged ciphertext are unchanged; check the current device and server state.'**
+  String get thisMigrationCantBeResumedSafely;
+
+  /// No description provided for @couldntUnlockOrVerifyThisLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t unlock or verify this local profile. Check the password and local storage, then try again.'**
+  String get couldntUnlockOrVerifyThisLocal;
+
+  /// No description provided for @couldntReadTheLocalProfileList.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the local profile list. Close this page and try again.'**
+  String get couldntReadTheLocalProfileList;
+
+  /// No description provided for @theStagedDestinationCiphertextHasAn.
+  ///
+  /// In en, this message translates to:
+  /// **'The staged destination ciphertext has an invalid format.'**
+  String get theStagedDestinationCiphertextHasAn;
+
+  /// No description provided for @noVaultCreationRequestWasSent.
+  ///
+  /// In en, this message translates to:
+  /// **'No Vault creation request was sent; the preparation journal was safely cancelled.'**
+  String get noVaultCreationRequestWasSent;
+
+  /// No description provided for @localDataWasFullyPreflightedAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data was fully preflighted and frozen; preparing the new sync Vault…'**
+  String get localDataWasFullyPreflightedAnd;
+
+  /// No description provided for @localSourceSnapshotVerifiedResumingThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Local source snapshot verified; resuming the same sync destination…'**
+  String get localSourceSnapshotVerifiedResumingThe;
+
+  /// No description provided for @theLocalProfileIsLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The local profile is locked.'**
+  String get theLocalProfileIsLocked;
+
+  /// No description provided for @encryptingAndStagingRecordsWithThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypting and staging records with the destination Vault key…'**
+  String get encryptingAndStagingRecordsWithThe;
+
+  /// No description provided for @syncingEncryptedRecordsToTheNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing encrypted records to the new Vault…'**
+  String get syncingEncryptedRecordsToTheNew;
+
+  /// No description provided for @confirmingTheSameDestinationVaultAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirming the same destination Vault and checking previously staged records…'**
+  String get confirmingTheSameDestinationVaultAnd;
+
+  /// No description provided for @reVerifyingTheLocalSourceSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-verifying the local source snapshot and staged encrypted data…'**
+  String get reVerifyingTheLocalSourceSnapshot;
+
+  /// No description provided for @preflightingAllLocalRecordsWritesTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflighting all local records; writes to the source profile are temporarily blocked…'**
+  String get preflightingAllLocalRecordsWritesTo;
+
+  /// No description provided for @verifyingTheLocalProfileAndChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying the local profile and checking the recovery journal…'**
+  String get verifyingTheLocalProfileAndChecking;
+
+  /// No description provided for @thisMigrationCantBeCancelledSafely.
+  ///
+  /// In en, this message translates to:
+  /// **'This migration can\'t be cancelled safely. Continue recovering the original destination; the source data stays frozen.'**
+  String get thisMigrationCantBeCancelledSafely;
+
+  /// No description provided for @theDestinationVaultsSyncPreferencesConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'The destination Vault\'s sync preferences conflict; the migration isn\'t fully verified yet.'**
+  String get theDestinationVaultsSyncPreferencesConflict;
+
+  /// No description provided for @recordsAreSavedEncryptedInThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Records are saved encrypted in the sync queue, but not all server confirmations have arrived. The source profile stays frozen; click \"Continue migration\" to retry safely.'**
+  String get recordsAreSavedEncryptedInThe;
+
+  /// No description provided for @migrationPreparationHasntSavedTheVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration preparation hasn\'t saved the Vault creation data yet.'**
+  String get migrationPreparationHasntSavedTheVault;
+
+  /// No description provided for @migrationCiphertextStagingIsIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration ciphertext staging is incomplete.'**
+  String get migrationCiphertextStagingIsIncomplete;
+
+  /// No description provided for @migrationStoppedTheLocalSourceData.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration stopped. The local source data is intact and writable again; data committed or pending sync in the destination Vault is kept.'**
+  String get migrationStoppedTheLocalSourceData;
+
+  /// No description provided for @migrationCompleteTheServerConfirmedEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration complete. The server confirmed every record; the local profile still keeps the original data.'**
+  String get migrationCompleteTheServerConfirmedEvery;
+
+  /// No description provided for @theMigrationJournalDoesntMatchThe.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration journal doesn\'t match the currently verified local source snapshot.'**
+  String get theMigrationJournalDoesntMatchThe;
+
+  /// No description provided for @theMigrationJournalContainsDuplicateOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration journal contains duplicate or extra records.'**
+  String get theMigrationJournalContainsDuplicateOr;
+
+  /// No description provided for @migrationIncompleteTheSourceDataIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration incomplete. The source data is unchanged; if a recovery journal was created, continue the same destination below.'**
+  String get migrationIncompleteTheSourceDataIs;
+
+  /// No description provided for @theMigrationDestinationBelongsToA.
+  ///
+  /// In en, this message translates to:
+  /// **'The migration destination belongs to a different server instance.'**
+  String get theMigrationDestinationBelongsToA;
+
+  /// No description provided for @accountPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Account password'**
+  String get accountPassword;
+
+  /// No description provided for @accountSessionExpiredSignInAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Account session expired; sign in again'**
+  String get accountSessionExpiredSignInAgain;
+
+  /// No description provided for @encryptedChangesAreUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted changes are up to date'**
+  String get encryptedChangesAreUpToDate;
+
+  /// No description provided for @encryptedSyncWillRetryWhenThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted sync will retry when the connection returns'**
+  String get encryptedSyncWillRetryWhenThe;
+
+  /// No description provided for @noVaultIsCurrentlyAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No Vault is currently available'**
+  String get noVaultIsCurrentlyAvailable;
+
+  /// No description provided for @receiveEncryptedChangesNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive encrypted changes now'**
+  String get receiveEncryptedChangesNow;
+
+  /// No description provided for @receivingSignedEncryptedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving signed encrypted changes'**
+  String get receivingSignedEncryptedChanges;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// No description provided for @thisDeviceOrVaultAccessWas.
+  ///
+  /// In en, this message translates to:
+  /// **'This device or Vault access was revoked'**
+  String get thisDeviceOrVaultAccessWas;
+
+  /// No description provided for @unlockToVerifyTheLatestVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock to verify the latest Vault state'**
+  String get unlockToVerifyTheLatestVault;
+
+  /// No description provided for @unlockWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock workspace'**
+  String get unlockWorkspace;
+
+  /// No description provided for @workspaceLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace locked'**
+  String get workspaceLocked;
+
+  /// No description provided for @yourAccountStaysSignedInWhile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account stays signed in. While locked, this device can receive and store signed ciphertext, but it cannot decrypt records or create or upload changes.'**
+  String get yourAccountStaysSignedInWhile;
+
+  /// No description provided for @sshConsoleSupportReadingTextAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH / Console support reading text and input; SSH also supports standalone command execution and SFTP text file read/write. RDP / VNC support connections and tab management; screen recognition and mouse control aren\'t available yet.'**
+  String get sshConsoleSupportReadingTextAnd;
+
+  /// No description provided for @onlyTheLast50ToolNames.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the last 50 tool names and results are kept in memory; commands, file contents and tokens aren\'t recorded.'**
+  String get onlyTheLast50ToolNames;
+
+  /// No description provided for @listensOn127001.
+  ///
+  /// In en, this message translates to:
+  /// **'Listens on 127.0.0.1 only. A new token is generated each time it\'s enabled; authorization ends after locking, signing out or switching Vaults. Different windows can use different ports. Stopping MCP doesn\'t close sessions you\'ve opened.'**
+  String get listensOn127001;
+
+  /// No description provided for @stopAndRevokeToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop and revoke token'**
+  String get stopAndRevokeToken;
+
+  /// No description provided for @allowExternalAiToPerformActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow external AI to perform actions'**
+  String get allowExternalAiToPerformActions;
+
+  /// No description provided for @actionsAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions allowed'**
+  String get actionsAllowed;
+
+  /// No description provided for @allowsConnectingClosingSessionsTerminalInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Allows connecting/closing sessions, terminal input, running commands and writing files. Re-enable MCP after changing this.'**
+  String get allowsConnectingClosingSessionsTerminalInput;
+
+  /// No description provided for @readOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only'**
+  String get readOnly;
+
+  /// No description provided for @readOnlyModeCanStillRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only mode can still read terminal output and file contents, which may contain sensitive information. Only give the connection configuration to AI you trust. Saved passwords, private keys and unlock keys are never provided as MCP fields.'**
+  String get readOnlyModeCanStillRead;
+
+  /// No description provided for @availableTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Available tools'**
+  String get availableTools;
+
+  /// No description provided for @enableMcp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable MCP'**
+  String get enableMcp;
+
+  /// No description provided for @copyConnectionConfigIncludesToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy connection config (includes token)'**
+  String get copyConnectionConfigIncludesToken;
+
+  /// No description provided for @externalAiAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'External AI access'**
+  String get externalAiAccess;
+
+  /// No description provided for @failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get failed;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get off;
+
+  /// No description provided for @copiedIncludesAccessToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied (includes access token)'**
+  String get copiedIncludesAccessToken;
+
+  /// No description provided for @couldntStartMcpMakeSureThe.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start MCP. Make sure the workspace is unlocked and the port isn\'t used by another window.'**
+  String get couldntStartMcpMakeSureThe;
+
+  /// No description provided for @couldntCopyTheConfigurationCheckClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy the configuration. Check clipboard permissions.'**
+  String get couldntCopyTheConfigurationCheckClipboard;
+
+  /// No description provided for @noCallsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No calls yet'**
+  String get noCallsYet;
+
+  /// No description provided for @recentCalls.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent calls'**
+  String get recentCalls;
+
+  /// No description provided for @localListeningPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Local listening port'**
+  String get localListeningPort;
+
+  /// No description provided for @starting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get starting;
+
+  /// No description provided for @theBrowserAndMobileAppsDont.
+  ///
+  /// In en, this message translates to:
+  /// **'The browser and mobile apps don\'t provide a local MCP listener. Enable it after opening the workspace in the Windows, Linux or macOS desktop client.'**
+  String get theBrowserAndMobileAppsDont;
+
+  /// No description provided for @portMustBe102465535.
+  ///
+  /// In en, this message translates to:
+  /// **'Port must be 1024–65535.'**
+  String get portMustBe102465535;
+
+  /// No description provided for @runningValuevalue.
+  ///
+  /// In en, this message translates to:
+  /// **'Running · {valueValue}'**
+  String runningValuevalue(String valueValue);
+
+  /// No description provided for @letExternalAiUseTheHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Let external AI use the hosts, sessions, terminals and remote files in the current workspace through MCP. No model API needs to be configured in Atermius.'**
+  String get letExternalAiUseTheHosts;
+
+  /// No description provided for @rdpRemoteDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'RDP remote desktop'**
+  String get rdpRemoteDesktop;
+
+  /// No description provided for @sshHost.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH host'**
+  String get sshHost;
+
+  /// No description provided for @vncRemoteDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'VNC remote desktop'**
+  String get vncRemoteDesktop;
+
+  /// No description provided for @newSession.
+  ///
+  /// In en, this message translates to:
+  /// **'New session'**
+  String get newSession;
+
+  /// No description provided for @unableToOpenANewWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open a new window.'**
+  String get unableToOpenANewWindow;
+
+  /// No description provided for @couldntOpenANewWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open a new window.'**
+  String get couldntOpenANewWindow;
+
+  /// No description provided for @newWindowsRequireADesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'New windows require a desktop.'**
+  String get newWindowsRequireADesktop;
+
+  /// No description provided for @fileWindowsRequireADesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'File windows require a desktop.'**
+  String get fileWindowsRequireADesktop;
+
+  /// No description provided for @independentFileWindowsRequireADesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Independent file windows require a desktop.'**
+  String get independentFileWindowsRequireADesktop;
+
+  /// No description provided for @chooseSshConfigFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose SSH config file'**
+  String get chooseSshConfigFile;
+
+  /// No description provided for @confirmImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm import'**
+  String get confirmImport;
+
+  /// No description provided for @createCountEncryptedHostRecordS.
+  ///
+  /// In en, this message translates to:
+  /// **'Create {count, plural, =1{1 encrypted Host record} other{{count} encrypted Host records}}. Existing Hosts will not be changed. No SSH connection will be opened.'**
+  String createCountEncryptedHostRecordS(int count);
+
+  /// No description provided for @importHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Hosts'**
+  String get importHosts;
+
+  /// No description provided for @importOpensshConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Import OpenSSH config'**
+  String get importOpensshConfig;
+
+  /// No description provided for @importTheseHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Import these Hosts?'**
+  String get importTheseHosts;
+
+  /// No description provided for @importCountHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Import {count, plural, =1{1 Host} other{{count} Hosts}}'**
+  String importCountHosts(int count);
+
+  /// No description provided for @lineLineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Line {line} · {message}'**
+  String lineLineMessage(int line, String message);
+
+  /// No description provided for @noConcreteHostAliasesWereFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No concrete Host aliases were found.'**
+  String get noConcreteHostAliasesWereFound;
+
+  /// No description provided for @proxyjumpReferencesCouldNotBeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'ProxyJump references could not be saved in a safe order.'**
+  String get proxyjumpReferencesCouldNotBeSaved;
+
+  /// No description provided for @reviewBlockedNoRecordsCanBe.
+  ///
+  /// In en, this message translates to:
+  /// **'Review blocked: no records can be imported from this file.'**
+  String get reviewBlockedNoRecordsCanBe;
+
+  /// No description provided for @reviewLiteralHostAliasesHostnameUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Review literal Host aliases, HostName, User, Port, and a single ProxyJump alias before saving. Include, Match, wildcard patterns, ProxyCommand, and LocalCommand are blocked. IdentityFile paths are never opened.'**
+  String get reviewLiteralHostAliasesHostnameUser;
+
+  /// No description provided for @theActiveVaultChangedDuringImport.
+  ///
+  /// In en, this message translates to:
+  /// **'The active Vault changed during import; remaining Hosts were not saved.'**
+  String get theActiveVaultChangedDuringImport;
+
+  /// No description provided for @theActiveVaultIsReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'The active Vault is read-only; no Hosts were imported.'**
+  String get theActiveVaultIsReadOnly;
+
+  /// No description provided for @theConfigFileCouldNotBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The config file could not be read.'**
+  String get theConfigFileCouldNotBe;
+
+  /// No description provided for @theSelectedConfigCouldNotBe.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected config could not be read.'**
+  String get theSelectedConfigCouldNotBe;
+
+  /// No description provided for @theSelectedConfigExceedsThe1.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected config exceeds the 1 MiB limit.'**
+  String get theSelectedConfigExceedsThe1;
+
+  /// No description provided for @thisProxyjumpChainContainsACycle.
+  ///
+  /// In en, this message translates to:
+  /// **'This ProxyJump chain contains a cycle; no Host in the affected route will be imported.'**
+  String get thisProxyjumpChainContainsACycle;
+
+  /// No description provided for @thisProxyjumpChainExceedsTheMaxjumphosthops.
+  ///
+  /// In en, this message translates to:
+  /// **'This ProxyJump chain exceeds the {maxJumpHostHops}-hop limit.'**
+  String thisProxyjumpChainExceedsTheMaxjumphosthops(int maxJumpHostHops);
+
+  /// No description provided for @thisProxyjumpChainPointsToA.
+  ///
+  /// In en, this message translates to:
+  /// **'This ProxyJump chain points to a missing saved Host.'**
+  String get thisProxyjumpChainPointsToA;
+
+  /// No description provided for @valuevalueAdditionalFindingsAreHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'{valueValue, plural, =1{1 additional finding is hidden.} other{{valueValue} additional findings are hidden.}}'**
+  String valuevalueAdditionalFindingsAreHidden(int valueValue);
+
+  /// No description provided for @filenameActions.
+  ///
+  /// In en, this message translates to:
+  /// **'{filename} actions'**
+  String filenameActions(String filename);
+
+  /// No description provided for @uploadFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload file'**
+  String get uploadFile;
+
+  /// No description provided for @parentFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent folder'**
+  String get parentFolder;
+
+  /// No description provided for @download.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// No description provided for @modified.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get modified;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @deleteFilenameFoldersMustBeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{filename}\"? Folders must be empty. This can\'t be undone.'**
+  String deleteFilenameFoldersMustBeEmpty(String filename);
+
+  /// No description provided for @size.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get size;
+
+  /// No description provided for @fileActions.
+  ///
+  /// In en, this message translates to:
+  /// **'File actions'**
+  String get fileActions;
+
+  /// No description provided for @newFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New folder'**
+  String get newFolder;
+
+  /// No description provided for @thisFolderIsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is empty'**
+  String get thisFolderIsEmpty;
+
+  /// No description provided for @confirmDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm deletion'**
+  String get confirmDeletion;
+
+  /// No description provided for @editText.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit text'**
+  String get editText;
+
+  /// No description provided for @remotePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote path'**
+  String get remotePath;
+
+  /// No description provided for @closePane.
+  ///
+  /// In en, this message translates to:
+  /// **'Close pane'**
+  String get closePane;
+
+  /// No description provided for @unsplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsplit'**
+  String get unsplit;
+
+  /// No description provided for @invalidLayoutSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid layout session.'**
+  String get invalidLayoutSession;
+
+  /// No description provided for @layoutIsNestedTooDeeply.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout is nested too deeply.'**
+  String get layoutIsNestedTooDeeply;
+
+  /// No description provided for @dropToSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop to split'**
+  String get dropToSplit;
+
+  /// No description provided for @paneActionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pane actions · {label}'**
+  String paneActionsLabel(String label);
+
+  /// No description provided for @paneActionsTapTheWhiteHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pane actions: tap the white handle at the top or press Alt+Shift+P'**
+  String get paneActionsTapTheWhiteHandle;
+
+  /// No description provided for @paneActionsHoverNearTheTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Pane actions: hover near the top, touch the top, or press Alt+Shift+P'**
+  String get paneActionsHoverNearTheTop;
+
+  /// No description provided for @settingsCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings categories'**
+  String get settingsCategories;
+
+  /// No description provided for @backToConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to conflict'**
+  String get backToConflict;
+
+  /// No description provided for @compare.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get compare;
+
+  /// No description provided for @compareRemoteFileVersions.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare remote file versions'**
+  String get compareRemoteFileVersions;
+
+  /// No description provided for @editRemoteTextFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit remote text file'**
+  String get editRemoteTextFile;
+
+  /// No description provided for @fileName.
+  ///
+  /// In en, this message translates to:
+  /// **'File name'**
+  String get fileName;
+
+  /// No description provided for @latestRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest remote'**
+  String get latestRemote;
+
+  /// No description provided for @overwriteRemoteFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite remote file'**
+  String get overwriteRemoteFile;
+
+  /// No description provided for @remoteFileChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote file changed'**
+  String get remoteFileChanged;
+
+  /// No description provided for @remoteFileContents.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote file contents'**
+  String get remoteFileContents;
+
+  /// No description provided for @saveAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as'**
+  String get saveAs;
+
+  /// No description provided for @saveRemoteFileAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Save remote file as'**
+  String get saveRemoteFileAs;
+
+  /// No description provided for @theRemoteFileChangedAfterYou.
+  ///
+  /// In en, this message translates to:
+  /// **'The remote file changed after you opened it. Your draft has not been saved. Compare versions, save a new copy, or explicitly overwrite the latest version.'**
+  String get theRemoteFileChangedAfterYou;
+
+  /// No description provided for @utf8TextUpTo10.
+  ///
+  /// In en, this message translates to:
+  /// **'UTF-8 text up to 10 MiB. The draft stays in memory and is not synchronized. SFTP cannot guarantee compare-and-swap or no-follow open against a concurrent remote path change; avoid editing files in shared writable directories.'**
+  String get utf8TextUpTo10;
+
+  /// No description provided for @yourDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Your draft'**
+  String get yourDraft;
+
+  /// No description provided for @advanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advanced;
+
+  /// No description provided for @allowNetworkExposure.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow network exposure'**
+  String get allowNetworkExposure;
+
+  /// No description provided for @anotherProfileOfThisHostAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'Another profile of this Host already uses this listener address and port.'**
+  String get anotherProfileOfThisHostAlready;
+
+  /// No description provided for @connectThisHostOverSshTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect this Host over SSH to start forwards.'**
+  String get connectThisHostOverSshTo;
+
+  /// No description provided for @couldNotRemoveThisForwardingProfile2.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove this forwarding profile.'**
+  String get couldNotRemoveThisForwardingProfile2;
+
+  /// No description provided for @destinationReachedFromTheSshServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination reached from the SSH server'**
+  String get destinationReachedFromTheSshServer;
+
+  /// No description provided for @destinationReachedFromThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination reached from this device'**
+  String get destinationReachedFromThisDevice;
+
+  /// No description provided for @dynamicSocksD.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic SOCKS (-D)'**
+  String get dynamicSocksD;
+
+  /// No description provided for @dynamicSocksDBind.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic SOCKS (-D) · {bind}'**
+  String dynamicSocksDBind(String bind);
+
+  /// No description provided for @dynamicForwardingIsASocks44a.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic forwarding is a SOCKS4/4a/5 CONNECT proxy without SOCKS authentication. Anyone who can reach its listener can use your SSH connection.'**
+  String get dynamicForwardingIsASocks44a;
+
+  /// No description provided for @expose.
+  ///
+  /// In en, this message translates to:
+  /// **'Expose'**
+  String get expose;
+
+  /// No description provided for @exposeThisForwardBeyondLoopback.
+  ///
+  /// In en, this message translates to:
+  /// **'Expose this forward beyond loopback?'**
+  String get exposeThisForwardBeyondLoopback;
+
+  /// No description provided for @lastConnectionLastconnectionerror.
+  ///
+  /// In en, this message translates to:
+  /// **'Last connection: {lastConnectionError}'**
+  String lastConnectionLastconnectionerror(Object lastConnectionError);
+
+  /// No description provided for @localL.
+  ///
+  /// In en, this message translates to:
+  /// **'Local (-L)'**
+  String get localL;
+
+  /// No description provided for @localLBindDestinationViaSsh.
+  ///
+  /// In en, this message translates to:
+  /// **'Local (-L) · {bind} → {destination} via SSH'**
+  String localLBindDestinationViaSsh(String bind, String destination);
+
+  /// No description provided for @loopbackOrAnIpAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Loopback or an IP address'**
+  String get loopbackOrAnIpAddress;
+
+  /// No description provided for @permitANonLoopbackListenerFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Permit a non-loopback listener (for example 0.0.0.0) or, for remote forwards, a device-side destination on your network. You will be asked to confirm before saving and before each start.'**
+  String get permitANonLoopbackListenerFor;
+
+  /// No description provided for @reachableBeyondLoopback.
+  ///
+  /// In en, this message translates to:
+  /// **'Reachable beyond loopback'**
+  String get reachableBeyondLoopback;
+
+  /// No description provided for @remoteR.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote (-R)'**
+  String get remoteR;
+
+  /// No description provided for @remoteRSshServerBindThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote (-R) · SSH server {bind} → this device {destination}'**
+  String remoteRSshServerBindThis(String bind, String destination);
+
+  /// No description provided for @socks44a5ConnectWithoutSocks.
+  ///
+  /// In en, this message translates to:
+  /// **'SOCKS4/4a/5 CONNECT without SOCKS authentication. Targets are resolved by the SSH server.'**
+  String get socks44a5ConnectWithoutSocks;
+
+  /// No description provided for @sshPortForwardingHostname.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH port forwarding · {hostName}'**
+  String sshPortForwardingHostname(String hostName);
+
+  /// No description provided for @sshServerListenerAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH server listener address'**
+  String get sshServerListenerAddress;
+
+  /// No description provided for @theSshServerGatewayportsSettingMay2.
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH server GatewayPorts setting may widen a loopback bind request. Verify the server configuration before using remote forwarding.'**
+  String get theSshServerGatewayportsSettingMay2;
+
+  /// No description provided for @thisHostIsNoLongerAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host is no longer available.'**
+  String get thisHostIsNoLongerAvailable;
+
+  /// No description provided for @thisHostIsNotSavedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host is not saved in the current profile or Vault (or was removed). Save the Host to keep forwarding profiles; running forwards below can still be stopped.'**
+  String get thisHostIsNotSavedIn;
+
+  /// No description provided for @sshportforwardprofiledescriptionNoLongerSavedForThis.
+  ///
+  /// In en, this message translates to:
+  /// **'{sshPortForwardProfileDescription}\nNo longer saved for this Host, but still running on this connection.'**
+  String sshportforwardprofiledescriptionNoLongerSavedForThis(
+    String sshPortForwardProfileDescription,
+  );
+
+  /// No description provided for @whatOnlyContinueOnANetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'{what} Only continue on a network you trust.'**
+  String whatOnlyContinueOnANetwork(String what);
+
+  /// No description provided for @downArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Down arrow'**
+  String get downArrow;
+
+  /// No description provided for @leftArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Left arrow'**
+  String get leftArrow;
+
+  /// No description provided for @lockAltModifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Alt modifier'**
+  String get lockAltModifier;
+
+  /// No description provided for @lockControlModifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Control modifier'**
+  String get lockControlModifier;
+
+  /// No description provided for @moreTerminalKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'More terminal keys'**
+  String get moreTerminalKeys;
+
+  /// No description provided for @pasteClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste clipboard'**
+  String get pasteClipboard;
+
+  /// No description provided for @releaseControlAndAlt.
+  ///
+  /// In en, this message translates to:
+  /// **'Release Control and Alt'**
+  String get releaseControlAndAlt;
+
+  /// No description provided for @rightArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Right arrow'**
+  String get rightArrow;
+
+  /// No description provided for @upArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Up arrow'**
+  String get upArrow;
+
+  /// No description provided for @nextMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Next match'**
+  String get nextMatch;
+
+  /// No description provided for @previousMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous match'**
+  String get previousMatch;
+
+  /// No description provided for @searchTerminalScrollback.
+  ///
+  /// In en, this message translates to:
+  /// **'Search terminal scrollback'**
+  String get searchTerminalScrollback;
+
+  /// No description provided for @closeSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Close sidebar'**
+  String get closeSidebar;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @refreshQuickCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh quick commands'**
+  String get refreshQuickCommands;
+
+  /// No description provided for @saveEncryptedAsSnippets.
+  ///
+  /// In en, this message translates to:
+  /// **'Save encrypted as Snippets'**
+  String get saveEncryptedAsSnippets;
+
+  /// No description provided for @singleLineCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Single-line command'**
+  String get singleLineCommand;
+
+  /// No description provided for @insertIntoTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert into terminal'**
+  String get insertIntoTerminal;
+
+  /// No description provided for @quickCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick commands'**
+  String get quickCommands;
+
+  /// No description provided for @quickCommandActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick command actions'**
+  String get quickCommandActions;
+
+  /// No description provided for @searchTermsAreRecordedWhenYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Search terms are recorded when you press Enter or close search'**
+  String get searchTermsAreRecordedWhenYou;
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// No description provided for @search2.
+  ///
+  /// In en, this message translates to:
+  /// **'Search…'**
+  String get search2;
+
+  /// No description provided for @searchHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Search history'**
+  String get searchHistory;
+
+  /// No description provided for @searchCurrentTerminalOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Search current terminal output'**
+  String get searchCurrentTerminalOutput;
+
+  /// No description provided for @theActionDidntCompleteRefreshAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'The action didn\'t complete. Refresh and try again.'**
+  String get theActionDidntCompleteRefreshAnd;
+
+  /// No description provided for @cantInsertSelectASessionThat.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t insert: select a session that is still connected, and the command must be a single line.'**
+  String get cantInsertSelectASessionThat;
+
+  /// No description provided for @couldntReadQuickCommandsRefreshAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read quick commands. Refresh and try again.'**
+  String get couldntReadQuickCommandsRefreshAnd;
+
+  /// No description provided for @showsCommandsCompletedOnTheCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows commands completed on the current host. Click to insert; nothing runs automatically.'**
+  String get showsCommandsCompletedOnTheCurrent;
+
+  /// No description provided for @noMatchingEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching entries'**
+  String get noMatchingEntries;
+
+  /// No description provided for @addQuickCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Add quick command'**
+  String get addQuickCommand;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @clearLocalHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear local history'**
+  String get clearLocalHistory;
+
+  /// No description provided for @clickToInsertPressEnterTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Click to insert, press Enter to run. Shows single-line Bash commands without parameters.'**
+  String get clickToInsertPressEnterTo;
+
+  /// No description provided for @removeSearchTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove search term'**
+  String get removeSearchTerm;
+
+  /// No description provided for @filterInputHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter input history'**
+  String get filterInputHistory;
+
+  /// No description provided for @filterByNameOrCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by name or command'**
+  String get filterByNameOrCommand;
+
+  /// No description provided for @terminalTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal tools'**
+  String get terminalTools;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @editQuickCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit quick command'**
+  String get editQuickCommand;
+
+  /// No description provided for @recordingSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording settings'**
+  String get recordingSettings;
+
+  /// No description provided for @enterANameAndASingle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name and a single-line command without control characters.'**
+  String get enterANameAndASingle;
+
+  /// No description provided for @inputHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Input history'**
+  String get inputHistory;
+
+  /// No description provided for @cancelTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel transfer'**
+  String get cancelTransfer;
+
+  /// No description provided for @chooseLocalFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose local file'**
+  String get chooseLocalFile;
+
+  /// No description provided for @couldNotOpenAStreamingFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open a streaming file source.'**
+  String get couldNotOpenAStreamingFile;
+
+  /// No description provided for @downloadFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Download file'**
+  String get downloadFile;
+
+  /// No description provided for @downloadingWithSftpCompatibilityModeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading with SFTP compatibility mode (up to 16 MiB)…'**
+  String get downloadingWithSftpCompatibilityModeUp;
+
+  /// No description provided for @fileExceeds1GibTransferLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'File exceeds 1 GiB transfer limit.'**
+  String get fileExceeds1GibTransferLimit;
+
+  /// No description provided for @mobileDownloadsUpTo16Mib.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile downloads up to 16 MiB. The save picker opens after the complete file is verified.'**
+  String get mobileDownloadsUpTo16Mib;
+
+  /// No description provided for @preparingTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing transfer…'**
+  String get preparingTransfer;
+
+  /// No description provided for @remoteFilePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote file path'**
+  String get remoteFilePath;
+
+  /// No description provided for @sftpCompatibilityDownloadsUpTo16.
+  ///
+  /// In en, this message translates to:
+  /// **'SFTP compatibility downloads up to 16 MiB. SCP requires a streaming save destination on this platform.'**
+  String get sftpCompatibilityDownloadsUpTo16;
+
+  /// No description provided for @singleFilesUpTo1Gib.
+  ///
+  /// In en, this message translates to:
+  /// **'Single files up to 1 GiB. Existing destinations are never replaced. SFTP files are visible while uploading.'**
+  String get singleFilesUpTo1Gib;
+
+  /// No description provided for @streamingFileSavesAreUnavailableOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaming file saves are unavailable on this platform.'**
+  String get streamingFileSavesAreUnavailableOn;
+
+  /// No description provided for @streamingTransferIsUnavailableOnThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaming transfer is unavailable on this platform.'**
+  String get streamingTransferIsUnavailableOnThis;
+
+  /// No description provided for @theSelectedProviderReturnedAnUnsafe.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected provider returned an unsafe file name.'**
+  String get theSelectedProviderReturnedAnUnsafe;
+
+  /// No description provided for @thisFilePickerDoesNotProvide.
+  ///
+  /// In en, this message translates to:
+  /// **'This file picker does not provide a streaming source.'**
+  String get thisFilePickerDoesNotProvide;
+
+  /// No description provided for @transferCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer cancelled.'**
+  String get transferCancelled;
+
+  /// No description provided for @transferFailedCheckThePathPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer failed. Check the path, permissions and whether the destination exists.'**
+  String get transferFailedCheckThePathPermissions;
+
+  /// No description provided for @uploadFile2.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload file'**
+  String get uploadFile2;
+
+  /// No description provided for @closeWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Close window'**
+  String get closeWindow;
+
+  /// No description provided for @maximize.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximize'**
+  String get maximize;
+
+  /// No description provided for @minimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize'**
+  String get minimize;
+
+  /// No description provided for @closeWindow2.
+  ///
+  /// In en, this message translates to:
+  /// **'Close window'**
+  String get closeWindow2;
+
+  /// No description provided for @maximize2.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximize'**
+  String get maximize2;
+
+  /// No description provided for @minimize2.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize'**
+  String get minimize2;
+
+  /// No description provided for @restore2.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore2;
+
+  /// No description provided for @save2.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save2;
+
+  /// No description provided for @saveWindowSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save window set'**
+  String get saveWindowSet;
+
+  /// No description provided for @thisWindowHasSessionsThatCant.
+  ///
+  /// In en, this message translates to:
+  /// **'This window has sessions that can\'t be saved. Close them and try again.'**
+  String get thisWindowHasSessionsThatCant;
+
+  /// No description provided for @thisWindowHasNoSessionsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'This window has no sessions to save.'**
+  String get thisWindowHasNoSessionsTo;
+
+  /// No description provided for @openWindowSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Open window set'**
+  String get openWindowSet;
+
+  /// No description provided for @couldntDeleteTheWindowSetUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the window set. Unlock again or sync, then try again.'**
+  String get couldntDeleteTheWindowSetUnlock;
+
+  /// No description provided for @couldntReadWindowSetsUnlockAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read window sets. Unlock again or sync, then try again.'**
+  String get couldntReadWindowSetsUnlockAgain;
+
+  /// No description provided for @thereAreNoReadySessionsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no ready sessions to save.'**
+  String get thereAreNoReadySessionsTo;
+
+  /// No description provided for @windowSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Window sets'**
+  String get windowSets;
+
+  /// No description provided for @setName.
+  ///
+  /// In en, this message translates to:
+  /// **'Set name'**
+  String get setName;
+
+  /// No description provided for @sshKey.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH key'**
+  String get sshKey;
+
+  /// No description provided for @close2.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close2;
+
+  /// No description provided for @password2.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password2;
+
+  /// No description provided for @theActionDidntCompleteTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'The action didn\'t complete. Try again.'**
+  String get theActionDidntCompleteTryAgain;
+
+  /// No description provided for @more.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get more;
+
+  /// No description provided for @directConnection2.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct connection'**
+  String get directConnection2;
+
+  /// No description provided for @connectionProperties.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection properties'**
+  String get connectionProperties;
+
+  /// No description provided for @viaJumpHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Via jump host'**
+  String get viaJumpHost;
+
+  /// No description provided for @theAppOpensInTheCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'The app opens in the current mode next time. Switching modes closes current connections; saved data is kept.'**
+  String get theAppOpensInTheCurrent;
+
+  /// No description provided for @cloudSyncMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud sync mode'**
+  String get cloudSyncMode;
+
+  /// No description provided for @switchToCloudMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to cloud mode'**
+  String get switchToCloudMode;
+
+  /// No description provided for @switchToLocalMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to local mode'**
+  String get switchToLocalMode;
+
+  /// No description provided for @workspaceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace mode'**
+  String get workspaceMode;
+
+  /// No description provided for @couldntSwitchTheWorkspaceModeCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t switch the workspace mode. Check local storage and try again.'**
+  String get couldntSwitchTheWorkspaceModeCheck;
+
+  /// No description provided for @localMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Local mode'**
+  String get localMode;
+
+  /// No description provided for @closeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close {title}'**
+  String closeTitle(String title);
+
+  /// No description provided for @newWindowCtrlShiftN.
+  ///
+  /// In en, this message translates to:
+  /// **'New window (Ctrl+Shift+N)'**
+  String get newWindowCtrlShiftN;
+
+  /// No description provided for @countCount2Connected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}/{count2} connected'**
+  String countCount2Connected(int count, int count2);
+
+  /// No description provided for @splitTopBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Split top/bottom'**
+  String get splitTopBottom;
+
+  /// No description provided for @hostMenuClickToOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Host menu · click to open'**
+  String get hostMenuClickToOpen;
+
+  /// No description provided for @closeOtherTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Close other tabs'**
+  String get closeOtherTabs;
+
+  /// No description provided for @closeTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Close tab'**
+  String get closeTab;
+
+  /// No description provided for @closeThisSplitGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Close this split group'**
+  String get closeThisSplitGroup;
+
+  /// No description provided for @unsplitCurrentPane.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsplit current pane'**
+  String get unsplitCurrentPane;
+
+  /// No description provided for @duplicateTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate tab'**
+  String get duplicateTab;
+
+  /// No description provided for @splitLeftRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Split left/right'**
+  String get splitLeftRight;
+
+  /// No description provided for @connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connected;
+
+  /// No description provided for @searchHostsOrQuickConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Search hosts or quick connect'**
+  String get searchHostsOrQuickConnect;
+
+  /// No description provided for @notConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get notConnected;
+
+  /// No description provided for @moveToNewWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to new window…'**
+  String get moveToNewWindow;
+
+  /// No description provided for @terminalSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal sidebar'**
+  String get terminalSidebar;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available in this RDP engine build'**
+  String get desktopRdpEngineFeatureUnavailable;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an absolute local folder'**
+  String get desktopChooseAbsoluteLocalFolder;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignored while \"Use all local monitors\" is on: each monitor keeps its own size.'**
+  String get desktopRdpMultimonResolutionHelp;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic follows the window through RDP display control; fixed sizes are requested at connect.'**
+  String get desktopRdpAutomaticResolutionHelp;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Use all local monitors'**
+  String get desktopUseAllLocalMonitors;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard text'**
+  String get desktopClipboardText;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard files'**
+  String get desktopClipboardFiles;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone'**
+  String get desktopMicrophone;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart cards'**
+  String get desktopSmartCards;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Cameras'**
+  String get desktopCameras;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resize requests need a server with ExtendedDesktopSize (for example TigerVNC or x11vnc with -xrandr). Other servers keep their size and the view scales locally.'**
+  String get desktopVncResizeHelp;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic (fit window)'**
+  String get desktopAutomaticFitWindow;
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution must be between {minSide} and {maxSide} pixels per side'**
+  String desktopResolutionSideBounds(int minSide, int maxSide);
+
+  /// Desktop RDP/VNC display or local resource setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution exceeds {megapixels} megapixels'**
+  String desktopResolutionPixelLimit(int megapixels);
+
+  /// No description provided for @inventoryTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory exceeds the 1 MiB import limit.'**
+  String get inventoryTooLarge;
+
+  /// No description provided for @inventoryTooManyLines.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory has too many lines to review safely.'**
+  String get inventoryTooManyLines;
+
+  /// No description provided for @inventoryLineTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'An inventory line is too long to review safely.'**
+  String get inventoryLineTooLong;
+
+  /// No description provided for @inventoryControlCharacter.
+  ///
+  /// In en, this message translates to:
+  /// **'Control characters are not allowed in inventory files.'**
+  String get inventoryControlCharacter;
+
+  /// No description provided for @inventoryUnsupportedFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'This inventory format is not supported.'**
+  String get inventoryUnsupportedFormat;
+
+  /// No description provided for @inventoryParseError.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory syntax could not be parsed safely.'**
+  String get inventoryParseError;
+
+  /// No description provided for @inventoryUnsupportedConstruct.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory contains an unsupported construct.'**
+  String get inventoryUnsupportedConstruct;
+
+  /// No description provided for @inventoryDynamicUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic inventory and plugin configuration are not supported.'**
+  String get inventoryDynamicUnsupported;
+
+  /// No description provided for @inventoryInvalidGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'A group declaration is malformed or unsupported.'**
+  String get inventoryInvalidGroup;
+
+  /// No description provided for @inventoryInvalidHost.
+  ///
+  /// In en, this message translates to:
+  /// **'A host declaration is malformed or unsupported.'**
+  String get inventoryInvalidHost;
+
+  /// No description provided for @inventoryInvalidVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'An allowlisted connection field has an invalid value.'**
+  String get inventoryInvalidVariable;
+
+  /// No description provided for @inventoryUnsupportedConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Only static SSH inventory hosts can be imported.'**
+  String get inventoryUnsupportedConnection;
+
+  /// No description provided for @inventoryIgnoredVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'An unsupported inventory variable was ignored and will not be imported.'**
+  String get inventoryIgnoredVariable;
+
+  /// No description provided for @inventoryConflictingVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflicting inventory values make this host ambiguous.'**
+  String get inventoryConflictingVariable;
+
+  /// No description provided for @inventoryDuplicateVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'A connection field is repeated and makes this host ambiguous.'**
+  String get inventoryDuplicateVariable;
+
+  /// No description provided for @inventoryGroupCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group inheritance contains a cycle.'**
+  String get inventoryGroupCycle;
+
+  /// No description provided for @inventoryLimitExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory exceeds a safe parsing limit.'**
+  String get inventoryLimitExceeded;
+
+  /// No description provided for @inventoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No static hosts were found in this inventory.'**
+  String get inventoryEmpty;
+
+  /// No description provided for @inventoryBlockedSource.
+  ///
+  /// In en, this message translates to:
+  /// **'A blocked inventory cannot change saved source state.'**
+  String get inventoryBlockedSource;
+
+  /// No description provided for @inventoryEmptySource.
+  ///
+  /// In en, this message translates to:
+  /// **'An empty inventory cannot mark saved Hosts missing.'**
+  String get inventoryEmptySource;
+
+  /// No description provided for @inventoryPartialSource.
+  ///
+  /// In en, this message translates to:
+  /// **'A partial or ambiguous inventory cannot mark saved Hosts missing.'**
+  String get inventoryPartialSource;
+
+  /// No description provided for @inventoryBlockedPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory has a blocking finding; no change is planned.'**
+  String get inventoryBlockedPlan;
+
+  /// No description provided for @inventoryBlockedEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'This entry has a blocking finding and will not be changed.'**
+  String get inventoryBlockedEntry;
+
+  /// No description provided for @inventoryDuplicateIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'This source contains an ambiguous duplicate Host identity.'**
+  String get inventoryDuplicateIdentity;
+
+  /// No description provided for @inventoryUsernameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A username is required to save a Host.'**
+  String get inventoryUsernameRequired;
+
+  /// No description provided for @inventoryMultipleSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'More than one saved Host has this source identity.'**
+  String get inventoryMultipleSaved;
+
+  /// No description provided for @inventoryKeepOtherSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Already saved. The existing Host will be kept unchanged. It belongs to another source or has no source identity.'**
+  String get inventoryKeepOtherSource;
+
+  /// No description provided for @inventoryRevisionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved Host revision is unavailable. Refresh the Hosts page and review again.'**
+  String get inventoryRevisionUnavailable;
+
+  /// No description provided for @inventoryTagLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'The merged Host would exceed the 128-tag storage limit. Remove tags or groups and review the inventory again.'**
+  String get inventoryTagLimit;
+
+  /// No description provided for @inventoryRestoreActive.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host will be restored as active in its source.'**
+  String get inventoryRestoreActive;
+
+  /// No description provided for @inventoryMissingRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'A saved Host revision is unavailable; the missing entry was not marked stale.'**
+  String get inventoryMissingRevision;
+
+  /// No description provided for @inventoryAbsentHost.
+  ///
+  /// In en, this message translates to:
+  /// **'This saved Host is absent from the complete inventory.'**
+  String get inventoryAbsentHost;
+
+  /// No description provided for @sshImportLineTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'This line is too long to review.'**
+  String get sshImportLineTooLong;
+
+  /// No description provided for @sshImportControlCharacter.
+  ///
+  /// In en, this message translates to:
+  /// **'Control characters are not allowed in an SSH config file.'**
+  String get sshImportControlCharacter;
+
+  /// No description provided for @sshImportUnterminatedQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Unterminated quote or escape; fix this line before import.'**
+  String get sshImportUnterminatedQuote;
+
+  /// No description provided for @sshImportAliasRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A Host line needs a literal alias.'**
+  String get sshImportAliasRequired;
+
+  /// No description provided for @sshImportUnsupportedPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Wildcard, negated, or malformed Host patterns are unsupported; use concrete aliases.'**
+  String get sshImportUnsupportedPattern;
+
+  /// No description provided for @sshImportHostLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'The config file exceeds the 256 Host import limit.'**
+  String get sshImportHostLimit;
+
+  /// No description provided for @sshImportInclude.
+  ///
+  /// In en, this message translates to:
+  /// **'Include files are not opened. Flatten the config and review it before import.'**
+  String get sshImportInclude;
+
+  /// No description provided for @sshImportMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Match blocks are not evaluated. Convert this file to literal Host blocks before import.'**
+  String get sshImportMatch;
+
+  /// No description provided for @sshImportGlobalCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Command directives are never executed; remove this global directive before import.'**
+  String get sshImportGlobalCommand;
+
+  /// No description provided for @sshImportGlobalIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'IdentityFile needs one value; no file is opened during import.'**
+  String get sshImportGlobalIdentity;
+
+  /// No description provided for @sshImportUnknownDirective.
+  ///
+  /// In en, this message translates to:
+  /// **'This directive is not imported. Review or remove it before connecting.'**
+  String get sshImportUnknownDirective;
+
+  /// No description provided for @sshImportGlobalValueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'This global directive needs exactly one value.'**
+  String get sshImportGlobalValueCount;
+
+  /// No description provided for @sshImportGlobalInvalidValue.
+  ///
+  /// In en, this message translates to:
+  /// **'This global value is invalid or unsupported.'**
+  String get sshImportGlobalInvalidValue;
+
+  /// No description provided for @importStatusCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'create'**
+  String get importStatusCreate;
+
+  /// No description provided for @importStatusUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'update'**
+  String get importStatusUpdate;
+
+  /// No description provided for @importStatusUnchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'unchanged'**
+  String get importStatusUnchanged;
+
+  /// No description provided for @importStatusMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'missing'**
+  String get importStatusMissing;
+
+  /// No description provided for @importStatusSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'skipped'**
+  String get importStatusSkipped;
+
+  /// No description provided for @importStatusBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'blocked'**
+  String get importStatusBlocked;
+
+  /// No description provided for @sshImportBlockedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked because the file contains unsupported structure.'**
+  String get sshImportBlockedFile;
+
+  /// No description provided for @sshImportAmbiguousName.
+  ///
+  /// In en, this message translates to:
+  /// **'More than one saved Host has this name; nothing will be overwritten.'**
+  String get sshImportAmbiguousName;
+
+  /// No description provided for @sshImportBlockedHost.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host has a blocking finding and will not be imported.'**
+  String get sshImportBlockedHost;
+
+  /// No description provided for @sshImportNotImportable.
+  ///
+  /// In en, this message translates to:
+  /// **'This Host is not importable.'**
+  String get sshImportNotImportable;
+
+  /// No description provided for @importUsernameMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'username missing'**
+  String get importUsernameMissing;
+
+  /// No description provided for @importPlannedEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned: {endpoint}'**
+  String importPlannedEndpoint(String endpoint);
+
+  /// No description provided for @importSavedEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved: {endpoint}'**
+  String importSavedEndpoint(String endpoint);
+
+  /// No description provided for @importHostTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Host tags to save: {tags}'**
+  String importHostTags(String tags);
+
+  /// No description provided for @importSshEndpointLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line {line} · {username}@{address}:{port}'**
+  String importSshEndpointLine(
+    int line,
+    String username,
+    String address,
+    int port,
+  );
+
+  /// No description provided for @importProxyJumpLine.
+  ///
+  /// In en, this message translates to:
+  /// **'ProxyJump {alias} · line {line}'**
+  String importProxyJumpLine(String alias, int line);
+
+  /// No description provided for @sshImportSavedName.
+  ///
+  /// In en, this message translates to:
+  /// **'Already saved as “{name}”; it will not be overwritten.'**
+  String sshImportSavedName(String name);
+
+  /// No description provided for @sshImportJumpAmbiguous.
+  ///
+  /// In en, this message translates to:
+  /// **'ProxyJump at line {line} is ambiguous because more than one saved Host has that name.'**
+  String sshImportJumpAmbiguous(int line);
+
+  /// No description provided for @sshImportJumpMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'ProxyJump at line {line} does not resolve to one imported or saved Host.'**
+  String sshImportJumpMissing(int line);
+
+  /// No description provided for @sshImportJumpSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'ProxyJump at line {line} points to the Host itself.'**
+  String sshImportJumpSelf(int line);
+
+  /// No description provided for @sshImportPreviewCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview: hosts to create: {count}; conflicts and blocked entries will be skipped.'**
+  String sshImportPreviewCounts(int count);
+
+  /// No description provided for @inventoryPreviewCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview: hosts to create: {created}; update: {updated}; unchanged: {unchanged}; missing: {missing}.'**
+  String inventoryPreviewCounts(
+    int created,
+    int updated,
+    int unchanged,
+    int missing,
+  );
+
+  /// Terminal clipboard paste action label.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get keybarPaste;
+
+  /// Release terminal Control and Alt modifier locks.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get keybarReset;
+
+  /// Terminal search status when the bounded query-length limit rejects the query.
+  ///
+  /// In en, this message translates to:
+  /// **'Query too long'**
+  String get terminalSearchQueryTooLong;
+
+  /// Terminal search status while the bounded buffer scan is pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching…'**
+  String get terminalSearchSearching;
+
+  /// Terminal search current one-based match position and bounded total; zero ignores position. Values are counts, never terminal contents.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, =0{0 matches} one{{position} of {total} match} other{{position} of {total} matches}}'**
+  String terminalSearchMatchCount(int total, int position);
+
+  /// Appends the bounded-search truncation warning to a localized match-count label; limits may omit rows, cells or hits.
+  ///
+  /// In en, this message translates to:
+  /// **'{countLabel} · results limited'**
+  String terminalSearchLimitedCount(String countLabel);
+
+  /// No description provided for @r7UiPaletteGalleryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Color schemes'**
+  String get r7UiPaletteGalleryTitle;
+
+  /// No description provided for @r7UiPaletteGalleryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to every terminal on this device, including local, cloud and separate terminal windows. Stored only on this device; the saved terminal theme is not changed.'**
+  String get r7UiPaletteGalleryDescription;
+
+  /// No description provided for @r7UiPaletteFollowSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved theme ({name})'**
+  String r7UiPaletteFollowSynced(String name);
+
+  /// No description provided for @r7UiPaletteSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search color schemes'**
+  String get r7UiPaletteSearchHint;
+
+  /// No description provided for @r7UiPaletteFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get r7UiPaletteFilterAll;
+
+  /// No description provided for @r7UiPaletteFilterDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get r7UiPaletteFilterDark;
+
+  /// No description provided for @r7UiPaletteFilterLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get r7UiPaletteFilterLight;
+
+  /// No description provided for @r7UiPaletteNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No color schemes match.'**
+  String get r7UiPaletteNoMatches;
+
+  /// No description provided for @r7UiPaletteActiveOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminals on this device use {name}.'**
+  String r7UiPaletteActiveOverride(String name);
+
+  /// No description provided for @r7UiPaletteFollowingSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminals on this device follow the saved terminal theme.'**
+  String get r7UiPaletteFollowingSynced;
+
+  /// No description provided for @r7UiPaletteSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the color scheme on this device. It applies until the app is closed.'**
+  String get r7UiPaletteSaveFailed;
+
+  /// No description provided for @r7UiShortcutRecordTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a new shortcut for {action}'**
+  String r7UiShortcutRecordTooltip(String action);
+
+  /// No description provided for @r7UiShortcutRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Press a key combination… Esc cancels'**
+  String get r7UiShortcutRecording;
+
+  /// No description provided for @r7UiShortcutReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset {action} to its default'**
+  String r7UiShortcutReset(String action);
+
+  /// No description provided for @r7UiShortcutDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Also used by another action'**
+  String get r7UiShortcutDuplicate;
+
+  /// No description provided for @r7UiShortcutInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported or reserved combination'**
+  String get r7UiShortcutInvalid;
+
+  /// R7 navigation: r7NavLogTranscriptNone
+  ///
+  /// In en, this message translates to:
+  /// **'No transcript was recorded for this session.'**
+  String get r7NavLogTranscriptNone;
+
+  /// R7 navigation: r7NavCertAnyPrincipal
+  ///
+  /// In en, this message translates to:
+  /// **'any principal'**
+  String get r7NavCertAnyPrincipal;
+
+  /// R7 navigation: r7NavKindKeyWithCertificate
+  ///
+  /// In en, this message translates to:
+  /// **'Private key + certificate'**
+  String get r7NavKindKeyWithCertificate;
+
+  /// R7 navigation: r7NavHomeNavigation
+  ///
+  /// In en, this message translates to:
+  /// **'Home navigation'**
+  String get r7NavHomeNavigation;
+
+  /// R7 navigation: r7NavKeychainSubtitle
+  ///
+  /// In en, this message translates to:
+  /// **'SSH keys, user certificates and passwords shared by hosts and groups. Hosts can still keep their own sign-in.'**
+  String get r7NavKeychainSubtitle;
+
+  /// R7 navigation: r7NavAdd
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get r7NavAdd;
+
+  /// R7 navigation: r7NavImportCertificateFile
+  ///
+  /// In en, this message translates to:
+  /// **'Import certificate file'**
+  String get r7NavImportCertificateFile;
+
+  /// R7 navigation: r7NavLogs
+  ///
+  /// In en, this message translates to:
+  /// **'Logs'**
+  String get r7NavLogs;
+
+  /// R7 navigation: r7NavLogHost
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get r7NavLogHost;
+
+  /// R7 navigation: r7NavUsedBy
+  ///
+  /// In en, this message translates to:
+  /// **'Used by {count}: {names}'**
+  String r7NavUsedBy(int count, String names);
+
+  /// R7 navigation: r7NavLogTranscriptLiveNotRecorded
+  ///
+  /// In en, this message translates to:
+  /// **'Recording was off when this session started.'**
+  String get r7NavLogTranscriptLiveNotRecorded;
+
+  /// R7 navigation: r7NavLogTranscript
+  ///
+  /// In en, this message translates to:
+  /// **'Output transcript'**
+  String get r7NavLogTranscript;
+
+  /// R7 navigation: r7NavCertUnsupported
+  ///
+  /// In en, this message translates to:
+  /// **'This certificate algorithm is not supported (DSA and security-key certificates are not).'**
+  String get r7NavCertUnsupported;
+
+  /// R7 navigation: r7NavLogSearchHint
+  ///
+  /// In en, this message translates to:
+  /// **'Search host or address'**
+  String get r7NavLogSearchHint;
+
+  /// R7 navigation: r7NavKeychainSearchHint
+  ///
+  /// In en, this message translates to:
+  /// **'Search name, user, fingerprint or host'**
+  String get r7NavKeychainSearchHint;
+
+  /// R7 navigation: r7NavImportExport
+  ///
+  /// In en, this message translates to:
+  /// **'Import / Export'**
+  String get r7NavImportExport;
+
+  /// R7 navigation: r7NavLogProtocol
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol'**
+  String get r7NavLogProtocol;
+
+  /// R7 navigation: r7NavLogRecordTranscripts
+  ///
+  /// In en, this message translates to:
+  /// **'Record terminal output transcripts'**
+  String get r7NavLogRecordTranscripts;
+
+  /// R7 navigation: r7NavLogFailureCredential
+  ///
+  /// In en, this message translates to:
+  /// **'sign-in details missing or unreadable'**
+  String get r7NavLogFailureCredential;
+
+  /// R7 navigation: r7NavLogFailureNetwork
+  ///
+  /// In en, this message translates to:
+  /// **'network or handshake error'**
+  String get r7NavLogFailureNetwork;
+
+  /// R7 navigation: r7NavLogNoMatches
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches the current search or filter.'**
+  String get r7NavLogNoMatches;
+
+  /// R7 navigation: r7NavLogCopyTranscript
+  ///
+  /// In en, this message translates to:
+  /// **'Copy transcript'**
+  String get r7NavLogCopyTranscript;
+
+  /// R7 navigation: r7NavFilterCertificates
+  ///
+  /// In en, this message translates to:
+  /// **'Certificates'**
+  String get r7NavFilterCertificates;
+
+  /// R7 navigation: r7NavLogStatusConnecting
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting'**
+  String get r7NavLogStatusConnecting;
+
+  /// R7 navigation: r7NavSignInKeychainNote
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the Keychain item (including any certificate). Edit it under Keychain; it stays shared with other hosts.'**
+  String get r7NavSignInKeychainNote;
+
+  /// R7 navigation: r7NavCertCa
+  ///
+  /// In en, this message translates to:
+  /// **'CA {fingerprint}'**
+  String r7NavCertCa(String fingerprint);
+
+  /// R7 navigation: r7NavDeleteBlocked
+  ///
+  /// In en, this message translates to:
+  /// **'In use — change those hosts or groups first'**
+  String get r7NavDeleteBlocked;
+
+  /// R7 navigation: r7NavLogFilterClosed
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get r7NavLogFilterClosed;
+
+  /// R7 navigation: r7NavKeychain
+  ///
+  /// In en, this message translates to:
+  /// **'Keychain'**
+  String get r7NavKeychain;
+
+  /// R7 navigation: r7NavLogStorageMemory
+  ///
+  /// In en, this message translates to:
+  /// **'Connection journal of this app session (kept in memory, cleared on lock). Separate from command history.'**
+  String get r7NavLogStorageMemory;
+
+  /// R7 navigation: r7NavLogConnectedAt
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get r7NavLogConnectedAt;
+
+  /// R7 navigation: r7NavCertificateOptional
+  ///
+  /// In en, this message translates to:
+  /// **'OpenSSH user certificate (optional)'**
+  String get r7NavCertificateOptional;
+
+  /// R7 navigation: r7NavLogStorageFailed
+  ///
+  /// In en, this message translates to:
+  /// **'Logs could not be saved or read; the list may be incomplete.'**
+  String get r7NavLogStorageFailed;
+
+  /// R7 navigation: r7NavLogFilterAll
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get r7NavLogFilterAll;
+
+  /// R7 navigation: r7NavFilterKeys
+  ///
+  /// In en, this message translates to:
+  /// **'Keys'**
+  String get r7NavFilterKeys;
+
+  /// R7 navigation: r7NavKindPassword
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get r7NavKindPassword;
+
+  /// R7 navigation: r7NavSnippets
+  ///
+  /// In en, this message translates to:
+  /// **'Quick commands'**
+  String get r7NavSnippets;
+
+  /// R7 navigation: r7NavLogStorageLocal
+  ///
+  /// In en, this message translates to:
+  /// **'Connection journal of this device, encrypted in this local profile. Separate from command history.'**
+  String get r7NavLogStorageLocal;
+
+  /// R7 navigation: r7NavLogDuration
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get r7NavLogDuration;
+
+  /// R7 navigation: r7NavImportKeyFile
+  ///
+  /// In en, this message translates to:
+  /// **'Import key file'**
+  String get r7NavImportKeyFile;
+
+  /// R7 navigation: r7NavLogStatusFailed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get r7NavLogStatusFailed;
+
+  /// R7 navigation: r7NavCertificateHelper
+  ///
+  /// In en, this message translates to:
+  /// **'Paste or import the *-cert.pub file signed by your CA. It must certify this private key; it is offered before the plain key.'**
+  String get r7NavCertificateHelper;
+
+  /// R7 navigation: r7NavCertKeyUnreadable
+  ///
+  /// In en, this message translates to:
+  /// **'The private key cannot be read to check the certificate (check the key and passphrase).'**
+  String get r7NavCertKeyUnreadable;
+
+  /// R7 navigation: r7NavLogRoute
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get r7NavLogRoute;
+
+  /// R7 navigation: r7NavSignInKeychainItem
+  ///
+  /// In en, this message translates to:
+  /// **'Keychain: {name}'**
+  String r7NavSignInKeychainItem(String name);
+
+  /// R7 navigation: r7NavLogFailureTimeout
+  ///
+  /// In en, this message translates to:
+  /// **'timed out'**
+  String get r7NavLogFailureTimeout;
+
+  /// R7 navigation: r7NavLogStatusConnected
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get r7NavLogStatusConnected;
+
+  /// R7 navigation: r7NavNotUsed
+  ///
+  /// In en, this message translates to:
+  /// **'Not used by any host or group'**
+  String get r7NavNotUsed;
+
+  /// R7 navigation: r7NavLogRecordPolicy
+  ///
+  /// In en, this message translates to:
+  /// **'Off by default. Applies to sessions opened after enabling. Saves what the terminal displays (including text the server echoes), never your keystrokes; hidden password prompts are not captured. Avoid displaying secrets while recording. Keeps the newest {count} transcripts of up to {kib} KiB.'**
+  String r7NavLogRecordPolicy(int count, int kib);
+
+  /// R7 navigation: r7NavLogStatus
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get r7NavLogStatus;
+
+  /// R7 navigation: r7NavLogFailureUnsupported
+  ///
+  /// In en, this message translates to:
+  /// **'route not supported'**
+  String get r7NavLogFailureUnsupported;
+
+  /// R7 navigation: r7NavLogFailureOther
+  ///
+  /// In en, this message translates to:
+  /// **'other error'**
+  String get r7NavLogFailureOther;
+
+  /// R7 navigation: r7NavPortForwarding
+  ///
+  /// In en, this message translates to:
+  /// **'Port forwarding'**
+  String get r7NavPortForwarding;
+
+  /// R7 navigation: r7NavLogFailureHostKeyRejected
+  ///
+  /// In en, this message translates to:
+  /// **'host key not approved'**
+  String get r7NavLogFailureHostKeyRejected;
+
+  /// R7 navigation: r7NavCertKeyMismatch
+  ///
+  /// In en, this message translates to:
+  /// **'The certificate does not certify this private key.'**
+  String get r7NavCertKeyMismatch;
+
+  /// R7 navigation: r7NavLogStarted
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get r7NavLogStarted;
+
+  /// R7 navigation: r7NavLogStatusEndedByRemote
+  ///
+  /// In en, this message translates to:
+  /// **'Ended by server'**
+  String get r7NavLogStatusEndedByRemote;
+
+  /// R7 navigation: r7NavCertPrincipals
+  ///
+  /// In en, this message translates to:
+  /// **'principals: {principals}'**
+  String r7NavCertPrincipals(String principals);
+
+  /// R7 navigation: r7NavLogFailureCancelled
+  ///
+  /// In en, this message translates to:
+  /// **'cancelled'**
+  String get r7NavLogFailureCancelled;
+
+  /// R7 navigation: r7NavCertInKeyField
+  ///
+  /// In en, this message translates to:
+  /// **'A certificate was entered as the private key; put it in the certificate field.'**
+  String get r7NavCertInKeyField;
+
+  /// R7 navigation: r7NavSignInOwn
+  ///
+  /// In en, this message translates to:
+  /// **'This host\'s own sign-in'**
+  String get r7NavSignInOwn;
+
+  /// R7 navigation: r7NavCertValidForever
+  ///
+  /// In en, this message translates to:
+  /// **'no expiry'**
+  String get r7NavCertValidForever;
+
+  /// R7 navigation: r7NavImportFileNotText
+  ///
+  /// In en, this message translates to:
+  /// **'The selected file is not a text key or certificate.'**
+  String get r7NavImportFileNotText;
+
+  /// R7 navigation: r7NavLogReason
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get r7NavLogReason;
+
+  /// R7 navigation: r7NavFilterPasswords
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords'**
+  String get r7NavFilterPasswords;
+
+  /// R7 navigation: r7NavLogFilterActive
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get r7NavLogFilterActive;
+
+  /// R7 navigation: r7NavLogEmpty
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions logged yet. Connections you open appear here.'**
+  String get r7NavLogEmpty;
+
+  /// R7 navigation: r7NavLogStatusLost
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost'**
+  String get r7NavLogStatusLost;
+
+  /// R7 navigation: r7NavCertExpired
+  ///
+  /// In en, this message translates to:
+  /// **'expired {date}'**
+  String r7NavCertExpired(String date);
+
+  /// R7 navigation: r7NavLogStatusClosed
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get r7NavLogStatusClosed;
+
+  /// R7 navigation: r7NavSignInSource
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with'**
+  String get r7NavSignInSource;
+
+  /// R7 navigation: r7NavSignInInherited
+  ///
+  /// In en, this message translates to:
+  /// **'Group default'**
+  String get r7NavSignInInherited;
+
+  /// R7 navigation: r7NavLogFailureHostKeyChanged
+  ///
+  /// In en, this message translates to:
+  /// **'host key changed'**
+  String get r7NavLogFailureHostKeyChanged;
+
+  /// R7 navigation: r7NavKindPrivateKey
+  ///
+  /// In en, this message translates to:
+  /// **'Private key'**
+  String get r7NavKindPrivateKey;
+
+  /// R7 navigation: r7NavLogFailureAuthentication
+  ///
+  /// In en, this message translates to:
+  /// **'authentication rejected'**
+  String get r7NavLogFailureAuthentication;
+
+  /// R7 navigation: r7NavImportFileTooLarge
+  ///
+  /// In en, this message translates to:
+  /// **'The selected file is too large for a key or certificate.'**
+  String get r7NavImportFileTooLarge;
+
+  /// R7 navigation: r7NavCertValidUntil
+  ///
+  /// In en, this message translates to:
+  /// **'valid until {date}'**
+  String r7NavCertValidUntil(String date);
+
+  /// R7 navigation: r7NavLogEnded
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get r7NavLogEnded;
+
+  /// R7 navigation: r7NavLogRouteJump
+  ///
+  /// In en, this message translates to:
+  /// **'via jump host'**
+  String get r7NavLogRouteJump;
+
+  /// R7 navigation: r7NavKeychainEmpty
+  ///
+  /// In en, this message translates to:
+  /// **'No keys, certificates or passwords yet.'**
+  String get r7NavKeychainEmpty;
+
+  /// R7 navigation: r7NavLogClearTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Clear finished logs'**
+  String get r7NavLogClearTitle;
+
+  /// R7 navigation: r7NavCertMalformed
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a valid OpenSSH certificate.'**
+  String get r7NavCertMalformed;
+
+  /// R7 navigation: r7NavNotAPrivateKey
+  ///
+  /// In en, this message translates to:
+  /// **'That file is not a private key (a .pub or certificate belongs in the certificate field).'**
+  String get r7NavNotAPrivateKey;
+
+  /// R7 navigation: r7NavLogFilterFailed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get r7NavLogFilterFailed;
+
+  /// R7 navigation: r7NavLogClearBody
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all finished session logs and their transcripts from this device? Active sessions stay listed.'**
+  String get r7NavLogClearBody;
+
+  /// R7 navigation: r7NavCertNotYetValid
+  ///
+  /// In en, this message translates to:
+  /// **'not valid before {date}'**
+  String r7NavCertNotYetValid(String date);
+
+  /// R7 navigation: r7NavLogEndpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoint'**
+  String get r7NavLogEndpoint;
+
+  /// R7 navigation: r7NavCertNotUser
+  ///
+  /// In en, this message translates to:
+  /// **'This is a host certificate; sign-in needs a user certificate.'**
+  String get r7NavCertNotUser;
+
+  /// R7 navigation: r7NavLogTranscriptTruncated
+  ///
+  /// In en, this message translates to:
+  /// **'Older output was dropped to stay within the size limit.'**
+  String get r7NavLogTranscriptTruncated;
+
+  /// R7 navigation: r7NavSignInInheritedNote
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the group\'s default sign-in. Choose this host\'s own sign-in to override it.'**
+  String get r7NavSignInInheritedNote;
+
+  /// Label of one SSH session of a host
+  ///
+  /// In en, this message translates to:
+  /// **'{host} #{index}'**
+  String r7ForwardSessionLabel(String host, int index);
+
+  /// Host connection state on the forwarding page
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get r7ForwardHostNotConnected;
+
+  /// Empty state when no host has forwarding rules
+  ///
+  /// In en, this message translates to:
+  /// **'No forwarding rules yet. Choose “New rule” to add one to a host.'**
+  String get r7ForwardNoRules;
+
+  /// Start button tooltip when the host is not connected
+  ///
+  /// In en, this message translates to:
+  /// **'Connect and start'**
+  String get r7ForwardConnectAndStart;
+
+  /// Editor title when duplicating a rule
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate forwarding rule'**
+  String get r7ForwardDuplicateTitle;
+
+  /// Delete rule confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete forwarding rule?'**
+  String get r7ForwardDeleteTitle;
+
+  /// A session of the host is still connecting
+  ///
+  /// In en, this message translates to:
+  /// **'Wait until the session finishes connecting'**
+  String get r7ForwardWaitForSession;
+
+  /// User cancelled a pending connect-and-start
+  ///
+  /// In en, this message translates to:
+  /// **'Start cancelled. A connection that completes stays open as a normal session.'**
+  String get r7ForwardStartCancelled;
+
+  /// Menu action: duplicate a forwarding rule
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get r7ForwardDuplicate;
+
+  /// Rule or host changed or was removed before it could start
+  ///
+  /// In en, this message translates to:
+  /// **'The rule or host changed or was removed; it was not started.'**
+  String get r7ForwardRuleChanged;
+
+  /// Host has several authenticated SSH sessions
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sessions'**
+  String r7ForwardHostSessions(int count);
+
+  /// Tooltip of the rule actions menu
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get r7ForwardMoreActions;
+
+  /// Vault/profile changed while connecting
+  ///
+  /// In en, this message translates to:
+  /// **'The vault or profile changed while connecting; the rule was not started.'**
+  String get r7ForwardScopeChanged;
+
+  /// Title of the host picker for a new forwarding rule
+  ///
+  /// In en, this message translates to:
+  /// **'Choose host'**
+  String get r7ForwardChooseHost;
+
+  /// Search field hint on the forwarding page and host picker
+  ///
+  /// In en, this message translates to:
+  /// **'Search hosts or rules'**
+  String get r7ForwardSearchHint;
+
+  /// Delete rule confirmation body
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” is removed from this host. If it is running, it is stopped first.'**
+  String r7ForwardDeleteBody(String name);
+
+  /// Host connection state on the forwarding page
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get r7ForwardHostConnecting;
+
+  /// Empty state when the search matches nothing
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches the search.'**
+  String get r7ForwardNoMatches;
+
+  /// Default name of a duplicated rule
+  ///
+  /// In en, this message translates to:
+  /// **'{name} copy'**
+  String r7ForwardCopyName(String name);
+
+  /// Home sidebar page title for SSH port forwarding rules
+  ///
+  /// In en, this message translates to:
+  /// **'SSH Forwarding'**
+  String get r7ForwardTitle;
+
+  /// A rule save/delete/start was refused because the saved rule changed meanwhile
+  ///
+  /// In en, this message translates to:
+  /// **'This rule was changed elsewhere. Nothing was changed here; review the current rule and try again.'**
+  String get r7ForwardRuleConflict;
+
+  /// Link that shows the SSH session (terminal tab) of the host
+  ///
+  /// In en, this message translates to:
+  /// **'Open session'**
+  String get r7ForwardOpenSession;
+
+  /// Connect-and-start ended without an authenticated session
+  ///
+  /// In en, this message translates to:
+  /// **'The connection was not completed; the rule was not started.'**
+  String get r7ForwardNotConnected;
+
+  /// Forwarding page summary: saved rules, hosts that have rules, running forwards
+  ///
+  /// In en, this message translates to:
+  /// **'{rules} rules on {hosts} hosts · {running} running'**
+  String r7ForwardSummary(int rules, int hosts, int running);
+
+  /// Forwards still running for a host that is no longer saved
+  ///
+  /// In en, this message translates to:
+  /// **'Host no longer saved — forwards still running'**
+  String get r7ForwardRemovedHost;
+
+  /// Several sessions are open; the user must choose where rules start
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a session to start rules on'**
+  String get r7ForwardChooseSession;
+
+  /// Host connection state on the forwarding page
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get r7ForwardHostConnected;
+
+  /// Button that creates a forwarding rule on a chosen host
+  ///
+  /// In en, this message translates to:
+  /// **'New rule'**
+  String get r7ForwardNewRule;
+
+  /// Status of a rule on another session of the same host
+  ///
+  /// In en, this message translates to:
+  /// **'On {session}: {status}'**
+  String r7ForwardOnSession(String session, String status);
+
+  /// Rule status while its host connects
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting… the rule starts after authentication'**
+  String get r7ForwardConnectingStart;
+
+  /// Empty state when there are no SSH hosts
+  ///
+  /// In en, this message translates to:
+  /// **'No SSH hosts yet. Add an SSH host first.'**
+  String get r7ForwardNoHosts;
+
+  /// Explains that rules never start automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Rules start only when you start them, over the host\'s authenticated SSH session.'**
+  String get r7ForwardNoAutoStart;
+
+  /// Filter chip: also list SSH hosts without forwarding rules
+  ///
+  /// In en, this message translates to:
+  /// **'Show hosts without rules'**
+  String get r7ForwardShowAllHosts;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Termius import / export'**
+  String get r7ImportMenuAction;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'A certificate was found, but this build can’t store certificates; only the private key is imported.'**
+  String get r7ImportIssueCertificateNotStored;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Only the first {name} of each host is used; others were ignored.'**
+  String r7ImportIssueBundleIdentityExtra(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Jump host: {alias}'**
+  String r7ImportRowJump(String alias);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Host “{name}” was skipped because a value can’t be written safely.'**
+  String r7ImportIssueExportHostSkipped(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The bundle contains no OpenSSH “config” file.'**
+  String get r7ImportIssueBundleConfigMissing;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Save file'**
+  String get r7ImportExportSave;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Termius?'**
+  String get r7ImportConfirmTitle;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The ProxyJump chain loops or is too long.'**
+  String get r7ImportIssueSshJumpCycle;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The file will contain readable plaintext passwords or private keys. Anyone with the file can sign in to these hosts. Store it securely and delete it after use.'**
+  String get r7ImportExportSecretWarning;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rows contain values starting with =, +, -, @ or a tab. They are written unchanged; open the file only in Termius or a text editor, not a spreadsheet app.'**
+  String r7ImportIssueExportFormulaRisk(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tags, or a tag is too long.'**
+  String get r7ImportIssueInvalidTag;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Will be created'**
+  String get r7ImportDispositionCreate;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'A quoted field is never closed.'**
+  String get r7ImportIssueCsvUnterminatedQuote;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hosts have saved passwords that are not in this file.'**
+  String r7ImportIssueExportSecretsOmitted(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hosts sign in with a private key that is not in this export. Use the OpenSSH bundle with key files turned on to include keys.'**
+  String r7ImportIssueExportKeysOmitted(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The file couldn’t be read.'**
+  String get r7ImportFileUnreadable;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} certificates were not exported because key files are turned off.'**
+  String r7ImportIssueExportCertificatesOmitted(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Export hosts as a Termius CSV template file or as an OpenSSH config. Secrets are left out unless you turn them on. The CSV can carry passwords only; use the OpenSSH bundle for key files.'**
+  String get r7ImportExportIntro;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The CSV structure is invalid.'**
+  String get r7ImportIssueCsvInvalid;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Import hosts'**
+  String get r7ImportApplyNone;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more rows are not shown; they are still included in the counts.'**
+  String r7ImportMoreRowsHidden(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The vault changed during the import, so it was stopped. Records written before the switch stay in the previous vault; review it before retrying.'**
+  String get r7ImportFailScopeChanged;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The bundle or one of its files exceeds the import limits.'**
+  String get r7ImportIssueBundleTooLarge;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'This vault is read-only. You can still export.'**
+  String get r7ImportReadOnly;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The file is not a valid ZIP bundle.'**
+  String get r7ImportIssueBundleInvalid;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The file contains a NUL character.'**
+  String get r7ImportIssueCsvNul;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get r7ImportConfirmAccept;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Mosh isn’t supported; this host is imported as SSH with the same port.'**
+  String get r7ImportIssueMoshAsSsh;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The file has more than {count} hosts.'**
+  String r7ImportIssueTooManyRows(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Import {count} hosts'**
+  String r7ImportApply(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The file is not valid UTF-8 text. Save it as UTF-8 and try again.'**
+  String get r7ImportIssueNotUtf8;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The bundle contains several “config” files at the same level; keep only one.'**
+  String get r7ImportIssueBundleConfigAmbiguous;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {hosts} hosts and {groups} groups. They are saved encrypted.'**
+  String r7ImportDone(int hosts, int groups);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'This file can’t be imported. Fix the findings below and choose it again.'**
+  String get r7ImportBlockedFile;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'This host doesn’t pass Atermius validation.'**
+  String get r7ImportIssueInvalidRecord;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The SSH_KEY private key is too large or invalid.'**
+  String get r7ImportIssueInvalidPrivateKey;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{username}@{address}:{port} · {protocol}'**
+  String r7ImportRowEndpoint(
+    String username,
+    String address,
+    String port,
+    String protocol,
+  );
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Bundle entry “{name}” was refused (link, unsafe path, encryption or unsupported compression).'**
+  String r7ImportIssueBundleEntryRejected(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The file is larger than the import limit.'**
+  String get r7ImportIssueFileTooLarge;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Not importable'**
+  String get r7ImportDispositionBlocked;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Termius CSV'**
+  String get r7ImportChooseCsv;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Private keys only apply to SSH; the key was not imported for this host.'**
+  String get r7ImportIssueKeyIgnoredForProtocol;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hosts use a key with a certificate; the Termius CSV can’t carry certificates.'**
+  String r7ImportIssueExportCertificatesNotRepresented(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Same host as row {row}.'**
+  String r7ImportIssueDuplicateInFile(int row);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wasn’t imported: only loopback-safe forwards with fixed ports are imported. Add other forwards in the forwarding editor.'**
+  String r7ImportIssueSshForwardBlocked(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'A value in column “{name}” was not imported.'**
+  String r7ImportIssueUnknownColumnValue(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Both a password and a private key were given. Atermius keeps one sign-in per host, so the private key is used and the password is not imported.'**
+  String get r7ImportIssuePasswordDroppedForKey;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} duplicate tags were merged.'**
+  String r7ImportIssueDuplicateTags(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The OpenSSH config can’t be imported as written.'**
+  String get r7ImportIssueSshBlocked;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded by you'**
+  String get r7ImportDispositionExcluded;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Termius import & export'**
+  String get r7ImportTransferTitle;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Hostname/IP is empty.'**
+  String get r7ImportIssueMissingAddress;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose OpenSSH bundle (.zip)'**
+  String get r7ImportChooseBundle;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Private key included (stored encrypted, never shown)'**
+  String get r7ImportRowPrivateKey;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hosts sign in with a private key. The Termius CSV template has no key column, so keys are not exported.'**
+  String r7ImportIssueExportKeysNotRepresented(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Host “{name}”: a group name starts or ends with spaces, which Termius trims.'**
+  String r7ImportIssueExportGroupWhitespace(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Export saved to the chosen file.'**
+  String get r7ImportExported;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Column “{name}” is not in the Termius template. Atermius reads it, but Termius itself rejects files with this column.'**
+  String r7ImportIssueNonTemplateColumn(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'OpenSSH bundle (.zip): config and key files'**
+  String get r7ImportExportFormatBundle;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Groups can be nested at most {count} levels.'**
+  String r7ImportIssueGroupTooDeep(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted Termius app data, Termius cloud vaults and native backups are not read. Export a CSV from Termius or use its OpenSSH export instead.'**
+  String get r7ImportNativeUnsupported;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The header has no “Hostname/IP” column.'**
+  String get r7ImportIssueMissingHostname;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Password included (stored encrypted, never shown)'**
+  String get r7ImportRowPassword;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The password is too long or contains a NUL character; it was not imported.'**
+  String get r7ImportIssueInvalidPassword;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Hostname/IP is not a valid host name or address.'**
+  String get r7ImportIssueInvalidAddress;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'This row has fewer columns than the header; missing values are treated as empty.'**
+  String get r7ImportIssueMissingFields;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'SSH_KEY is not an inline private key. Key names and file paths are never read; add the key to the host after import.'**
+  String get r7ImportIssueSshKeyNotInline;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more findings are hidden.'**
+  String r7ImportMoreIssuesHidden(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Group: {path}'**
+  String r7ImportRowGroup(String path);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'This vault is read-only. Nothing was imported.'**
+  String get r7ImportFailReadOnly;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Host “{name}”: a tag contains “,” or surrounding spaces; Termius splits tags on “,” and trims them.'**
+  String r7ImportIssueExportTagComma(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'CertificateFile is missing from the bundle or is not an OpenSSH user certificate.'**
+  String get r7ImportIssueBundleCertificateMissing;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Port forwards: {count}'**
+  String r7ImportRowForwards(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'SSH hosts need a username in Atermius. Fill in the Username column.'**
+  String get r7ImportIssueMissingUsername;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'IdentityFile is not inside the selected bundle; no other files are read. Add the key after import.'**
+  String get r7ImportIssueBundleKeyMissing;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'OpenSSH config'**
+  String get r7ImportExportFormatOpenSsh;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Host “{name}”: its jump host isn’t in this export, so ProxyJump was left out.'**
+  String r7ImportIssueExportJumpHost(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'A certificate has no matching private key and was not imported.'**
+  String get r7ImportIssueCertificateWithoutKey;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The import failed and could not be fully undone. Saved before the failure: {hosts} hosts, {groups} groups, {credentials} keychain credentials; a record changed elsewhere or a write interrupted by a vault switch is kept. Review hosts and the keychain before retrying.'**
+  String r7ImportFailPartial(int hosts, int groups, int credentials);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Export readable secrets?'**
+  String get r7ImportExportSecretConfirmTitle;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Host “{name}” was given an OpenSSH-safe alias.'**
+  String r7ImportIssueExportAliasRewritten(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The exported file is not encrypted. Passwords or private keys in it can be read by anyone or any app with access to the file, including sync and backup tools.'**
+  String get r7ImportExportSecretConfirmBody;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Include private key files (and certificates)'**
+  String get r7ImportExportIncludeKeys;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped: duplicate row'**
+  String get r7ImportDispositionDuplicate;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The label contains control characters or is too long.'**
+  String get r7ImportIssueInvalidLabel;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Include passwords'**
+  String get r7ImportExportIncludePasswords;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The IdentityFile in the bundle is not a private key (or is too large) and was not imported.'**
+  String get r7ImportIssueBundleKeyInvalid;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hosts have port forwards, which the Termius CSV can’t represent.'**
+  String r7ImportIssueExportForwards(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Empty group names in the path were ignored.'**
+  String get r7ImportIssueEmptyGroupSegment;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hosts will be exported.'**
+  String r7ImportExportSummary(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'ProxyJump “{name}” doesn’t match exactly one importable or saved host.'**
+  String r7ImportIssueSshJumpMissing(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get r7ImportModeImport;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Also import rows that match an existing host'**
+  String get r7ImportImportDuplicates;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'This export is larger than Atermius can import back (too many hosts or too much data for one file). Nothing will be saved; export fewer hosts.'**
+  String get r7ImportIssueExportTooLarge;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Export with secrets'**
+  String get r7ImportExportSecretConfirmAccept;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hosts sign in with a shared keychain password; it is written into each host’s row only when passwords are included.'**
+  String r7ImportIssueExportSharedCredential(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Matches saved host “{name}”.'**
+  String r7ImportIssueAlreadyExists(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose OpenSSH config'**
+  String get r7ImportChooseOpenSsh;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{create} to create · {groups} new groups · {skipped} skipped · {blocked} not importable'**
+  String r7ImportSummary(int create, int groups, int skipped, int blocked);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Termius CSV columns: Groups, Label, Tags, Hostname/IP, Protocol, Port, Username, Password. Subgroups are separated by “/” and tags by “,”. An extra SSH_KEY column with an inline private key is accepted on import only.'**
+  String get r7ImportTemplateColumns;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'This config contains no passwords or key files. Use the OpenSSH bundle to include keys.'**
+  String get r7ImportExportOpenSshNoSecrets;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Standard OpenSSH files to extract into ~/.ssh (see README inside). Not a Termius vault; Termius 10.4 does not read certificate files from it.'**
+  String get r7ImportExportBundleHelp;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'A value contains control characters.'**
+  String get r7ImportIssueControlCharacter;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Line {line}: {message}'**
+  String r7ImportIssueAtLine(int line, String message);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was ignored; Atermius always verifies host keys with its own known-hosts list.'**
+  String r7ImportIssueSshHostKeyPolicyIgnored(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The column “{name}” appears more than once.'**
+  String r7ImportIssueDuplicateHeader(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Hosts or groups changed after the preview. Nothing was imported; choose the file again.'**
+  String get r7ImportFailStale;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The file is empty.'**
+  String get r7ImportIssueEmptyFile;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The export file couldn’t be saved.'**
+  String get r7ImportExportFailed;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Tags: {tags}'**
+  String r7ImportRowTags(String tags);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Import hosts from the Termius CSV template or from an OpenSSH config (including termius export-ssh-config output). Nothing is saved until you review the preview and confirm.'**
+  String get r7ImportIntro;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Include RDP and VNC hosts (Atermius extension; Termius imports them without connection settings)'**
+  String get r7ImportExportIncludeDesktops;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The username contains spaces or control characters, or is too long.'**
+  String get r7ImportIssueInvalidUsername;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hosts sign in with a password, which OpenSSH files can’t store.'**
+  String r7ImportIssueExportPasswordsNotRepresented(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'A row has too many columns.'**
+  String get r7ImportIssueCsvTooManyFields;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get r7ImportModeExport;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'This row has values beyond the header columns.'**
+  String get r7ImportIssueExtraFields;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{address}:{port} · {protocol}'**
+  String r7ImportRowEndpointNoUser(
+    String address,
+    String port,
+    String protocol,
+  );
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'A quote appears inside an unquoted field.'**
+  String get r7ImportIssueCsvStrayQuote;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol “{name}” isn’t supported (SSH, RDP and VNC are).'**
+  String r7ImportIssueUnsupportedProtocol(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Host “{name}”: a group name contains “/”, which Termius reads as a subgroup separator.'**
+  String r7ImportIssueExportGroupSlash(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The first row is not a Termius CSV header (expected columns such as Label and Hostname/IP).'**
+  String get r7ImportIssueNoTemplateHeader;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Export cancelled. No file was written.'**
+  String get r7ImportExportCancelled;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The header differs from the Termius template order; Atermius reads it by column name, but Termius would not import this file.'**
+  String get r7ImportIssueHeaderOrderNotTermius;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Another saved host already uses this name.'**
+  String get r7ImportIssueNameAlreadyUsed;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol “{name}” is an Atermius extension; Termius may not accept it in its CSV template.'**
+  String r7ImportIssueExtensionProtocol(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped: already saved'**
+  String get r7ImportDispositionExisting;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} RDP/VNC hosts are not exported in this format.'**
+  String r7ImportIssueExportSkippedProtocol(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Port must be a number from 1 to 65535.'**
+  String get r7ImportIssueInvalidPort;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Column “{name}” is not part of the Termius template; its values are not imported.'**
+  String r7ImportIssueUnknownHeader(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hosts use a jump host, which this format can’t represent.'**
+  String r7ImportIssueExportJumpCount(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{name} isn’t applied by Atermius and was ignored.'**
+  String r7ImportIssueSshOptionIgnored(String name);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Create {hosts} encrypted hosts and {groups} groups in the current vault. {secrets} of these hosts include a password or private key, which is stored encrypted inside that host only.'**
+  String r7ImportConfirmBody(int hosts, int groups, int secrets);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{directive}: {message}'**
+  String r7ImportIssueSshFinding(String directive, String message);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} exported keys have a saved passphrase; the passphrase is not written, and encrypted keys will ask for it.'**
+  String r7ImportIssueExportPassphraseNotExported(int count);
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'Termius CSV'**
+  String get r7ImportExportFormatCsv;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'A group name contains control characters or is too long.'**
+  String get r7ImportIssueInvalidGroup;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'A field is too long.'**
+  String get r7ImportIssueCsvFieldTooLong;
+
+  /// Termius import/export (R7).
+  ///
+  /// In en, this message translates to:
+  /// **'The import failed and was undone. Nothing was kept.'**
+  String get r7ImportFailRolledBack;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'ja', 'ru', 'zh'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'zh':
+      return AppLocalizationsZh();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

@@ -1,0 +1,57 @@
+{
+  "vector_version": 1,
+  "purpose": "Deterministic non-production account recovery interoperability vector. Seeds and codes are test-only values.",
+  "context": {
+    "account_id": "11111111-1111-4111-8111-111111111111",
+    "instance_id": "22222222-2222-4222-8222-222222222222",
+    "server_space_id": "33333333-3333-4333-8333-333333333333",
+    "recovery_generation": 7
+  },
+  "account_id": "11111111-1111-4111-8111-111111111111",
+  "instance_id": "22222222-2222-4222-8222-222222222222",
+  "server_space_id": "33333333-3333-4333-8333-333333333333",
+  "recovery_generation": 7,
+  "recovery_code_base64url": "QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl8",
+  "account_key_base64url": "gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp8",
+  "signing_seed_base64url": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "signing_public_key_base64url": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+  "encryption_seed_base64url": "ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8",
+  "encryption_public_key_base64url": "VzCACrNA_LGM5REe2p1wX5E4i0HkVEy9EDullC2yIz4",
+  "recovery_code_hkdf_info_utf8": "[\"atermius\",\"account-recovery-envelope\",1,{\"account_id\":\"11111111-1111-4111-8111-111111111111\",\"instance_id\":\"22222222-2222-4222-8222-222222222222\",\"recovery_generation\":7,\"server_space_id\":\"33333333-3333-4333-8333-333333333333\"}]",
+  "recovery_code_wrapping_key_hex": "1caa688376602d1549c259a1efe8ccff6e76588323cb066ee22a389d0f76c238",
+  "account_key_hkdf_info_utf8": "[\"atermius\",\"account-recovery-identity-wrap\",1,{\"account_id\":\"11111111-1111-4111-8111-111111111111\",\"instance_id\":\"22222222-2222-4222-8222-222222222222\",\"recovery_generation\":7,\"server_space_id\":\"33333333-3333-4333-8333-333333333333\"}]",
+  "account_key_wrapping_key_hex": "7dcd6ae6f301503dc519f64a74d3989b562bff3486c8d1059f933506d0024a6e",
+  "descriptor_jcs_utf8": "{\"account_id\":\"11111111-1111-4111-8111-111111111111\",\"instance_id\":\"22222222-2222-4222-8222-222222222222\",\"protocol\":\"atermius-account-recovery-descriptor-v1\",\"recovery_generation\":7,\"recovery_public_encryption_key\":\"VzCACrNA_LGM5REe2p1wX5E4i0HkVEy9EDullC2yIz4\",\"recovery_public_signing_key\":\"A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg\",\"server_space_id\":\"33333333-3333-4333-8333-333333333333\"}",
+  "descriptor_sha256": "e76468c90e5b140a6ec5cd497fe7488f05c1aa12f167116a928130b78ab850bb",
+  "identity_plaintext_jcs_utf8": "{\"a\":\"11111111-1111-4111-8111-111111111111\",\"d\":\"e76468c90e5b140a6ec5cd497fe7488f05c1aa12f167116a928130b78ab850bb\",\"f\":\"atermius-recovery-identity-v1\",\"g\":7,\"i\":\"22222222-2222-4222-8222-222222222222\",\"p\":\"A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg\",\"q\":\"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8\",\"s\":\"33333333-3333-4333-8333-333333333333\",\"x\":\"VzCACrNA_LGM5REe2p1wX5E4i0HkVEy9EDullC2yIz4\",\"y\":\"ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8\"}",
+  "identity_plaintext_sha256": "09e4b3607a240772856b563c8265c4073bb6dd1c41bcef5d9aa620db9c79da8c",
+  "recovery_envelope_aad_jcs_utf8": "{\"account_id\":\"11111111-1111-4111-8111-111111111111\",\"format\":\"atermius-account-recovery-v1\",\"instance_id\":\"22222222-2222-4222-8222-222222222222\",\"recovery_generation\":7,\"server_space_id\":\"33333333-3333-4333-8333-333333333333\"}",
+  "recovery_envelope": {
+    "version": 1,
+    "suite": "xchacha20-poly1305-ietf",
+    "nonce": "QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZX",
+    "ciphertext": "CgJlecG9DyKgOmVVqGCLm9Npl_thbxu3Hh7nLBVlPhagpEwS7diZJWh5eU3ualqQIlIc8SssdKMZIEQ0JNSh1FoJcSwmYnHam21SRe5EB2FqNQ20NyYUWCSe5yLRTH5Ea4fY6rKxMxn_yHlc9wc2bfh5MtloCyIwlh7pFUsdZ40SKapfiOlp_nmX7OjivAWg3wEgJUUFl5ImH6veOwxczSFqUOiWV9S9xNlDTjQ9MejqDaAa_vBgQ3ea3o37Dnnx1AG7aNU9GypDlC1GfflDior33TSbdZ1A7adGJNYCj1k65Hik0kZhNDQQBhHt0OY_sp12wBUyjVlzoDHThI5dGsiET9W2zxroBw48tTX7Lc53Nb7gZTH-l7pscHJVELl1cjO4wJ_DuGiM_YhsIYCHLMnVSbevJYwgQ8ecyXsCyiJ1oB5SKV0I3ISGWT2ms-buMZ7wZiEd9pEGk90NBBltiqtl2wyT3_QhwcrfFAnXD3abowqsBDojDLJvRNlx8Z9dqx8IwMLOk7eUDcOMsXGZo-J1n_KS0eYh-gXTbFHzWtY26xLYbJOD-33SbBl6jp8VlRvkG6ReZaF7yHXr3jq2F8cXQz1vKESzesDUXvybp3xmUD4NYYIyLSUIfC9ggVApXAh2pgYmlhxpw3Bqd4p_Gm3VXDxVkX2hCSUYw9-xaPnqNNnqpwg7i_CeppJ8Eu6D"
+  },
+  "account_key_envelope_aad_jcs_utf8": "{\"account_id\":\"11111111-1111-4111-8111-111111111111\",\"format\":\"atermius-account-recovery-identity-v1\",\"instance_id\":\"22222222-2222-4222-8222-222222222222\",\"recovery_generation\":7,\"server_space_id\":\"33333333-3333-4333-8333-333333333333\"}",
+  "account_key_envelope": {
+    "version": 1,
+    "suite": "xchacha20-poly1305-ietf",
+    "nonce": "WFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5v",
+    "ciphertext": "gnnVBq5ebqtrQQ1Pfq2vrGxINuUf3hcHnzOtS4L73idypnMZynCVZJqpt2KCbNlkoTwcay3YKSu9x_05tWtXbWXe68OJfI1IPAnyIcwdjn4U_yGE6_O6Z1aDbyRgEaSQ_9diw6XTkgi2TelgeMva9E4378k3zWnZg5TYD7lobKesE_U8adf55UiNF9CxD4-hEhkiDReYkavb6QsZ9aPgVyaHYwDApd4Kdx-a2jke3vGLO5M8mbYeh56S8jvy1BIzWNjexpciA7UT-HxrcoEF0R2Su3TaqC1R4boXIDY1Xj3iswQpDLHlj_zIlz77KFENEVEVHstW3CNIoSzHtnbB5KvyEUNeb2VmWQamXDrfYvecfwwBUCDmBSALujbY8JBldVGXwQ5IUg72ENee6-qP-bt0XI4n8a4MD2XxXShLP3sb5npMu2z6RkQqV-jsDztBIOfloMzBq1DQe4bsbrEYHetoAPoxVPYVIQeN9lCqYeGOktBETLg7Ylii3E458nMMVG1ljN4ezpMkRpzRMMm-fMdAhaidDsmbsTYE8so4ZsBRLQkuG9AaqQmy7tDDIJUM65AAqtBw4SKxKVRq70ifMaTLky2EcPCZap94"
+  },
+  "recovery_identity_proof_payload_jcs_utf8": "{\"account_id\":\"11111111-1111-4111-8111-111111111111\",\"instance_id\":\"22222222-2222-4222-8222-222222222222\",\"protocol\":\"atermius-account-recovery-identity-v1\",\"recovery_descriptor_hash\":\"e76468c90e5b140a6ec5cd497fe7488f05c1aa12f167116a928130b78ab850bb\",\"recovery_envelope_sha256\":\"5052eef35cdb9391f3f0649c9d799d261105322d6cc9e7b7294ae1bc6c83a368\",\"recovery_generation\":7,\"recovery_identity_envelope_sha256\":\"5e3f6b209d88d7f680289c7b0328541f887109abd338c67a8b94931691956dc4\",\"server_space_id\":\"33333333-3333-4333-8333-333333333333\"}",
+  "recovery_identity_proof_signature_base64url": "Peh-npZ8z7_ySn3M-oeNKLhVLL1vMW1vdrqurGtEuZ5VhLlk9gyt_ZIqR5lyq8hWFqE7T7WgrKqt5p_tiMMkAQ",
+  "vault_id": "44444444-4444-4444-8444-444444444444",
+  "key_epoch": 3,
+  "uploader_device_id": "55555555-5555-4555-8555-555555555555",
+  "vault_key_base64url": "oKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr8",
+  "keybox_plaintext_jcs_utf8": "{\"account_id\":\"11111111-1111-4111-8111-111111111111\",\"instance_id\":\"22222222-2222-4222-8222-222222222222\",\"key_epoch\":3,\"server_space_id\":\"33333333-3333-4333-8333-333333333333\",\"vault_id\":\"44444444-4444-4444-8444-444444444444\",\"vault_key\":\"oKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr8\"}",
+  "keybox_envelope": {
+    "version": 1,
+    "suite": "crypto_box_seal",
+    "ciphertext": "l5CUraheTbaGS5Ax5_Xz-Xg1Q4Ctt6mE9qc70zaQHjlH7kvxL7SZx3VrCM3ikweoHtvjHjMtd5QxLZbffVbN8mZ8EWDoqmMwh4G1Xz_oBQAg6Uz3Dy6nh6gHo4T3hFQlEhuzpVEBqig_Lz9SCKlDRKLLij0VExjqIbbA2XOr4LLI_9u89t68p8unB2F0kw6YE2inuAH7YG85YGUp2wKursi1pJyStRz0QiVTCeXH9TuKA9v5uYopQq16SDMNJ6yX7HoFdSjoTJDFzI1FLBMjsZXIXdiIv3IgVJ0L8B-hwbft2w2YZdr3CI4S09plYUAdamylHKTfRQC04AkkZ1h-nexSLPDV4L_1HWXtGYWVABTNhtddD6v1IeFTiXVfij1EMZRbqb94goCV8Tlg_43Wdn-jzzZHrOlt-5w_UtrHLHrI16fFzFudRvuBK3Au"
+  },
+  "keybox_ciphertext_sha256": "ac216655c46c30b488b55570843758bbb7515f6eb78d79cfef0fc9b5909a4a58",
+  "keybox_signature_payload_jcs_utf8": "{\"account_id\":\"11111111-1111-4111-8111-111111111111\",\"envelope_sha256\":\"ac216655c46c30b488b55570843758bbb7515f6eb78d79cfef0fc9b5909a4a58\",\"instance_id\":\"22222222-2222-4222-8222-222222222222\",\"key_epoch\":3,\"protocol\":\"atermius-account-recovery-v1\",\"recovery_descriptor_hash\":\"e76468c90e5b140a6ec5cd497fe7488f05c1aa12f167116a928130b78ab850bb\",\"recovery_generation\":7,\"server_space_id\":\"33333333-3333-4333-8333-333333333333\",\"uploader_device_id\":\"55555555-5555-4555-8555-555555555555\",\"vault_id\":\"44444444-4444-4444-8444-444444444444\"}",
+  "keybox_recovery_signature_base64url": "7qcWmTEGC8RsudXSdsQAcl_EhEdVvuX-KzkworpEpGZlCg9nzrIEzcnyyDsE-PJfsU5wHk-oT2i20y0hHeQHCw"
+}
