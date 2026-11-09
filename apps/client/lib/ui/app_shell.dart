@@ -1,3 +1,6 @@
+import 'cloud_access/organizations_page.dart' show CloudAccessAccountCard;
+import 'cloud_access/share_host_dialog.dart' show showCloudShareDialog;
+import '../cloud/cloud_access_service.dart' show CloudAccessService;
 import 'app_menu.dart';
 import '../platform/file_window_tracking.dart';
 import '../desktop/window/desktop_window.dart';
@@ -15,6 +18,7 @@ import 'mcp_settings_panel.dart';
 import 'settings_scaffold.dart';
 import '../console/local_console.dart';
 import 'local_shell_menu.dart';
+import 'home_add_sharing_row.dart';
 import '../desktop/desktop_view.dart';
 import '../desktop/window/desktop_tab_windows.dart';
 import 'host_file_session.dart';
@@ -98,6 +102,10 @@ import '../web_update/web_app_update_factory.dart';
 import '../web_update/web_app_update_monitor.dart';
 import '../l10n/l10n.dart';
 import 'app_language_settings.dart';
+import 'account_settings.dart';
+import 'app_theme_mode.dart';
+import 'wallpaper.dart';
+import 'wallpaper_settings.dart';
 
 const _uuid = Uuid();
 const _syncDiagnosticsClientVersion =
@@ -1883,10 +1891,10 @@ _snack(context, context.l10n.couldntOpenANewWindow, error: true);
                     horizontal: 18,
                     vertical: 12,
                   ),
-                  color: const Color(0xFF51251F),
+                  color: context.palette.errorContainer,
                   child: Text(
                     context.l10n.localStorageNeedsRecoveryReadingEditing,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.palette.onErrorContainer),
                   ),
                 ),
               Expanded(
@@ -2020,7 +2028,7 @@ class _WebAppUpdateBanner extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     context.l10n.theServerRequiresANewerClient,
-                    style: const TextStyle(color: AppColors.orange),
+                    style: TextStyle(color: context.palette.orange),
                   ),
                 ],
                 if (app.pendingCount > 0 &&
@@ -2034,7 +2042,7 @@ class _WebAppUpdateBanner extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     context.l10n.updateReadinessChangedFinishTheVisible,
-                    style: const TextStyle(color: AppColors.orange),
+                    style: TextStyle(color: context.palette.orange),
                   ),
                 ],
               ],
@@ -2090,8 +2098,8 @@ class _WebAppUpdateBanner extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         color: protocolMismatch
-            ? const Color(0xFF51251F)
-            : AppColors.lime.withValues(alpha: .13),
+            ? context.palette.errorContainer
+            : context.palette.lime.withValues(alpha: .13),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2207,8 +2215,8 @@ class _WebAppUpdateSettingsCard extends StatelessWidget {
             Text(
               _status,
               key: const ValueKey('web_app_update_status'),
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 height: 1.4,
                 fontSize: 12,
               ),
@@ -2245,7 +2253,7 @@ Future<bool> _confirmSshHostKey(
     context: context,
     useRootNavigator: true,
     builder: (dialogContext) => AlertDialog(
-      icon: const Icon(Icons.gpp_maybe_outlined, color: AppColors.orange),
+      icon: Icon(Icons.gpp_maybe_outlined, color: context.palette.orange),
       title: Text(context.l10n.verifySshHostKey),
       content: SizedBox(
         width: appDialogWidth(context, 440),
@@ -2260,7 +2268,7 @@ Future<bool> _confirmSshHostKey(
               const SizedBox(height: 8),
               Text(
                 context.l10n.algorithmAlgorithm(algorithm),
-                style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                style: TextStyle(fontSize: 12, color: context.palette.muted),
               ),
             ],
             const SizedBox(height: 14),
@@ -2270,9 +2278,9 @@ Future<bool> _confirmSshHostKey(
               label: context.l10n.sshHostKeyFingerprintFingerprint(fingerprint),
               child: SelectableText(
                 fingerprint,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'monospace',
-                  color: AppColors.lime,
+                  color: context.palette.lime,
                 ),
               ),
             ),
@@ -2283,7 +2291,7 @@ Future<bool> _confirmSshHostKey(
                   : previouslyRevoked
                   ? context.l10n.thisExactFingerprintWasRevokedBefore
                   : context.l10n.afterConfirmationThisFingerprintIsSaved,
-              style: const TextStyle(fontSize: 12, color: AppColors.muted),
+              style: TextStyle(fontSize: 12, color: context.palette.muted),
             ),
           ],
         ),
@@ -2371,9 +2379,9 @@ class _SideNavigation extends StatelessWidget {
               .toList(growable: false);
     return Container(
       width: wide ? 200 : phone ? 52 : 72,
-      decoration: const BoxDecoration(
-        color: Color(0xFF0D141C),
-        border: Border(right: BorderSide(color: AppColors.line)),
+      decoration: BoxDecoration(
+        color: wallpaperWindowFill(context, context.palette.rail, opacity: .72),
+        border: Border(right: BorderSide(color: context.palette.line)),
       ),
       child: Column(
         children: [
@@ -2393,12 +2401,12 @@ class _SideNavigation extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: AppColors.lime,
+                    color: context.palette.lime,
                     borderRadius: BorderRadius.circular(11),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.terminal_rounded,
-                    color: Color(0xFF10160C),
+                    color: context.palette.onAccentText,
                     size: 22,
                   ),
                 ),
@@ -2433,10 +2441,10 @@ class _SideNavigation extends StatelessWidget {
                       context.l10n.workspace2,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         letterSpacing: 1.2,
-                        color: AppColors.muted,
+                        color: context.palette.muted,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -2448,9 +2456,9 @@ class _SideNavigation extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.end,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: AppColors.muted,
+                        color: context.palette.muted,
                       ),
                     ),
                   ),
@@ -2485,12 +2493,12 @@ class _SideNavigation extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: selected
-                              ? AppColors.lime.withValues(alpha: .105)
+                              ? context.palette.lime.withValues(alpha: .105)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(11),
                           border: selected
                               ? Border.all(
-                                  color: AppColors.lime.withValues(alpha: .18),
+                                  color: context.palette.lime.withValues(alpha: .18),
                                 )
                               : null,
                         ),
@@ -2503,8 +2511,8 @@ class _SideNavigation extends StatelessWidget {
                               item.icon,
                               size: 19,
                               color: selected
-                                  ? AppColors.lime
-                                  : AppColors.muted,
+                                  ? context.palette.lime
+                                  : context.palette.muted,
                             ),
                             if (wide) ...[
                               const SizedBox(width: 12),
@@ -2516,8 +2524,8 @@ class _SideNavigation extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: selected
-                                        ? AppColors.text
-                                        : AppColors.muted,
+                                        ? context.palette.text
+                                        : context.palette.muted,
                                     fontWeight: selected
                                         ? FontWeight.w600
                                         : FontWeight.w400,
@@ -2566,10 +2574,10 @@ class _SideNavigation extends StatelessWidget {
                             : MainAxisAlignment.center,
                         children: [
                           if (wide) const SizedBox(width: 11),
-                          const Icon(
+                          Icon(
                             Icons.import_export_rounded,
                             size: 19,
-                            color: AppColors.muted,
+                            color: context.palette.muted,
                           ),
                           if (wide) ...[
                             const SizedBox(width: 12),
@@ -2578,9 +2586,9 @@ class _SideNavigation extends StatelessWidget {
                                 context.l10n.r7NavImportExport,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: AppColors.muted,
+                                  color: context.palette.muted,
                                 ),
                               ),
                             ),
@@ -2597,19 +2605,19 @@ class _SideNavigation extends StatelessWidget {
               margin: const EdgeInsets.all(14),
               padding: const EdgeInsets.all(13),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.palette.surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.line),
+                border: Border.all(color: context.palette.line),
               ),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 15,
-                    backgroundColor: AppColors.surfaceSoft,
+                    backgroundColor: context.palette.surfaceSoft,
                     child: Icon(
                       Icons.person_outline,
                       size: 16,
-                      color: AppColors.teal,
+                      color: context.palette.teal,
                     ),
                   ),
                   const SizedBox(width: 9),
@@ -2629,9 +2637,9 @@ class _SideNavigation extends StatelessWidget {
                         const SizedBox(height: 3),
                         Text(
                           app.activeVault == null ? context.l10n.accountSessionUnlocked : context.l10n.encryptedSessionUnlocked,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
-                            color: AppColors.muted,
+                            color: context.palette.muted,
                           ),
                         ),
                       ],
@@ -2641,10 +2649,10 @@ class _SideNavigation extends StatelessWidget {
                     tooltip: context.l10n.lockWorkspace,
                     visualDensity: VisualDensity.compact,
                     onPressed: () => app.lock(),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.lock_outline,
                       size: 17,
-                      color: AppColors.muted,
+                      color: context.palette.muted,
                     ),
                   ),
                 ],
@@ -2654,7 +2662,7 @@ class _SideNavigation extends StatelessWidget {
             IconButton(
               tooltip: context.l10n.lockWorkspace,
               onPressed: () => app.lock(),
-              icon: const Icon(Icons.lock_outline, color: AppColors.muted),
+              icon: Icon(Icons.lock_outline, color: context.palette.muted),
             ),
           const SizedBox(height: 9),
         ],
@@ -2787,14 +2795,14 @@ IconData _syncIcon(String status) => switch (status) {
   _ => Icons.cloud_off_outlined,
 };
 
-Color _syncColor(String status) => switch (status) {
-  'idle' => AppColors.teal,
-  'pending' || 'syncing' || 'snapshot_recovering' => AppColors.lime,
-  'deletion_pending' => AppColors.orange,
-  'snapshot_too_large' => AppColors.red,
-  'read_only' => AppColors.muted,
-  'revoked' || 'auth_required' || 'error' => AppColors.red,
-  _ => AppColors.orange,
+Color _syncColor(BuildContext context, String status) => switch (status) {
+  'idle' => context.palette.teal,
+  'pending' || 'syncing' || 'snapshot_recovering' => context.palette.lime,
+  'deletion_pending' => context.palette.orange,
+  'snapshot_too_large' => context.palette.red,
+  'read_only' => context.palette.muted,
+  'revoked' || 'auth_required' || 'error' => context.palette.red,
+  _ => context.palette.orange,
 };
 
 class _CountBadge extends StatelessWidget {
@@ -2804,12 +2812,12 @@ class _CountBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
     decoration: BoxDecoration(
-      color: AppColors.orange.withValues(alpha: .15),
+      color: context.palette.orange.withValues(alpha: .15),
       borderRadius: BorderRadius.circular(20),
     ),
     child: Text(
       '$count',
-      style: const TextStyle(fontSize: 10, color: AppColors.orange),
+      style: TextStyle(fontSize: 10, color: context.palette.orange),
     ),
   );
 }
@@ -2958,7 +2966,7 @@ class _EmptyVaultWorkspace extends StatelessWidget {
                 Icon(
                   Icons.lock_open_rounded,
                   size: AppDensity.of(context).isCompact ? 30 : 34,
-                  color: AppColors.lime,
+                  color: context.palette.lime,
                 ),
                 SizedBox(height: AppDensity.of(context).space5),
                 Text(
@@ -2970,8 +2978,8 @@ class _EmptyVaultWorkspace extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.thisAccountHasNoVaultAvailable,
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.palette.muted,
                     height: 1.55,
                     fontSize: 13,
                   ),
@@ -3081,6 +3089,31 @@ class _HostsPageState extends State<_HostsPage> {
                 ? null
                 : () => _connect(visible.first),
           ),
+          const SizedBox(height: 10),
+          HomeAddSharingRow(
+            idPrefix: 'cloud',
+            canAddHosts: canWrite,
+            onAddHost: (protocol) => _showCloudHostEditor(
+              context,
+              app,
+              initialProtocol: protocol,
+            ),
+            onLaunchShell: (launch) async {
+              try {
+                await app.openLocalShellTab(launch: launch);
+              } catch (error) {
+                if (context.mounted) {
+                  _snack(context, app.friendlyError(error), error: true);
+                }
+              }
+            },
+            onSerialConsole: widget.onQuickConnect,
+            sharing: CloudHomeSharingStatus(
+              key: ValueKey('cloud-home-sharing-${app.currentVaultId}'),
+              app: app,
+              onOpenDetails: () => unawaited(_manageVaultMembers(context, app)),
+            ),
+          ),
           const SizedBox(height: 12),
           WindowCombinationsStrip(
             key: ValueKey('cloud-combinations-${app.currentVaultId}'),
@@ -3147,8 +3180,8 @@ class _HostsPageState extends State<_HostsPage> {
                   DecoratedBox(
                     key: ValueKey('cloud_group_tile_${group.id}'),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      border: Border.all(color: AppColors.line),
+                      color: context.palette.surface,
+                      border: Border.all(color: context.palette.line),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -3274,6 +3307,13 @@ class _HostsPageState extends State<_HostsPage> {
                             app: app,
                             host: host,
                           ),
+                          onShare: _cloudShareAvailable(app)
+                              ? () => showCloudShareDialog(
+                                  context,
+                                  app: app,
+                                  host: host,
+                                )
+                              : null,
                         ),
                       ),
                     )
@@ -3353,6 +3393,11 @@ class _HostsPageState extends State<_HostsPage> {
     } finally {
       _connectingHosts.remove(host.id);
     }
+  }
+
+  bool _cloudShareAvailable(AppController app) {
+    final service = CloudAccessService(app);
+    return service.linksAvailable || service.organizationsAvailable;
   }
 
   Future<void> _editHost(BuildContext context, [HostRecord? existing]) =>
@@ -3451,7 +3496,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                   Text(
                     app.friendlyError(snapshot.error!),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
@@ -3476,7 +3521,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                       _purgeNotice!,
                       key: const ValueKey('recycle_bin_purge_notice'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.lime),
+                      style: TextStyle(color: context.palette.lime),
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -3485,7 +3530,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                       _purgeError!,
                       key: const ValueKey('recycle_bin_purge_error'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.red),
+                      style: TextStyle(color: context.palette.red),
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -3494,7 +3539,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                       _automaticPurgeNotice!,
                       key: const ValueKey('recycle_bin_auto_purge_notice'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.lime),
+                      style: TextStyle(color: context.palette.lime),
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -3503,7 +3548,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                       _automaticPurgeError!,
                       key: const ValueKey('recycle_bin_auto_purge_error'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.red),
+                      style: TextStyle(color: context.palette.red),
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -3517,7 +3562,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
             children: [
               Text(
                 context.l10n.recordsAreDecryptedOnlyOnThis,
-                style: const TextStyle(color: AppColors.muted, height: 1.4),
+                style: TextStyle(color: context.palette.muted, height: 1.4),
               ),
               if (_restoreError != null) ...[
                 const SizedBox(height: 10),
@@ -3526,7 +3571,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                   child: Text(
                     _restoreError!,
                     key: const ValueKey('recycle_bin_restore_error'),
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
               ],
@@ -3537,7 +3582,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                   child: Text(
                     _purgeNotice!,
                     key: const ValueKey('recycle_bin_purge_notice'),
-                    style: const TextStyle(color: AppColors.lime),
+                    style: TextStyle(color: context.palette.lime),
                   ),
                 ),
               ],
@@ -3548,7 +3593,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                   child: Text(
                     _purgeError!,
                     key: const ValueKey('recycle_bin_purge_error'),
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
               ],
@@ -3559,7 +3604,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                   child: Text(
                     _automaticPurgeNotice!,
                     key: const ValueKey('recycle_bin_auto_purge_notice'),
-                    style: const TextStyle(color: AppColors.lime),
+                    style: TextStyle(color: context.palette.lime),
                   ),
                 ),
               ],
@@ -3570,7 +3615,7 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                   child: Text(
                     _automaticPurgeError!,
                     key: const ValueKey('recycle_bin_auto_purge_error'),
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
               ],
@@ -3751,12 +3796,12 @@ class _RecycleBinDialogState extends State<_RecycleBinDialog> {
                   const SizedBox(height: 12),
                   Text(
                     context.l10n.restoreDeadlineFormatTheServerChecks(DateFormat.yMMMd().add_jm().format(restoreUntil.toLocal())),
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: context.palette.muted),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     context.l10n.offlineDeviceCopiesAndRetainedBackups,
-                    style: const TextStyle(color: AppColors.orange),
+                    style: TextStyle(color: context.palette.orange),
                   ),
                   const SizedBox(height: 8),
                   CheckboxListTile(
@@ -3883,7 +3928,7 @@ class _AutomaticPurgeConsentDialogState
           const SizedBox(height: 10),
           Text(
             context.l10n.offlineDeviceCopiesAndExportsAre,
-            style: const TextStyle(color: AppColors.orange),
+            style: TextStyle(color: context.palette.orange),
           ),
           const SizedBox(height: 8),
           CheckboxListTile(
@@ -3979,7 +4024,7 @@ class _RecycleBinRow extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(_iconFor(entry.recordType), color: AppColors.orange),
+              Icon(_iconFor(entry.recordType), color: context.palette.orange),
               const SizedBox(width: 11),
               Expanded(
                 child: Column(
@@ -3992,16 +4037,16 @@ class _RecycleBinRow extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       context.l10n.labelforIdSubstringDeletedFormat(_labelFor(entry.recordType), entry.recordId.substring(0, 8), DateFormat.yMMMd().add_jm().format(entry.deletedAt.toLocal())),
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: context.palette.muted,
                         fontSize: 11,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       automaticPurgeConsentLine,
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: context.palette.muted,
                         fontSize: 11,
                       ),
                     ),
@@ -4013,8 +4058,8 @@ class _RecycleBinRow extends StatelessWidget {
                             : context.l10n.restoreDeadlineFormat3(DateFormat.yMMMd().add_jm().format(entry.restoreUntil!.toLocal())),
                         style: TextStyle(
                           color: expiredByClientClock
-                              ? AppColors.orange
-                              : AppColors.muted,
+                              ? context.palette.orange
+                              : context.palette.muted,
                           fontSize: 11,
                         ),
                       ),
@@ -4023,14 +4068,14 @@ class _RecycleBinRow extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         context.l10n.permanentPurgeBecomesAvailableAfterThis,
-                        style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                        style: TextStyle(color: context.palette.muted, fontSize: 11),
                       ),
                     ],
                     if (isOwner && entry.restoreUntil == null) ...[
                       const SizedBox(height: 3),
                       Text(
                         context.l10n.permanentPurgeIsUnavailableBecauseThis,
-                        style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                        style: TextStyle(color: context.palette.muted, fontSize: 11),
                       ),
                     ],
                     if (!entry.canRestore &&
@@ -4038,8 +4083,8 @@ class _RecycleBinRow extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         entry.unavailableReason!,
-                        style: const TextStyle(
-                          color: AppColors.muted,
+                        style: TextStyle(
+                          color: context.palette.muted,
                           fontSize: 11,
                         ),
                       ),
@@ -4082,7 +4127,7 @@ class _RecycleBinRow extends StatelessWidget {
                       key: ValueKey('recycle_bin_purge-${entry.recordId}'),
                       onPressed: busy ? null : onPurge,
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.red,
+                        foregroundColor: context.palette.red,
                       ),
                       icon: const Icon(Icons.delete_forever_outlined, size: 17),
                       label: Text(context.l10n.permanentlyPurge),
@@ -4288,7 +4333,7 @@ class _GroupsPageState extends State<_GroupsPage> {
                   leading: Icon(
                     Icons.folder_copy_outlined,
                     color: group.color == 0
-                        ? AppColors.teal
+                        ? context.palette.teal
                         : Color(0xFF000000 | group.color),
                   ),
                   title: Text(group.name),
@@ -4500,7 +4545,7 @@ class _ServerGroupEditorDialogState extends State<_ServerGroupEditorDialog> {
                           CircleAvatar(
                             radius: 10,
                             backgroundColor: color == 0
-                                ? AppColors.surfaceRaised
+                                ? context.palette.surfaceRaised
                                 : Color(0xFF000000 | color),
                           ),
                           const SizedBox(width: 10),
@@ -4568,7 +4613,7 @@ class _ServerGroupEditorDialogState extends State<_ServerGroupEditorDialog> {
                     child: Text(
                       _error!,
                       key: const ValueKey('server_group_editor_error'),
-                      style: const TextStyle(color: AppColors.red),
+                      style: TextStyle(color: context.palette.red),
                     ),
                   ),
                 ),
@@ -4617,6 +4662,7 @@ class _HostCard extends StatelessWidget {
     required this.onDelete,
     required this.onFavorite,
     required this.onAttachments,
+    this.onShare,
   });
   final HostRecord host;
   final bool compact;
@@ -4633,6 +4679,9 @@ class _HostCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onFavorite;
   final VoidCallback onAttachments;
+
+  /// Cloud access "Share…" (null when the server offers no sharing).
+  final VoidCallback? onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -4693,6 +4742,13 @@ class _HostCard extends StatelessWidget {
               Icons.attach_file,
               onAttachments,
             ),
+            if (onShare != null)
+              WorkspaceAction(
+                'host-share-${host.id}',
+                context.l10n.cloudAccessShareMenu,
+                Icons.ios_share,
+                onShare!,
+              ),
             WorkspaceAction(
               'host-delete-${host.id}',
               context.l10n.delete,
@@ -4720,7 +4776,7 @@ class _HostCard extends StatelessWidget {
                     children: [
                       DecoratedBox(
                         decoration: BoxDecoration(
-                          color: _hostColor(host.color).withValues(alpha: .12),
+                          color: _hostColor(context, host.color).withValues(alpha: .12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Padding(
@@ -4758,7 +4814,7 @@ class _HostCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               strutStyle: metrics.subtitleTextStrut,
                               style: TextStyle(
-                                color: AppColors.muted,
+                                color: context.palette.muted,
                                 fontSize: metrics.subtitleTextSize,
                               ),
                             ),
@@ -4838,6 +4894,13 @@ class _HostCard extends StatelessWidget {
                             Icons.attach_file,
                             onAttachments,
                           ),
+                          if (onShare != null)
+                            WorkspaceAction(
+                              'host-share-${host.id}',
+                              context.l10n.cloudAccessShareMenu,
+                              Icons.ios_share,
+                              onShare!,
+                            ),
                           WorkspaceAction(
                             'host-delete-${host.id}',
                             context.l10n.delete,
@@ -4873,7 +4936,7 @@ class _HostCard extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                     strutStyle: metrics.metaTextStrut,
                                     style: TextStyle(
-                                      color: AppColors.teal,
+                                      color: context.palette.teal,
                                       fontSize: metrics.metaTextSize,
                                     ),
                                   ),
@@ -4890,7 +4953,7 @@ class _HostCard extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 strutStyle: metrics.metaTextStrut,
                                 style: TextStyle(
-                                  color: AppColors.muted,
+                                  color: context.palette.muted,
                                   fontSize: metrics.metaTextSize,
                                 ),
                               ),
@@ -4909,7 +4972,7 @@ class _HostCard extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 strutStyle: metrics.metaTextStrut,
                                 style: TextStyle(
-                                  color: AppColors.orange,
+                                  color: context.palette.orange,
                                   fontSize: metrics.metaTextSize,
                                 ),
                               ),
@@ -4926,8 +4989,8 @@ class _HostCard extends StatelessWidget {
                                       : Icons.alt_route,
                                   size: HostCardMetrics.metaIconSize,
                                   color: issue != null
-                                      ? AppColors.orange
-                                      : AppColors.muted,
+                                      ? context.palette.orange
+                                      : context.palette.muted,
                                 ),
                               ),
                             ),
@@ -4935,10 +4998,10 @@ class _HostCard extends StatelessWidget {
                               AnsibleInventoryEntryState.stale)
                             Tooltip(
                               message: context.l10n.inventoryEntryStale,
-                              child: const Icon(
+                              child: Icon(
                                 Icons.history,
                                 size: HostCardMetrics.metaIconSize,
-                                color: AppColors.orange,
+                                color: context.palette.orange,
                               ),
                             ),
                         ],
@@ -5053,14 +5116,14 @@ class _CredentialsPageState extends State<_CredentialsPage> {
                       width: 42,
                       height: 42,
                       decoration: BoxDecoration(
-                        color: AppColors.teal.withValues(alpha: .1),
+                        color: context.palette.teal.withValues(alpha: .1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         credential.kind == AuthKind.password
                             ? Icons.password_rounded
                             : Icons.key_rounded,
-                        color: AppColors.teal,
+                        color: context.palette.teal,
                       ),
                     ),
                     title: Text(credential.name),
@@ -5122,13 +5185,13 @@ class _CloudKeychainDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cert = tryParseCertificate(credential.certificate);
-    const muted = TextStyle(color: AppColors.muted, fontSize: 12);
+    final muted = TextStyle(color: context.palette.muted, fontSize: 12);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '${credential.username} · ${credential.kind == AuthKind.password ? l10n.credentialPasswordStoredEncrypted : cert != null ? l10n.r7NavKindKeyWithCertificate : l10n.credentialPrivateKeyStoredEncrypted}',
-          style: const TextStyle(color: AppColors.muted),
+          style: TextStyle(color: context.palette.muted),
         ),
         if (credential.fingerprint != null)
           Text(
@@ -5146,8 +5209,8 @@ class _CloudKeychainDetails extends StatelessWidget {
             ].join(' · '),
             style: muted.copyWith(
               color: cert.isValidAt(DateTime.now())
-                  ? AppColors.muted
-                  : AppColors.orange,
+                  ? context.palette.muted
+                  : context.palette.orange,
             ),
           ),
         Text(
@@ -5344,13 +5407,13 @@ class _CredentialEditorDialogState extends State<_CredentialEditorDialog> {
                 child: Text(
                   _error!,
                   key: const ValueKey('ssh-credential-error'),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             const SizedBox(height: 9),
             Text(
               context.l10n.thisFormNeverSubmitsCredentialText,
-              style: const TextStyle(color: AppColors.teal, fontSize: 11),
+              style: TextStyle(color: context.palette.teal, fontSize: 11),
             ),
           ],
         ),
@@ -5420,9 +5483,9 @@ class _SnippetsPage extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.code_rounded,
-                              color: AppColors.lime,
+                              color: context.palette.lime,
                               size: 18,
                             ),
                             const SizedBox(width: 9),
@@ -5441,10 +5504,10 @@ class _SnippetsPage extends StatelessWidget {
                               onPressed: canWrite
                                   ? () => _editSnippet(context, app, snippet)
                                   : null,
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.edit_outlined,
                                 size: 18,
-                                color: AppColors.muted,
+                                color: context.palette.muted,
                               ),
                             ),
                             IconButton(
@@ -5459,10 +5522,10 @@ class _SnippetsPage extends StatelessWidget {
                                           true)
                                         await app.deleteSnippet(snippet);
                                     },
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.delete_outline,
                                 size: 18,
-                                color: AppColors.muted,
+                                color: context.palette.muted,
                               ),
                             ),
                           ],
@@ -5472,19 +5535,19 @@ class _SnippetsPage extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(13),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0B1016),
+                            color: context.palette.codeBackground,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.line),
+                            border: Border.all(color: context.palette.line),
                           ),
                           child: SelectableText(
                             snippet.executionMode == SnippetExecutionMode.script
                                 ? snippet.body
                                 : '${snippet.program} · ${snippet.arguments.length} arguments · ${snippet.parameters.length} parameters',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'monospace',
                               fontSize: 12,
                               height: 1.55,
-                              color: Color(0xFFC3D4E2),
+                              color: context.palette.codeText,
                             ),
                           ),
                         ),
@@ -5599,17 +5662,17 @@ class _SavedWorkspacesPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.teal.withValues(alpha: .08),
+              color: context.palette.teal.withValues(alpha: .08),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.teal.withValues(alpha: .25)),
+              border: Border.all(color: context.palette.teal.withValues(alpha: .25)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
+                Icon(
                   Icons.lock_outline_rounded,
                   size: 17,
-                  color: AppColors.teal,
+                  color: context.palette.teal,
                 ),
                 const SizedBox(width: 9),
                 Expanded(
@@ -5688,10 +5751,10 @@ class _SavedWorkspaceCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.view_quilt_outlined,
                   size: 19,
-                  color: AppColors.lime,
+                  color: context.palette.lime,
                 ),
                 const SizedBox(width: 9),
                 Expanded(
@@ -5754,15 +5817,15 @@ class _SavedWorkspaceCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: context.palette.surface,
                         borderRadius: BorderRadius.circular(7),
-                        border: Border.all(color: AppColors.line),
+                        border: Border.all(color: context.palette.line),
                       ),
                       child: Text(
                         label,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
-                          color: AppColors.muted,
+                          color: context.palette.muted,
                         ),
                       ),
                     ),
@@ -5844,7 +5907,7 @@ class _WorkspacePaneSummary extends StatelessWidget {
           Icon(
             missing ? Icons.link_off_rounded : Icons.dns_outlined,
             size: 16,
-            color: missing ? AppColors.orange : AppColors.muted,
+            color: missing ? context.palette.orange : context.palette.muted,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -5856,7 +5919,7 @@ class _WorkspacePaneSummary extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 12,
-                color: missing ? AppColors.orange : AppColors.text,
+                color: missing ? context.palette.orange : context.palette.text,
               ),
             ),
           ),
@@ -6264,12 +6327,12 @@ class _CreateSplitWorkspaceDialogState
                       margin: const EdgeInsets.only(bottom: 5),
                       padding: const EdgeInsets.fromLTRB(8, 3, 5, 3),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: context.palette.surface,
                         borderRadius: BorderRadius.circular(9),
                         border: Border.all(
                           color: _selectedPaneId == pane.paneId
-                              ? AppColors.teal
-                              : AppColors.line,
+                              ? context.palette.teal
+                              : context.palette.line,
                         ),
                       ),
                       child: Row(
@@ -6302,9 +6365,9 @@ class _CreateSplitWorkspaceDialogState
                                 if (_activePaneId == pane.paneId)
                                   Text(
                                     context.l10n.activePane,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 9,
-                                      color: AppColors.teal,
+                                      color: context.palette.teal,
                                     ),
                                   ),
                               ],
@@ -6401,18 +6464,18 @@ class _CreateSplitWorkspaceDialogState
                   const Divider(height: 13),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.call_split_rounded,
                         size: 16,
-                        color: AppColors.muted,
+                        color: context.palette.muted,
                       ),
                       const SizedBox(width: 7),
                       Expanded(
                         child: Text(
                           context.l10n.splitControlsCountDividersEachRatio(splits.length),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.muted,
+                            color: context.palette.muted,
                           ),
                         ),
                       ),
@@ -6424,8 +6487,8 @@ class _CreateSplitWorkspaceDialogState
                       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
                       margin: const EdgeInsets.only(top: 5),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        border: Border.all(color: AppColors.line),
+                        color: context.palette.surface,
+                        border: Border.all(color: context.palette.line),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -6585,15 +6648,15 @@ class _CreateSplitWorkspaceDialogState
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.visibility_outlined,
                         size: 16,
-                        color: AppColors.muted,
+                        color: context.palette.muted,
                       ),
                       const SizedBox(width: 7),
                       Text(
                         context.l10n.disconnectedRecursivePreview,
-                        style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                        style: TextStyle(fontSize: 11, color: context.palette.muted),
                       ),
                     ],
                   ),
@@ -6609,7 +6672,7 @@ class _CreateSplitWorkspaceDialogState
                   const SizedBox(height: 7),
                   Text(
                     context.l10n.savingAndPreviewingDoNotConnect,
-                    style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                    style: TextStyle(fontSize: 11, color: context.palette.muted),
                   ),
                 ],
               ),
@@ -6643,9 +6706,9 @@ class _SplitPreviewHostCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(6),
     decoration: BoxDecoration(
-      color: AppColors.surface,
+      color: context.palette.surface,
       borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: AppColors.line),
+      border: Border.all(color: context.palette.line),
     ),
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -6655,10 +6718,10 @@ class _SplitPreviewHostCard extends StatelessWidget {
           title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: AppColors.teal,
+            color: context.palette.teal,
           ),
         ),
         const SizedBox(height: 3),
@@ -6673,7 +6736,7 @@ class _SplitPreviewHostCard extends StatelessWidget {
             host!.endpoint,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10, color: AppColors.muted),
+            style: TextStyle(fontSize: 10, color: context.palette.muted),
           ),
       ],
     ),
@@ -7153,14 +7216,14 @@ Future<void> _runSnippetBatch(
                         const SizedBox(height: 8),
                         Text(
                           context.l10n.eachSelectedHostReceivesReferencedCredential,
-                          style: const TextStyle(color: AppColors.orange),
+                          style: TextStyle(color: context.palette.orange),
                         ),
                       ],
                       if (executionBlockedMessage != null) ...[
                         const SizedBox(height: 14),
                         Text(
                           executionBlockedMessage,
-                          style: const TextStyle(color: AppColors.orange),
+                          style: TextStyle(color: context.palette.orange),
                         ),
                       ],
                       for (
@@ -7178,9 +7241,9 @@ Future<void> _runSnippetBatch(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0B1016),
+                            color: context.palette.codeBackground,
                             borderRadius: BorderRadius.circular(9),
-                            border: Border.all(color: AppColors.line),
+                            border: Border.all(color: context.palette.line),
                           ),
                           child: Semantics(
                             key: ValueKey('snippet-batch-preview-$index'),
@@ -7189,10 +7252,10 @@ Future<void> _runSnippetBatch(
                             child: ExcludeSemantics(
                               child: SelectableText(
                                 previewText,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: 'monospace',
                                   fontSize: 12,
-                                  color: Color(0xFFC3D4E2),
+                                  color: context.palette.codeText,
                                 ),
                               ),
                             ),
@@ -7313,7 +7376,7 @@ Future<void> _runSnippetBatch(
                             ] else if (snapshot.hasError) ...[
                               Text(
                                 app.friendlyError(snapshot.error!),
-                                style: const TextStyle(color: AppColors.red),
+                                style: TextStyle(color: context.palette.red),
                               ),
                               const SizedBox(height: 8),
                               Text(
@@ -7325,7 +7388,7 @@ Future<void> _runSnippetBatch(
                               ),
                               const SizedBox(height: 8),
                               for (final outcome in outcomes)
-                                _snippetBatchOutcomeTile(outcome),
+                                _snippetBatchOutcomeTile(context, outcome),
                             ],
                           ],
                         ),
@@ -7370,7 +7433,10 @@ Future<void> _runSnippetBatch(
   }
 }
 
-Widget _snippetBatchOutcomeTile(SnippetBatchTargetOutcome outcome) {
+Widget _snippetBatchOutcomeTile(
+  BuildContext context,
+  SnippetBatchTargetOutcome outcome,
+) {
   final result = outcome.result;
   final icon = outcome.skipped
       ? Icons.skip_next_outlined
@@ -7393,7 +7459,7 @@ Widget _snippetBatchOutcomeTile(SnippetBatchTargetOutcome outcome) {
   return Card(
     key: ValueKey('snippet-batch-outcome-${outcome.hostId}'),
     child: ExpansionTile(
-      leading: Icon(icon, color: outcome.skipped ? AppColors.orange : null),
+      leading: Icon(icon, color: outcome.skipped ? context.palette.orange : null),
       title: Text(title),
       subtitle: Text(status),
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -7401,10 +7467,10 @@ Widget _snippetBatchOutcomeTile(SnippetBatchTargetOutcome outcome) {
         if (result != null) ...[
           Align(
             alignment: Alignment.centerLeft,
-            child: _snippetExecutionStatus(result),
+            child: _snippetExecutionStatus(context, result),
           ),
           const SizedBox(height: 8),
-          _snippetExecutionOutput(result),
+          _snippetExecutionOutput(context, result),
         ] else if (outcome.error != null)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -7414,12 +7480,12 @@ Widget _snippetBatchOutcomeTile(SnippetBatchTargetOutcome outcome) {
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Text(
                     currentL10n.sshExecFailedAfterDispatchThe,
-                    style: const TextStyle(color: AppColors.orange),
+                    style: TextStyle(color: context.palette.orange),
                   ),
                 ),
               Text(
                 outcome.error!,
-                style: const TextStyle(color: AppColors.orange),
+                style: TextStyle(color: context.palette.orange),
               ),
             ],
           ),
@@ -7544,14 +7610,14 @@ Future<void> _runSnippet(
                         const SizedBox(height: 8),
                         Text(
                           context.l10n.credentialValuesAreSentOnlyThrough,
-                          style: const TextStyle(color: AppColors.orange),
+                          style: TextStyle(color: context.palette.orange),
                         ),
                       ],
                       if (executionBlockedMessage != null) ...[
                         const SizedBox(height: 14),
                         Text(
                           executionBlockedMessage,
-                          style: const TextStyle(color: AppColors.orange),
+                          style: TextStyle(color: context.palette.orange),
                         ),
                       ],
                       const SizedBox(height: 16),
@@ -7564,9 +7630,9 @@ Future<void> _runSnippet(
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0B1016),
+                          color: context.palette.codeBackground,
                           borderRadius: BorderRadius.circular(9),
-                          border: Border.all(color: AppColors.line),
+                          border: Border.all(color: context.palette.line),
                         ),
                         child: Semantics(
                           key: const ValueKey('snippet_execution_preview'),
@@ -7575,10 +7641,10 @@ Future<void> _runSnippet(
                           child: ExcludeSemantics(
                             child: SelectableText(
                               previewText,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 12,
-                                color: Color(0xFFC3D4E2),
+                                color: context.palette.codeText,
                               ),
                             ),
                           ),
@@ -7685,12 +7751,12 @@ Future<void> _runSnippet(
                               ] else if (snapshot.hasError) ...[
                                 Text(
                                   app.friendlyError(snapshot.error!),
-                                  style: const TextStyle(color: AppColors.red),
+                                  style: TextStyle(color: context.palette.red),
                                 ),
                               ] else ...[
-                                _snippetExecutionStatus(snapshot.data!),
+                                _snippetExecutionStatus(context, snapshot.data!),
                                 const SizedBox(height: 10),
-                                _snippetExecutionOutput(snapshot.data!),
+                                _snippetExecutionOutput(context, snapshot.data!),
                               ],
                             ],
                           ),
@@ -7755,47 +7821,47 @@ Future<void> _runSnippet(
   }
 }
 
-Widget _snippetExecutionStatus(SshExecResult result) {
+Widget _snippetExecutionStatus(BuildContext context, SshExecResult result) {
   final (text, color) = switch (result) {
     SshExecResult(cancelled: true, execOpenPending: true) => (
       'Canceled. The SSH exec request has not replied; disconnect and reconnect before retrying. Remote completion is unknown.',
-      AppColors.orange,
+      context.palette.orange,
     ),
     SshExecResult(cancelled: true) => (
       currentL10n.execCancelledUnknown,
-      AppColors.orange,
+      context.palette.orange,
     ),
     SshExecResult(timedOut: true, execOpenPending: true) => (
       currentL10n.execOpenTimedOut,
-      AppColors.orange,
+      context.palette.orange,
     ),
     SshExecResult(timedOut: true) => (
       currentL10n.execTimedOutUnknown,
-      AppColors.orange,
+      context.palette.orange,
     ),
     SshExecResult(outputTruncated: true) => (
       currentL10n.execOutputTruncated,
-      AppColors.orange,
+      context.palette.orange,
     ),
     SshExecResult(bashUnavailable: true) => (
       currentL10n.execBashUnavailable,
-      AppColors.red,
+      context.palette.red,
     ),
     SshExecResult(exitCode: final int code) => (
       'Exit code: $code',
-      code == 0 ? AppColors.teal : AppColors.red,
+      code == 0 ? context.palette.teal : context.palette.red,
     ),
     _ => (
       result.exitSignal == null
           ? 'SSH ended without reporting an exit status.'
           : 'SSH process ended by signal ${result.exitSignal}.',
-      AppColors.orange,
+      context.palette.orange,
     ),
   };
   return Text(text, style: TextStyle(color: color));
 }
 
-Widget _snippetExecutionOutput(SshExecResult result) {
+Widget _snippetExecutionOutput(BuildContext context, SshExecResult result) {
   final sections = <String>[
     if (result.stdout.isNotEmpty) 'stdout:\n${result.stdout}',
     if (result.stderr.isNotEmpty) 'stderr:\n${result.stderr}',
@@ -7807,9 +7873,9 @@ Widget _snippetExecutionOutput(SshExecResult result) {
     constraints: const BoxConstraints(maxHeight: 300),
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
-      color: const Color(0xFF0B1016),
+      color: context.palette.codeBackground,
       borderRadius: BorderRadius.circular(9),
-      border: Border.all(color: AppColors.line),
+      border: Border.all(color: context.palette.line),
     ),
     child: SingleChildScrollView(
       child: Semantics(
@@ -7820,10 +7886,10 @@ Widget _snippetExecutionOutput(SshExecResult result) {
           child: SelectableText(
             outputText,
             key: const ValueKey('snippet_execution_output_text'),
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'monospace',
               fontSize: 12,
-              color: Color(0xFFC3D4E2),
+              color: context.palette.codeText,
             ),
           ),
         ),
@@ -8031,7 +8097,7 @@ Future<void> _editSnippet(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         validationError!,
-                        style: const TextStyle(color: AppColors.red),
+                        style: TextStyle(color: context.palette.red),
                       ),
                     ),
                   ],
@@ -8492,8 +8558,8 @@ class _TerminalPageState extends State<_TerminalPage> {
           Container(
             width: 250,
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              border: Border.all(color: AppColors.line),
+              color: context.palette.surface,
+              border: Border.all(color: context.palette.line),
               borderRadius: BorderRadius.circular(15),
             ),
             child: Column(
@@ -8502,10 +8568,10 @@ class _TerminalPageState extends State<_TerminalPage> {
                   padding: const EdgeInsets.all(15),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.dns_outlined,
                         size: 17,
-                        color: AppColors.muted,
+                        color: context.palette.muted,
                       ),
                       const SizedBox(width: 8),
                       if (localConsoleSupported)
@@ -8525,8 +8591,8 @@ class _TerminalPageState extends State<_TerminalPage> {
                       ),
                       Text(
                         '${app.hosts.length}',
-                        style: const TextStyle(
-                          color: AppColors.muted,
+                        style: TextStyle(
+                          color: context.palette.muted,
                           fontSize: 11,
                         ),
                       ),
@@ -8542,7 +8608,7 @@ class _TerminalPageState extends State<_TerminalPage> {
                             child: Text(
                               context.l10n.addAHostFirst,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(color: AppColors.muted),
+                              style: TextStyle(color: context.palette.muted),
                             ),
                           ),
                         )
@@ -8560,15 +8626,15 @@ class _TerminalPageState extends State<_TerminalPage> {
                               child: ListTile(
                                 dense: true,
                                 selected: app.selectedHost?.id == host.id,
-                                selectedTileColor: AppColors.lime.withValues(
+                                selectedTileColor: context.palette.lime.withValues(
                                   alpha: .06,
                                 ),
                                 leading: Icon(
                                   connected ? Icons.circle : Icons.dns_outlined,
                                   size: connected ? 10 : 17,
                                   color: connected
-                                      ? AppColors.teal
-                                      : AppColors.muted,
+                                      ? context.palette.teal
+                                      : context.palette.muted,
                                 ),
                                 title: Text(
                                   host.name,
@@ -8580,9 +8646,9 @@ class _TerminalPageState extends State<_TerminalPage> {
                                   host.endpoint,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 10,
-                                    color: AppColors.muted,
+                                    color: context.palette.muted,
                                   ),
                                 ),
                                 onTap: () => app.selectHost(host),
@@ -8621,9 +8687,9 @@ class _TerminalPageState extends State<_TerminalPage> {
                         IconButton(
                           tooltip: context.l10n.disconnect2,
                           onPressed: () => app.closeTerminalTab(activeTab.id),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.link_off_rounded,
-                            color: AppColors.red,
+                            color: context.palette.red,
                           ),
                         ),
                       ],
@@ -8641,8 +8707,8 @@ class _TerminalPageState extends State<_TerminalPage> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF080C11),
-                      border: Border.all(color: AppColors.line),
+                      color: wallpaperWindowFill(context, const Color(0xFF080C11)),
+                      border: Border.all(color: context.palette.line),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: LayoutBuilder(
@@ -8651,9 +8717,9 @@ class _TerminalPageState extends State<_TerminalPage> {
                           Container(
                             height: 43,
                             padding: const EdgeInsets.symmetric(horizontal: 14),
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               border: Border(
-                                bottom: BorderSide(color: AppColors.line),
+                                bottom: BorderSide(color: context.palette.line),
                               ),
                             ),
                             child: Row(
@@ -8665,8 +8731,8 @@ class _TerminalPageState extends State<_TerminalPage> {
                                         : '${activeTab!.host?.username}@${activeTab.host?.address}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: AppColors.muted,
+                                    style: TextStyle(
+                                      color: context.palette.muted,
                                       fontSize: 11,
                                       fontFamily: 'monospace',
                                     ),
@@ -8831,9 +8897,9 @@ class _TerminalPageState extends State<_TerminalPage> {
                               key: const ValueKey('terminal-share-status'),
                               height: 34,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 border: Border(
-                                  bottom: BorderSide(color: AppColors.line),
+                                  bottom: BorderSide(color: context.palette.line),
                                 ),
                               ),
                               child: Row(
@@ -8846,10 +8912,10 @@ class _TerminalPageState extends State<_TerminalPage> {
                                         : Icons.sync_rounded,
                                     size: 14,
                                     color: shareStatus.phase == 'active'
-                                        ? AppColors.teal
+                                        ? context.palette.teal
                                         : shareStatus.phase == 'failed'
-                                        ? AppColors.red
-                                        : AppColors.orange,
+                                        ? context.palette.red
+                                        : context.palette.orange,
                                   ),
                                   const SizedBox(width: 7),
                                   Text(
@@ -8857,8 +8923,8 @@ class _TerminalPageState extends State<_TerminalPage> {
                                         context.l10n.terminalSharePhase(shareStatus.phase),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: AppColors.muted,
+                                    style: TextStyle(
+                                      color: context.palette.muted,
                                       fontSize: 10,
                                     ),
                                   ),
@@ -8876,8 +8942,8 @@ class _TerminalPageState extends State<_TerminalPage> {
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: AppColors.muted,
+                                        style: TextStyle(
+                                          color: context.palette.muted,
                                           fontSize: 10,
                                         ),
                                       ),
@@ -8889,10 +8955,10 @@ class _TerminalPageState extends State<_TerminalPage> {
                                     'active',
                                   }.contains(shareStatus.phase)) ...[
                                     const SizedBox(width: 10),
-                                    const Text(
+                                    Text(
                                       'ID',
                                       style: TextStyle(
-                                        color: AppColors.muted,
+                                        color: context.palette.muted,
                                         fontSize: 10,
                                       ),
                                     ),
@@ -8900,8 +8966,8 @@ class _TerminalPageState extends State<_TerminalPage> {
                                     SelectableText(
                                       shareStatus.sessionId,
                                       key: const ValueKey('terminal-share-code'),
-                                      style: const TextStyle(
-                                        color: AppColors.muted,
+                                      style: TextStyle(
+                                        color: context.palette.muted,
                                         fontSize: 10,
                                         fontFamily: 'monospace',
                                       ),
@@ -9054,6 +9120,7 @@ return DesktopView(
             readOnly: tab.state != 'connected',
             onKeyEvent: (_, event) => _handleTerminalKeyEvent(id, event),
             padding: const EdgeInsets.all(12),
+            backgroundOpacity: wallpaperTerminalBackgroundOpacity(context),
             textStyle: TerminalStyle(
               fontSize: app.terminalFontSize.toDouble(),
               fontFamily: 'monospace',
@@ -9137,6 +9204,7 @@ return DesktopView(
       hardwareKeyboardOnly: false,
       onKeyEvent: (_, event) => _handleTerminalKeyEvent(tab.id, event),
       padding: const EdgeInsets.all(14),
+      backgroundOpacity: wallpaperTerminalBackgroundOpacity(context),
       textStyle: TerminalStyle(
         fontSize: app.terminalFontSize.toDouble(),
         fontFamily: 'monospace',
@@ -9242,6 +9310,7 @@ return DesktopView(
             hardwareKeyboardOnly: false,
             onKeyEvent: (_, event) => _handleTerminalKeyEvent(tab.id, event),
             padding: const EdgeInsets.all(10),
+            backgroundOpacity: wallpaperTerminalBackgroundOpacity(context),
             textStyle: TerminalStyle(
               fontSize: app.terminalFontSize.toDouble(),
               fontFamily: 'monospace',
@@ -9257,12 +9326,14 @@ return DesktopView(
         'workspace-live-split-pane-${workspace.panes[index].paneId}',
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF080C11),
-        border: Border.all(color: AppColors.line),
+        color: wallpaperWindowFill(context, const Color(0xFF080C11)),
+        border: Border.all(color: context.palette.line),
         borderRadius: BorderRadius.circular(8),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
+      // Stable slot: follow-splits wallpaper for this pane (incl. its chrome).
+      child: WallpaperPaneBackdrop(
+        child: Column(
         children: [
           SizedBox(
             height: 34,
@@ -9274,8 +9345,8 @@ return DesktopView(
                     context.l10n.paneValuevalueValuevalue2Valuevalue3(index + 1, host?.name ?? 'Terminal', host?.endpoint ?? ''),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.muted,
+                    style: TextStyle(
+                      color: context.palette.muted,
                       fontSize: 10,
                       fontFamily: 'monospace',
                     ),
@@ -9326,6 +9397,7 @@ return DesktopView(
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -9337,8 +9409,8 @@ return DesktopView(
       key: ValueKey('workspace-live-split-pane-${pane.paneId}'),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFF101820),
-        border: Border.all(color: AppColors.line),
+        color: context.palette.surface,
+        border: Border.all(color: context.palette.line),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -9349,12 +9421,12 @@ return DesktopView(
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppColors.muted, fontSize: 10),
+            style: TextStyle(color: context.palette.muted, fontSize: 10),
           ),
           const SizedBox(height: 4),
           Text(
             host == null ? context.l10n.hostUnavailable : context.l10n.disconnected2,
-            style: const TextStyle(color: AppColors.muted, fontSize: 10),
+            style: TextStyle(color: context.palette.muted, fontSize: 10),
           ),
           const SizedBox(height: 4),
           TextButton.icon(
@@ -9782,15 +9854,15 @@ return DesktopView(
                             padding: const EdgeInsets.only(left: 12, bottom: 8),
                             child: Text(
                               syncError!,
-                              style: const TextStyle(color: AppColors.red),
+                              style: TextStyle(color: context.palette.red),
                             ),
                           ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
                             context.l10n.clearLocalHistoryOnlyRemovesThis,
-                            style: const TextStyle(
-                              color: AppColors.muted,
+                            style: TextStyle(
+                              color: context.palette.muted,
                               fontSize: 12,
                             ),
                           ),
@@ -9799,8 +9871,8 @@ return DesktopView(
                           const SizedBox(height: 10),
                           Text(
                             context.l10n.copiedPasteThisCommandIntoThe,
-                            style: const TextStyle(
-                              color: AppColors.muted,
+                            style: TextStyle(
+                              color: context.palette.muted,
                               fontSize: 12,
                             ),
                           ),
@@ -9818,7 +9890,7 @@ return DesktopView(
                           const SizedBox(height: 8),
                           Text(
                             copyError!,
-                            style: const TextStyle(color: AppColors.red),
+                            style: TextStyle(color: context.palette.red),
                           ),
                         ],
                         const SizedBox(height: 12),
@@ -9829,14 +9901,14 @@ return DesktopView(
                             child: Text(
                               emptyHistoryLabel,
                               semanticsLabel: emptyHistoryLabel,
-                              style: const TextStyle(color: AppColors.muted),
+                              style: TextStyle(color: context.palette.muted),
                             ),
                           )
                         else ...[
                           Text(
                             '${history.length} recent command${history.length == 1 ? '' : 's'}',
-                            style: const TextStyle(
-                              color: AppColors.muted,
+                            style: TextStyle(
+                              color: context.palette.muted,
                               fontSize: 12,
                             ),
                           ),
@@ -9884,8 +9956,8 @@ return DesktopView(
                                           semanticsLabel: exitLabel,
                                           style: TextStyle(
                                             color: command.exitStatus == 0
-                                                ? AppColors.muted
-                                                : AppColors.red,
+                                                ? context.palette.muted
+                                                : context.palette.red,
                                             fontSize: 10,
                                           ),
                                         ),
@@ -10209,7 +10281,7 @@ class _SshUserInfoDialogState extends State<_SshUserInfoDialog> {
             Text(
               widget.hostLabel,
               key: const ValueKey('ssh-user-info-host'),
-              style: const TextStyle(color: AppColors.muted),
+              style: TextStyle(color: context.palette.muted),
             ),
             if (widget.requestName.isNotEmpty) ...[
               const SizedBox(height: 10),
@@ -10231,7 +10303,7 @@ class _SshUserInfoDialogState extends State<_SshUserInfoDialog> {
               Text(
                 context.l10n.theSshServerRequestedTooMany,
                 key: const ValueKey('ssh-user-info-prompt-limit'),
-                style: const TextStyle(color: AppColors.red),
+                style: TextStyle(color: context.palette.red),
               ),
             ] else if (widget.prompts.isEmpty) ...[
               const SizedBox(height: 14),
@@ -10268,7 +10340,7 @@ class _SshUserInfoDialogState extends State<_SshUserInfoDialog> {
             Text(
               context.l10n.responsesAreSentOnlyForThis,
               key: const ValueKey('ssh-user-info-not-saved'),
-              style: const TextStyle(color: AppColors.muted),
+              style: TextStyle(color: context.palette.muted),
             ),
           ],
         ),
@@ -10328,19 +10400,19 @@ class _StagedWorkspaceLayout extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(bottom: BorderSide(color: AppColors.line)),
+        decoration: BoxDecoration(
+          color: context.palette.surface,
+          border: Border(bottom: BorderSide(color: context.palette.line)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.lock_outline_rounded,
                   size: 15,
-                  color: AppColors.teal,
+                  color: context.palette.teal,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -10372,7 +10444,7 @@ class _StagedWorkspaceLayout extends StatelessWidget {
               statusLine,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 9, color: AppColors.muted),
+              style: TextStyle(fontSize: 9, color: context.palette.muted),
             ),
             const SizedBox(height: 4),
             Expanded(
@@ -10535,9 +10607,9 @@ class _StagedSplitWorkspacePane extends StatelessWidget {
           key: ValueKey('workspace-split-pane-$index'),
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.palette.surface,
             borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: AppColors.line),
+            border: Border.all(color: context.palette.line),
           ),
           child: narrow && !short
               ? Column(
@@ -10546,8 +10618,8 @@ class _StagedSplitWorkspacePane extends StatelessWidget {
                   children: [
                     Text(
                       context.l10n.paneValuevalue(index + 1),
-                      style: const TextStyle(
-                        color: AppColors.teal,
+                      style: TextStyle(
+                        color: context.palette.teal,
                         fontSize: 9,
                         fontWeight: FontWeight.w600,
                       ),
@@ -10577,8 +10649,8 @@ class _StagedSplitWorkspacePane extends StatelessWidget {
                               children: [
                                 Text(
                                   context.l10n.paneValuevalue(index + 1),
-                                  style: const TextStyle(
-                                    color: AppColors.teal,
+                                  style: TextStyle(
+                                    color: context.palette.teal,
                                     fontSize: 9,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -10828,7 +10900,7 @@ class _TerminalShareDevicePickerState
                   title: Text(choice.label),
                   subtitle: Text(
                     context.l10n.deviceSubstring(choice.recipient.deviceId.substring(0, 8)),
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: context.palette.muted),
                   ),
                   onChanged: !selected && _selectedDeviceIds.length >= 8
                       ? null
@@ -10862,7 +10934,7 @@ class _TerminalShareDevicePickerState
           const SizedBox(height: 8),
           Text(
             context.l10n.theShareExpiresAfter15Minutes,
-            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            style: TextStyle(color: context.palette.muted, fontSize: 12),
           ),
         ],
       ),
@@ -10932,7 +11004,7 @@ class _TerminalShareControllerPickerState
               title: Text(choice.label),
               subtitle: Text(
                 context.l10n.deviceSubstring(choice.recipient.deviceId.substring(0, 8)),
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: context.palette.muted),
               ),
               onChanged: (value) => setState(() => _selectedDeviceId = value),
             ),
@@ -11040,7 +11112,7 @@ class _TerminalShareJoinDialogState extends State<_TerminalShareJoinDialog> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 6),
-              Text(_error!, style: const TextStyle(color: AppColors.red)),
+              Text(_error!, style: TextStyle(color: context.palette.red)),
             ],
           ],
         ),
@@ -11210,10 +11282,10 @@ class _TerminalObserverDialogState extends State<_TerminalObserverDialog> {
                               color:
                                   widget.observer.controlErrorMessage != null ||
                                       widget.observer.state == 'failed'
-                                  ? AppColors.red
+                                  ? context.palette.red
                                   : widget.observer.state == 'connected'
-                                  ? AppColors.teal
-                                  : AppColors.muted,
+                                  ? context.palette.teal
+                                  : context.palette.muted,
                               fontSize: 11,
                             ),
                           ),
@@ -11264,8 +11336,8 @@ class _TerminalObserverDialogState extends State<_TerminalObserverDialog> {
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                           child: Text(
                             context.l10n.controlActive,
-                            style: const TextStyle(
-                              color: AppColors.teal,
+                            style: TextStyle(
+                              color: context.palette.teal,
                               fontSize: 11,
                             ),
                           ),
@@ -11322,8 +11394,8 @@ class _TerminalObserverDialogState extends State<_TerminalObserverDialog> {
                     hasController
                         ? context.l10n.inputIsEncryptedToTheHost
                         : context.l10n.outputIsEncryptedForThisDevice,
-                    style: const TextStyle(
-                      color: AppColors.muted,
+                    style: TextStyle(
+                      color: context.palette.muted,
                       fontSize: 11,
                     ),
                   ),
@@ -11349,10 +11421,10 @@ class _TerminalWelcome extends StatelessWidget {
     trigger: errorMessage == null,
     duration: MotionDurations.standard,
     offset: const Offset(0, 4),
-    child: _content(),
+    child: _content(context),
   );
 
-  Widget _content() => Center(
+  Widget _content(BuildContext context) => Center(
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -11360,13 +11432,13 @@ class _TerminalWelcome extends StatelessWidget {
           width: 58,
           height: 58,
           decoration: BoxDecoration(
-            color: AppColors.lime.withValues(alpha: .1),
+            color: context.palette.lime.withValues(alpha: .1),
             borderRadius: BorderRadius.circular(17),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.terminal_rounded,
             size: 29,
-            color: AppColors.lime,
+            color: context.palette.lime,
           ),
         ),
         const SizedBox(height: 16),
@@ -11385,7 +11457,7 @@ class _TerminalWelcome extends StatelessWidget {
               child: Text(
                 errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.red, height: 1.45),
+                style: TextStyle(color: context.palette.red, height: 1.45),
               ),
             ),
           )
@@ -11394,14 +11466,14 @@ class _TerminalWelcome extends StatelessWidget {
             app.selectedHost == null
                 ? currentL10n.chooseAHostOnTheLeft
                 : currentL10n.connectToNameToOpenAn(app.selectedHost!.name),
-            style: const TextStyle(color: AppColors.muted),
+            style: TextStyle(color: context.palette.muted),
           ),
         if (errorMessage != null) ...[
           const SizedBox(height: 8),
           Text(
             currentL10n.chooseConnectOnTheLeftTo,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted),
+            style: TextStyle(color: context.palette.muted),
           ),
         ],
         const SizedBox(height: 14),
@@ -11553,10 +11625,10 @@ class _SftpPageState extends State<_SftpPage> {
                     Container(
                       height: 48,
                       padding: const EdgeInsets.symmetric(horizontal: 13),
-                      decoration: const BoxDecoration(
-                        color: AppColors.surfaceRaised,
+                      decoration: BoxDecoration(
+                        color: context.palette.surfaceRaised,
                         border: Border(
-                          bottom: BorderSide(color: AppColors.line),
+                          bottom: BorderSide(color: context.palette.line),
                         ),
                       ),
                       child: Row(
@@ -11578,10 +11650,10 @@ class _SftpPageState extends State<_SftpPage> {
                             ),
                           ),
                           const SizedBox(width: 7),
-                          const Icon(
+                          Icon(
                             Icons.folder_open_outlined,
                             size: 17,
-                            color: AppColors.lime,
+                            color: context.palette.lime,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -11637,12 +11709,12 @@ class _SftpPageState extends State<_SftpPage> {
                     if (_error != null)
                       Container(
                         width: double.infinity,
-                        color: AppColors.red.withValues(alpha: .08),
+                        color: context.palette.red.withValues(alpha: .08),
                         padding: const EdgeInsets.all(10),
                         child: Text(
                           _error!,
-                          style: const TextStyle(
-                            color: AppColors.red,
+                          style: TextStyle(
+                            color: context.palette.red,
                             fontSize: 12,
                           ),
                         ),
@@ -11669,8 +11741,8 @@ class _SftpPageState extends State<_SftpPage> {
                                         ? Icons.folder_rounded
                                         : Icons.insert_drive_file_outlined,
                                     color: isDirectory
-                                        ? AppColors.orange
-                                        : AppColors.muted,
+                                        ? context.palette.orange
+                                        : context.palette.muted,
                                   ),
                                   title: Text(
                                     item.filename,
@@ -11680,9 +11752,9 @@ class _SftpPageState extends State<_SftpPage> {
                                     isDirectory
                                         ? context.l10n.directory
                                         : _fileDetails(item),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 11,
-                                      color: AppColors.muted,
+                                      color: context.palette.muted,
                                     ),
                                   ),
                                   onTap: isDirectory
@@ -12049,7 +12121,7 @@ class _SyncPage extends StatelessWidget {
             app.syncStatus == 'snapshot_too_large') ...[
           const SizedBox(height: 12),
           Card(
-            color: AppColors.orange.withValues(alpha: .08),
+            color: context.palette.orange.withValues(alpha: .08),
             child: Padding(
               padding: const EdgeInsets.all(15),
               child: Row(
@@ -12059,7 +12131,7 @@ class _SyncPage extends StatelessWidget {
                     app.snapshotRecoveryActive
                         ? Icons.sync_rounded
                         : Icons.warning_amber_rounded,
-                    color: AppColors.orange,
+                    color: context.palette.orange,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -12069,10 +12141,10 @@ class _SyncPage extends StatelessWidget {
                           : app.syncStatus == 'snapshot_too_large'
                           ? context.l10n.thisSnapshotExceedsThisClientsLimit
                           : context.l10n.theSyncCursorExpiredOrThe,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         height: 1.5,
-                        color: AppColors.text,
+                        color: context.palette.text,
                       ),
                     ),
                   ),
@@ -12085,24 +12157,24 @@ class _SyncPage extends StatelessWidget {
             app.syncStatus == 'deletion_pending') ...[
           const SizedBox(height: 12),
           Card(
-            color: AppColors.orange.withValues(alpha: .08),
+            color: context.palette.orange.withValues(alpha: .08),
             child: Padding(
               padding: const EdgeInsets.all(15),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.lock_clock_outlined,
-                    color: AppColors.orange,
+                    color: context.palette.orange,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       context.l10n.vaultIsInItsDeletionGrace(app.pendingCount),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         height: 1.5,
-                        color: AppColors.text,
+                        color: context.palette.text,
                       ),
                     ),
                   ),
@@ -12127,27 +12199,27 @@ class _SyncPage extends StatelessWidget {
                   icon: Icons.cloud_done_outlined,
                   label: context.l10n.syncStatus,
                   value: _statusLabel(app.syncStatus),
-                  accent: _syncColor(app.syncStatus),
+                  accent: _syncColor(context, app.syncStatus),
                 ),
                 _StatCard(
                   icon: Icons.upload_rounded,
                   label: context.l10n.outboxItems,
                   value: '${app.pendingCount}',
-                  accent: AppColors.lime,
+                  accent: context.palette.lime,
                 ),
                 _StatCard(
                   icon: Icons.download_rounded,
                   label: context.l10n.lastPull,
                   value: '${app.receivedCount} changes',
-                  accent: AppColors.teal,
+                  accent: context.palette.teal,
                 ),
                 _StatCard(
                   icon: Icons.compare_arrows_rounded,
                   label: context.l10n.openConflicts,
                   value: '${app.unresolvedConflictCount}',
                   accent: app.unresolvedConflictCount > 0
-                      ? AppColors.orange
-                      : AppColors.teal,
+                      ? context.palette.orange
+                      : context.palette.teal,
                 ),
                 _StatCard(
                   icon: Icons.history_rounded,
@@ -12157,15 +12229,15 @@ class _SyncPage extends StatelessWidget {
                       : DateFormat.yMMMd().add_jm().format(
                           app.lastSuccessfulSyncAt!.toLocal(),
                         ),
-                  accent: AppColors.teal,
+                  accent: context.palette.teal,
                 ),
                 _StatCard(
                   icon: Icons.report_gmailerrorred_outlined,
                   label: context.l10n.issueCategory,
                   value: _syncIssueCategoryLabel(app.syncStatus),
                   accent: _syncIssueCategoryLabel(app.syncStatus) == 'None'
-                      ? AppColors.teal
-                      : AppColors.orange,
+                      ? context.palette.teal
+                      : context.palette.orange,
                 ),
               ],
             );
@@ -12178,7 +12250,7 @@ class _SyncPage extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.privacy_tip_outlined, color: AppColors.teal),
+                Icon(Icons.privacy_tip_outlined, color: context.palette.teal),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -12191,10 +12263,10 @@ class _SyncPage extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         context.l10n.theExportContainsARandomReport,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           height: 1.5,
-                          color: AppColors.muted,
+                          color: context.palette.muted,
                         ),
                       ),
                     ],
@@ -12219,7 +12291,7 @@ class _SyncPage extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.dns_outlined, color: AppColors.teal),
+                    Icon(Icons.dns_outlined, color: context.palette.teal),
                     const SizedBox(width: 9),
                     Expanded(
                       child: Text(
@@ -12230,9 +12302,9 @@ class _SyncPage extends StatelessWidget {
                     _StatusDot(
                       label: _syncGenerationStatus(app),
                       color: switch (_syncGenerationStatus(app)) {
-                        'Generation matches' => AppColors.teal,
-                        'Generation mismatch' => AppColors.orange,
-                        _ => AppColors.muted,
+                        'Generation matches' => context.palette.teal,
+                        'Generation mismatch' => context.palette.orange,
+                        _ => context.palette.muted,
                       },
                     ),
                   ],
@@ -12240,8 +12312,8 @@ class _SyncPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.comparedWithTheLastVerifiedServer,
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.palette.muted,
                     fontSize: 11,
                     height: 1.45,
                   ),
@@ -12249,16 +12321,16 @@ class _SyncPage extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   context.l10n.savedCheckpointShortkey(_shortKey(app.syncCheckpointServerGeneration)),
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.palette.muted,
                     fontSize: 12,
                     height: 1.5,
                   ),
                 ),
                 Text(
                   context.l10n.lastVerifiedServerShortkey(_shortKey(app.instance?.generation)),
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.palette.muted,
                     fontSize: 12,
                     height: 1.5,
                   ),
@@ -12274,7 +12346,7 @@ class _SyncPage extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.offline_pin_outlined, color: AppColors.teal),
+                Icon(Icons.offline_pin_outlined, color: context.palette.teal),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -12287,10 +12359,10 @@ class _SyncPage extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         context.l10n.localEditsAreEncryptedAndCommitted,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           height: 1.55,
-                          color: AppColors.muted,
+                          color: context.palette.muted,
                         ),
                       ),
                     ],
@@ -12298,7 +12370,7 @@ class _SyncPage extends StatelessWidget {
                 ),
                 _StatusDot(
                   label: _statusLabel(app.syncStatus).toUpperCase(),
-                  color: _syncColor(app.syncStatus),
+                  color: _syncColor(context, app.syncStatus),
                 ),
               ],
             ),
@@ -12307,24 +12379,24 @@ class _SyncPage extends StatelessWidget {
         if (app.unavailableRecordCount > 0) ...[
           const SizedBox(height: 12),
           Card(
-            color: AppColors.orange.withValues(alpha: .08),
+            color: context.palette.orange.withValues(alpha: .08),
             child: Padding(
               padding: const EdgeInsets.all(15),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.warning_amber_rounded,
-                    color: AppColors.orange,
+                    color: context.palette.orange,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       context.l10n.unavailablerecordcountEncryptedRecordSCouldNot(app.unavailableRecordCount),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         height: 1.5,
-                        color: AppColors.text,
+                        color: context.palette.text,
                       ),
                     ),
                   ),
@@ -12373,7 +12445,7 @@ class _SyncPage extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           context.l10n.concurrentBranchesSubmittedToTheServer,
-          style: const TextStyle(fontSize: 12, height: 1.5, color: AppColors.muted),
+          style: TextStyle(fontSize: 12, height: 1.5, color: context.palette.muted),
         ),
         const SizedBox(height: 10),
         if (app.openFeedConflictItems.isEmpty)
@@ -12390,9 +12462,9 @@ class _SyncPage extends StatelessWidget {
           const SizedBox(height: 8),
           Card(
             child: ExpansionTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.task_alt_outlined,
-                color: AppColors.teal,
+                color: context.palette.teal,
               ),
               title: Text(context.l10n.processedBranchesCount(app.resolvedFeedConflictItems.length)),
               children: app.resolvedFeedConflictItems
@@ -12641,7 +12713,7 @@ class _ConflictFeedCardState extends State<_ConflictFeedCard> {
               children: [
                 Icon(
                   terminal ? Icons.task_alt_outlined : Icons.merge_type_rounded,
-                  color: terminal ? AppColors.teal : AppColors.orange,
+                  color: terminal ? context.palette.teal : context.palette.orange,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -12655,9 +12727,9 @@ class _ConflictFeedCardState extends State<_ConflictFeedCard> {
                       const SizedBox(height: 3),
                       Text(
                         context.l10n.branchSequenceSeqValuevalue(item.seq, timestamp == null ? item.createdAt : DateFormat.yMMMd().add_Hm().format(timestamp)),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.muted,
+                          color: context.palette.muted,
                         ),
                       ),
                     ],
@@ -12703,7 +12775,7 @@ class _ConflictFeedCardState extends State<_ConflictFeedCard> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: (item.isVerified ? AppColors.teal : AppColors.orange)
+                  color: (item.isVerified ? context.palette.teal : context.palette.orange)
                       .withValues(alpha: .08),
                   borderRadius: BorderRadius.circular(9),
                 ),
@@ -12716,8 +12788,8 @@ class _ConflictFeedCardState extends State<_ConflictFeedCard> {
                           : Icons.gpp_bad_outlined,
                       size: 17,
                       color: item.isVerified
-                          ? AppColors.teal
-                          : AppColors.orange,
+                          ? context.palette.teal
+                          : context.palette.orange,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -12942,7 +13014,7 @@ class _HostSecurityConflictMergeDialogState
                 Text(
                   context.l10n.credentialSelectionProxySettingsForwardingDetails,
                   key: const ValueKey('host-security-merge-masked-note'),
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                  style: TextStyle(fontSize: 12, color: context.palette.muted),
                 ),
                 const SizedBox(height: 14),
                 RadioListTile<HostSecurityMergeBranch>(
@@ -12978,7 +13050,7 @@ class _HostSecurityConflictMergeDialogState
                     label: context.l10n.theCommittedHostChangedReviewIts,
                     child: Text(
                       context.l10n.theCommittedHostChangedAfterThis,
-                      style: const TextStyle(color: AppColors.orange),
+                      style: TextStyle(color: context.palette.orange),
                     ),
                   ),
                 ],
@@ -12987,7 +13059,7 @@ class _HostSecurityConflictMergeDialogState
                   Text(
                     _error!,
                     key: const ValueKey('host-security-merge-error'),
-                    style: const TextStyle(color: AppColors.orange),
+                    style: TextStyle(color: context.palette.orange),
                   ),
                 ],
               ],
@@ -13045,7 +13117,7 @@ class _HostSecurityConflictMergeDialogState
   Widget _reviewValue(String label, String value) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: const TextStyle(fontSize: 10, color: AppColors.muted)),
+      Text(label, style: TextStyle(fontSize: 10, color: context.palette.muted)),
       Text(value, style: const TextStyle(fontSize: 12), maxLines: 2),
     ],
   );
@@ -13205,7 +13277,7 @@ class _CredentialConflictMergeDialogState
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.orange.withValues(alpha: .1),
+                        color: context.palette.orange.withValues(alpha: .1),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Text(
@@ -13519,9 +13591,9 @@ class _ConflictCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.delete_forever_outlined,
-                    color: AppColors.orange,
+                    color: context.palette.orange,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -13536,8 +13608,8 @@ class _ConflictCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 context.l10n.theServerProvidedASignedCleanup,
-                style: const TextStyle(
-                  color: AppColors.muted,
+                style: TextStyle(
+                  color: context.palette.muted,
                   fontSize: 12,
                   height: 1.45,
                 ),
@@ -13546,9 +13618,9 @@ class _ConflictCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.redactionProofItem('${proof['redaction_id']}'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.muted,
+                    color: context.palette.muted,
                     fontFamily: 'monospace',
                   ),
                 ),
@@ -13609,9 +13681,9 @@ class _ConflictCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.warning_amber_rounded,
-                  color: AppColors.orange,
+                  color: context.palette.orange,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -13626,9 +13698,9 @@ class _ConflictCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               context.l10n.localRevisionItem('${localHeader['revision_id']}'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: AppColors.muted,
+                color: context.palette.muted,
                 fontFamily: 'monospace',
               ),
             ),
@@ -13637,9 +13709,9 @@ class _ConflictCard extends StatelessWidget {
               remoteHeader == null
                   ? context.l10n.remoteHeadIsAbsent
                   : context.l10n.remoteRevisionItem('${remoteHeader['revision_id']}'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: AppColors.muted,
+                color: context.palette.muted,
                 fontFamily: 'monospace',
               ),
             ),
@@ -13669,8 +13741,8 @@ class _ConflictCard extends StatelessWidget {
               const SizedBox(height: 9),
               Text(
                 context.l10n.theCrossDeviceBranchIsntVerified,
-                style: const TextStyle(
-                  color: AppColors.muted,
+                style: TextStyle(
+                  color: context.palette.muted,
                   fontSize: 12,
                   height: 1.4,
                 ),
@@ -13685,8 +13757,8 @@ class _ConflictCard extends StatelessWidget {
                   : remoteHeader == null
                   ? context.l10n.theLocalBranchAndItsOriginal
                   : context.l10n.bothRevisionsStayEncryptedInLocal,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 12,
                 height: 1.45,
               ),
@@ -13978,7 +14050,7 @@ class _AuditPage extends StatelessWidget {
               icon: cannotReadVault
                   ? Icons.info_outline_rounded
                   : Icons.lock_outline_rounded,
-              color: cannotReadVault ? AppColors.orange : AppColors.teal,
+              color: cannotReadVault ? context.palette.orange : context.palette.teal,
               text: cannotReadVault
                   ? context.l10n.vaultScopedAuditIsAvailableOnly
                   : context.l10n.showingEventsForCurrentvaultnameSwitchingThe(app.currentVaultName),
@@ -13986,13 +14058,13 @@ class _AuditPage extends StatelessWidget {
           const SizedBox(height: 15),
           if (app.auditError != null)
             Card(
-              color: AppColors.red.withValues(alpha: .07),
+              color: context.palette.red.withValues(alpha: .07),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.error_outline, color: AppColors.red),
+                    Icon(Icons.error_outline, color: context.palette.red),
                     const SizedBox(width: 11),
                     Expanded(
                       child: Column(
@@ -14012,8 +14084,8 @@ class _AuditPage extends StatelessWidget {
                           const SizedBox(height: 5),
                           Text(
                             app.auditError!,
-                            style: const TextStyle(
-                              color: AppColors.muted,
+                            style: TextStyle(
+                              color: context.palette.muted,
                               fontSize: 12,
                               height: 1.45,
                             ),
@@ -14075,9 +14147,9 @@ class _AuditPage extends StatelessWidget {
                 children: [
                   Text(
                     context.l10n.pageValuevalue2(app.auditPageIndex + 1),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.muted,
+                      color: context.palette.muted,
                     ),
                   ),
                   const Spacer(),
@@ -14121,13 +14193,13 @@ class _AuditEventCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 17,
-            backgroundColor: AppColors.teal.withValues(alpha: .13),
+            backgroundColor: context.palette.teal.withValues(alpha: .13),
             child: Icon(
               event.source == 'maintenance'
                   ? Icons.settings_suggest_outlined
                   : Icons.check_circle_outline,
               size: 18,
-              color: AppColors.teal,
+              color: context.palette.teal,
             ),
           ),
           const SizedBox(width: 12),
@@ -14142,8 +14214,8 @@ class _AuditEventCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   '${event.resourceType}${event.resourceId == null ? '' : ' · ${_shortAuditId(event.resourceId!)}'}',
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.palette.muted,
                     fontSize: 11,
                     fontFamily: 'monospace',
                   ),
@@ -14151,7 +14223,7 @@ class _AuditEventCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   context.l10n.accountShortauditidDeviceShortauditid2Valuevalue(_shortAuditId(event.actorUserId), _shortAuditId(event.actorDeviceId), event.source == 'maintenance' ? context.l10n.maintenanceJobs : 'API'),
-                  style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                  style: TextStyle(color: context.palette.muted, fontSize: 11),
                 ),
               ],
             ),
@@ -14162,15 +14234,15 @@ class _AuditEventCard extends StatelessWidget {
             children: [
               Text(
                 DateFormat.yMMMd().add_jm().format(event.occurredAt.toLocal()),
-                style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                style: TextStyle(fontSize: 11, color: context.palette.muted),
                 textAlign: TextAlign.right,
               ),
               const SizedBox(height: 5),
               Text(
                 '#${event.eventId}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: AppColors.muted,
+                  color: context.palette.muted,
                   fontFamily: 'monospace',
                 ),
               ),
@@ -14204,8 +14276,8 @@ class _AuditInlineNotice extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 11,
                 height: 1.45,
               ),
@@ -14370,9 +14442,9 @@ class _VaultRedactionReadinessPanel extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.sync_problem_outlined,
-                  color: AppColors.teal,
+                  color: context.palette.teal,
                   size: 19,
                 ),
                 const SizedBox(width: 8),
@@ -14396,8 +14468,8 @@ class _VaultRedactionReadinessPanel extends StatelessWidget {
               readiness.isEmpty
                   ? context.l10n.noActiveVaultDeviceReportsAre
                   : '$readyCount of ${readiness.length} active Vault devices are ready; ${blockers.length} report(s) block permanent purge.',
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 12,
                 height: 1.4,
               ),
@@ -14407,7 +14479,7 @@ class _VaultRedactionReadinessPanel extends StatelessWidget {
               Text(
                 error,
                 key: const ValueKey('vault_redaction_readiness_error'),
-                style: const TextStyle(color: AppColors.red, fontSize: 12),
+                style: TextStyle(color: context.palette.red, fontSize: 12),
               ),
             ],
             if (shownDevices.isNotEmpty) ...[
@@ -14422,8 +14494,8 @@ class _VaultRedactionReadinessPanel extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 3),
                   child: Text(
                     context.l10n.valuevalueMoreDeviceSNeedReview(blockers.length - shownDevices.length),
-                    style: const TextStyle(
-                      color: AppColors.muted,
+                    style: TextStyle(
+                      color: context.palette.muted,
                       fontSize: 11,
                     ),
                   ),
@@ -14434,7 +14506,7 @@ class _VaultRedactionReadinessPanel extends StatelessWidget {
               const SizedBox(height: 5),
               Text(
                 context.l10n.allActiveVaultDevicesReportSupport,
-                style: const TextStyle(color: AppColors.lime, fontSize: 12),
+                style: TextStyle(color: context.palette.lime, fontSize: 12),
               ),
             ],
             const SizedBox(height: 7),
@@ -14487,11 +14559,11 @@ class _VaultRedactionDeviceReadinessRow extends StatelessWidget {
     final deviceId = device['device_id'] as String? ?? '';
     final shortId = deviceId.length >= 8 ? deviceId.substring(0, 8) : 'unknown';
     final statusColor = switch (readiness.status) {
-      DeviceRedactionReadinessStatus.ready => AppColors.lime,
+      DeviceRedactionReadinessStatus.ready => context.palette.lime,
       DeviceRedactionReadinessStatus.missing ||
       DeviceRedactionReadinessStatus.invalidated ||
-      DeviceRedactionReadinessStatus.unsupported => AppColors.orange,
-      DeviceRedactionReadinessStatus.unverifiable => AppColors.red,
+      DeviceRedactionReadinessStatus.unsupported => context.palette.orange,
+      DeviceRedactionReadinessStatus.unverifiable => context.palette.red,
     };
     return Semantics(
       key: ValueKey('vault_redaction_device-$deviceId'),
@@ -14553,16 +14625,16 @@ class _DevicesPage extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
+                Icon(
                   Icons.admin_panel_settings_outlined,
-                  color: AppColors.teal,
+                  color: context.palette.teal,
                 ),
                 const SizedBox(width: 11),
                 Expanded(
                   child: Text(
                     context.l10n.eachDeviceKeepsItsPrivateSigning,
-                    style: const TextStyle(
-                      color: AppColors.muted,
+                    style: TextStyle(
+                      color: context.palette.muted,
                       fontSize: 12,
                       height: 1.5,
                     ),
@@ -14581,8 +14653,8 @@ class _DevicesPage extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 9),
           child: Text(
             context.l10n.accountDevices,
-            style: const TextStyle(
-              color: AppColors.muted,
+            style: TextStyle(
+              color: context.palette.muted,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -14615,11 +14687,11 @@ class _DevicesPage extends StatelessWidget {
                 ),
                 leading: CircleAvatar(
                   backgroundColor: current
-                      ? AppColors.lime.withValues(alpha: .15)
-                      : AppColors.surfaceSoft,
+                      ? context.palette.lime.withValues(alpha: .15)
+                      : context.palette.surfaceSoft,
                   child: Icon(
                     current ? Icons.laptop_mac_rounded : Icons.devices_rounded,
-                    color: current ? AppColors.lime : AppColors.muted,
+                    color: current ? context.palette.lime : context.palette.muted,
                     size: 19,
                   ),
                 ),
@@ -14647,8 +14719,8 @@ class _DevicesPage extends StatelessWidget {
                   children: [
                     Text(
                       context.l10n.itemSigningKeyShortkey('${device['device_id']}', _shortKey(device['signing_public_key'] as String?)),
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: context.palette.muted,
                         fontSize: 11,
                         height: 1.5,
                         fontFamily: 'monospace',
@@ -14664,23 +14736,23 @@ class _DevicesPage extends StatelessWidget {
                         if (createdAt != null)
                           Text(
                             context.l10n.createdFormat(DateFormat.yMMMd().add_jm().format(createdAt)),
-                            style: const TextStyle(
-                              color: AppColors.muted,
+                            style: TextStyle(
+                              color: context.palette.muted,
                               fontSize: 11,
                             ),
                           ),
                         if (revokedAt != null)
                           Text(
                             context.l10n.revokedFormat2(DateFormat.yMMMd().add_jm().format(revokedAt)),
-                            style: const TextStyle(
-                              color: AppColors.muted,
+                            style: TextStyle(
+                              color: context.palette.muted,
                               fontSize: 11,
                             ),
                           ),
                       ],
                     ),
                     const SizedBox(height: 7),
-                    _deviceCapabilitySummary(app, device),
+                    _deviceCapabilitySummary(context, app, device),
                   ],
                 ),
                 isThreeLine: true,
@@ -14707,9 +14779,9 @@ class _DevicesPage extends StatelessWidget {
                               );
                           }
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.block_rounded,
-                          color: AppColors.red,
+                          color: context.palette.red,
                         ),
                       ),
               ),
@@ -14721,11 +14793,12 @@ class _DevicesPage extends StatelessWidget {
 }
 
 Widget _deviceCapabilitySummary(
+  BuildContext context,
   AppController app,
   Map<String, dynamic> device,
 ) {
-  const textStyle = TextStyle(
-    color: AppColors.muted,
+  final textStyle = TextStyle(
+    color: context.palette.muted,
     fontSize: 11,
     height: 1.45,
   );
@@ -14765,7 +14838,7 @@ Widget _deviceCapabilitySummary(
   } on Object {
     return Text(
       currentL10n.compatibilityReportUnverifiedDetailsHidden,
-      style: const TextStyle(color: AppColors.red, fontSize: 11, height: 1.45),
+      style: TextStyle(color: context.palette.red, fontSize: 11, height: 1.45),
     );
   }
 }
@@ -14792,9 +14865,9 @@ class _DeviceStatusTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      _TrustedDeviceStatus.active => ('Active', AppColors.teal),
-      _TrustedDeviceStatus.revoked => ('Revoked', AppColors.red),
-      _TrustedDeviceStatus.unknown => ('Status unavailable', AppColors.muted),
+      _TrustedDeviceStatus.active => ('Active', context.palette.teal),
+      _TrustedDeviceStatus.revoked => ('Revoked', context.palette.red),
+      _TrustedDeviceStatus.unknown => ('Status unavailable', context.palette.muted),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
@@ -14824,7 +14897,7 @@ Future<bool?> _confirmRevokeDevice(
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, true),
-        style: FilledButton.styleFrom(backgroundColor: AppColors.red),
+        style: FilledButton.styleFrom(backgroundColor: context.palette.red),
         child: Text(context.l10n.revokeDevice),
       ),
     ],
@@ -14887,22 +14960,22 @@ Future<void> _approveDevice(BuildContext context, AppController app) async {
                     const SizedBox(height: 7),
                     Text(
                       context.l10n.signingKeyFingerprint,
-                      style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                      style: TextStyle(color: context.palette.muted, fontSize: 11),
                     ),
                     _PublicFingerprint(
                       app: app,
                       encodedKey: target!['signing_public_key'] as String?,
-                      color: AppColors.lime,
+                      color: context.palette.lime,
                     ),
                     const SizedBox(height: 9),
                     Text(
                       context.l10n.encryptionKeyFingerprint,
-                      style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                      style: TextStyle(color: context.palette.muted, fontSize: 11),
                     ),
                     _PublicFingerprint(
                       app: app,
                       encodedKey: target!['encryption_public_key'] as String?,
-                      color: AppColors.teal,
+                      color: context.palette.teal,
                     ),
                     const SizedBox(height: 13),
                     _MessageBoxLikeWarning(
@@ -15044,28 +15117,28 @@ class VaultLifecycleTile extends StatelessWidget {
       _ => 'UNAVAILABLE',
     };
     final statusColor = switch (vault.status) {
-      'active' when vault.canWrite => AppColors.teal,
-      'deleting' => AppColors.orange,
-      _ => AppColors.muted,
+      'active' when vault.canWrite => context.palette.teal,
+      'deleting' => context.palette.orange,
+      _ => context.palette.muted,
     };
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceSoft,
+        color: context.palette.surfaceSoft,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: AppColors.line),
+        border: Border.all(color: context.palette.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.folder_outlined, color: AppColors.lime),
+            leading: Icon(Icons.folder_outlined, color: context.palette.lime),
             title: Text(displayName),
             subtitle: Text(
               context.l10n.roleKeyEpochActivekeyepochMembershipMembershipversion(vault.role, vault.activeKeyEpoch, vault.membershipVersion),
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              style: TextStyle(color: context.palette.muted, fontSize: 11),
             ),
             trailing: Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -15099,8 +15172,8 @@ class VaultLifecycleTile extends StatelessWidget {
             const SizedBox(height: 7),
             Text(
               context.l10n.atTheServerDeadlineRecordsHistory,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 11,
                 height: 1.5,
               ),
@@ -15122,8 +15195,8 @@ class VaultLifecycleTile extends StatelessWidget {
             const Divider(height: 14),
             Text(
               context.l10n.deletingThisVaultStartsTheServer,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 11,
                 height: 1.5,
               ),
@@ -15143,8 +15216,8 @@ class VaultLifecycleTile extends StatelessWidget {
             const Divider(height: 14),
             Text(
               context.l10n.thisVaultIsReadOnlyFor,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 11,
                 height: 1.5,
               ),
@@ -15153,7 +15226,7 @@ class VaultLifecycleTile extends StatelessWidget {
           if (isCurrent && onOpen == null && !deleting)
             Align(
               alignment: Alignment.centerLeft,
-              child: _StatusDot(label: context.l10n.currentVault, color: AppColors.lime),
+              child: _StatusDot(label: context.l10n.currentVault, color: context.palette.lime),
             ),
         ],
       ),
@@ -15170,12 +15243,12 @@ class _VaultReadOnlyBanner extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: double.infinity,
     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-    color: AppColors.orange.withValues(alpha: .1),
+    color: context.palette.orange.withValues(alpha: .1),
     child: Row(
       children: [
-        const Icon(
+        Icon(
           Icons.lock_clock_outlined,
-          color: AppColors.orange,
+          color: context.palette.orange,
           size: 18,
         ),
         const SizedBox(width: 9),
@@ -15248,8 +15321,8 @@ class _MobilePushSettingsCard extends StatelessWidget {
                 configured
                     ? context.l10n.theOperatingSystemWillAskFor
                     : context.l10n.thisMobileAppBuildHasNo,
-                style: const TextStyle(
-                  color: AppColors.muted,
+                style: TextStyle(
+                  color: context.palette.muted,
                   fontSize: 12,
                   height: 1.45,
                 ),
@@ -15287,6 +15360,7 @@ class _SettingsPage extends StatelessWidget {
     final backupScheduleSupported = supportedActions.contains(
       'backup_schedule',
     );
+    final cloudAccess = CloudAccessService(app);
     return SettingsScaffold(
       key: const ValueKey('cloud_settings'),
       sections: [
@@ -15312,6 +15386,20 @@ class _SettingsPage extends StatelessWidget {
             ],
           ),
         ),
+        // ACCOUNT worker: account/login category (identity, session actions).
+        SettingsSection(
+          id: accountSettingsSectionId,
+          title: context.l10n.accountSettingsTitle,
+          icon: Icons.account_circle_outlined,
+          description: context.l10n.accountSettingsDescription,
+          builder: (_) => AccountSettingsPanel(
+            app: app,
+            cloudAccessControls:
+                cloudAccess.organizationsAvailable || cloudAccess.linksAvailable
+                ? CloudAccessAccountCard(service: cloudAccess)
+                : null,
+          ),
+        ),
         SettingsSection(
           id: 'mcp',
           title: 'AI / MCP',
@@ -15319,21 +15407,37 @@ class _SettingsPage extends StatelessWidget {
           description: context.l10n.letExternalAiAccessTheCurrent2,
           builder: (_) => const McpSettingsPanel(),
         ),
-        if (app.activeVault != null)
-          SettingsSection(
-            id: 'terminal',
-            title: context.l10n.terminalAndShortcuts,
-            icon: Icons.terminal,
-            description: context.l10n.setTheTerminalFontSizeColors2,
-            builder: (_) => SettingsCards(
-              children: [
+        // SETTINGS worker: Theme (UI mode + terminal font/colors) and
+        // Shortcuts are separate categories.
+        SettingsSection(
+          id: settingsThemeSectionId,
+          title: context.l10n.settingsThemeTitle,
+          icon: Icons.palette_outlined,
+          description: context.l10n.settingsThemeDescription,
+          builder: (_) => SettingsCards(
+            children: [
+              const SettingsCard(child: AppThemeSettings()),
+              const SettingsCard(child: WallpaperSettings()),
+              if (app.activeVault != null) ...[
                 SettingsCard(
                   child: _TerminalFontSizePreferenceSection(app: app),
                 ),
                 SettingsCard(child: _TerminalThemePreferenceSection(app: app)),
-                SettingsCard(
-                  child: TerminalPaletteGallery(synced: app.terminalTheme),
-                ),
+              ],
+              SettingsCard(
+                child: TerminalPaletteGallery(synced: app.terminalTheme),
+              ),
+            ],
+          ),
+        ),
+        if (app.activeVault != null)
+          SettingsSection(
+            id: settingsShortcutsSectionId,
+            title: context.l10n.settingsThemeShortcutsTitle,
+            icon: Icons.keyboard_outlined,
+            description: context.l10n.settingsThemeShortcutsDescription,
+            builder: (_) => SettingsCards(
+              children: [
                 SettingsCard(
                   child: _TerminalShortcutsPreferenceSection(app: app),
                 ),
@@ -15373,8 +15477,8 @@ class _SettingsPage extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       context.l10n.noVaultIsCurrentlyAvailableTo,
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: context.palette.muted,
                         height: 1.45,
                         fontSize: 12,
                       ),
@@ -15484,8 +15588,8 @@ class _SettingsPage extends StatelessWidget {
                           const SizedBox(height: 7),
                           Text(
                             context.l10n.moveEncryptedLocalHostsCredentialsGroups,
-                            style: const TextStyle(
-                              color: AppColors.muted,
+                            style: TextStyle(
+                              color: context.palette.muted,
                               height: 1.45,
                               fontSize: 12,
                             ),
@@ -15620,17 +15724,17 @@ class _SettingsPage extends StatelessWidget {
                       const SizedBox(height: 7),
                       Text(
                         context.l10n.instanceSigningKeyFingerprintSha256,
-                        style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                        style: TextStyle(color: context.palette.muted, fontSize: 11),
                       ),
                       _PublicFingerprint(
                         app: app,
                         encodedKey: app.instance?.signingPublicKey,
-                        color: AppColors.lime,
+                        color: context.palette.lime,
                       ),
                       const SizedBox(height: 6),
                       Text(
                         context.l10n.compareThisPublicFingerprintWithAnother,
-                        style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                        style: TextStyle(color: context.palette.muted, fontSize: 11),
                       ),
                       const SizedBox(height: 10),
                       OutlinedButton.icon(
@@ -15722,7 +15826,7 @@ class _InstanceAdminPushHealthCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               context.l10n.readOnlyProviderConfigurationAggregateQueue,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             const SizedBox(height: 8),
             Semantics(
@@ -15744,7 +15848,7 @@ class _InstanceAdminPushHealthCard extends StatelessWidget {
                 label: context.l10n.couldntLoadPushServiceStatus,
                 child: Text(
                   context.l10n.couldntLoadPushServiceStatusError(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -15862,7 +15966,7 @@ class _InstanceAdminOverviewCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               context.l10n.readOnlyInstanceIdentityUsageAnd,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             if (app.instanceAdminOverviewLoading) ...[
               const SizedBox(height: 12),
@@ -15876,7 +15980,7 @@ class _InstanceAdminOverviewCard extends StatelessWidget {
                 label: context.l10n.couldntLoadInstanceOverview,
                 child: Text(
                   context.l10n.couldntLoadInstanceOverviewError(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -16133,7 +16237,7 @@ class _InstanceAdminMetricsCredentialCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               context.l10n.createADedicatedReadOnlyBearer,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             if (app.instanceAdminMetricsCredentialLoading ||
                 app.instanceAdminMetricsCredentialSaving) ...[
@@ -16161,7 +16265,7 @@ class _InstanceAdminMetricsCredentialCard extends StatelessWidget {
                 liveRegion: true,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -16173,7 +16277,7 @@ class _InstanceAdminMetricsCredentialCard extends StatelessWidget {
                 liveRegion: true,
                 child: Text(
                   notice,
-                  style: const TextStyle(color: AppColors.lime),
+                  style: TextStyle(color: context.palette.lime),
                 ),
               ),
             ],
@@ -16310,7 +16414,7 @@ class _InstanceAdminRelayPolicyCardState
             const SizedBox(height: 5),
             Text(
               context.l10n.savedSettingsCanOnlyNarrowThe,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             if (app.instanceAdminRelayPolicyLoading) ...[
               const SizedBox(height: 12),
@@ -16325,7 +16429,7 @@ class _InstanceAdminRelayPolicyCardState
                 liveRegion: true,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -16382,7 +16486,7 @@ class _InstanceAdminRelayPolicyCardState
                     : policy.deploymentLimits.relayAvailable
                     ? context.l10n.theDeploymentGateIsAvailableWith
                     : context.l10n.toEnableSshRelayTheServer,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.palette.muted, fontSize: 12),
               ),
               SwitchListTile.adaptive(
                 key: const ValueKey('admin-relay-policy-enabled'),
@@ -16439,7 +16543,7 @@ class _InstanceAdminRelayPolicyCardState
                   liveRegion: true,
                   child: Text(
                     error,
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
               ],
@@ -16450,7 +16554,7 @@ class _InstanceAdminRelayPolicyCardState
                   liveRegion: true,
                   child: Text(
                     notice,
-                    style: const TextStyle(color: AppColors.lime),
+                    style: TextStyle(color: context.palette.lime),
                   ),
                 ),
               ],
@@ -16516,7 +16620,7 @@ class _InstanceAdminBackupStatusCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               context.l10n.showsTheLatestCompletedBackupAttempt,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             if (app.instanceAdminBackupStatusLoading) ...[
               const SizedBox(height: 12),
@@ -16530,7 +16634,7 @@ class _InstanceAdminBackupStatusCard extends StatelessWidget {
                 label: context.l10n.couldntLoadBackupCommandStatus,
                 child: Text(
                   context.l10n.couldntLoadBackupCommandStatusError(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -16609,7 +16713,7 @@ class _InstanceAdminBackupReplicationCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               context.l10n.theServerCanCopyEncryptedInstance,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             if (statusLoading) ...[
               const SizedBox(height: 12),
@@ -16624,7 +16728,7 @@ class _InstanceAdminBackupReplicationCard extends StatelessWidget {
                 liveRegion: true,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -16642,7 +16746,7 @@ class _InstanceAdminBackupReplicationCard extends StatelessWidget {
                 liveRegion: true,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -16654,7 +16758,7 @@ class _InstanceAdminBackupReplicationCard extends StatelessWidget {
                 liveRegion: true,
                 child: Text(
                   notice,
-                  style: const TextStyle(color: AppColors.lime),
+                  style: TextStyle(color: context.palette.lime),
                 ),
               ),
             ],
@@ -16849,7 +16953,7 @@ class _InstanceAdminBackupScheduleCardState
             const SizedBox(height: 5),
             Text(
               context.l10n.chooseHowOftenThisServerCreates,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             if (app.instanceAdminBackupScheduleLoading) ...[
               const SizedBox(height: 12),
@@ -16864,7 +16968,7 @@ class _InstanceAdminBackupScheduleCardState
                 liveRegion: true,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -16882,8 +16986,8 @@ class _InstanceAdminBackupScheduleCardState
                           : Icons.info_outline_rounded,
                       size: 18,
                       color: value.backupConfigured
-                          ? AppColors.lime
-                          : AppColors.orange,
+                          ? context.palette.lime
+                          : context.palette.orange,
                     ),
                     const SizedBox(width: 7),
                     Text(
@@ -16898,7 +17002,7 @@ class _InstanceAdminBackupScheduleCardState
                 const SizedBox(height: 5),
                 Text(
                   context.l10n.askTheServerOperatorToConfigure,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.palette.muted, fontSize: 12),
                 ),
               ],
               SwitchListTile.adaptive(
@@ -16987,7 +17091,7 @@ class _InstanceAdminBackupScheduleCardState
                   liveRegion: true,
                   child: Text(
                     error,
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
               ],
@@ -16998,7 +17102,7 @@ class _InstanceAdminBackupScheduleCardState
                   liveRegion: true,
                   child: Text(
                     notice,
-                    style: const TextStyle(color: AppColors.lime),
+                    style: TextStyle(color: context.palette.lime),
                   ),
                 ),
               ],
@@ -17156,7 +17260,7 @@ class _InstanceAdminRestoreStageCardState
               const SizedBox(height: 8),
               Text(
                 context.l10n.thisServerIsNotCurrentlyAccepting,
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: context.palette.muted),
               ),
             ],
             const SizedBox(height: 5),
@@ -17164,8 +17268,8 @@ class _InstanceAdminRestoreStageCardState
               restoreReplicaSupported
                   ? context.l10n.chooseALocalEncryptedArchiveOr
                   : context.l10n.chooseALocalEncryptedArchiveTo,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 12,
                 height: 1.45,
               ),
@@ -17183,7 +17287,7 @@ class _InstanceAdminRestoreStageCardState
                 liveRegion: true,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -17192,7 +17296,7 @@ class _InstanceAdminRestoreStageCardState
               if (sources.isEmpty)
                 Text(
                   context.l10n.noSupportedEncryptedArchivesAreAvailable,
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: context.palette.muted),
                 )
               else ...[
                 RadioGroup<String>(
@@ -17252,7 +17356,7 @@ class _InstanceAdminRestoreStageCardState
                               selected
                                   ? context.l10n.selectedArchive
                                   : context.l10n.encryptedArchive,
-                              style: const TextStyle(color: AppColors.muted),
+                              style: TextStyle(color: context.palette.muted),
                             ),
                           );
                         })
@@ -17268,9 +17372,9 @@ class _InstanceAdminRestoreStageCardState
                       restoreReplicaSupported
                           ? context.l10n.showingValuevalueValuevalue2OfTotal(sourcePage.offset + 1, sourcePage.offset + sourcePage.sources.length, sourcePage.total)
                           : context.l10n.showingCountLocalArchivesOnThis(sources.length),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.muted,
+                        color: context.palette.muted,
                       ),
                     ),
                     const Spacer(),
@@ -17310,7 +17414,7 @@ class _InstanceAdminRestoreStageCardState
                 liveRegion: true,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
               if (canRetry && restoreSupported) ...[
@@ -17337,7 +17441,7 @@ class _InstanceAdminRestoreStageCardState
                 liveRegion: true,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.orange),
+                  style: TextStyle(color: context.palette.orange),
                 ),
               ),
             ],
@@ -17348,7 +17452,7 @@ class _InstanceAdminRestoreStageCardState
                 liveRegion: true,
                 child: Text(
                   notice,
-                  style: const TextStyle(color: AppColors.lime),
+                  style: TextStyle(color: context.palette.lime),
                 ),
               ),
             ],
@@ -17500,7 +17604,7 @@ class _AdminVaultsCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               context.l10n.vaultMetadataAndStorageLimitsEncrypted,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             if (app.adminVaultsLoading) ...[
               const SizedBox(height: 12),
@@ -17514,7 +17618,7 @@ class _AdminVaultsCard extends StatelessWidget {
                 label: context.l10n.couldntLoadTheAdminVaultList,
                 child: Text(
                   context.l10n.couldntLoadTheVaultListError(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -17524,13 +17628,13 @@ class _AdminVaultsCard extends StatelessWidget {
                 label: context.l10n.couldntUpdateTheVaultQuota,
                 child: Text(
                   context.l10n.couldntUpdateTheVaultQuotaError(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
             if (app.adminVaultMutationNotice case final notice?) ...[
               const SizedBox(height: 12),
-              Text(notice, style: const TextStyle(color: AppColors.lime)),
+              Text(notice, style: TextStyle(color: context.palette.lime)),
             ],
             if (page case final value?) ...[
               const SizedBox(height: 12),
@@ -17538,7 +17642,7 @@ class _AdminVaultsCard extends StatelessWidget {
                 value.total == 0
                     ? context.l10n.noVaultsFound
                     : context.l10n.showingStartEndOfAdmincountVaults(start, end, _adminCount(value.total)),
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.palette.muted, fontSize: 12),
               ),
               if (value.vaults.isEmpty && value.total > 0)
                 Padding(
@@ -17757,7 +17861,7 @@ class _InstanceAdminAuditCard extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         context.l10n.installationWideEventsSeparateFromAccount,
-                        style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                        style: TextStyle(color: context.palette.muted, fontSize: 12),
                       ),
                     ],
                   ),
@@ -17785,7 +17889,7 @@ class _InstanceAdminAuditCard extends StatelessWidget {
                 label: context.l10n.couldntLoadInstanceAdminAuditRecords,
                 child: Text(
                   context.l10n.couldntLoadInstanceAdminAuditRecords2(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
               const SizedBox(height: 8),
@@ -17816,9 +17920,9 @@ class _InstanceAdminAuditCard extends StatelessWidget {
                 children: [
                   Text(
                     context.l10n.pageValuevalue(app.adminAuditPageIndex + 1),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.muted,
+                      color: context.palette.muted,
                     ),
                   ),
                   const Spacer(),
@@ -17873,8 +17977,8 @@ class _InstanceAdminAuditEventTile extends StatelessWidget {
                 _instanceAdminAuditResultLabel(event.result),
                 style: TextStyle(
                   color: event.result == 'success'
-                      ? AppColors.lime
-                      : AppColors.red,
+                      ? context.palette.lime
+                      : context.palette.red,
                   fontSize: 11,
                 ),
               ),
@@ -17939,14 +18043,14 @@ class _AdminMaintenanceJobsCard extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         context.l10n.maintenanceRunsTheConfiguredRetentionAnd,
-                        style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                        style: TextStyle(color: context.palette.muted, fontSize: 12),
                       ),
                       if (backupSupported) ...[
                         const SizedBox(height: 7),
                         Text(
                           context.l10n.encryptedBackupsAreCreatedOnThe,
-                          style: const TextStyle(
-                            color: AppColors.muted,
+                          style: TextStyle(
+                            color: context.palette.muted,
                             fontSize: 12,
                             height: 1.45,
                           ),
@@ -17956,8 +18060,8 @@ class _AdminMaintenanceJobsCard extends StatelessWidget {
                         const SizedBox(height: 7),
                         Text(
                           context.l10n.restorePreparesAnIsolatedCopyWhile,
-                          style: const TextStyle(
-                            color: AppColors.muted,
+                          style: TextStyle(
+                            color: context.palette.muted,
                             fontSize: 12,
                             height: 1.45,
                           ),
@@ -18044,7 +18148,7 @@ class _AdminMaintenanceJobsCard extends StatelessWidget {
                 label: context.l10n.instanceMaintenanceJobSubmitted,
                 child: Text(
                   notice,
-                  style: const TextStyle(color: AppColors.lime),
+                  style: TextStyle(color: context.palette.lime),
                 ),
               ),
             ],
@@ -18054,7 +18158,7 @@ class _AdminMaintenanceJobsCard extends StatelessWidget {
                 label: context.l10n.encryptedBackupJobSubmitted,
                 child: Text(
                   notice,
-                  style: const TextStyle(color: AppColors.lime),
+                  style: TextStyle(color: context.palette.lime),
                 ),
               ),
             ],
@@ -18064,7 +18168,7 @@ class _AdminMaintenanceJobsCard extends StatelessWidget {
                 label: context.l10n.couldntSubmitTheEncryptedBackupJob,
                 child: Text(
                   context.l10n.couldntSubmitTheEncryptedBackupJob2(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
               const SizedBox(height: 7),
@@ -18087,7 +18191,7 @@ class _AdminMaintenanceJobsCard extends StatelessWidget {
                 liveRegion: true,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
               if (app.adminRestoreStageDiscardRetryJobId case final jobId?)
@@ -18107,7 +18211,7 @@ class _AdminMaintenanceJobsCard extends StatelessWidget {
                 liveRegion: true,
                 child: Text(
                   notice,
-                  style: const TextStyle(color: AppColors.lime),
+                  style: TextStyle(color: context.palette.lime),
                 ),
               ),
             ],
@@ -18117,7 +18221,7 @@ class _AdminMaintenanceJobsCard extends StatelessWidget {
                 label: context.l10n.couldntReadOrSubmitInstanceJobs,
                 child: Text(
                   context.l10n.couldntReadOrSubmitInstanceJobs2(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
               const SizedBox(height: 7),
@@ -18158,9 +18262,9 @@ class _AdminMaintenanceJobsCard extends StatelessWidget {
                     value.total == 0
                         ? context.l10n.noJobs
                         : context.l10n.showingValuevalueValuevalue2OfTotal(value.offset + 1, value.offset + value.jobs.length, value.total),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.muted,
+                      color: context.palette.muted,
                     ),
                   ),
                   const Spacer(),
@@ -18273,7 +18377,7 @@ class _AdminMaintenanceJobTile extends StatelessWidget {
               : job.status == 'succeeded'
               ? Icons.check_circle_outline_rounded
               : Icons.info_outline_rounded,
-          color: job.status == 'failed' ? AppColors.red : AppColors.lime,
+          color: job.status == 'failed' ? context.palette.red : context.palette.lime,
         ),
         title: Text('$title · ${job.status}'),
         subtitle: Text(
@@ -18354,7 +18458,7 @@ class _AdminAccountsCard extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         context.l10n.disableOrReEnableAccountsAnd,
-                        style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                        style: TextStyle(color: context.palette.muted, fontSize: 12),
                       ),
                     ],
                   ),
@@ -18386,7 +18490,7 @@ class _AdminAccountsCard extends StatelessWidget {
                 label: context.l10n.couldntLoadTheAdminAccountList,
                 child: Text(
                   context.l10n.couldntLoadTheAccountListError(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
               const SizedBox(height: 8),
@@ -18408,13 +18512,13 @@ class _AdminAccountsCard extends StatelessWidget {
                 label: context.l10n.adminAccountActionFailed,
                 child: Text(
                   context.l10n.accountActionFailedError(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
             if (app.adminAccountActionNotice case final notice?) ...[
               const SizedBox(height: 12),
-              Text(notice, style: const TextStyle(color: AppColors.lime)),
+              Text(notice, style: TextStyle(color: context.palette.lime)),
             ],
             if (app.adminAccountsLoading && page == null) ...[
               const SizedBox(height: 14),
@@ -18427,7 +18531,7 @@ class _AdminAccountsCard extends StatelessWidget {
                 value.total == 0
                     ? context.l10n.noAccountsFound
                     : context.l10n.showingFirstLastOfAdmincountAccounts(first, last, _adminCount(value.total)),
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.palette.muted, fontSize: 12),
               ),
               if (value.accounts.isEmpty && value.total > 0)
                 Padding(
@@ -18617,7 +18721,7 @@ class _AdminRelayGroupsCardState extends State<_AdminRelayGroupsCard> {
                       const SizedBox(height: 5),
                       Text(
                         context.l10n.theseInstanceGroupsControlSshRelay,
-                        style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                        style: TextStyle(color: context.palette.muted, fontSize: 12),
                       ),
                     ],
                   ),
@@ -18646,7 +18750,7 @@ class _AdminRelayGroupsCardState extends State<_AdminRelayGroupsCard> {
                 label: context.l10n.unableToLoadServerManagedGroups,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
               OutlinedButton.icon(
@@ -18663,13 +18767,13 @@ class _AdminRelayGroupsCardState extends State<_AdminRelayGroupsCard> {
                 label: context.l10n.serverManagedGroupActionFailed,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
             if (app.adminRelayGroupNotice case final notice?) ...[
               const SizedBox(height: 8),
-              Text(notice, style: const TextStyle(color: AppColors.lime)),
+              Text(notice, style: TextStyle(color: context.palette.lime)),
             ],
             if (app.adminRelayGroupsLoading && groups.isEmpty) ...[
               const SizedBox(height: 12),
@@ -18754,7 +18858,7 @@ class _AdminRelayGroupsCardState extends State<_AdminRelayGroupsCard> {
                 label: context.l10n.unableToLoadServerManagedGroup,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
               OutlinedButton.icon(
@@ -18803,11 +18907,11 @@ class _AdminRelayGroupsCardState extends State<_AdminRelayGroupsCard> {
               ),
               Text(
                 context.l10n.groupRevisionRevisionMembershipRevisionMembershiprevision(detail.revision, detail.membershipRevision, detail.policy.revision),
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: context.palette.muted, fontSize: 11),
               ),
               Text(
                 context.l10n.createdFormattimeUpdatedFormattime2(_formatTime(detail.createdAt), _formatTime(detail.updatedAt)),
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: context.palette.muted, fontSize: 11),
               ),
               const SizedBox(height: 10),
               Row(
@@ -19038,7 +19142,7 @@ class _AdminRelayGroupsCardState extends State<_AdminRelayGroupsCard> {
                     label: context.l10n.unableToLoadMemberEffectiveRelay,
                     child: Text(
                       previewError,
-                      style: const TextStyle(color: AppColors.red),
+                      style: TextStyle(color: context.palette.red),
                     ),
                   ),
                 ],
@@ -19063,11 +19167,11 @@ class _AdminRelayGroupsCardState extends State<_AdminRelayGroupsCard> {
                 detail.policy.inherited
                     ? 'Selection: inherited from the instance Relay policy'
                     : 'Selection: group override',
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.palette.muted, fontSize: 12),
               ),
               Text(
                 context.l10n.policyRevisionRevisionInstanceRevisionInstancepolicyrevision(detail.policy.revision, detail.policy.instancePolicyRevision, _formatTime(detail.policy.updatedAt)),
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: context.palette.muted, fontSize: 11),
               ),
               if (selectedPolicy != null)
                 Text(
@@ -19083,13 +19187,13 @@ class _AdminRelayGroupsCardState extends State<_AdminRelayGroupsCard> {
                 padding: const EdgeInsets.only(top: 4, bottom: 8),
                 child: Text(
                   context.l10n.aUsersEffectiveRelayAccessAlso,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                  style: TextStyle(color: context.palette.muted, fontSize: 11),
                 ),
               ),
               if (limits != null)
                 Text(
                   context.l10n.editableCeilingValuevalueCidrsSummarizePorts(limits.relayAvailable ? context.l10n.relayAvailable : context.l10n.relayUnavailable, _summarize(limits.allowCidrs), _summarize(limits.allowPorts)),
-                  style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                  style: TextStyle(color: context.palette.muted, fontSize: 11),
                 ),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
@@ -19134,19 +19238,19 @@ class _AdminRelayGroupsCardState extends State<_AdminRelayGroupsCard> {
                   label: context.l10n.serverManagedGroupSaveFailed,
                   child: Text(
                     error,
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
               ],
               if (app.adminRelayGroupDetailNotice case final notice?) ...[
                 const SizedBox(height: 8),
-                Text(notice, style: const TextStyle(color: AppColors.lime)),
+                Text(notice, style: TextStyle(color: context.palette.lime)),
               ],
               if (app.adminRelayGroupConflict) ...[
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.aConcurrentChangeWasDetectedYour,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
                 OutlinedButton.icon(
                   onPressed: isBusy
@@ -19303,7 +19407,7 @@ class _AdminAccountInvitationIssueDialogState
                 padding: const EdgeInsets.only(top: 10),
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
           ],
@@ -19398,8 +19502,8 @@ class _AdminAccountInvitationTokenDialogState
             Text(
               context.l10n.oneTimeInvitationToken,
               key: const ValueKey('admin_account_invitation_token'),
-              style: const TextStyle(
-                color: AppColors.text,
+              style: TextStyle(
+                color: context.palette.text,
                 fontSize: 12,
                 fontFamily: 'monospace',
                 letterSpacing: 0.2,
@@ -19408,9 +19512,9 @@ class _AdminAccountInvitationTokenDialogState
             const SizedBox(height: 6),
             DecoratedBox(
               decoration: BoxDecoration(
-                color: AppColors.surfaceRaised,
+                color: context.palette.surfaceRaised,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.line),
+                border: Border.all(color: context.palette.line),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -19422,8 +19526,8 @@ class _AdminAccountInvitationTokenDialogState
                           key: const ValueKey(
                             'admin_account_invitation_token_value',
                           ),
-                          style: const TextStyle(
-                            color: AppColors.text,
+                          style: TextStyle(
+                            color: context.palette.text,
                             fontSize: 12,
                             fontFamily: 'monospace',
                             letterSpacing: 0.2,
@@ -19442,7 +19546,7 @@ class _AdminAccountInvitationTokenDialogState
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
           ],
@@ -19567,7 +19671,7 @@ class _AdminAccountInvitationsCardState
             const SizedBox(height: 5),
             Text(
               context.l10n.createUsernameBoundInvitationsAndReview,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -19610,7 +19714,7 @@ class _AdminAccountInvitationsCardState
                 label: context.l10n.couldntLoadTheAccountInvitationList,
                 child: Text(
                   context.l10n.couldntLoadTheInvitationListError(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
               const SizedBox(height: 8),
@@ -19628,13 +19732,13 @@ class _AdminAccountInvitationsCardState
                 label: context.l10n.adminAccountInvitationActionFailed,
                 child: Text(
                   context.l10n.invitationActionFailedError(error),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
             if (app.adminAccountInvitationNotice case final notice?) ...[
               const SizedBox(height: 12),
-              Text(notice, style: const TextStyle(color: AppColors.lime)),
+              Text(notice, style: TextStyle(color: context.palette.lime)),
             ],
             if (app.adminAccountInvitationsLoading && page == null) ...[
               const SizedBox(height: 14),
@@ -19647,7 +19751,7 @@ class _AdminAccountInvitationsCardState
                 value.total == 0
                     ? context.l10n.noAccountInvitationsFound
                     : context.l10n.showingFirstLastOfAdmincountInvitations(first, last, _adminCount(value.total)),
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.palette.muted, fontSize: 12),
               ),
               if (value.invitations.isEmpty && value.total > 0)
                 Padding(
@@ -19723,9 +19827,9 @@ class _AdminAccountInvitationTile extends StatelessWidget {
       _ => invitation.status,
     };
     final statusColor = switch (invitation.status) {
-      'pending' => AppColors.teal,
-      'expired' || 'revoked' => AppColors.orange,
-      _ => AppColors.muted,
+      'pending' => context.palette.teal,
+      'expired' || 'revoked' => context.palette.orange,
+      _ => context.palette.muted,
     };
     return Card(
       key: ValueKey('admin_account_invitation_${invitation.invitationId}'),
@@ -19839,12 +19943,12 @@ class _AdminAccountTile extends StatelessWidget {
             if (isCurrentAccount)
               Text(
                 context.l10n.currentSignedInAccountAdministrativeActions,
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: context.palette.muted, fontSize: 11),
               )
             else if (isDeleting)
               Text(
                 context.l10n.deletingAccountAdministrativeActionsUnavailable,
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: context.palette.muted, fontSize: 11),
               )
             else ...[
               const SizedBox(height: 6),
@@ -20080,7 +20184,7 @@ class _AdminAccountRelayPolicyPanelState
             const SizedBox(height: 6),
             Semantics(
               label: context.l10n.unableToLoadAccountRelayPolicy,
-              child: Text(error, style: const TextStyle(color: AppColors.red)),
+              child: Text(error, style: TextStyle(color: context.palette.red)),
             ),
           ],
           if (userPolicy != null && instancePolicy != null) ...[
@@ -20089,15 +20193,15 @@ class _AdminAccountRelayPolicyPanelState
               userPolicy.inherited
                   ? 'Selection: inherited from the instance policy'
                   : 'Selection: account override',
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             Text(
               context.l10n.accountRevisionRevisionUpdatedFormattime(userPolicy.revision, _formatTime(userPolicy.updatedAt)),
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              style: TextStyle(color: context.palette.muted, fontSize: 11),
             ),
             Text(
               context.l10n.instanceRevisionRevisionUpdatedFormattime(instancePolicy.revision, _formatTime(instancePolicy.updatedAt)),
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              style: TextStyle(color: context.palette.muted, fontSize: 11),
             ),
             const SizedBox(height: 8),
             if (selectedPolicy != null)
@@ -20114,7 +20218,7 @@ class _AdminAccountRelayPolicyPanelState
               const SizedBox(height: 4),
               Text(
                 context.l10n.editableCeilingValuevalueCidrsSummarizePorts(limits.relayAvailable ? context.l10n.relayAvailable : context.l10n.relayUnavailable, _summarize(limits.allowCidrs), _summarize(limits.allowPorts)),
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: context.palette.muted, fontSize: 11),
               ),
             ],
             const SizedBox(height: 8),
@@ -20166,13 +20270,13 @@ class _AdminAccountRelayPolicyPanelState
                 label: context.l10n.accountRelayPolicySaveFailed,
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
             if (app.adminAccountRelayPolicyNotice case final notice?) ...[
               const SizedBox(height: 8),
-              Text(notice, style: const TextStyle(color: AppColors.lime)),
+              Text(notice, style: TextStyle(color: context.palette.lime)),
             ],
             if (app.adminAccountRelayPolicyConflict) ...[
               const SizedBox(height: 8),
@@ -20311,7 +20415,7 @@ class _AdminAccountSessionsPanel extends StatelessWidget {
               label: context.l10n.couldntLoadTheAccountSessionList,
               child: Text(
                 context.l10n.couldntLoadTheSessionListError(error),
-                style: const TextStyle(color: AppColors.red),
+                style: TextStyle(color: context.palette.red),
               ),
             ),
             const SizedBox(height: 6),
@@ -20338,7 +20442,7 @@ class _AdminAccountSessionsPanel extends StatelessWidget {
               value.total == 0
                   ? context.l10n.noSessionsFound
                   : context.l10n.showingFirstLastOfAdmincountSessions(first, last, _adminCount(value.total)),
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             if (value.sessions.isEmpty && value.total > 0)
               Padding(
@@ -20870,7 +20974,7 @@ class _VaultSyncedPreferencesPanelState
             const SizedBox(height: 7),
             Text(
               context.l10n.chooseTheDefaultWorkspaceSectionFor,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             const SizedBox(height: 12),
             _DetailLine(label: context.l10n.currentVault2, value: app.currentVaultName),
@@ -20879,9 +20983,9 @@ class _VaultSyncedPreferencesPanelState
               Container(
                 key: const ValueKey('vault_preference_conflict_repair'),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceRaised,
+                  color: context.palette.surfaceRaised,
                   border: Border.all(
-                    color: AppColors.orange.withValues(alpha: 0.55),
+                    color: context.palette.orange.withValues(alpha: 0.55),
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -20898,14 +21002,14 @@ class _VaultSyncedPreferencesPanelState
                       const SizedBox(height: 5),
                       Text(
                         context.l10n.compareEachValueAndRecordId,
-                        style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                        style: TextStyle(color: context.palette.muted, fontSize: 12),
                       ),
                       if (retainedRepairId != null) ...[
                         const SizedBox(height: 5),
                         Text(
                           context.l10n.aPreviousRepairAlreadySelectedRetainedrepairid(retainedRepairId),
-                          style: const TextStyle(
-                            color: AppColors.orange,
+                          style: TextStyle(
+                            color: context.palette.orange,
                             fontSize: 12,
                           ),
                         ),
@@ -20968,8 +21072,8 @@ class _VaultSyncedPreferencesPanelState
                       if (repairCandidates.isEmpty)
                         Text(
                           context.l10n.noVerifiedCandidateIsAvailableRetry3,
-                          style: const TextStyle(
-                            color: AppColors.orange,
+                          style: TextStyle(
+                            color: context.palette.orange,
                             fontSize: 12,
                           ),
                         ),
@@ -21058,7 +21162,7 @@ class _VaultSyncedPreferencesPanelState
                 child: Text(
                   error,
                   key: const ValueKey('vault_preference_error'),
-                  style: const TextStyle(color: AppColors.orange, fontSize: 12),
+                  style: TextStyle(color: context.palette.orange, fontSize: 12),
                 ),
               )
             else
@@ -21069,7 +21173,7 @@ class _VaultSyncedPreferencesPanelState
                     ? context.l10n.thisSettingIsStoredAsAn(app.currentVaultName)
                     : context.l10n.thisVaultIsReadOnlyYou,
                 style: TextStyle(
-                  color: canWrite ? AppColors.muted : AppColors.orange,
+                  color: canWrite ? context.palette.muted : context.palette.orange,
                   fontSize: 12,
                 ),
               ),
@@ -21081,7 +21185,7 @@ class _VaultSyncedPreferencesPanelState
                   message,
                   key: const ValueKey('vault_synced_preference_status'),
                   style: TextStyle(
-                    color: _saveSucceeded ? AppColors.teal : AppColors.orange,
+                    color: _saveSucceeded ? context.palette.teal : context.palette.orange,
                     fontSize: 12,
                   ),
                 ),
@@ -21335,8 +21439,8 @@ class _TerminalFontSizePreferenceSectionState
         const SizedBox(height: 6),
         Text(
           context.l10n.setTheSharedTerminalTextSize(_supportedSizes.join(', '), VaultPreferenceRecord.defaultTerminalFontSize),
-          style: const TextStyle(
-            color: AppColors.muted,
+          style: TextStyle(
+            color: context.palette.muted,
             fontSize: 12,
             height: 1.4,
           ),
@@ -21346,9 +21450,9 @@ class _TerminalFontSizePreferenceSectionState
           Container(
             key: const ValueKey('terminal_font_size_conflict'),
             decoration: BoxDecoration(
-              color: AppColors.surfaceRaised,
+              color: context.palette.surfaceRaised,
               border: Border.all(
-                color: AppColors.orange.withValues(alpha: .55),
+                color: context.palette.orange.withValues(alpha: .55),
               ),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -21363,14 +21467,14 @@ class _TerminalFontSizePreferenceSectionState
                 const SizedBox(height: 5),
                 Text(
                   context.l10n.reviewTheSizeAndRecordId,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.palette.muted, fontSize: 12),
                 ),
                 if (retainedRecordId != null) ...[
                   const SizedBox(height: 5),
                   Text(
                     context.l10n.aPreviousRepairSelectedRetainedrecordidRetry2(retainedRecordId),
-                    style: const TextStyle(
-                      color: AppColors.orange,
+                    style: TextStyle(
+                      color: context.palette.orange,
                       fontSize: 12,
                     ),
                   ),
@@ -21438,7 +21542,7 @@ class _TerminalFontSizePreferenceSectionState
                 if (conflictCandidates.isEmpty)
                   Text(
                     context.l10n.noVerifiedCandidateIsAvailableRetry2,
-                    style: const TextStyle(color: AppColors.orange, fontSize: 12),
+                    style: TextStyle(color: context.palette.orange, fontSize: 12),
                   ),
                 const SizedBox(height: 8),
                 FilledButton.icon(
@@ -21527,7 +21631,7 @@ class _TerminalFontSizePreferenceSectionState
             child: Text(
               context.l10n.vaultPreferenceDataNeedsAttentionBefore2,
               key: const ValueKey('terminal_font_size_error'),
-              style: const TextStyle(color: AppColors.orange, fontSize: 12),
+              style: TextStyle(color: context.palette.orange, fontSize: 12),
             ),
           ),
         ] else ...[
@@ -21539,7 +21643,7 @@ class _TerminalFontSizePreferenceSectionState
                 ? context.l10n.thisSettingIsEncryptedInCurrentvaultname(app.currentVaultName)
                 : context.l10n.thisVaultIsReadOnlyYou4,
             style: TextStyle(
-              color: canWrite ? AppColors.muted : AppColors.orange,
+              color: canWrite ? context.palette.muted : context.palette.orange,
               fontSize: 12,
             ),
           ),
@@ -21552,7 +21656,7 @@ class _TerminalFontSizePreferenceSectionState
               message,
               key: const ValueKey('vault_terminal_font_size_status'),
               style: TextStyle(
-                color: _saveSucceeded ? AppColors.teal : AppColors.orange,
+                color: _saveSucceeded ? context.palette.teal : context.palette.orange,
                 fontSize: 12,
               ),
             ),
@@ -21665,6 +21769,11 @@ class _TerminalThemePreferenceSectionState
     final startingVaultId = app.currentVaultId;
     final startingVaultName = app.currentVaultName;
     final startingVaultGeneration = app.vaultSelectionGeneration;
+    // A saved synced theme must become visible on this device, so a device
+    // palette overlay is cleared afterwards, unless the user picked a device
+    // palette while the save was running.
+    final palettes = TerminalPaletteController.of(context);
+    final paletteGeneration = palettes.selectionGeneration;
     setState(() {
       _saving = true;
       _message = null;
@@ -21690,6 +21799,7 @@ class _TerminalThemePreferenceSectionState
         });
         return;
       }
+      palettes.followSyncedIf(paletteGeneration);
       setState(() {
         _lastPersistedTheme = theme;
         _message =
@@ -21713,7 +21823,10 @@ class _TerminalThemePreferenceSectionState
           return;
         }
         final committed = app.terminalTheme == theme;
-        if (committed) _lastPersistedTheme = theme;
+        if (committed) {
+          _lastPersistedTheme = theme;
+          palettes.followSyncedIf(paletteGeneration);
+        }
         _message = committed
             ? context.l10n.savedLabelThisEncryptedPreferenceWill(theme.label)
             : context.l10n.couldNotSaveTerminalThemeCheck;
@@ -21789,16 +21902,16 @@ class _TerminalThemePreferenceSectionState
         const SizedBox(height: 6),
         Text(
           context.l10n.chooseTheTerminalPaletteSharedBy,
-          style: const TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
+          style: TextStyle(color: context.palette.muted, fontSize: 12, height: 1.4),
         ),
         if (app.hasTerminalThemePreferenceConflict) ...[
           const SizedBox(height: 10),
           Container(
             key: const ValueKey('terminal_theme_conflict'),
             decoration: BoxDecoration(
-              color: AppColors.surfaceRaised,
+              color: context.palette.surfaceRaised,
               border: Border.all(
-                color: AppColors.orange.withValues(alpha: .55),
+                color: context.palette.orange.withValues(alpha: .55),
               ),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -21813,14 +21926,14 @@ class _TerminalThemePreferenceSectionState
                 const SizedBox(height: 5),
                 Text(
                   context.l10n.reviewThePaletteAndRecordId,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.palette.muted, fontSize: 12),
                 ),
                 if (retainedRecordId != null) ...[
                   const SizedBox(height: 5),
                   Text(
                     context.l10n.aPreviousRepairSelectedRetainedrecordidRetry2(retainedRecordId),
-                    style: const TextStyle(
-                      color: AppColors.orange,
+                    style: TextStyle(
+                      color: context.palette.orange,
                       fontSize: 12,
                     ),
                   ),
@@ -21877,7 +21990,7 @@ class _TerminalThemePreferenceSectionState
                 if (conflictCandidates.isEmpty)
                   Text(
                     context.l10n.noVerifiedCandidateIsAvailableRetry2,
-                    style: const TextStyle(color: AppColors.orange, fontSize: 12),
+                    style: TextStyle(color: context.palette.orange, fontSize: 12),
                   ),
                 const SizedBox(height: 8),
                 FilledButton.icon(
@@ -21908,12 +22021,13 @@ class _TerminalThemePreferenceSectionState
         const SizedBox(height: 10),
         Text(
           context.l10n.terminalColorTheme,
-          style: const TextStyle(color: AppColors.muted, fontSize: 12),
+          style: TextStyle(color: context.palette.muted, fontSize: 12),
         ),
         const SizedBox(height: 6),
         TerminalSyncedThemeSelector(
           key: const ValueKey('vault_terminal_theme'),
           selected: _selectedTheme,
+          persisted: app.terminalTheme,
           onSelected: editingBlocked || _saving || _repairing
               ? null
               : (theme) => setState(() {
@@ -21944,7 +22058,7 @@ class _TerminalThemePreferenceSectionState
             child: Text(
               context.l10n.vaultPreferenceDataNeedsAttentionBefore2,
               key: const ValueKey('terminal_theme_error'),
-              style: const TextStyle(color: AppColors.orange, fontSize: 12),
+              style: TextStyle(color: context.palette.orange, fontSize: 12),
             ),
           ),
         ] else ...[
@@ -21956,7 +22070,7 @@ class _TerminalThemePreferenceSectionState
                 ? context.l10n.thisSettingIsEncryptedInCurrentvaultname(app.currentVaultName)
                 : context.l10n.thisVaultIsReadOnlyYou3,
             style: TextStyle(
-              color: canWrite ? AppColors.muted : AppColors.orange,
+              color: canWrite ? context.palette.muted : context.palette.orange,
               fontSize: 12,
             ),
           ),
@@ -21969,7 +22083,7 @@ class _TerminalThemePreferenceSectionState
               message,
               key: const ValueKey('vault_terminal_theme_status'),
               style: TextStyle(
-                color: _saveSucceeded ? AppColors.teal : AppColors.orange,
+                color: _saveSucceeded ? context.palette.teal : context.palette.orange,
                 fontSize: 12,
               ),
             ),
@@ -22278,7 +22392,7 @@ class _TerminalShortcutsPreferenceSectionState
         const SizedBox(height: 6),
         Text(
           context.l10n.bindingsSyncAsSemanticActionsMod,
-          style: const TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
+          style: TextStyle(color: context.palette.muted, fontSize: 12, height: 1.4),
         ),
         const SizedBox(height: 8),
         TerminalShortcutEditor(
@@ -22297,7 +22411,7 @@ class _TerminalShortcutsPreferenceSectionState
           Text(
             context.l10n.enterASupportedNonReservedChord,
             key: const ValueKey('terminal_shortcuts_validation_error'),
-            style: const TextStyle(color: AppColors.orange, fontSize: 12),
+            style: TextStyle(color: context.palette.orange, fontSize: 12),
           ),
         ],
         if (app.hasTerminalShortcutsPreferenceConflict) ...[
@@ -22305,9 +22419,9 @@ class _TerminalShortcutsPreferenceSectionState
           Container(
             key: const ValueKey('terminal_shortcuts_conflict'),
             decoration: BoxDecoration(
-              color: AppColors.surfaceRaised,
+              color: context.palette.surfaceRaised,
               border: Border.all(
-                color: AppColors.orange.withValues(alpha: .55),
+                color: context.palette.orange.withValues(alpha: .55),
               ),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -22322,14 +22436,14 @@ class _TerminalShortcutsPreferenceSectionState
                 const SizedBox(height: 5),
                 Text(
                   context.l10n.reviewEachSynchronizedBindingAndRecord,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.palette.muted, fontSize: 12),
                 ),
                 if (retainedRecordId != null) ...[
                   const SizedBox(height: 5),
                   Text(
                     context.l10n.aPreviousRepairSelectedRetainedrecordidRetry(retainedRecordId),
-                    style: const TextStyle(
-                      color: AppColors.orange,
+                    style: TextStyle(
+                      color: context.palette.orange,
                       fontSize: 12,
                     ),
                   ),
@@ -22379,7 +22493,7 @@ class _TerminalShortcutsPreferenceSectionState
                 if (conflictCandidates.isEmpty)
                   Text(
                     context.l10n.noVerifiedCandidateIsAvailableRetry,
-                    style: const TextStyle(color: AppColors.orange, fontSize: 12),
+                    style: TextStyle(color: context.palette.orange, fontSize: 12),
                   ),
                 const SizedBox(height: 8),
                 FilledButton.icon(
@@ -22451,7 +22565,7 @@ class _TerminalShortcutsPreferenceSectionState
           Text(
             context.l10n.vaultPreferenceDataNeedsAttentionBefore,
             key: const ValueKey('terminal_shortcuts_error'),
-            style: const TextStyle(color: AppColors.orange, fontSize: 12),
+            style: TextStyle(color: context.palette.orange, fontSize: 12),
           ),
         ] else ...[
           const SizedBox(height: 8),
@@ -22462,7 +22576,7 @@ class _TerminalShortcutsPreferenceSectionState
                 ? context.l10n.bindingsAreEncryptedInCurrentvaultnameAnd(app.currentVaultName)
                 : context.l10n.thisVaultIsReadOnlyYou2,
             style: TextStyle(
-              color: canWrite ? AppColors.muted : AppColors.orange,
+              color: canWrite ? context.palette.muted : context.palette.orange,
               fontSize: 12,
             ),
           ),
@@ -22475,7 +22589,7 @@ class _TerminalShortcutsPreferenceSectionState
               message,
               key: const ValueKey('terminal_shortcuts_status'),
               style: TextStyle(
-                color: _saveSucceeded ? AppColors.teal : AppColors.orange,
+                color: _saveSucceeded ? context.palette.teal : context.palette.orange,
                 fontSize: 12,
               ),
             ),
@@ -22634,7 +22748,7 @@ class _AccountRecoveryPanelState extends State<_AccountRecoveryPanel> {
                         style: Theme.of(dialogContext).textTheme.bodySmall
                             ?.copyWith(
                               color: copyFeedback!
-                                  ? AppColors.teal
+                                  ? context.palette.teal
                                   : Theme.of(dialogContext).colorScheme.error,
                             ),
                       ),
@@ -22761,7 +22875,7 @@ class _AccountRecoveryPanelState extends State<_AccountRecoveryPanel> {
               spacing: 9,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                const Icon(Icons.key_rounded, color: AppColors.lime),
+                Icon(Icons.key_rounded, color: context.palette.lime),
                 Text(
                   context.l10n.accountRecovery,
                   style: const TextStyle(fontWeight: FontWeight.w600),
@@ -22778,8 +22892,8 @@ class _AccountRecoveryPanelState extends State<_AccountRecoveryPanel> {
             const SizedBox(height: 7),
             Text(
               context.l10n.aRandomRecoveryCodeEncryptsA,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 height: 1.45,
                 fontSize: 12,
               ),
@@ -22788,23 +22902,23 @@ class _AccountRecoveryPanelState extends State<_AccountRecoveryPanel> {
               const SizedBox(height: 8),
               Text(
                 context.l10n.countOfCount2VaultKeyContexts(app.accountRecoveryPresentContexts.length, app.accountRecoveryRequiredContexts.length),
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.palette.muted, fontSize: 12),
               ),
             ],
             if (_unconfirmedCode) ...[
               const SizedBox(height: 8),
               Text(
                 context.l10n.thePreviousCodeWasNotConfirmed,
-                style: const TextStyle(color: AppColors.orange, fontSize: 12),
+                style: TextStyle(color: context.palette.orange, fontSize: 12),
               ),
             ],
             if (_error != null) ...[
               const SizedBox(height: 8),
-              Text(_error!, style: const TextStyle(color: AppColors.red)),
+              Text(_error!, style: TextStyle(color: context.palette.red)),
             ],
             if (_notice != null) ...[
               const SizedBox(height: 8),
-              Text(_notice!, style: const TextStyle(color: AppColors.lime)),
+              Text(_notice!, style: TextStyle(color: context.palette.lime)),
             ],
             const SizedBox(height: 10),
             Wrap(
@@ -22992,13 +23106,13 @@ class _AccountPasswordPanelState extends State<_AccountPasswordPanel> {
             const SizedBox(height: 8),
             Text(
               context.l10n.theServerReceivesPasswordDerivedVerifiers,
-              style: const TextStyle(color: AppColors.muted, height: 1.45),
+              style: TextStyle(color: context.palette.muted, height: 1.45),
             ),
             if (pending) ...[
               const SizedBox(height: 11),
               Text(
                 context.l10n.theLastResponseWasNotConfirmed,
-                style: const TextStyle(color: AppColors.orange, height: 1.45),
+                style: TextStyle(color: context.palette.orange, height: 1.45),
               ),
             ] else ...[
               const SizedBox(height: 11),
@@ -23022,16 +23136,16 @@ class _AccountPasswordPanelState extends State<_AccountPasswordPanel> {
               const SizedBox(height: 8),
               Text(
                 context.l10n.useAtLeast12CharactersIf,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.palette.muted, fontSize: 12),
               ),
             ],
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!, style: const TextStyle(color: AppColors.red)),
+              Text(_error!, style: TextStyle(color: context.palette.red)),
             ],
             if (_success != null) ...[
               const SizedBox(height: 10),
-              Text(_success!, style: const TextStyle(color: AppColors.teal)),
+              Text(_success!, style: TextStyle(color: context.palette.teal)),
             ],
             const SizedBox(height: 12),
             Align(
@@ -23111,7 +23225,7 @@ class _AccountDeletionPanel extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             context.l10n.accountDeletionImmediatelyRevokesAllSessions,
-            style: const TextStyle(color: AppColors.muted, height: 1.5),
+            style: TextStyle(color: context.palette.muted, height: 1.5),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
@@ -23120,7 +23234,7 @@ class _AccountDeletionPanel extends StatelessWidget {
                 : () => _deleteAccount(context, app),
             icon: const Icon(Icons.person_remove_outlined),
             label: Text(context.l10n.scheduleAccountDeletion),
-            style: OutlinedButton.styleFrom(foregroundColor: AppColors.orange),
+            style: OutlinedButton.styleFrom(foregroundColor: context.palette.orange),
           ),
         ],
       ),
@@ -23168,8 +23282,8 @@ class _KnownHostTrustPanel extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               context.l10n.fingerprintsApprovedDuringSshConnectionAre,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 12,
                 height: 1.5,
               ),
@@ -23180,10 +23294,10 @@ class _KnownHostTrustPanel extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.orange.withValues(alpha: 0.10),
+                  color: context.palette.orange.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: AppColors.orange.withValues(alpha: 0.5),
+                    color: context.palette.orange.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Text(
@@ -23196,7 +23310,7 @@ class _KnownHostTrustPanel extends StatelessWidget {
             if (records.isEmpty)
               Text(
                 context.l10n.noHostKeysHaveBeenApproved,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.palette.muted, fontSize: 12),
               )
             else
               ...records.map((record) {
@@ -23220,9 +23334,9 @@ class _KnownHostTrustPanel extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.fromLTRB(10, 7, 4, 7),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceSoft,
+                    color: context.palette.surfaceSoft,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.line),
+                    border: Border.all(color: context.palette.line),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -23236,10 +23350,10 @@ class _KnownHostTrustPanel extends StatelessWidget {
                               ? Icons.sync_outlined
                               : Icons.verified_user_outlined,
                           color: revoked
-                              ? AppColors.muted
+                              ? context.palette.muted
                               : pending
-                              ? AppColors.orange
-                              : AppColors.teal,
+                              ? context.palette.orange
+                              : context.palette.teal,
                           size: 18,
                         ),
                       ),
@@ -23269,8 +23383,8 @@ class _KnownHostTrustPanel extends StatelessWidget {
                                   '${record.algorithm} · $trustStatus',
                                   style: TextStyle(
                                     color: conflicted
-                                        ? AppColors.orange
-                                        : AppColors.muted,
+                                        ? context.palette.orange
+                                        : context.palette.muted,
                                     fontSize: 11,
                                   ),
                                 ),
@@ -23286,8 +23400,8 @@ class _KnownHostTrustPanel extends StatelessWidget {
                               if (revoked && revokedAt != null)
                                 Text(
                                   context.l10n.revokedFormat(DateFormat.yMMMd().add_Hm().format(revokedAt)),
-                                  style: const TextStyle(
-                                    color: AppColors.muted,
+                                  style: TextStyle(
+                                    color: context.palette.muted,
                                     fontSize: 10,
                                   ),
                                 ),
@@ -23325,7 +23439,7 @@ Future<void> _revokeKnownHostTrust(
   await showAppDialog<void>(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      icon: const Icon(Icons.key_off_outlined, color: AppColors.orange),
+      icon: Icon(Icons.key_off_outlined, color: context.palette.orange),
       title: Text(context.l10n.revokeSshHostKeyTrust2),
       content: Text(
         context.l10n.connectionsToEndpointUsingAlgorithmWill(record.endpoint, record.algorithm),
@@ -23583,7 +23697,7 @@ _snack(context, context.l10n.vaultArchiveImportedAndLocalState);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: error ? AppColors.orange : null,
+        backgroundColor: error ? context.palette.orange : null,
       ),
     );
   }
@@ -23607,7 +23721,7 @@ _snack(context, context.l10n.vaultArchiveImportedAndLocalState);
           const SizedBox(height: 7),
           Text(
             context.l10n.restoreIsRestrictedToTheSame,
-            style: const TextStyle(color: AppColors.muted, height: 1.45),
+            style: TextStyle(color: context.palette.muted, height: 1.45),
           ),
           if (_busy || app.archiveBusy) ...[
             const SizedBox(height: 12),
@@ -23623,7 +23737,7 @@ _snack(context, context.l10n.vaultArchiveImportedAndLocalState);
             const SizedBox(height: 10),
             Text(
               context.l10n.lastArchiveVerificationFailedAtArchivefailurephase('${app.archiveFailurePhase}'),
-              style: const TextStyle(color: AppColors.orange, fontSize: 12),
+              style: TextStyle(color: context.palette.orange, fontSize: 12),
             ),
           ],
           const SizedBox(height: 14),
@@ -23681,7 +23795,7 @@ Future<void> _deleteAccount(BuildContext context, AppController app) async {
             const SizedBox(height: 11),
             Text(
               context.l10n.ifYouOwnASharedVault,
-              style: const TextStyle(color: AppColors.muted, height: 1.5),
+              style: TextStyle(color: context.palette.muted, height: 1.5),
             ),
           ],
         ),
@@ -23800,7 +23914,7 @@ class _AccountDeletionConfirmationDialogState
             const SizedBox(height: 10),
             Text(
               _errorMessage!,
-              style: const TextStyle(color: AppColors.red, height: 1.4),
+              style: TextStyle(color: context.palette.red, height: 1.4),
             ),
           ],
         ],
@@ -23857,7 +23971,7 @@ Future<void> _deleteVault(
             const SizedBox(height: 10),
             Text(
               context.l10n.atTheDeadlineTheServerPurges,
-              style: const TextStyle(color: AppColors.muted, height: 1.5),
+              style: TextStyle(color: context.palette.muted, height: 1.5),
             ),
             if (app.pendingCount > 0) ...[
               const SizedBox(height: 10),
@@ -23925,7 +24039,7 @@ Future<void> _deleteVault(
                 const SizedBox(height: 10),
                 Text(
                   errorMessage!,
-                  style: const TextStyle(color: AppColors.red, height: 1.4),
+                  style: TextStyle(color: context.palette.red, height: 1.4),
                 ),
               ],
             ],
@@ -24050,7 +24164,7 @@ Future<void> _cancelVaultDeletion(
                 const SizedBox(height: 10),
                 Text(
                   errorMessage!,
-                  style: const TextStyle(color: AppColors.red, height: 1.4),
+                  style: TextStyle(color: context.palette.red, height: 1.4),
                 ),
               ],
             ],
@@ -24219,7 +24333,7 @@ Future<void> _inviteVaultMember(BuildContext context, AppController app) async {
               children: [
                 Text(
                   context.l10n.pasteTheRecipientsSignedPublicDevice,
-                  style: const TextStyle(color: AppColors.muted, height: 1.45),
+                  style: TextStyle(color: context.palette.muted, height: 1.45),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -24271,22 +24385,22 @@ Future<void> _inviteVaultMember(BuildContext context, AppController app) async {
                   const SizedBox(height: 5),
                   Text(
                     context.l10n.signingKeyFingerprintSha256,
-                    style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                    style: TextStyle(color: context.palette.muted, fontSize: 11),
                   ),
                   _PublicFingerprint(
                     app: app,
                     encodedKey: encodeBase64Url(recipient!.signingPublicKey),
-                    color: AppColors.lime,
+                    color: context.palette.lime,
                   ),
                   const SizedBox(height: 7),
                   Text(
                     context.l10n.encryptionKeyFingerprintSha256,
-                    style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                    style: TextStyle(color: context.palette.muted, fontSize: 11),
                   ),
                   _PublicFingerprint(
                     app: app,
                     encodedKey: encodeBase64Url(recipient!.encryptionPublicKey),
-                    color: AppColors.teal,
+                    color: context.palette.teal,
                   ),
                   const SizedBox(height: 13),
                   _MessageBoxLikeWarning(
@@ -24574,7 +24688,7 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
       context: context,
       useRootNavigator: true,
       builder: (dialogContext) => AlertDialog(
-        icon: const Icon(Icons.key_outlined, color: AppColors.lime),
+        icon: Icon(Icons.key_outlined, color: context.palette.lime),
         title: Text(context.l10n.rotateKeyAndChangeRole),
         content: SizedBox(
           width: appDialogWidth(context, 480),
@@ -24617,9 +24731,9 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
       context: context,
       useRootNavigator: true,
       builder: (dialogContext) => AlertDialog(
-        icon: const Icon(
+        icon: Icon(
           Icons.person_remove_alt_1_outlined,
-          color: AppColors.orange,
+          color: context.palette.orange,
         ),
         title: Text(pending ? context.l10n.revokeInvitation2 : context.l10n.revokeMemberAccess),
         content: SizedBox(
@@ -24637,7 +24751,7 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
             child: Text(context.l10n.keepAccess),
           ),
           FilledButton.icon(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.orange),
+            style: FilledButton.styleFrom(backgroundColor: context.palette.orange),
             onPressed: () => Navigator.pop(dialogContext, true),
             icon: const Icon(Icons.person_remove_alt_1_outlined),
             label: Text(context.l10n.revokeAndRotateKey),
@@ -24662,9 +24776,9 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
       context: context,
       useRootNavigator: true,
       builder: (dialogContext) => AlertDialog(
-        icon: const Icon(
+        icon: Icon(
           Icons.admin_panel_settings_outlined,
-          color: AppColors.orange,
+          color: context.palette.orange,
         ),
         title: Text(context.l10n.transferVaultOwnership),
         content: SizedBox(
@@ -24680,7 +24794,7 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
             child: Text(context.l10n.keepCurrentOwner),
           ),
           FilledButton.icon(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.orange),
+            style: FilledButton.styleFrom(backgroundColor: context.palette.orange),
             onPressed: () => Navigator.pop(dialogContext, true),
             icon: const Icon(Icons.swap_horiz_rounded),
             label: Text(context.l10n.transferAndRotateKey),
@@ -24756,7 +24870,7 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
             children: [
               Text(
                 context.l10n.everyRoleChangeAndRevocationCommits,
-                style: const TextStyle(color: AppColors.muted, height: 1.45),
+                style: TextStyle(color: context.palette.muted, height: 1.45),
               ),
               if (vault?.status == 'deleting' || vault?.canWrite != true) ...[
                 const SizedBox(height: 10),
@@ -24808,8 +24922,8 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
                                         invitationDetail,
                                       if (isActive) _presenceLine(userId),
                                     ].join('\n'),
-                                    style: const TextStyle(
-                                      color: AppColors.muted,
+                                    style: TextStyle(
+                                      color: context.palette.muted,
                                       height: 1.4,
                                     ),
                                   ),
@@ -24862,7 +24976,7 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
                                               : () =>
                                                     _transferOwnership(member),
                                           style: OutlinedButton.styleFrom(
-                                            foregroundColor: AppColors.orange,
+                                            foregroundColor: context.palette.orange,
                                           ),
                                           icon: const Icon(
                                             Icons.admin_panel_settings_outlined,
@@ -24879,7 +24993,7 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
                                             ? null
                                             : () => _revoke(member),
                                         style: OutlinedButton.styleFrom(
-                                          foregroundColor: AppColors.orange,
+                                          foregroundColor: context.palette.orange,
                                         ),
                                         icon: const Icon(
                                           Icons.person_remove_alt_1_outlined,
@@ -24925,14 +25039,14 @@ class _VaultMembersDialogState extends State<_VaultMembersDialog> {
             'stale' || 'reissue_required' => context.l10n.reissueRequired,
             _ => 'INVITED',
           },
-          color: AppColors.orange,
+          color: context.palette.orange,
         ),
-        'revoked' => _StatusDot(label: context.l10n.revoked2, color: AppColors.muted),
+        'revoked' => _StatusDot(label: context.l10n.revoked2, color: context.palette.muted),
         _ when role == 'owner' => _StatusDot(
           label: context.l10n.owner,
-          color: AppColors.lime,
+          color: context.palette.lime,
         ),
-        _ => _StatusDot(label: context.l10n.active, color: AppColors.teal),
+        _ => _StatusDot(label: context.l10n.active, color: context.palette.teal),
       };
 }
 
@@ -24953,7 +25067,7 @@ Future<void> _acceptVaultInvitation(
           children: [
             Text(
               context.l10n.useTheAccountAndApprovedDevice,
-              style: const TextStyle(color: AppColors.muted, height: 1.45),
+              style: TextStyle(color: context.palette.muted, height: 1.45),
             ),
             const SizedBox(height: 8),
             _DetailLine(
@@ -25019,8 +25133,8 @@ class _PageHeading extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: const TextStyle(
-            color: AppColors.muted,
+          style: TextStyle(
+            color: context.palette.muted,
             height: 1.45,
             fontSize: 12,
           ),
@@ -25088,7 +25202,7 @@ class _StatCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                  style: TextStyle(fontSize: 10, color: context.palette.muted),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -25133,10 +25247,10 @@ class _EmptyState extends StatelessWidget {
             width: AppDensity.of(context).isCompact ? 44 : 48,
             height: AppDensity.of(context).isCompact ? 44 : 48,
             decoration: BoxDecoration(
-              color: AppColors.surfaceRaised,
+              color: context.palette.surfaceRaised,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(icon, color: AppColors.muted),
+            child: Icon(icon, color: context.palette.muted),
           ),
           const SizedBox(height: 14),
           Text(
@@ -25152,8 +25266,8 @@ class _EmptyState extends StatelessWidget {
             child: Text(
               body,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 12,
                 height: 1.55,
               ),
@@ -25173,12 +25287,12 @@ class _Tag extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
     decoration: BoxDecoration(
-      color: AppColors.surfaceRaised,
+      color: context.palette.surfaceRaised,
       borderRadius: BorderRadius.circular(6),
     ),
     child: Text(
       label,
-      style: const TextStyle(fontSize: 9, color: AppColors.muted),
+      style: TextStyle(fontSize: 9, color: context.palette.muted),
     ),
   );
 }
@@ -25190,14 +25304,14 @@ class _Pill extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
     decoration: BoxDecoration(
-      color: AppColors.lime.withValues(alpha: .1),
+      color: context.palette.lime.withValues(alpha: .1),
       borderRadius: BorderRadius.circular(20),
     ),
     child: Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 8,
-        color: AppColors.lime,
+        color: context.palette.lime,
         fontWeight: FontWeight.w700,
         letterSpacing: .6,
       ),
@@ -25246,7 +25360,7 @@ class _DetailLine extends StatelessWidget {
           width: 150,
           child: Text(
             label,
-            style: const TextStyle(fontSize: 11, color: AppColors.muted),
+            style: TextStyle(fontSize: 11, color: context.palette.muted),
           ),
         ),
         Expanded(
@@ -25276,14 +25390,14 @@ class _PolicyRow extends StatelessWidget {
           icon,
           size: 16,
           color: icon == Icons.check_circle_outline
-              ? AppColors.teal
-              : AppColors.orange,
+              ? context.palette.teal
+              : context.palette.orange,
         ),
         const SizedBox(width: 9),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 12, color: AppColors.muted),
+            style: TextStyle(fontSize: 12, color: context.palette.muted),
           ),
         ),
       ],
@@ -25298,24 +25412,24 @@ class _MessageBoxLikeWarning extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(11),
     decoration: BoxDecoration(
-      color: AppColors.orange.withValues(alpha: .08),
-      border: Border.all(color: AppColors.orange.withValues(alpha: .25)),
+      color: context.palette.orange.withValues(alpha: .08),
+      border: Border.all(color: context.palette.orange.withValues(alpha: .25)),
       borderRadius: BorderRadius.circular(11),
     ),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(
+        Icon(
           Icons.warning_amber_rounded,
-          color: AppColors.orange,
+          color: context.palette.orange,
           size: 18,
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: AppColors.orange,
+            style: TextStyle(
+              color: context.palette.orange,
               fontSize: 11,
               height: 1.45,
             ),
@@ -25345,7 +25459,7 @@ Future<bool?> _confirmDelete(
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, true),
-        style: FilledButton.styleFrom(backgroundColor: AppColors.red),
+        style: FilledButton.styleFrom(backgroundColor: context.palette.red),
         child: Text(context.l10n.delete2),
       ),
     ],
@@ -25403,11 +25517,11 @@ String _topBarSyncLabel(String status, int pendingCount) {
   return _statusLabel(status);
 }
 
-Color _hostColor(int color) => switch (color % 4) {
-  0 => AppColors.lime,
-  1 => AppColors.teal,
-  2 => const Color(0xFF82A7FF),
-  _ => AppColors.orange,
+Color _hostColor(BuildContext context, int color) => switch (color % 4) {
+  0 => context.palette.lime,
+  1 => context.palette.teal,
+  2 => context.palette.hostBlue,
+  _ => context.palette.orange,
 };
 
 String _shortKey(String? key) {
@@ -25483,7 +25597,7 @@ void _snack(BuildContext context, String text, {bool error = false}) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(text),
-      backgroundColor: error ? const Color(0xFF602B2B) : null,
+      backgroundColor: error ? context.palette.errorContainer : null,
     ),
   );
 }
@@ -25494,6 +25608,9 @@ Future<void> _showCloudHostEditor(
   HostRecord? existing,
   HostProtocol initialProtocol = HostProtocol.ssh,
 }) async {
+  // Exact scope the editor (its groups/hosts/keychain/permissions) belongs to.
+  final vaultId = app.activeVault?.id, accountId = app.session?.accountId;
+  final api = app.api, selectionGeneration = app.vaultSelectionGeneration;
   final result = await showHostEditorPanel(
     context,
     existing: existing,
@@ -25516,7 +25633,15 @@ Future<void> _showCloudHostEditor(
     onValidate: app.validateHostReferences,
     canEdit: app.activeVault?.canWrite == true,
   );
-  if (result == null) return;
+  // Never save into a scope other than the one the editor opened for. Same
+  // IDs can survive a server/session change or a Vault A->B->A reselection.
+  if (result == null ||
+      app.activeVault?.id != vaultId ||
+      app.session?.accountId != accountId ||
+      !identical(app.api, api) ||
+      app.vaultSelectionGeneration != selectionGeneration) {
+    return;
+  }
   try {
     final original = existing;
     if (original == null) {

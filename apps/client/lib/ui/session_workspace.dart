@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'app_motion.dart';
 import 'app_density.dart';
+import 'wallpaper.dart';
 import '../l10n/l10n.dart';
 
 @immutable
@@ -685,7 +686,8 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  widget.child,
+                  // Stable slot: per-pane wallpaper (follow-splits mode).
+                  WallpaperPaneBackdrop(child: widget.child),
                   if (_hasActions)
                     Positioned(
                       top: 0,

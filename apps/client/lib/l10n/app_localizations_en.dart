@@ -16831,4 +16831,1439 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get telnetInputTooLarge =>
       'That paste is too large to send over Telnet (limit 1 MiB). Nothing was sent.';
+
+  @override
+  String get accountSettingsTitle => 'Account & sign-in';
+
+  @override
+  String get accountSettingsDescription =>
+      'See which account and server this device uses, manage the session, or sign in to an account.';
+
+  @override
+  String get accountSettingsCurrentMode => 'Current mode';
+
+  @override
+  String get accountSettingsModeAccount => 'Account and sync';
+
+  @override
+  String get accountSettingsModeLocal => 'Local only (this device)';
+
+  @override
+  String get accountSettingsSignedInAs => 'Signed in as';
+
+  @override
+  String get accountSettingsServer => 'Server';
+
+  @override
+  String get accountSettingsSessionUnlocked =>
+      'Signed in and unlocked on this device';
+
+  @override
+  String get accountSettingsActiveVault => 'Current Vault';
+
+  @override
+  String get accountSettingsNoVault => 'No Vault selected';
+
+  @override
+  String get accountSettingsInstanceAdmin => 'Instance administrator';
+
+  @override
+  String get accountSettingsSessionActions => 'Session';
+
+  @override
+  String get accountSettingsSecurityAction =>
+      'Password, two-factor and recovery';
+
+  @override
+  String get accountSettingsSignOutTitle => 'Sign out of this account?';
+
+  @override
+  String get accountSettingsSignOutBody =>
+      'Open sessions for this account on this device will close. Your encrypted Vault data stays on the server, and you will need your account password to sign in again.';
+
+  @override
+  String get accountSettingsSwitchToLocalTitle => 'Switch to local mode?';
+
+  @override
+  String get accountSettingsSwitchToLocalBody =>
+      'The account workspace and its open sessions on this device will close. Nothing from the account is copied into local profiles.';
+
+  @override
+  String get accountSettingsLocalNotSignedIn => 'Not signed in to an account';
+
+  @override
+  String get accountSettingsLocalSyncRequiresAccount =>
+      'Local profiles are stored only on this device and never sync. To sync hosts between devices, sign in to an account on your Atermius server.';
+
+  @override
+  String get accountSettingsSignIn => 'Sign in or connect to a server';
+
+  @override
+  String get accountSettingsSignInTitle => 'Open account sign-in?';
+
+  @override
+  String get accountSettingsSignInBody =>
+      'The local profile will be locked and its open sessions closed. Local hosts stay on this device and are not uploaded. After signing in you can review moving them in Data and migration.';
+
+  @override
+  String get themeSettingTitle => 'Theme';
+
+  @override
+  String themeSettingSystemResolved(Object theme) {
+    return 'Match system · currently $theme';
+  }
+
+  @override
+  String get themeOptionSystem => 'Match system';
+
+  @override
+  String get themeSettingDescription =>
+      'Changes the app\'s windows, menus and panels. Terminal colors and remote desktop images keep their own palette.';
+
+  @override
+  String get themeOptionLight => 'Light';
+
+  @override
+  String get themeOptionDark => 'Dark';
+
+  @override
+  String get themeSettingSaveFailed =>
+      'The theme changed for this session but couldn\'t be saved on this device.';
+
+  @override
+  String get syncSettingsPreferenceSaveFailed =>
+      'Couldn\'t save this choice on this device. It applies until the app restarts.';
+
+  @override
+  String get syncSettingsSyncingNow => 'Syncing…';
+
+  @override
+  String get syncSettingsDeviceOnly =>
+      'These sync choices apply only to this device.';
+
+  @override
+  String get syncSettingsPreferenceSaving => 'Saving…';
+
+  @override
+  String get syncSettingsAutomaticOffDescription =>
+      'Off on this device. Edits stay encrypted in this device\'s queue until you choose Sync now or turn automatic sync back on.';
+
+  @override
+  String get syncSettingsNever => 'Never';
+
+  @override
+  String get syncSettingsSignInRequired =>
+      'Sync needs an account sign-in on this device.';
+
+  @override
+  String syncSettingsResultNotCompleted(String status) {
+    return 'Sync didn\'t complete. Current status: $status.';
+  }
+
+  @override
+  String get syncSettingsWaitingToUpload => 'Waiting to upload';
+
+  @override
+  String syncSettingsResultFailed(String error) {
+    return 'Sync didn\'t complete: $error';
+  }
+
+  @override
+  String syncSettingsQueuedWhileOff(int count) {
+    return 'Encrypted changes queued on this device: $count. They upload when you choose Sync now or turn automatic sync on.';
+  }
+
+  @override
+  String get syncSettingsTitle => 'Sync';
+
+  @override
+  String syncSettingsResultPending(int count) {
+    return 'Sync ran, but encrypted changes are still waiting to upload: $count.';
+  }
+
+  @override
+  String get syncSettingsAutomaticTitle => 'Automatic sync';
+
+  @override
+  String get syncSettingsPreferenceLoading =>
+      'Loading this device\'s sync choice… Automatic sync starts after it loads.';
+
+  @override
+  String get syncSettingsPreferenceReadFailedShort =>
+      'Automatic sync stays paused until the saved choice can be read. Retry, or choose a setting to replace it.';
+
+  @override
+  String get syncSettingsResultCompleted =>
+      'Sync complete. Nothing is waiting to upload.';
+
+  @override
+  String get syncSettingsAutomaticOnDescription =>
+      'Edits upload and changes from other devices download in the background.';
+
+  @override
+  String get syncSettingsPreferenceReadFailed =>
+      'Paused: this device\'s saved choice couldn\'t be read.';
+
+  @override
+  String get syncSettingsSyncNow => 'Sync now';
+
+  @override
+  String get syncSettingsStatus => 'Status';
+
+  @override
+  String get settingsThemeShortcutsTitle => 'Shortcuts';
+
+  @override
+  String get settingsThemeShortcutsDescription =>
+      'Choose the keyboard shortcuts used in terminals.';
+
+  @override
+  String get settingsThemeTitle => 'Theme';
+
+  @override
+  String settingsThemeOverlayActive(String name) {
+    return 'Terminals on this device show the device palette $name instead. Selecting the saved theme, or saving another one, switches them back.';
+  }
+
+  @override
+  String get settingsThemeDescription =>
+      'Choose the app\'s light or dark mode, the terminal font size and terminal colors.';
+
+  @override
+  String get wallpaperSettingTitle => 'Wallpaper';
+
+  @override
+  String get wallpaperSettingDescription =>
+      'Shows an image behind the app and terminal panes. Only the image is blurred; text, controls, terminal text and remote desktop images stay sharp.';
+
+  @override
+  String get wallpaperChooseImage => 'Choose image…';
+
+  @override
+  String get wallpaperReplaceImage => 'Replace image…';
+
+  @override
+  String get wallpaperReset => 'Remove wallpaper';
+
+  @override
+  String get wallpaperNoImage => 'No wallpaper';
+
+  @override
+  String get wallpaperPreviewLabel => 'Wallpaper preview';
+
+  @override
+  String get wallpaperLoading => 'Loading wallpaper…';
+
+  @override
+  String get wallpaperMissing =>
+      'The saved wallpaper image is missing or can\'t be read. Choose a new image or remove the wallpaper.';
+
+  @override
+  String get wallpaperModeTitle => 'Layout';
+
+  @override
+  String get wallpaperModeWindow => 'Whole window';
+
+  @override
+  String get wallpaperModeWindowHint => 'One image spans the whole window.';
+
+  @override
+  String get wallpaperModePanes => 'Follow splits';
+
+  @override
+  String get wallpaperModePanesHint =>
+      'Each terminal pane shows its own copy of the image and follows resizing and reordering.';
+
+  @override
+  String wallpaperBlurValue(String value) {
+    return 'Blur: $value';
+  }
+
+  @override
+  String wallpaperErrorTooLarge(int limit) {
+    return 'This image is larger than $limit MB.';
+  }
+
+  @override
+  String get wallpaperErrorUnsupported =>
+      'Choose a PNG, JPEG or still WebP image.';
+
+  @override
+  String get wallpaperErrorCorrupt =>
+      'This image can\'t be read. It may be damaged.';
+
+  @override
+  String wallpaperErrorDimensions(int side) {
+    return 'This image is too large to use (up to $side px per side).';
+  }
+
+  @override
+  String get wallpaperErrorStorage =>
+      'The wallpaper couldn\'t be saved on this device.';
+
+  @override
+  String get wallpaperSaveFailed =>
+      'The wallpaper changed for this session but couldn\'t be saved on this device.';
+
+  @override
+  String get wallpaperDeviceNote =>
+      'A copy of the image is kept in this app\'s storage on this device. Separate windows use the same wallpaper when they open.';
+
+  @override
+  String get fileManagerPasteInto => 'Paste into folder';
+
+  @override
+  String get fileManagerPathCopied => 'Path copied';
+
+  @override
+  String fileManagerCopying(String name) {
+    return 'Copying \"$name\"…';
+  }
+
+  @override
+  String get fileManagerDropFailed =>
+      'The dropped items couldn\'t be read. Nothing was uploaded.';
+
+  @override
+  String get fileManagerOperationUnsupported =>
+      'This connection doesn\'t support file-manager operations.';
+
+  @override
+  String fileManagerDeleteConfirm(String name) {
+    return 'Delete \"$name\"? This can\'t be undone.';
+  }
+
+  @override
+  String get fileManagerOpen => 'Open';
+
+  @override
+  String get fileManagerPasteHere => 'Paste here';
+
+  @override
+  String fileManagerUploading(String name, int index, int count) {
+    return 'Uploading \"$name\" ($index/$count)…';
+  }
+
+  @override
+  String fileManagerMoveConfirm(String name, String folder) {
+    return 'Move \"$name\" into \"$folder\"?';
+  }
+
+  @override
+  String get fileManagerNameConflictTitle => 'Name already in use';
+
+  @override
+  String get fileManagerSkip => 'Skip';
+
+  @override
+  String fileManagerClipboardCut(String name) {
+    return 'Cut \"$name\" — paste in this tab to move it';
+  }
+
+  @override
+  String fileManagerRenameTitle(String name) {
+    return 'Rename \"$name\"';
+  }
+
+  @override
+  String fileManagerDeleteFolderConfirm(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'all $count items',
+      one: 'the 1 item',
+    );
+    return 'Delete folder \"$name\" and $_temp0 inside it? Symbolic links are removed, not followed. This can\'t be undone.';
+  }
+
+  @override
+  String get fileManagerClearClipboard => 'Clear file clipboard';
+
+  @override
+  String get fileManagerRename => 'Rename';
+
+  @override
+  String fileManagerErrorUnsupportedEntry(String name) {
+    return '\"$name\" is a symbolic link, special file or has an unsupported name. Folder copies don\'t follow or recreate these, so nothing was copied.';
+  }
+
+  @override
+  String get fileManagerKeepBoth => 'Keep both';
+
+  @override
+  String fileManagerErrorFileTooLarge(String name) {
+    return '\"$name\" is larger than the 1 GiB per-file copy limit.';
+  }
+
+  @override
+  String get fileManagerCut => 'Cut';
+
+  @override
+  String get fileManagerDropNothingAccepted =>
+      'Only files can be dropped here. Folders and links to other locations aren\'t uploaded.';
+
+  @override
+  String get fileManagerPaste => 'Paste';
+
+  @override
+  String get fileManagerErrorSourceChanged =>
+      'The item changed or disappeared on the server. Refresh and try again.';
+
+  @override
+  String fileManagerErrorExists(String name) {
+    return '\"$name\" already exists here. Nothing was replaced.';
+  }
+
+  @override
+  String get fileManagerMoveTitle => 'Move item';
+
+  @override
+  String get fileManagerErrorIntoItself =>
+      'A folder can\'t be moved or copied into itself.';
+
+  @override
+  String get fileManagerCancelled => 'Cancelled. Nothing else was changed.';
+
+  @override
+  String fileManagerDropTooManyFiles(int count) {
+    return 'Drop at most $count files at a time.';
+  }
+
+  @override
+  String get fileManagerBusy => 'Another file action is still running.';
+
+  @override
+  String get fileManagerCopyPath => 'Copy path';
+
+  @override
+  String fileManagerNameConflictKeepBoth(String name) {
+    return '\"$name\" already exists in this folder. Keep both by adding \"(copy)\" to the new name? The existing item won\'t be replaced.';
+  }
+
+  @override
+  String fileManagerMoving(String name) {
+    return 'Moving \"$name\"…';
+  }
+
+  @override
+  String fileManagerClipboardCopied(String name) {
+    return 'Copied \"$name\" — paste in this tab';
+  }
+
+  @override
+  String get fileManagerDropNeedsSftp =>
+      'Dropped files are uploaded with SFTP. Open this folder with SFTP to upload.';
+
+  @override
+  String fileManagerDeleting(String name) {
+    return 'Deleting \"$name\"…';
+  }
+
+  @override
+  String fileManagerUploadSummary(int uploaded, int skipped, int failed) {
+    return 'Uploaded $uploaded · skipped $skipped · failed $failed';
+  }
+
+  @override
+  String get fileManagerInvalidName =>
+      'Use a single name without slashes, backslashes or control characters.';
+
+  @override
+  String fileManagerErrorLimitExceeded(int entries, int depth) {
+    return 'This folder is too large for a file-manager action (limit $entries items, $depth levels deep or 2 GiB). Nothing was changed.';
+  }
+
+  @override
+  String get fileManagerCopy => 'Copy';
+
+  @override
+  String get fileManagerDropTargetChanged =>
+      'The file tab changed folder or connection while the drop was being checked. Nothing was uploaded; drop the files again.';
+
+  @override
+  String fileManagerUploadConflict(String name) {
+    return '\"$name\" already exists in this folder. Upload it under a new \"(copy)\" name or skip it? The existing file won\'t be replaced.';
+  }
+
+  @override
+  String get fileManagerMove => 'Move';
+
+  @override
+  String get homeAddSerialConsoleDetail =>
+      'Opens a COM port on this computer at 8N1. Nothing runs on the server.';
+
+  @override
+  String get homeSharingThisDevice => 'Online on this device';
+
+  @override
+  String get homeAddShell => 'Shell (system default)';
+
+  @override
+  String homeSharingSharedPresenceUnknown(int members) {
+    return 'Shared · $members members · status unknown';
+  }
+
+  @override
+  String get homeSharingLoading => 'Loading members…';
+
+  @override
+  String get homeAddTooltip =>
+      'Add a host or open a local Shell or serial Console';
+
+  @override
+  String get homeAddButton => 'Add';
+
+  @override
+  String get homeSharingLocalOnly => 'Local only';
+
+  @override
+  String get homeAddSerialConsolePort => 'Serial port';
+
+  @override
+  String homeSharingMore(int count, String names) {
+    return '$count more:\n$names';
+  }
+
+  @override
+  String get homeAddSerialConsoleOpen => 'Open Console';
+
+  @override
+  String homeSharingSharedOnline(int members, int online) {
+    return 'Shared · $members members · $online online';
+  }
+
+  @override
+  String get homeAddSerialConsoleBaud => 'Baud rate';
+
+  @override
+  String homeSharingYou(String name) {
+    return '$name (you)';
+  }
+
+  @override
+  String get homeAddSerialConsoleTitle => 'Open serial Console';
+
+  @override
+  String get homeAddSerialConsole => 'Serial Console (COM)…';
+
+  @override
+  String get homeSharingLocalDetail =>
+      'This local Profile is stored encrypted on this device only. It has no Vault members, nobody else can see it and no presence is sent. Sign in to an account Vault to share Hosts with other people.';
+
+  @override
+  String get homeAddSerialConsoleUnavailable =>
+      'Serial Console (Windows app only)';
+
+  @override
+  String get homeSharingPresenceUnknown => 'Status unknown';
+
+  @override
+  String get homeSharingOffline => 'Offline';
+
+  @override
+  String get homeSharingMembersUnavailable => 'Members not loaded';
+
+  @override
+  String get homeSharingLocalTooltip =>
+      'Local Profile on this device — not shared with anyone';
+
+  @override
+  String get homeSharingDetailsTooltip =>
+      'Show Vault members and online status';
+
+  @override
+  String get homeSharingIndividual => 'Only you';
+
+  @override
+  String get homeSharingOnline => 'Online';
+
+  @override
+  String sidebarResizeWidthValue(int width) {
+    return '$width px wide';
+  }
+
+  @override
+  String get sidebarResizeHint =>
+      'Drag, or use the Left and Right arrow keys, to change the width';
+
+  @override
+  String get sidebarResizeHandle => 'Resize sidebar';
+
+  @override
+  String get fileEditLaunchFailed => 'No application could open this file.';
+
+  @override
+  String get fileEditAtomicUnsupported =>
+      'This server can\'t replace files atomically, so nothing was uploaded.';
+
+  @override
+  String get fileEditUpload => 'Upload';
+
+  @override
+  String get fileEditLocalRejected =>
+      'The local copy is no longer a regular file in its private folder. Nothing was uploaded.';
+
+  @override
+  String get fileEditConflictTitle => 'Server copy changed';
+
+  @override
+  String fileEditUploadedChangedAgain(String name) {
+    return 'Uploaded \"$name\", but it changed again locally while sending. Upload again when ready.';
+  }
+
+  @override
+  String get fileEditBlockedType =>
+      'This file type could run when opened, so it isn\'t opened externally. Use Edit text or Download instead.';
+
+  @override
+  String get fileEditStatusRejected => 'Local copy rejected';
+
+  @override
+  String fileEditFooterTitle(int count) {
+    return 'Editing externally ($count)';
+  }
+
+  @override
+  String get fileEditOpenExternal => 'Open in external app';
+
+  @override
+  String get fileEditSessionChanged =>
+      'This file tab\'s connection closed or changed. Nothing was uploaded.';
+
+  @override
+  String get fileEditStatusChanged => 'Changed locally — not uploaded';
+
+  @override
+  String fileEditTooMany(int count) {
+    return 'At most $count files can be edited externally at once.';
+  }
+
+  @override
+  String get fileEditLocalMissing =>
+      'The local copy is missing. Nothing was uploaded.';
+
+  @override
+  String get fileEditNotRegular =>
+      'Only regular remote files can be edited externally.';
+
+  @override
+  String get fileEditStatusWatching => 'Watching for saves';
+
+  @override
+  String get fileEditIgnore => 'Ignore';
+
+  @override
+  String fileEditOpened(String name) {
+    return 'Opened \"$name\" externally. After saving there, choose Upload below.';
+  }
+
+  @override
+  String get fileEditTooLarge =>
+      'Only files up to 10 MiB can be edited externally.';
+
+  @override
+  String get fileEditLocalTooLarge =>
+      'The local copy is larger than 10 MiB. Nothing was uploaded.';
+
+  @override
+  String get fileEditStatusUploading => 'Uploading…';
+
+  @override
+  String get fileEditUnavailable =>
+      'External editing needs the desktop app. Use Edit text to change this file here.';
+
+  @override
+  String fileEditConflictMessage(String name) {
+    return '\"$name\" changed on the server after you opened it. Replace the server copy with your local version?';
+  }
+
+  @override
+  String get fileEditStatusConflict => 'Also changed on the server';
+
+  @override
+  String fileEditUploaded(String name) {
+    return 'Uploaded \"$name\".';
+  }
+
+  @override
+  String get fileEditStop => 'Stop watching';
+
+  @override
+  String get fileEditStatusFailed => 'Upload failed — local change kept';
+
+  @override
+  String get fileEditKeepLocal => 'Keep local';
+
+  @override
+  String get fileEditReplace => 'Replace server copy';
+
+  @override
+  String get cloudAccessShareMenu => 'Share…';
+
+  @override
+  String cloudAccessShareTitle(String name) {
+    return 'Share $name';
+  }
+
+  @override
+  String get cloudAccessClose => 'Close';
+
+  @override
+  String get cloudAccessTabMembers => 'Members & teams';
+
+  @override
+  String get cloudAccessTabLinks => 'Temporary links';
+
+  @override
+  String get cloudAccessGatewayTrustNotice =>
+      'Guests connect through this server\'s gateway. To make that possible, this Host\'s login is sealed to the server gateway key until the link is revoked or expires. The server operator (or anyone who compromises the server) can open it and see the session. Guests never receive the password or key through this feature, but can do anything the account allows inside the session. Use a dedicated low-privilege account.';
+
+  @override
+  String get cloudAccessLinksHeading => 'Links for this Host';
+
+  @override
+  String get cloudAccessNewLink => 'New link';
+
+  @override
+  String get cloudAccessNoLinks => 'No temporary links yet.';
+
+  @override
+  String get cloudAccessStatusActive => 'Active';
+
+  @override
+  String get cloudAccessStatusScheduled => 'Scheduled';
+
+  @override
+  String get cloudAccessStatusExpired => 'Expired';
+
+  @override
+  String get cloudAccessStatusPaused => 'Paused';
+
+  @override
+  String get cloudAccessStatusSuspended => 'Suspended';
+
+  @override
+  String get cloudAccessStatusRevoked => 'Revoked';
+
+  @override
+  String cloudAccessValidUntil(String time) {
+    return 'until $time';
+  }
+
+  @override
+  String cloudAccessRedemptionCount(String used, String max) {
+    return '$used/$max opened';
+  }
+
+  @override
+  String cloudAccessActiveSessions(String count) {
+    return '$count active';
+  }
+
+  @override
+  String get cloudAccessMore => 'More';
+
+  @override
+  String get cloudAccessActivity => 'Activity';
+
+  @override
+  String get cloudAccessPause => 'Pause';
+
+  @override
+  String get cloudAccessResume => 'Resume';
+
+  @override
+  String get cloudAccessRotate => 'New secret';
+
+  @override
+  String get cloudAccessRevoke => 'Revoke';
+
+  @override
+  String get cloudAccessRevokeLinkTitle => 'Revoke this link?';
+
+  @override
+  String get cloudAccessRevokeLinkMessage =>
+      'The link stops working immediately and active guest sessions are closed within seconds. Revocation cannot undo what guests already did on the Host.';
+
+  @override
+  String get cloudAccessRotateTitle => 'Issue a new secret?';
+
+  @override
+  String get cloudAccessRotateMessage =>
+      'The current URL stops working and its guests are disconnected. You get a new URL to send.';
+
+  @override
+  String get cloudAccessScheduleStart => 'Start later';
+
+  @override
+  String get cloudAccessStartsNow => 'Starts now';
+
+  @override
+  String get cloudAccessPickStart => 'Choose a start time';
+
+  @override
+  String get cloudAccessLifetime => 'Valid for';
+
+  @override
+  String get cloudAccessOneHour => '1 hour';
+
+  @override
+  String get cloudAccessOneDay => '24 hours';
+
+  @override
+  String get cloudAccessOneWeek => '7 days';
+
+  @override
+  String get cloudAccessCustom => 'Custom…';
+
+  @override
+  String cloudAccessWindowSummary(String start, String end, String utc) {
+    return 'From $start until $end (your local time; $utc UTC). The server clock decides.';
+  }
+
+  @override
+  String get cloudAccessEndBeforeStart =>
+      'The end must be after the start and in the future.';
+
+  @override
+  String get cloudAccessMaxRedemptions => 'Times the link can be opened';
+
+  @override
+  String get cloudAccessMaxRedemptionsHelp =>
+      'Default 1. Each browser that clicks Continue uses one.';
+
+  @override
+  String get cloudAccessUnlimited => 'Unlimited';
+
+  @override
+  String get cloudAccessRedemptionsRange =>
+      'Enter 1–1000, or choose Unlimited.';
+
+  @override
+  String get cloudAccessMaxConnections => 'Connection attempts (optional)';
+
+  @override
+  String get cloudAccessMaxConnectionsHelp =>
+      'Leave empty for no limit. Refused attempts do not count.';
+
+  @override
+  String get cloudAccessConnectionsRange =>
+      'Enter a positive number or leave it empty.';
+
+  @override
+  String get cloudAccessConcurrent => 'Simultaneous connections';
+
+  @override
+  String get cloudAccessViewOnly => 'View only';
+
+  @override
+  String get cloudAccessViewOnlyHelp =>
+      'Keyboard, mouse and paste are blocked by the server.';
+
+  @override
+  String get cloudAccessClipboardToRemote => 'Allow pasting into the Host';
+
+  @override
+  String get cloudAccessClipboardFromRemote => 'Allow copying from the Host';
+
+  @override
+  String get cloudAccessFilesLocked =>
+      'File transfer, drives, printing and recording are off for guests.';
+
+  @override
+  String get cloudAccessCustomSlug => 'Custom address (optional)';
+
+  @override
+  String get cloudAccessCustomSlugHelp =>
+      '3–48 lowercase letters, digits or hyphens. An address is not a password: anyone may guess it, so avoid sensitive words.';
+
+  @override
+  String get cloudAccessGuestTitle => 'Title shown to the guest (optional)';
+
+  @override
+  String get cloudAccessGuestTitleHelp =>
+      'Encrypted with the link secret; the server cannot read it.';
+
+  @override
+  String get cloudAccessCancel => 'Cancel';
+
+  @override
+  String get cloudAccessCreateLink => 'Create link';
+
+  @override
+  String get cloudAccessLinkReady => 'Link created';
+
+  @override
+  String get cloudAccessCopyLink => 'Copy link';
+
+  @override
+  String get cloudAccessCopied => 'Copied';
+
+  @override
+  String get cloudAccessShownOnce =>
+      'This is the only time the full link is shown. If it is lost, issue a new secret.';
+
+  @override
+  String get cloudAccessSendSafely =>
+      'Anyone with this link can open it. Send it only through a channel you trust; some mail scanners may open links and use them up.';
+
+  @override
+  String get cloudAccessDone => 'Done';
+
+  @override
+  String get cloudAccessBack => 'Back';
+
+  @override
+  String cloudAccessActivityFor(String link) {
+    return 'Activity · $link';
+  }
+
+  @override
+  String get cloudAccessGuestSessions => 'Guest sessions';
+
+  @override
+  String get cloudAccessNoSessions => 'Nobody has opened this link yet.';
+
+  @override
+  String cloudAccessSessionSince(String time) {
+    return 'Active since $time';
+  }
+
+  @override
+  String cloudAccessSessionEnded(String reason) {
+    return 'Ended ($reason)';
+  }
+
+  @override
+  String get cloudAccessTerminate => 'End session';
+
+  @override
+  String get cloudAccessAuditEvents => 'Audit (metadata only)';
+
+  @override
+  String get cloudAccessMembersExplainer =>
+      'Members get this Host through an encrypted Vault. Recipients receive the Vault key only after you confirm each of their devices; organization admins cannot obtain it on their own.';
+
+  @override
+  String get cloudAccessDedicatedVault => 'Share only this Host';
+
+  @override
+  String get cloudAccessDedicatedVaultHelp =>
+      'A new sharing Vault is created with a copy of this Host and only the items listed below. Other Hosts and credentials in your current Vault stay private.';
+
+  @override
+  String get cloudAccessSharingVaultName => 'Sharing Vault name';
+
+  @override
+  String cloudAccessSharingVaultDefaultName(String name) {
+    return 'Shared · $name';
+  }
+
+  @override
+  String get cloudAccessWillCopy => 'Will be copied:';
+
+  @override
+  String cloudAccessDependencyJumpHost(String name) {
+    return 'Jump host $name';
+  }
+
+  @override
+  String cloudAccessDependencyCredential(String name) {
+    return 'Credential $name';
+  }
+
+  @override
+  String cloudAccessDependencyKnownHost(String key) {
+    return 'Trusted host key $key';
+  }
+
+  @override
+  String cloudAccessDependencyGroup(String name) {
+    return 'Group $name is not copied';
+  }
+
+  @override
+  String cloudAccessBlockerMissingJump(String name) {
+    return '$name uses a jump host that is not in this Vault.';
+  }
+
+  @override
+  String cloudAccessBlockerMissingCredential(String name) {
+    return '$name references a credential that is not in this Vault.';
+  }
+
+  @override
+  String cloudAccessBlockerJumpLoop(String name) {
+    return '$name has a jump host loop.';
+  }
+
+  @override
+  String get cloudAccessConsentCopy =>
+      'I approve copying exactly these items into the new Vault.';
+
+  @override
+  String get cloudAccessCreateSharingVault => 'Create sharing Vault';
+
+  @override
+  String get cloudAccessWholeVaultHeading => 'Or share this whole Vault';
+
+  @override
+  String get cloudAccessWholeVaultHelp =>
+      'Recipients will see every Host, credential and snippet in the current Vault.';
+
+  @override
+  String get cloudAccessManageWholeVault => 'Manage whole-Vault access';
+
+  @override
+  String get cloudAccessAttachOrg => 'Choose an organization';
+
+  @override
+  String get cloudAccessAttachOrgHelp =>
+      'Grants refer to members and teams of one organization you manage.';
+
+  @override
+  String get cloudAccessAttach => 'Use';
+
+  @override
+  String get cloudAccessManageOrganizations => 'Manage organizations';
+
+  @override
+  String cloudAccessGrantsIn(String org) {
+    return 'Access in $org';
+  }
+
+  @override
+  String get cloudAccessAddGrant => 'Add member or team';
+
+  @override
+  String cloudAccessTeamLabel(String name) {
+    return 'Team $name';
+  }
+
+  @override
+  String get cloudAccessRoleViewer => 'Viewer';
+
+  @override
+  String get cloudAccessRoleEditor => 'Editor';
+
+  @override
+  String get cloudAccessRemove => 'Remove';
+
+  @override
+  String get cloudAccessKeyDistribution => 'Waiting for keys';
+
+  @override
+  String get cloudAccessKeyDistributionHelp =>
+      'Compare each fingerprint with the recipient through another channel before delivering the Vault key.';
+
+  @override
+  String get cloudAccessWaitingForDevice =>
+      'Waiting for the recipient to open Organizations on a device';
+
+  @override
+  String get cloudAccessWaitingForOwner => 'Ready for you to confirm';
+
+  @override
+  String get cloudAccessWaitingForRecipient =>
+      'Key sent; waiting for the recipient to accept';
+
+  @override
+  String get cloudAccessRoleDiffers =>
+      'Signed role differs from the grant; rotate or re-invite to change it';
+
+  @override
+  String cloudAccessDeviceFingerprint(String fingerprint) {
+    return 'Device $fingerprint';
+  }
+
+  @override
+  String get cloudAccessConfirmFingerprintTitle => 'Confirm this device';
+
+  @override
+  String cloudAccessConfirmFingerprintMessage(String user, String fingerprint) {
+    return 'Deliver the Vault key to $user\'s device $fingerprint? Only continue if $user confirmed this fingerprint to you.';
+  }
+
+  @override
+  String get cloudAccessDeliverKey => 'Deliver key';
+
+  @override
+  String get cloudAccessRemovalPending =>
+      'Server access is already blocked. Rotate the Vault key to remove this member cryptographically, and change any credentials they have seen.';
+
+  @override
+  String get cloudAccessKeepDirect => 'Keep as direct member';
+
+  @override
+  String get cloudAccessRotateToRemove => 'Rotate key';
+
+  @override
+  String get cloudAccessRestrictedToViewer =>
+      'Limited to viewing until the signed role is updated';
+
+  @override
+  String get cloudAccessOrganizations => 'Organizations';
+
+  @override
+  String get cloudAccessOrganizationsSubtitle =>
+      'Members, teams and invitations';
+
+  @override
+  String get cloudAccessOrganizationsExplainer =>
+      'Organization names, members, roles and teams are visible to this server. Joining an organization never gives you a Vault key by itself.';
+
+  @override
+  String get cloudAccessPendingJoin =>
+      'You opened an organization invitation — review it';
+
+  @override
+  String get cloudAccessJoinOrganization => 'Join an organization';
+
+  @override
+  String get cloudAccessJoinLinkField => 'Invitation link';
+
+  @override
+  String get cloudAccessJoinInvalid => 'This is not a valid invitation link.';
+
+  @override
+  String get cloudAccessReview => 'Review';
+
+  @override
+  String cloudAccessJoinSummary(String inviter, String role) {
+    return 'Invited by $inviter as $role';
+  }
+
+  @override
+  String get cloudAccessJoin => 'Join';
+
+  @override
+  String get cloudAccessJoined =>
+      'Joined. Vault owners still need to confirm your device before you receive any shared Vault.';
+
+  @override
+  String get cloudAccessSharedVaultKeys => 'Shared Vault keys';
+
+  @override
+  String get cloudAccessSharedVaultKeysHelp =>
+      'Publishes this device\'s public keys and accepts Vaults whose owners confirmed this device.';
+
+  @override
+  String get cloudAccessCheckDeliveries => 'Check for shared Vaults';
+
+  @override
+  String cloudAccessDeliveriesAccepted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count shared Vaults added.',
+      one: '1 shared Vault added.',
+      zero: 'No new shared Vaults.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cloudAccessYourOrganizations => 'Your organizations';
+
+  @override
+  String get cloudAccessNewOrganization => 'New organization';
+
+  @override
+  String get cloudAccessOrganizationName => 'Organization name';
+
+  @override
+  String get cloudAccessNoOrganizations =>
+      'You are not in any organization yet.';
+
+  @override
+  String cloudAccessMemberCount(String count) {
+    return '$count members';
+  }
+
+  @override
+  String get cloudAccessOrgRoleOwner => 'Owner';
+
+  @override
+  String get cloudAccessOrgRoleAdmin => 'Admin';
+
+  @override
+  String get cloudAccessOrgRoleMember => 'Member';
+
+  @override
+  String get cloudAccessSave => 'Save';
+
+  @override
+  String get cloudAccessMembers => 'Members';
+
+  @override
+  String get cloudAccessInviteMember => 'Invite';
+
+  @override
+  String get cloudAccessInviteUsername => 'Username (optional)';
+
+  @override
+  String get cloudAccessInviteUsernameHelp =>
+      'Limit the invitation to one existing account. New people first need an account invitation from an instance administrator.';
+
+  @override
+  String get cloudAccessRole => 'Role';
+
+  @override
+  String get cloudAccessInitialTeam => 'Team';
+
+  @override
+  String get cloudAccessNoTeam => 'No team';
+
+  @override
+  String get cloudAccessCreateInvitation => 'Create invitation';
+
+  @override
+  String get cloudAccessInvitationReady => 'Invitation link created';
+
+  @override
+  String get cloudAccessCopyInvitation => 'Copy invitation link';
+
+  @override
+  String get cloudAccessLeave => 'Leave';
+
+  @override
+  String get cloudAccessRemoveMemberTitle => 'Remove from organization?';
+
+  @override
+  String get cloudAccessRemoveMemberMessage =>
+      'Access through organization grants is blocked immediately. Vault owners should then rotate keys of affected Vaults.';
+
+  @override
+  String get cloudAccessTeams => 'Teams';
+
+  @override
+  String get cloudAccessNewTeam => 'New team';
+
+  @override
+  String get cloudAccessTeamName => 'Team name';
+
+  @override
+  String cloudAccessTeamMembers(String team) {
+    return 'Members of $team';
+  }
+
+  @override
+  String get cloudAccessInvitations => 'Invitations';
+
+  @override
+  String get cloudAccessAnyAccount => 'Any account';
+
+  @override
+  String get cloudAccessErrorGeneric => 'The request could not be completed.';
+
+  @override
+  String get cloudAccessErrorLinksUnavailable =>
+      'Temporary links are not configured on this server.';
+
+  @override
+  String get cloudAccessErrorOrganizationsUnavailable =>
+      'Organizations are not enabled on this server.';
+
+  @override
+  String get cloudAccessErrorProtocolUnavailable =>
+      'This Host\'s protocol cannot be shared on this server.';
+
+  @override
+  String get cloudAccessErrorOwnerRequired =>
+      'Only the Vault owner can share through links.';
+
+  @override
+  String get cloudAccessErrorJumpHost =>
+      'Hosts that use a jump host cannot be shared through the gateway.';
+
+  @override
+  String get cloudAccessErrorPortForward =>
+      'Hosts with port forwarding profiles cannot be shared through the gateway.';
+
+  @override
+  String get cloudAccessErrorHostKeyRequired =>
+      'Connect once and trust this Host\'s SSH key before sharing it.';
+
+  @override
+  String get cloudAccessErrorCertificateRequired =>
+      'Connect once and trust this Host\'s RDP certificate before sharing it.';
+
+  @override
+  String get cloudAccessErrorLoginRequired =>
+      'Save a login on this Host before sharing it.';
+
+  @override
+  String get cloudAccessErrorHostChanged =>
+      'The Host changed or is not synchronized yet. Sync and try again.';
+
+  @override
+  String get cloudAccessErrorPlanBlocked =>
+      'Resolve the listed problems first.';
+
+  @override
+  String get cloudAccessErrorTargetDenied =>
+      'This Host\'s address is not allowed by the server\'s sharing policy.';
+
+  @override
+  String get cloudAccessErrorSlugTaken => 'This address is not available.';
+
+  @override
+  String get cloudAccessErrorSlugInvalid =>
+      'Use 3–48 lowercase letters, digits or inner hyphens.';
+
+  @override
+  String get cloudAccessErrorTooManyLinks =>
+      'Too many active links. Revoke some first.';
+
+  @override
+  String get cloudAccessErrorInvalidOptions =>
+      'These link options are not allowed by the server.';
+
+  @override
+  String get cloudAccessErrorOrgRoleRequired =>
+      'Organization owner or admin role is required.';
+
+  @override
+  String get cloudAccessErrorOrgCreationRestricted =>
+      'Only instance administrators can create organizations here.';
+
+  @override
+  String get cloudAccessErrorLastOwner =>
+      'An organization needs at least one owner.';
+
+  @override
+  String get cloudAccessErrorInvitationUnavailable =>
+      'This invitation is not available.';
+
+  @override
+  String get cloudAccessErrorAccountNotFound =>
+      'No active account has this username.';
+
+  @override
+  String get cloudAccessErrorRateLimited =>
+      'Too many attempts. Wait a moment and try again.';
+
+  @override
+  String get cloudAccessGuestWindowTitle => 'Atermius shared access';
+
+  @override
+  String get cloudAccessGuestLanding =>
+      'You received an Atermius temporary access link';
+
+  @override
+  String get cloudAccessGuestLandingHelp =>
+      'Nothing happens until you continue. Continuing may use one of the link\'s allowed openings.';
+
+  @override
+  String get cloudAccessGuestContinue => 'Continue';
+
+  @override
+  String get cloudAccessGuestHeading => 'Shared access';
+
+  @override
+  String cloudAccessGuestValidUntil(String time) {
+    return 'This session ends $time';
+  }
+
+  @override
+  String get cloudAccessGuestViewOnly => 'View only';
+
+  @override
+  String get cloudAccessGuestInteractive => 'Interactive';
+
+  @override
+  String get cloudAccessGuestClipboardOn => 'Clipboard allowed';
+
+  @override
+  String get cloudAccessGuestClipboardOff => 'Clipboard off';
+
+  @override
+  String get cloudAccessGuestConnect => 'Connect';
+
+  @override
+  String get cloudAccessGuestDisconnect => 'Disconnect';
+
+  @override
+  String get cloudAccessGuestLeave => 'End my access';
+
+  @override
+  String get cloudAccessGuestLeft =>
+      'Your access ended. You can close this tab.';
+
+  @override
+  String get cloudAccessGuestTrustNote =>
+      'This session runs through the sharer\'s Atermius server, which can see it.';
+
+  @override
+  String get cloudAccessGuestUnavailable => 'This link is not available.';
+
+  @override
+  String get cloudAccessGuestAskOwner =>
+      'Ask the person who shared it to send a new link.';
+
+  @override
+  String get cloudAccessGuestNotYetValid => 'This link is not valid yet.';
+
+  @override
+  String get cloudAccessGuestExpired => 'This link has expired.';
+
+  @override
+  String get cloudAccessGuestExhausted => 'This link has already been used.';
+
+  @override
+  String get cloudAccessGuestSuspended =>
+      'This link was paused or revoked by its owner.';
+
+  @override
+  String get cloudAccessGuestSessionEnded => 'Your session has ended.';
+
+  @override
+  String get cloudAccessGuestBusy =>
+      'Too many connections right now. Try again shortly.';
+
+  @override
+  String get cloudAccessGuestExpiringSoon => 'Ends in 5 minutes';
+
+  @override
+  String get cloudAccessGuestClosed => 'The connection closed.';
+
+  @override
+  String get cloudAccessGuestClosedRevoked =>
+      'Access was revoked or changed by the owner.';
+
+  @override
+  String get cloudAccessGuestClosedExpired => 'The access time ended.';
+
+  @override
+  String get cloudAccessGuestClosedTarget =>
+      'The Host could not be reached or did not match its trusted identity.';
+
+  @override
+  String get cloudAccessGuestClosedProtocol =>
+      'The connection was closed because of an unexpected message.';
+
+  @override
+  String cloudAccessApplyRole(String role) {
+    return 'Make $role';
+  }
+
+  @override
+  String get cloudAccessApplyRoleTitle => 'Change this member\'s role?';
+
+  @override
+  String cloudAccessApplyRoleMessage(String user, String role) {
+    return '$user becomes $role. This signs a new membership manifest and rotates the Vault key from this device.';
+  }
+
+  @override
+  String get cloudAccessErrorScopeChanged =>
+      'The account, server or selected Vault changed during this action. Nothing was sent; try again.';
+
+  @override
+  String get cloudAccessErrorNotSynced =>
+      'The sharing Vault was created but is not synchronized yet. Sync it before adding members.';
+
+  @override
+  String get cloudAccessErrorScopeEndedCommitted =>
+      'The account, server or selected Vault changed after the server had already completed part of this action (for example, created the Vault or the invitation). That part was not undone; review it before trying again.';
 }

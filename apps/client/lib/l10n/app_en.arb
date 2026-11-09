@@ -13028,5 +13028,1893 @@
   "telnetQuickConnectNoUser": "Telnet doesn't send a user name automatically. Use: telnet host[:port] and log in in the terminal.",
   "@telnetQuickConnectNoUser": {},
   "telnetInputTooLarge": "That paste is too large to send over Telnet (limit 1 MiB). Nothing was sent.",
-  "@telnetInputTooLarge": {}
+  "@telnetInputTooLarge": {},
+  "accountSettingsTitle": "Account & sign-in",
+  "@accountSettingsTitle": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsDescription": "See which account and server this device uses, manage the session, or sign in to an account.",
+  "@accountSettingsDescription": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsCurrentMode": "Current mode",
+  "@accountSettingsCurrentMode": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsModeAccount": "Account and sync",
+  "@accountSettingsModeAccount": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsModeLocal": "Local only (this device)",
+  "@accountSettingsModeLocal": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSignedInAs": "Signed in as",
+  "@accountSettingsSignedInAs": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsServer": "Server",
+  "@accountSettingsServer": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSessionUnlocked": "Signed in and unlocked on this device",
+  "@accountSettingsSessionUnlocked": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsActiveVault": "Current Vault",
+  "@accountSettingsActiveVault": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsNoVault": "No Vault selected",
+  "@accountSettingsNoVault": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsInstanceAdmin": "Instance administrator",
+  "@accountSettingsInstanceAdmin": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSessionActions": "Session",
+  "@accountSettingsSessionActions": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSecurityAction": "Password, two-factor and recovery",
+  "@accountSettingsSecurityAction": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSignOutTitle": "Sign out of this account?",
+  "@accountSettingsSignOutTitle": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSignOutBody": "Open sessions for this account on this device will close. Your encrypted Vault data stays on the server, and you will need your account password to sign in again.",
+  "@accountSettingsSignOutBody": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSwitchToLocalTitle": "Switch to local mode?",
+  "@accountSettingsSwitchToLocalTitle": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSwitchToLocalBody": "The account workspace and its open sessions on this device will close. Nothing from the account is copied into local profiles.",
+  "@accountSettingsSwitchToLocalBody": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsLocalNotSignedIn": "Not signed in to an account",
+  "@accountSettingsLocalNotSignedIn": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsLocalSyncRequiresAccount": "Local profiles are stored only on this device and never sync. To sync hosts between devices, sign in to an account on your Atermius server.",
+  "@accountSettingsLocalSyncRequiresAccount": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSignIn": "Sign in or connect to a server",
+  "@accountSettingsSignIn": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSignInTitle": "Open account sign-in?",
+  "@accountSettingsSignInTitle": {
+    "description": "Account settings UI text."
+  },
+  "accountSettingsSignInBody": "The local profile will be locked and its open sessions closed. Local hosts stay on this device and are not uploaded. After signing in you can review moving them in Data and migration.",
+  "@accountSettingsSignInBody": {
+    "description": "Account settings UI text."
+  },
+  "@themeOptionDark": {
+    "description": "App-owned UI text."
+  },
+  "@themeSettingDescription": {
+    "description": "App-owned UI text."
+  },
+  "themeSettingTitle": "Theme",
+  "@themeSettingSaveFailed": {
+    "description": "App-owned UI text."
+  },
+  "@themeSettingTitle": {
+    "description": "App-owned UI text."
+  },
+  "themeSettingSystemResolved": "Match system · currently {theme}",
+  "themeOptionSystem": "Match system",
+  "themeSettingDescription": "Changes the app's windows, menus and panels. Terminal colors and remote desktop images keep their own palette.",
+  "@themeOptionLight": {
+    "description": "App-owned UI text."
+  },
+  "@themeOptionSystem": {
+    "description": "App-owned UI text."
+  },
+  "themeOptionLight": "Light",
+  "themeOptionDark": "Dark",
+  "themeSettingSaveFailed": "The theme changed for this session but couldn't be saved on this device.",
+  "@themeSettingSystemResolved": {
+    "description": "App-owned UI text.",
+    "placeholders": {
+      "theme": {
+        "type": "Object"
+      }
+    }
+  },
+  "syncSettingsPreferenceSaveFailed": "Couldn't save this choice on this device. It applies until the app restarts.",
+  "@syncSettingsSyncNow": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsPreferenceReadFailedShort": {
+    "description": "Sync settings UI text."
+  },
+  "syncSettingsSyncingNow": "Syncing…",
+  "syncSettingsDeviceOnly": "These sync choices apply only to this device.",
+  "syncSettingsPreferenceSaving": "Saving…",
+  "@syncSettingsWaitingToUpload": {
+    "description": "Sync settings UI text."
+  },
+  "syncSettingsAutomaticOffDescription": "Off on this device. Edits stay encrypted in this device's queue until you choose Sync now or turn automatic sync back on.",
+  "syncSettingsNever": "Never",
+  "syncSettingsSignInRequired": "Sync needs an account sign-in on this device.",
+  "syncSettingsResultNotCompleted": "Sync didn't complete. Current status: {status}.",
+  "syncSettingsWaitingToUpload": "Waiting to upload",
+  "@syncSettingsPreferenceLoading": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsStatus": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsTitle": {
+    "description": "Sync settings UI text."
+  },
+  "syncSettingsResultFailed": "Sync didn't complete: {error}",
+  "syncSettingsQueuedWhileOff": "Encrypted changes queued on this device: {count}. They upload when you choose Sync now or turn automatic sync on.",
+  "@syncSettingsSignInRequired": {
+    "description": "Sync settings UI text."
+  },
+  "syncSettingsTitle": "Sync",
+  "syncSettingsResultPending": "Sync ran, but encrypted changes are still waiting to upload: {count}.",
+  "@syncSettingsPreferenceReadFailed": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsResultCompleted": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsSyncingNow": {
+    "description": "Sync settings UI text."
+  },
+  "syncSettingsAutomaticTitle": "Automatic sync",
+  "syncSettingsPreferenceLoading": "Loading this device's sync choice… Automatic sync starts after it loads.",
+  "@syncSettingsAutomaticTitle": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsDeviceOnly": {
+    "description": "Sync settings UI text."
+  },
+  "syncSettingsPreferenceReadFailedShort": "Automatic sync stays paused until the saved choice can be read. Retry, or choose a setting to replace it.",
+  "@syncSettingsQueuedWhileOff": {
+    "description": "Sync settings UI text.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@syncSettingsPreferenceSaving": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsResultPending": {
+    "description": "Sync settings UI text.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@syncSettingsResultNotCompleted": {
+    "description": "Sync settings UI text.",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "syncSettingsResultCompleted": "Sync complete. Nothing is waiting to upload.",
+  "syncSettingsAutomaticOnDescription": "Edits upload and changes from other devices download in the background.",
+  "@syncSettingsPreferenceSaveFailed": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsAutomaticOnDescription": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsNever": {
+    "description": "Sync settings UI text."
+  },
+  "@syncSettingsAutomaticOffDescription": {
+    "description": "Sync settings UI text."
+  },
+  "syncSettingsPreferenceReadFailed": "Paused: this device's saved choice couldn't be read.",
+  "syncSettingsSyncNow": "Sync now",
+  "syncSettingsStatus": "Status",
+  "@syncSettingsResultFailed": {
+    "description": "Sync settings UI text.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsThemeShortcutsTitle": "Shortcuts",
+  "@settingsThemeShortcutsTitle": {
+    "description": "Settings Theme/Shortcuts categories (settings worker)."
+  },
+  "settingsThemeShortcutsDescription": "Choose the keyboard shortcuts used in terminals.",
+  "@settingsThemeOverlayActive": {
+    "description": "Settings Theme/Shortcuts categories (settings worker).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@settingsThemeDescription": {
+    "description": "Settings Theme/Shortcuts categories (settings worker)."
+  },
+  "settingsThemeTitle": "Theme",
+  "settingsThemeOverlayActive": "Terminals on this device show the device palette {name} instead. Selecting the saved theme, or saving another one, switches them back.",
+  "@settingsThemeTitle": {
+    "description": "Settings Theme/Shortcuts categories (settings worker)."
+  },
+  "settingsThemeDescription": "Choose the app's light or dark mode, the terminal font size and terminal colors.",
+  "@settingsThemeShortcutsDescription": {
+    "description": "Settings Theme/Shortcuts categories (settings worker)."
+  },
+  "wallpaperSettingTitle": "Wallpaper",
+  "@wallpaperSettingTitle": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperSettingDescription": "Shows an image behind the app and terminal panes. Only the image is blurred; text, controls, terminal text and remote desktop images stay sharp.",
+  "@wallpaperSettingDescription": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperChooseImage": "Choose image…",
+  "@wallpaperChooseImage": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperReplaceImage": "Replace image…",
+  "@wallpaperReplaceImage": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperReset": "Remove wallpaper",
+  "@wallpaperReset": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperNoImage": "No wallpaper",
+  "@wallpaperNoImage": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperPreviewLabel": "Wallpaper preview",
+  "@wallpaperPreviewLabel": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperLoading": "Loading wallpaper…",
+  "@wallpaperLoading": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperMissing": "The saved wallpaper image is missing or can't be read. Choose a new image or remove the wallpaper.",
+  "@wallpaperMissing": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperModeTitle": "Layout",
+  "@wallpaperModeTitle": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperModeWindow": "Whole window",
+  "@wallpaperModeWindow": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperModeWindowHint": "One image spans the whole window.",
+  "@wallpaperModeWindowHint": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperModePanes": "Follow splits",
+  "@wallpaperModePanes": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperModePanesHint": "Each terminal pane shows its own copy of the image and follows resizing and reordering.",
+  "@wallpaperModePanesHint": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperBlurValue": "Blur: {value}",
+  "@wallpaperBlurValue": {
+    "description": "Theme settings wallpaper card (wallpaper worker).",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "wallpaperErrorTooLarge": "This image is larger than {limit} MB.",
+  "@wallpaperErrorTooLarge": {
+    "description": "Theme settings wallpaper card (wallpaper worker).",
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "wallpaperErrorUnsupported": "Choose a PNG, JPEG or still WebP image.",
+  "@wallpaperErrorUnsupported": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperErrorCorrupt": "This image can't be read. It may be damaged.",
+  "@wallpaperErrorCorrupt": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperErrorDimensions": "This image is too large to use (up to {side} px per side).",
+  "@wallpaperErrorDimensions": {
+    "description": "Theme settings wallpaper card (wallpaper worker).",
+    "placeholders": {
+      "side": {
+        "type": "int"
+      }
+    }
+  },
+  "wallpaperErrorStorage": "The wallpaper couldn't be saved on this device.",
+  "@wallpaperErrorStorage": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperSaveFailed": "The wallpaper changed for this session but couldn't be saved on this device.",
+  "@wallpaperSaveFailed": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "wallpaperDeviceNote": "A copy of the image is kept in this app's storage on this device. Separate windows use the same wallpaper when they open.",
+  "@wallpaperDeviceNote": {
+    "description": "Theme settings wallpaper card (wallpaper worker)."
+  },
+  "@fileManagerRename": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerRenameTitle": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileManagerInvalidName": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerCopying": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileManagerPasteInto": "Paste into folder",
+  "fileManagerPathCopied": "Path copied",
+  "fileManagerCopying": "Copying \"{name}\"…",
+  "@fileManagerDropNothingAccepted": {
+    "description": "File manager UI text."
+  },
+  "fileManagerDropFailed": "The dropped items couldn't be read. Nothing was uploaded.",
+  "fileManagerOperationUnsupported": "This connection doesn't support file-manager operations.",
+  "@fileManagerOperationUnsupported": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerCut": {
+    "description": "File manager UI text."
+  },
+  "fileManagerDeleteConfirm": "Delete \"{name}\"? This can't be undone.",
+  "fileManagerOpen": "Open",
+  "fileManagerPasteHere": "Paste here",
+  "fileManagerUploading": "Uploading \"{name}\" ({index}/{count})…",
+  "fileManagerMoveConfirm": "Move \"{name}\" into \"{folder}\"?",
+  "@fileManagerErrorLimitExceeded": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "entries": {
+        "type": "int"
+      },
+      "depth": {
+        "type": "int"
+      }
+    }
+  },
+  "@fileManagerUploading": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@fileManagerDeleteConfirm": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileManagerUploadConflict": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileManagerNameConflictTitle": "Name already in use",
+  "fileManagerSkip": "Skip",
+  "@fileManagerDeleting": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileManagerKeepBoth": {
+    "description": "File manager UI text."
+  },
+  "fileManagerClipboardCut": "Cut \"{name}\" — paste in this tab to move it",
+  "fileManagerRenameTitle": "Rename \"{name}\"",
+  "fileManagerDeleteFolderConfirm": "Delete folder \"{name}\" and {count, plural, =1{the 1 item} other{all {count} items}} inside it? Symbolic links are removed, not followed. This can't be undone.",
+  "@fileManagerDeleteFolderConfirm": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileManagerClearClipboard": "Clear file clipboard",
+  "@fileManagerNameConflictTitle": {
+    "description": "File manager UI text."
+  },
+  "fileManagerRename": "Rename",
+  "@fileManagerPathCopied": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerDropNeedsSftp": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerErrorIntoItself": {
+    "description": "File manager UI text."
+  },
+  "fileManagerErrorUnsupportedEntry": "\"{name}\" is a symbolic link, special file or has an unsupported name. Folder copies don't follow or recreate these, so nothing was copied.",
+  "@fileManagerPaste": {
+    "description": "File manager UI text."
+  },
+  "fileManagerKeepBoth": "Keep both",
+  "@fileManagerCancelled": {
+    "description": "File manager UI text."
+  },
+  "fileManagerErrorFileTooLarge": "\"{name}\" is larger than the 1 GiB per-file copy limit.",
+  "fileManagerCut": "Cut",
+  "fileManagerDropNothingAccepted": "Only files can be dropped here. Folders and links to other locations aren't uploaded.",
+  "fileManagerPaste": "Paste",
+  "fileManagerErrorSourceChanged": "The item changed or disappeared on the server. Refresh and try again.",
+  "fileManagerErrorExists": "\"{name}\" already exists here. Nothing was replaced.",
+  "fileManagerMoveTitle": "Move item",
+  "fileManagerErrorIntoItself": "A folder can't be moved or copied into itself.",
+  "fileManagerCancelled": "Cancelled. Nothing else was changed.",
+  "@fileManagerCopyPath": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerOpen": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerErrorExists": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileManagerClipboardCut": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileManagerDropTargetChanged": {
+    "description": "File manager UI text."
+  },
+  "fileManagerDropTooManyFiles": "Drop at most {count} files at a time.",
+  "@fileManagerMoving": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileManagerErrorUnsupportedEntry": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileManagerSkip": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerMoveConfirm": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileManagerNameConflictKeepBoth": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileManagerDropFailed": {
+    "description": "File manager UI text."
+  },
+  "fileManagerBusy": "Another file action is still running.",
+  "fileManagerCopyPath": "Copy path",
+  "fileManagerNameConflictKeepBoth": "\"{name}\" already exists in this folder. Keep both by adding \"(copy)\" to the new name? The existing item won't be replaced.",
+  "@fileManagerErrorSourceChanged": {
+    "description": "File manager UI text."
+  },
+  "fileManagerMoving": "Moving \"{name}\"…",
+  "@fileManagerPasteHere": {
+    "description": "File manager UI text."
+  },
+  "fileManagerClipboardCopied": "Copied \"{name}\" — paste in this tab",
+  "@fileManagerClearClipboard": {
+    "description": "File manager UI text."
+  },
+  "fileManagerDropNeedsSftp": "Dropped files are uploaded with SFTP. Open this folder with SFTP to upload.",
+  "fileManagerDeleting": "Deleting \"{name}\"…",
+  "fileManagerUploadSummary": "Uploaded {uploaded} · skipped {skipped} · failed {failed}",
+  "@fileManagerClipboardCopied": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileManagerInvalidName": "Use a single name without slashes, backslashes or control characters.",
+  "@fileManagerUploadSummary": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "uploaded": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "fileManagerErrorLimitExceeded": "This folder is too large for a file-manager action (limit {entries} items, {depth} levels deep or 2 GiB). Nothing was changed.",
+  "@fileManagerPasteInto": {
+    "description": "File manager UI text."
+  },
+  "fileManagerCopy": "Copy",
+  "@fileManagerMoveTitle": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerErrorFileTooLarge": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileManagerDropTargetChanged": "The file tab changed folder or connection while the drop was being checked. Nothing was uploaded; drop the files again.",
+  "fileManagerUploadConflict": "\"{name}\" already exists in this folder. Upload it under a new \"(copy)\" name or skip it? The existing file won't be replaced.",
+  "@fileManagerBusy": {
+    "description": "File manager UI text."
+  },
+  "fileManagerMove": "Move",
+  "@fileManagerDropTooManyFiles": {
+    "description": "File manager UI text.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@fileManagerCopy": {
+    "description": "File manager UI text."
+  },
+  "@fileManagerMove": {
+    "description": "File manager UI text."
+  },
+  "homeAddSerialConsoleDetail": "Opens a COM port on this computer at 8N1. Nothing runs on the server.",
+  "homeSharingThisDevice": "Online on this device",
+  "homeAddShell": "Shell (system default)",
+  "homeSharingSharedPresenceUnknown": "Shared · {members} members · status unknown",
+  "homeSharingLoading": "Loading members…",
+  "homeAddTooltip": "Add a host or open a local Shell or serial Console",
+  "@homeAddSerialConsoleDetail": {},
+  "homeAddButton": "Add",
+  "homeSharingLocalOnly": "Local only",
+  "@homeAddSerialConsoleOpen": {},
+  "homeAddSerialConsolePort": "Serial port",
+  "@homeSharingDetailsTooltip": {},
+  "@homeAddTooltip": {},
+  "@homeSharingIndividual": {},
+  "@homeSharingPresenceUnknown": {},
+  "homeSharingMore": "{count} more:\n{names}",
+  "@homeAddSerialConsoleUnavailable": {},
+  "@homeSharingMembersUnavailable": {},
+  "@homeSharingOffline": {},
+  "homeAddSerialConsoleOpen": "Open Console",
+  "@homeAddSerialConsolePort": {},
+  "homeSharingSharedOnline": "Shared · {members} members · {online} online",
+  "homeAddSerialConsoleBaud": "Baud rate",
+  "homeSharingYou": "{name} (you)",
+  "homeAddSerialConsoleTitle": "Open serial Console",
+  "homeAddSerialConsole": "Serial Console (COM)…",
+  "homeSharingLocalDetail": "This local Profile is stored encrypted on this device only. It has no Vault members, nobody else can see it and no presence is sent. Sign in to an account Vault to share Hosts with other people.",
+  "@homeSharingYou": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@homeSharingSharedPresenceUnknown": {
+    "placeholders": {
+      "members": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAddSerialConsoleUnavailable": "Serial Console (Windows app only)",
+  "@homeAddSerialConsoleBaud": {},
+  "homeSharingPresenceUnknown": "Status unknown",
+  "homeSharingOffline": "Offline",
+  "@homeAddButton": {},
+  "@homeSharingLocalTooltip": {},
+  "homeSharingMembersUnavailable": "Members not loaded",
+  "@homeSharingOnline": {},
+  "@homeAddSerialConsole": {},
+  "@homeAddSerialConsoleTitle": {},
+  "homeSharingLocalTooltip": "Local Profile on this device — not shared with anyone",
+  "@homeSharingSharedOnline": {
+    "placeholders": {
+      "members": {
+        "type": "int"
+      },
+      "online": {
+        "type": "int"
+      }
+    }
+  },
+  "@homeAddShell": {},
+  "@homeSharingLocalOnly": {},
+  "@homeSharingLocalDetail": {},
+  "@homeSharingMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "homeSharingDetailsTooltip": "Show Vault members and online status",
+  "@homeSharingLoading": {},
+  "@homeSharingThisDevice": {},
+  "homeSharingIndividual": "Only you",
+  "homeSharingOnline": "Online",
+  "@sidebarResizeWidthValue": {
+    "description": "Terminal tools sidebar resize handle (sidebar worker).",
+    "placeholders": {
+      "width": {
+        "type": "int"
+      }
+    }
+  },
+  "@sidebarResizeHint": {
+    "description": "Terminal tools sidebar resize handle (sidebar worker)."
+  },
+  "sidebarResizeWidthValue": "{width} px wide",
+  "sidebarResizeHint": "Drag, or use the Left and Right arrow keys, to change the width",
+  "sidebarResizeHandle": "Resize sidebar",
+  "@sidebarResizeHandle": {
+    "description": "Terminal tools sidebar resize handle (sidebar worker)."
+  },
+  "fileEditLaunchFailed": "No application could open this file.",
+  "@fileEditReplace": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditAtomicUnsupported": "This server can't replace files atomically, so nothing was uploaded.",
+  "@fileEditIgnore": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditUpload": "Upload",
+  "fileEditLocalRejected": "The local copy is no longer a regular file in its private folder. Nothing was uploaded.",
+  "fileEditConflictTitle": "Server copy changed",
+  "@fileEditOpened": {
+    "description": "External editor (file tab) UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileEditUploadedChangedAgain": "Uploaded \"{name}\", but it changed again locally while sending. Upload again when ready.",
+  "@fileEditLocalRejected": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditStatusConflict": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditSessionChanged": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditBlockedType": "This file type could run when opened, so it isn't opened externally. Use Edit text or Download instead.",
+  "@fileEditConflictMessage": {
+    "description": "External editor (file tab) UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileEditLocalTooLarge": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditStatusRejected": "Local copy rejected",
+  "@fileEditStatusChanged": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditFooterTitle": "Editing externally ({count})",
+  "@fileEditStatusWatching": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditOpenExternal": "Open in external app",
+  "@fileEditConflictTitle": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditTooLarge": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditSessionChanged": "This file tab's connection closed or changed. Nothing was uploaded.",
+  "fileEditStatusChanged": "Changed locally — not uploaded",
+  "fileEditTooMany": "At most {count} files can be edited externally at once.",
+  "fileEditLocalMissing": "The local copy is missing. Nothing was uploaded.",
+  "@fileEditTooMany": {
+    "description": "External editor (file tab) UI text.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@fileEditAtomicUnsupported": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditStatusUploading": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditNotRegular": "Only regular remote files can be edited externally.",
+  "fileEditStatusWatching": "Watching for saves",
+  "fileEditIgnore": "Ignore",
+  "@fileEditStatusRejected": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditOpened": "Opened \"{name}\" externally. After saving there, choose Upload below.",
+  "fileEditTooLarge": "Only files up to 10 MiB can be edited externally.",
+  "fileEditLocalTooLarge": "The local copy is larger than 10 MiB. Nothing was uploaded.",
+  "@fileEditUploaded": {
+    "description": "External editor (file tab) UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileEditKeepLocal": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditNotRegular": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditUpload": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditStatusUploading": "Uploading…",
+  "@fileEditLaunchFailed": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditBlockedType": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditUnavailable": "External editing needs the desktop app. Use Edit text to change this file here.",
+  "@fileEditFooterTitle": {
+    "description": "External editor (file tab) UI text.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@fileEditStatusFailed": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditConflictMessage": "\"{name}\" changed on the server after you opened it. Replace the server copy with your local version?",
+  "fileEditStatusConflict": "Also changed on the server",
+  "@fileEditUnavailable": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditUploadedChangedAgain": {
+    "description": "External editor (file tab) UI text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileEditUploaded": "Uploaded \"{name}\".",
+  "@fileEditLocalMissing": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditStop": {
+    "description": "External editor (file tab) UI text."
+  },
+  "@fileEditOpenExternal": {
+    "description": "External editor (file tab) UI text."
+  },
+  "fileEditStop": "Stop watching",
+  "fileEditStatusFailed": "Upload failed — local change kept",
+  "fileEditKeepLocal": "Keep local",
+  "fileEditReplace": "Replace server copy",
+  "cloudAccessShareMenu": "Share…",
+  "@cloudAccessShareMenu": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessShareTitle": "Share {name}",
+  "@cloudAccessShareTitle": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessClose": "Close",
+  "@cloudAccessClose": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessTabMembers": "Members & teams",
+  "@cloudAccessTabMembers": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessTabLinks": "Temporary links",
+  "@cloudAccessTabLinks": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGatewayTrustNotice": "Guests connect through this server's gateway. To make that possible, this Host's login is sealed to the server gateway key until the link is revoked or expires. The server operator (or anyone who compromises the server) can open it and see the session. Guests never receive the password or key through this feature, but can do anything the account allows inside the session. Use a dedicated low-privilege account.",
+  "@cloudAccessGatewayTrustNotice": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessLinksHeading": "Links for this Host",
+  "@cloudAccessLinksHeading": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessNewLink": "New link",
+  "@cloudAccessNewLink": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessNoLinks": "No temporary links yet.",
+  "@cloudAccessNoLinks": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessStatusActive": "Active",
+  "@cloudAccessStatusActive": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessStatusScheduled": "Scheduled",
+  "@cloudAccessStatusScheduled": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessStatusExpired": "Expired",
+  "@cloudAccessStatusExpired": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessStatusPaused": "Paused",
+  "@cloudAccessStatusPaused": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessStatusSuspended": "Suspended",
+  "@cloudAccessStatusSuspended": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessStatusRevoked": "Revoked",
+  "@cloudAccessStatusRevoked": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessValidUntil": "until {time}",
+  "@cloudAccessValidUntil": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessRedemptionCount": "{used}/{max} opened",
+  "@cloudAccessRedemptionCount": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessActiveSessions": "{count} active",
+  "@cloudAccessActiveSessions": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessMore": "More",
+  "@cloudAccessMore": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessActivity": "Activity",
+  "@cloudAccessActivity": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessPause": "Pause",
+  "@cloudAccessPause": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessResume": "Resume",
+  "@cloudAccessResume": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRotate": "New secret",
+  "@cloudAccessRotate": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRevoke": "Revoke",
+  "@cloudAccessRevoke": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRevokeLinkTitle": "Revoke this link?",
+  "@cloudAccessRevokeLinkTitle": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRevokeLinkMessage": "The link stops working immediately and active guest sessions are closed within seconds. Revocation cannot undo what guests already did on the Host.",
+  "@cloudAccessRevokeLinkMessage": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRotateTitle": "Issue a new secret?",
+  "@cloudAccessRotateTitle": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRotateMessage": "The current URL stops working and its guests are disconnected. You get a new URL to send.",
+  "@cloudAccessRotateMessage": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessScheduleStart": "Start later",
+  "@cloudAccessScheduleStart": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessStartsNow": "Starts now",
+  "@cloudAccessStartsNow": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessPickStart": "Choose a start time",
+  "@cloudAccessPickStart": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessLifetime": "Valid for",
+  "@cloudAccessLifetime": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessOneHour": "1 hour",
+  "@cloudAccessOneHour": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessOneDay": "24 hours",
+  "@cloudAccessOneDay": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessOneWeek": "7 days",
+  "@cloudAccessOneWeek": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCustom": "Custom…",
+  "@cloudAccessCustom": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessWindowSummary": "From {start} until {end} (your local time; {utc} UTC). The server clock decides.",
+  "@cloudAccessWindowSummary": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "utc": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessEndBeforeStart": "The end must be after the start and in the future.",
+  "@cloudAccessEndBeforeStart": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessMaxRedemptions": "Times the link can be opened",
+  "@cloudAccessMaxRedemptions": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessMaxRedemptionsHelp": "Default 1. Each browser that clicks Continue uses one.",
+  "@cloudAccessMaxRedemptionsHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessUnlimited": "Unlimited",
+  "@cloudAccessUnlimited": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRedemptionsRange": "Enter 1–1000, or choose Unlimited.",
+  "@cloudAccessRedemptionsRange": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessMaxConnections": "Connection attempts (optional)",
+  "@cloudAccessMaxConnections": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessMaxConnectionsHelp": "Leave empty for no limit. Refused attempts do not count.",
+  "@cloudAccessMaxConnectionsHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessConnectionsRange": "Enter a positive number or leave it empty.",
+  "@cloudAccessConnectionsRange": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessConcurrent": "Simultaneous connections",
+  "@cloudAccessConcurrent": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessViewOnly": "View only",
+  "@cloudAccessViewOnly": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessViewOnlyHelp": "Keyboard, mouse and paste are blocked by the server.",
+  "@cloudAccessViewOnlyHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessClipboardToRemote": "Allow pasting into the Host",
+  "@cloudAccessClipboardToRemote": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessClipboardFromRemote": "Allow copying from the Host",
+  "@cloudAccessClipboardFromRemote": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessFilesLocked": "File transfer, drives, printing and recording are off for guests.",
+  "@cloudAccessFilesLocked": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCustomSlug": "Custom address (optional)",
+  "@cloudAccessCustomSlug": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCustomSlugHelp": "3–48 lowercase letters, digits or hyphens. An address is not a password: anyone may guess it, so avoid sensitive words.",
+  "@cloudAccessCustomSlugHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestTitle": "Title shown to the guest (optional)",
+  "@cloudAccessGuestTitle": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestTitleHelp": "Encrypted with the link secret; the server cannot read it.",
+  "@cloudAccessGuestTitleHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCancel": "Cancel",
+  "@cloudAccessCancel": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCreateLink": "Create link",
+  "@cloudAccessCreateLink": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessLinkReady": "Link created",
+  "@cloudAccessLinkReady": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCopyLink": "Copy link",
+  "@cloudAccessCopyLink": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCopied": "Copied",
+  "@cloudAccessCopied": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessShownOnce": "This is the only time the full link is shown. If it is lost, issue a new secret.",
+  "@cloudAccessShownOnce": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessSendSafely": "Anyone with this link can open it. Send it only through a channel you trust; some mail scanners may open links and use them up.",
+  "@cloudAccessSendSafely": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessDone": "Done",
+  "@cloudAccessDone": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessBack": "Back",
+  "@cloudAccessBack": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessActivityFor": "Activity · {link}",
+  "@cloudAccessActivityFor": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessGuestSessions": "Guest sessions",
+  "@cloudAccessGuestSessions": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessNoSessions": "Nobody has opened this link yet.",
+  "@cloudAccessNoSessions": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessSessionSince": "Active since {time}",
+  "@cloudAccessSessionSince": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessSessionEnded": "Ended ({reason})",
+  "@cloudAccessSessionEnded": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessTerminate": "End session",
+  "@cloudAccessTerminate": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessAuditEvents": "Audit (metadata only)",
+  "@cloudAccessAuditEvents": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessMembersExplainer": "Members get this Host through an encrypted Vault. Recipients receive the Vault key only after you confirm each of their devices; organization admins cannot obtain it on their own.",
+  "@cloudAccessMembersExplainer": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessDedicatedVault": "Share only this Host",
+  "@cloudAccessDedicatedVault": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessDedicatedVaultHelp": "A new sharing Vault is created with a copy of this Host and only the items listed below. Other Hosts and credentials in your current Vault stay private.",
+  "@cloudAccessDedicatedVaultHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessSharingVaultName": "Sharing Vault name",
+  "@cloudAccessSharingVaultName": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessSharingVaultDefaultName": "Shared · {name}",
+  "@cloudAccessSharingVaultDefaultName": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessWillCopy": "Will be copied:",
+  "@cloudAccessWillCopy": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessDependencyJumpHost": "Jump host {name}",
+  "@cloudAccessDependencyJumpHost": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessDependencyCredential": "Credential {name}",
+  "@cloudAccessDependencyCredential": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessDependencyKnownHost": "Trusted host key {key}",
+  "@cloudAccessDependencyKnownHost": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessDependencyGroup": "Group {name} is not copied",
+  "@cloudAccessDependencyGroup": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessBlockerMissingJump": "{name} uses a jump host that is not in this Vault.",
+  "@cloudAccessBlockerMissingJump": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessBlockerMissingCredential": "{name} references a credential that is not in this Vault.",
+  "@cloudAccessBlockerMissingCredential": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessBlockerJumpLoop": "{name} has a jump host loop.",
+  "@cloudAccessBlockerJumpLoop": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessConsentCopy": "I approve copying exactly these items into the new Vault.",
+  "@cloudAccessConsentCopy": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCreateSharingVault": "Create sharing Vault",
+  "@cloudAccessCreateSharingVault": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessWholeVaultHeading": "Or share this whole Vault",
+  "@cloudAccessWholeVaultHeading": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessWholeVaultHelp": "Recipients will see every Host, credential and snippet in the current Vault.",
+  "@cloudAccessWholeVaultHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessManageWholeVault": "Manage whole-Vault access",
+  "@cloudAccessManageWholeVault": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessAttachOrg": "Choose an organization",
+  "@cloudAccessAttachOrg": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessAttachOrgHelp": "Grants refer to members and teams of one organization you manage.",
+  "@cloudAccessAttachOrgHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessAttach": "Use",
+  "@cloudAccessAttach": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessManageOrganizations": "Manage organizations",
+  "@cloudAccessManageOrganizations": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGrantsIn": "Access in {org}",
+  "@cloudAccessGrantsIn": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "org": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessAddGrant": "Add member or team",
+  "@cloudAccessAddGrant": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessTeamLabel": "Team {name}",
+  "@cloudAccessTeamLabel": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessRoleViewer": "Viewer",
+  "@cloudAccessRoleViewer": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRoleEditor": "Editor",
+  "@cloudAccessRoleEditor": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRemove": "Remove",
+  "@cloudAccessRemove": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessKeyDistribution": "Waiting for keys",
+  "@cloudAccessKeyDistribution": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessKeyDistributionHelp": "Compare each fingerprint with the recipient through another channel before delivering the Vault key.",
+  "@cloudAccessKeyDistributionHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessWaitingForDevice": "Waiting for the recipient to open Organizations on a device",
+  "@cloudAccessWaitingForDevice": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessWaitingForOwner": "Ready for you to confirm",
+  "@cloudAccessWaitingForOwner": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessWaitingForRecipient": "Key sent; waiting for the recipient to accept",
+  "@cloudAccessWaitingForRecipient": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRoleDiffers": "Signed role differs from the grant; rotate or re-invite to change it",
+  "@cloudAccessRoleDiffers": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessDeviceFingerprint": "Device {fingerprint}",
+  "@cloudAccessDeviceFingerprint": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "fingerprint": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessConfirmFingerprintTitle": "Confirm this device",
+  "@cloudAccessConfirmFingerprintTitle": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessConfirmFingerprintMessage": "Deliver the Vault key to {user}'s device {fingerprint}? Only continue if {user} confirmed this fingerprint to you.",
+  "@cloudAccessConfirmFingerprintMessage": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "user": {
+        "type": "String"
+      },
+      "fingerprint": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessDeliverKey": "Deliver key",
+  "@cloudAccessDeliverKey": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRemovalPending": "Server access is already blocked. Rotate the Vault key to remove this member cryptographically, and change any credentials they have seen.",
+  "@cloudAccessRemovalPending": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessKeepDirect": "Keep as direct member",
+  "@cloudAccessKeepDirect": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRotateToRemove": "Rotate key",
+  "@cloudAccessRotateToRemove": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRestrictedToViewer": "Limited to viewing until the signed role is updated",
+  "@cloudAccessRestrictedToViewer": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessOrganizations": "Organizations",
+  "@cloudAccessOrganizations": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessOrganizationsSubtitle": "Members, teams and invitations",
+  "@cloudAccessOrganizationsSubtitle": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessOrganizationsExplainer": "Organization names, members, roles and teams are visible to this server. Joining an organization never gives you a Vault key by itself.",
+  "@cloudAccessOrganizationsExplainer": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessPendingJoin": "You opened an organization invitation — review it",
+  "@cloudAccessPendingJoin": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessJoinOrganization": "Join an organization",
+  "@cloudAccessJoinOrganization": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessJoinLinkField": "Invitation link",
+  "@cloudAccessJoinLinkField": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessJoinInvalid": "This is not a valid invitation link.",
+  "@cloudAccessJoinInvalid": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessReview": "Review",
+  "@cloudAccessReview": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessJoinSummary": "Invited by {inviter} as {role}",
+  "@cloudAccessJoinSummary": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "inviter": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessJoin": "Join",
+  "@cloudAccessJoin": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessJoined": "Joined. Vault owners still need to confirm your device before you receive any shared Vault.",
+  "@cloudAccessJoined": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessSharedVaultKeys": "Shared Vault keys",
+  "@cloudAccessSharedVaultKeys": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessSharedVaultKeysHelp": "Publishes this device's public keys and accepts Vaults whose owners confirmed this device.",
+  "@cloudAccessSharedVaultKeysHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCheckDeliveries": "Check for shared Vaults",
+  "@cloudAccessCheckDeliveries": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessDeliveriesAccepted": "{count, plural, =0{No new shared Vaults.} =1{1 shared Vault added.} other{{count} shared Vaults added.}}",
+  "@cloudAccessDeliveriesAccepted": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudAccessYourOrganizations": "Your organizations",
+  "@cloudAccessYourOrganizations": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessNewOrganization": "New organization",
+  "@cloudAccessNewOrganization": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessOrganizationName": "Organization name",
+  "@cloudAccessOrganizationName": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessNoOrganizations": "You are not in any organization yet.",
+  "@cloudAccessNoOrganizations": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessMemberCount": "{count} members",
+  "@cloudAccessMemberCount": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessOrgRoleOwner": "Owner",
+  "@cloudAccessOrgRoleOwner": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessOrgRoleAdmin": "Admin",
+  "@cloudAccessOrgRoleAdmin": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessOrgRoleMember": "Member",
+  "@cloudAccessOrgRoleMember": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessSave": "Save",
+  "@cloudAccessSave": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessMembers": "Members",
+  "@cloudAccessMembers": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessInviteMember": "Invite",
+  "@cloudAccessInviteMember": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessInviteUsername": "Username (optional)",
+  "@cloudAccessInviteUsername": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessInviteUsernameHelp": "Limit the invitation to one existing account. New people first need an account invitation from an instance administrator.",
+  "@cloudAccessInviteUsernameHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRole": "Role",
+  "@cloudAccessRole": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessInitialTeam": "Team",
+  "@cloudAccessInitialTeam": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessNoTeam": "No team",
+  "@cloudAccessNoTeam": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCreateInvitation": "Create invitation",
+  "@cloudAccessCreateInvitation": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessInvitationReady": "Invitation link created",
+  "@cloudAccessInvitationReady": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessCopyInvitation": "Copy invitation link",
+  "@cloudAccessCopyInvitation": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessLeave": "Leave",
+  "@cloudAccessLeave": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRemoveMemberTitle": "Remove from organization?",
+  "@cloudAccessRemoveMemberTitle": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessRemoveMemberMessage": "Access through organization grants is blocked immediately. Vault owners should then rotate keys of affected Vaults.",
+  "@cloudAccessRemoveMemberMessage": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessTeams": "Teams",
+  "@cloudAccessTeams": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessNewTeam": "New team",
+  "@cloudAccessNewTeam": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessTeamName": "Team name",
+  "@cloudAccessTeamName": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessTeamMembers": "Members of {team}",
+  "@cloudAccessTeamMembers": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "team": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessInvitations": "Invitations",
+  "@cloudAccessInvitations": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessAnyAccount": "Any account",
+  "@cloudAccessAnyAccount": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorGeneric": "The request could not be completed.",
+  "@cloudAccessErrorGeneric": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorLinksUnavailable": "Temporary links are not configured on this server.",
+  "@cloudAccessErrorLinksUnavailable": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorOrganizationsUnavailable": "Organizations are not enabled on this server.",
+  "@cloudAccessErrorOrganizationsUnavailable": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorProtocolUnavailable": "This Host's protocol cannot be shared on this server.",
+  "@cloudAccessErrorProtocolUnavailable": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorOwnerRequired": "Only the Vault owner can share through links.",
+  "@cloudAccessErrorOwnerRequired": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorJumpHost": "Hosts that use a jump host cannot be shared through the gateway.",
+  "@cloudAccessErrorJumpHost": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorPortForward": "Hosts with port forwarding profiles cannot be shared through the gateway.",
+  "@cloudAccessErrorPortForward": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorHostKeyRequired": "Connect once and trust this Host's SSH key before sharing it.",
+  "@cloudAccessErrorHostKeyRequired": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorCertificateRequired": "Connect once and trust this Host's RDP certificate before sharing it.",
+  "@cloudAccessErrorCertificateRequired": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorLoginRequired": "Save a login on this Host before sharing it.",
+  "@cloudAccessErrorLoginRequired": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorHostChanged": "The Host changed or is not synchronized yet. Sync and try again.",
+  "@cloudAccessErrorHostChanged": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorPlanBlocked": "Resolve the listed problems first.",
+  "@cloudAccessErrorPlanBlocked": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorTargetDenied": "This Host's address is not allowed by the server's sharing policy.",
+  "@cloudAccessErrorTargetDenied": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorSlugTaken": "This address is not available.",
+  "@cloudAccessErrorSlugTaken": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorSlugInvalid": "Use 3–48 lowercase letters, digits or inner hyphens.",
+  "@cloudAccessErrorSlugInvalid": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorTooManyLinks": "Too many active links. Revoke some first.",
+  "@cloudAccessErrorTooManyLinks": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorInvalidOptions": "These link options are not allowed by the server.",
+  "@cloudAccessErrorInvalidOptions": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorOrgRoleRequired": "Organization owner or admin role is required.",
+  "@cloudAccessErrorOrgRoleRequired": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorOrgCreationRestricted": "Only instance administrators can create organizations here.",
+  "@cloudAccessErrorOrgCreationRestricted": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorLastOwner": "An organization needs at least one owner.",
+  "@cloudAccessErrorLastOwner": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorInvitationUnavailable": "This invitation is not available.",
+  "@cloudAccessErrorInvitationUnavailable": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorAccountNotFound": "No active account has this username.",
+  "@cloudAccessErrorAccountNotFound": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorRateLimited": "Too many attempts. Wait a moment and try again.",
+  "@cloudAccessErrorRateLimited": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestWindowTitle": "Atermius shared access",
+  "@cloudAccessGuestWindowTitle": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestLanding": "You received an Atermius temporary access link",
+  "@cloudAccessGuestLanding": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestLandingHelp": "Nothing happens until you continue. Continuing may use one of the link's allowed openings.",
+  "@cloudAccessGuestLandingHelp": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestContinue": "Continue",
+  "@cloudAccessGuestContinue": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestHeading": "Shared access",
+  "@cloudAccessGuestHeading": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestValidUntil": "This session ends {time}",
+  "@cloudAccessGuestValidUntil": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessGuestViewOnly": "View only",
+  "@cloudAccessGuestViewOnly": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestInteractive": "Interactive",
+  "@cloudAccessGuestInteractive": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestClipboardOn": "Clipboard allowed",
+  "@cloudAccessGuestClipboardOn": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestClipboardOff": "Clipboard off",
+  "@cloudAccessGuestClipboardOff": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestConnect": "Connect",
+  "@cloudAccessGuestConnect": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestDisconnect": "Disconnect",
+  "@cloudAccessGuestDisconnect": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestLeave": "End my access",
+  "@cloudAccessGuestLeave": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestLeft": "Your access ended. You can close this tab.",
+  "@cloudAccessGuestLeft": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestTrustNote": "This session runs through the sharer's Atermius server, which can see it.",
+  "@cloudAccessGuestTrustNote": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestUnavailable": "This link is not available.",
+  "@cloudAccessGuestUnavailable": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestAskOwner": "Ask the person who shared it to send a new link.",
+  "@cloudAccessGuestAskOwner": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestNotYetValid": "This link is not valid yet.",
+  "@cloudAccessGuestNotYetValid": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestExpired": "This link has expired.",
+  "@cloudAccessGuestExpired": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestExhausted": "This link has already been used.",
+  "@cloudAccessGuestExhausted": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestSuspended": "This link was paused or revoked by its owner.",
+  "@cloudAccessGuestSuspended": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestSessionEnded": "Your session has ended.",
+  "@cloudAccessGuestSessionEnded": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestBusy": "Too many connections right now. Try again shortly.",
+  "@cloudAccessGuestBusy": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestExpiringSoon": "Ends in 5 minutes",
+  "@cloudAccessGuestExpiringSoon": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestClosed": "The connection closed.",
+  "@cloudAccessGuestClosed": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestClosedRevoked": "Access was revoked or changed by the owner.",
+  "@cloudAccessGuestClosedRevoked": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestClosedExpired": "The access time ended.",
+  "@cloudAccessGuestClosedExpired": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestClosedTarget": "The Host could not be reached or did not match its trusted identity.",
+  "@cloudAccessGuestClosedTarget": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessGuestClosedProtocol": "The connection was closed because of an unexpected message.",
+  "@cloudAccessGuestClosedProtocol": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessApplyRole": "Make {role}",
+  "@cloudAccessApplyRole": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessApplyRoleTitle": "Change this member's role?",
+  "@cloudAccessApplyRoleTitle": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessApplyRoleMessage": "{user} becomes {role}. This signs a new membership manifest and rotates the Vault key from this device.",
+  "@cloudAccessApplyRoleMessage": {
+    "description": "Cloud access (organizations, Host sharing, temporary links).",
+    "placeholders": {
+      "user": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAccessErrorScopeChanged": "The account, server or selected Vault changed during this action. Nothing was sent; try again.",
+  "@cloudAccessErrorScopeChanged": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorNotSynced": "The sharing Vault was created but is not synchronized yet. Sync it before adding members.",
+  "@cloudAccessErrorNotSynced": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  },
+  "cloudAccessErrorScopeEndedCommitted": "The account, server or selected Vault changed after the server had already completed part of this action (for example, created the Vault or the invitation). That part was not undone; review it before trying again.",
+  "@cloudAccessErrorScopeEndedCommitted": {
+    "description": "Cloud access (organizations, Host sharing, temporary links)."
+  }
 }

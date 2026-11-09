@@ -432,7 +432,11 @@ void main() {
         'first-marker',
       );
       await tester.pump(const Duration(milliseconds: 200));
-      expect(find.text('1 of 1 matches'), findsOneWidget);
+      // ICU singular: "1 of 1 match" (the old plural literal was stale).
+      expect(
+        find.text(currentL10n.terminalSearchMatchCount(1, 1)),
+        findsOneWidget,
+      );
       await tester.tap(toggle);
       await tester.pumpAndSettle();
       bar.onSelect(secondId);

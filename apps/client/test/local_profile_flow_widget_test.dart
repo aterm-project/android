@@ -116,6 +116,11 @@ void main() {
       profileId: first.record.profileId,
       password: 'correct horse battery staple',
     );
+    // The Home Add/sharing row test creates one more profile.
+    final eighteenth = await fixtureService.unlock(
+      profileId: first.record.profileId,
+      password: 'correct horse battery staple',
+    );
     profileTemplate = first.record;
     profileFixtures = [
       first,
@@ -135,6 +140,7 @@ void main() {
       fifteenth,
       sixteenth,
       seventeenth,
+      eighteenth,
     ];
     profileQueue = [...profileFixtures];
     await fixtureCatalog.close();
@@ -388,6 +394,73 @@ void main() {
       expect(find.text(currentL10n.saveAndConnect), findsOneWidget);
       await tester.tap(find.text(currentL10n.cancel));
       await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'local Home Add row sits below search, routes RDP to the editor and is Local only',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await pumpFlow(tester, flow(onExit: () {}));
+      await tester.enterText(
+        find.byKey(const ValueKey('local_profile_create_password')),
+        'correct horse battery staple',
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('local_profile_create_button')),
+      );
+      await pumpUntilIdle(tester);
+      expect(tester.takeException(), isNull);
+      final search = find.byKey(const ValueKey('local_home_search'));
+      final add = find.byKey(const ValueKey('local_home_add'));
+      expect(add, findsOneWidget);
+      expect(tester.getTopLeft(add).dy, greaterThan(tester.getBottomLeft(search).dy));
+      expect(tester.getRect(add).right, lessThanOrEqualTo(390));
+      // No Vault in a local Profile: never other users or a shared state.
+      expect(find.text(currentL10n.homeSharingLocalOnly), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget.key is ValueKey<String> &&
+              (widget.key! as ValueKey<String>).value.startsWith(
+                'local_home_sharing_avatar_',
+              ),
+        ),
+        findsNothing,
+      );
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('local_home_add_console')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('local_home_add_rdp')));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<DropdownButtonFormField<HostProtocol>>(
+              find.byKey(const ValueKey('local_host_protocol')),
+            )
+            .initialValue,
+        HostProtocol.rdp,
+      );
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('local_host_port')))
+            .controller!
+            .text,
+        '3389',
+      );
+      await tester.tap(find.text(currentL10n.cancel));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('local_home_sharing')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('home_local_sharing_dialog')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },
   );
@@ -1615,7 +1688,7 @@ void main() {
         findsOneWidget,
       );
 
-      await openSettingsCategory(tester, 'terminal');
+      await openSettingsCategory(tester, 'appearance');
       final fontSizeDropdown = find.byKey(
         const ValueKey('local_terminal_font_size_dropdown'),
       );
@@ -1647,6 +1720,7 @@ void main() {
       await tester.tap(themeSave);
       await pumpUntilIdle(tester);
 
+      await openSettingsCategory(tester, 'shortcuts');
       final searchShortcut = find.byKey(
         const ValueKey('local_terminal_shortcut_search'),
       );
@@ -1767,7 +1841,7 @@ void main() {
 
       await _tapWorkspaceAction(tester, 'local_profile_preferences_toggle');
       await tester.pumpAndSettle();
-      await openSettingsCategory(tester, 'terminal');
+      await openSettingsCategory(tester, 'appearance');
       final restoredFontSize = find.byKey(
         const ValueKey('local_terminal_font_size_dropdown'),
       );
@@ -1806,6 +1880,7 @@ void main() {
             .selected,
         VaultTerminalThemeChoice.light,
       );
+      await openSettingsCategory(tester, 'shortcuts');
       final restoredShortcut = find.byKey(
         const ValueKey('local_terminal_shortcut_search'),
       );

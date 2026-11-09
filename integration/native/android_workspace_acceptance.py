@@ -128,7 +128,7 @@ def key_summary(value):
     return {'entry_count':len(value['entries']),'canonical_sha256':hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest(),'certificate_sha256':[e['certificate_sha256'] for e in value['entries']]}
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage');p.add_argument('--serial',required=True);p.add_argument('--apk',type=Path);p.add_argument('--source-sha256');a=p.parse_args();d=Device(a.serial)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage');p.add_argument('--serial',default='172.19.1.198:5555');p.add_argument('--apk',type=Path);p.add_argument('--source-sha256');a=p.parse_args();d=Device(a.serial)
     e=json.loads(EVIDENCE.read_text()) if EVIDENCE.exists() else {'schema':1,'checks':{},'stages':[],'passed':False}
     s=json.loads(STATE.read_text()) if STATE.exists() else {}
     c=json.loads((ROOT/'android-fixture-private.json').read_text())

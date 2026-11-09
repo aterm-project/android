@@ -944,7 +944,7 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                             running,
                           ),
                           key: const ValueKey('r7fwd-summary'),
-                          style: const TextStyle(color: AppColors.muted),
+                          style: TextStyle(color: context.palette.muted),
                         ),
                       ],
                     ),
@@ -989,8 +989,8 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                 const SizedBox(height: 8),
                 Text(
                   '${_source.storageDescription} ${l10n.r7ForwardNoAutoStart}',
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.palette.muted,
                     fontSize: 12,
                     height: 1.4,
                   ),
@@ -1010,7 +1010,7 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                   _Banner(
                     key: const ValueKey('r7fwd-error'),
                     text: _error!,
-                    color: AppColors.red,
+                    color: context.palette.red,
                   ),
               ],
             ),
@@ -1055,8 +1055,8 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
     );
     final (String state, Color color) = live.isEmpty
         ? (connecting || pendingAny)
-              ? (l10n.r7ForwardHostConnecting, AppColors.orange)
-              : (l10n.r7ForwardHostNotConnected, AppColors.muted)
+              ? (l10n.r7ForwardHostConnecting, context.palette.orange)
+              : (l10n.r7ForwardHostNotConnected, context.palette.muted)
         : live.length == 1
         ? (l10n.r7ForwardHostConnected, Theme.of(context).colorScheme.primary)
         : (
@@ -1074,7 +1074,7 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
         : '${host.username}@${host.address}:${host.port}';
     return Card(
       key: ValueKey('r7fwd-host-${host.id}'),
-      color: AppColors.surface,
+      color: context.palette.surface,
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
@@ -1093,7 +1093,7 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                 ),
                 Text(
                   endpoint,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.palette.muted, fontSize: 12),
                 ),
                 Text(
                   state,
@@ -1144,7 +1144,7 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   l10n.noForwardingProfilesSavedForThis,
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: context.palette.muted),
                 ),
               ),
             for (final profile in host.portForwardProfiles)
@@ -1228,7 +1228,7 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
       margin: const EdgeInsets.only(top: 6),
       padding: const EdgeInsets.fromLTRB(10, 8, 0, 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -1253,10 +1253,10 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                       const SizedBox(width: 6),
                       Tooltip(
                         message: l10n.reachableBeyondLoopback,
-                        child: const Icon(
+                        child: Icon(
                           Icons.public,
                           size: 15,
-                          color: AppColors.orange,
+                          color: context.palette.orange,
                         ),
                       ),
                     ],
@@ -1268,7 +1268,7 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                     profile,
                     activePort: status.listeningPort,
                   ),
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.palette.muted, fontSize: 12),
                 ),
                 const SizedBox(height: 3),
                 if (pending)
@@ -1278,8 +1278,8 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                         child: Text(
                           l10n.r7ForwardConnectingStart,
                           key: ValueKey('r7fwd-status-$id'),
-                          style: const TextStyle(
-                            color: AppColors.orange,
+                          style: TextStyle(
+                            color: context.palette.orange,
                             fontSize: 12,
                           ),
                         ),
@@ -1300,8 +1300,8 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                       status.lastConnectionError!,
                     ),
                     key: ValueKey('r7fwd-connection-error-$id'),
-                    style: const TextStyle(
-                      color: AppColors.orange,
+                    style: TextStyle(
+                      color: context.palette.orange,
                       fontSize: 12,
                     ),
                   ),
@@ -1309,8 +1309,8 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
                   Text(
                     note,
                     key: ValueKey('r7fwd-note-$id'),
-                    style: const TextStyle(
-                      color: AppColors.orange,
+                    style: TextStyle(
+                      color: context.palette.orange,
                       fontSize: 12,
                     ),
                   ),
@@ -1376,18 +1376,18 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
         ),
         Theme.of(context).colorScheme.primary,
       ),
-      SshPortForwardState.starting => (l10n.starting, AppColors.muted),
+      SshPortForwardState.starting => (l10n.starting, context.palette.muted),
       SshPortForwardState.stopping => (
         l10n.forwardStatusStopping,
-        AppColors.muted,
+        context.palette.muted,
       ),
       SshPortForwardState.failed => (
         l10n.forwardStatusFailed(status.error ?? l10n.forwardStatusUnknownError),
-        AppColors.red,
+        context.palette.red,
       ),
       SshPortForwardState.stopped => (
         l10n.forwardStatusStopped,
-        AppColors.muted,
+        context.palette.muted,
       ),
     };
     return Text(
@@ -1472,7 +1472,7 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
     final manager = session.liveManager!;
     return Card(
       key: ValueKey('r7fwd-removed-${session.id}'),
-      color: AppColors.surface,
+      color: context.palette.surface,
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
@@ -1481,7 +1481,7 @@ class _SshForwardingPageState extends State<SshForwardingPage> {
           children: [
             Text(
               '${session.label} · ${context.l10n.r7ForwardRemovedHost}',
-              style: const TextStyle(color: AppColors.orange),
+              style: TextStyle(color: context.palette.orange),
             ),
             for (final profile in manager.activeProfiles)
               _orphanRow(session.hostId, session, profile),
@@ -1527,15 +1527,18 @@ class _TypeBadge extends StatelessWidget {
 }
 
 class _Banner extends StatelessWidget {
-  const _Banner({required this.text, this.color = AppColors.orange, super.key});
+  const _Banner({required this.text, this.color, super.key});
 
   final String text;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(top: 6),
-    child: Text(text, style: TextStyle(color: color, height: 1.4)),
+    child: Text(
+      text,
+      style: TextStyle(color: color ?? context.palette.orange, height: 1.4),
+    ),
   );
 }
 
@@ -1551,7 +1554,7 @@ class _Empty extends StatelessWidget {
       text,
       key: const ValueKey('r7fwd-empty'),
       textAlign: TextAlign.center,
-      style: const TextStyle(color: AppColors.muted),
+      style: TextStyle(color: context.palette.muted),
     ),
   );
 }

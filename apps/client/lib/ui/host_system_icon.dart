@@ -22,7 +22,7 @@ class HostSystemIcon extends StatelessWidget {
               !system.displayName.contains(system.version!)
         ? '${system.displayName} · ${system.version}'
         : system.displayName;
-    final color = _systemColor(system, AppColors.accentText);
+    final color = _systemColor(system, context.palette.accentText);
     return Semantics(
       label: context.l10n.operatingSystemLabel(label),
       child: Tooltip(

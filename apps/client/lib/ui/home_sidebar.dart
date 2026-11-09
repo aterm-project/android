@@ -115,9 +115,9 @@ class HomeSidebar extends StatelessWidget {
       child: Container(
         key: const ValueKey('home_sidebar'),
         width: widthFor(mode),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(right: BorderSide(color: AppColors.line)),
+        decoration: BoxDecoration(
+          color: context.palette.surface,
+          border: Border(right: BorderSide(color: context.palette.line)),
         ),
         child: Column(
           children: [
@@ -140,7 +140,7 @@ class HomeSidebar extends StatelessWidget {
               ),
             ),
             if (footerActions.isNotEmpty) ...[
-              const Divider(height: 1, color: AppColors.line),
+              Divider(height: 1, color: context.palette.line),
               _HomeSidebarFooterMenu(
                 actions: footerActions,
                 label: footerLabel ?? context.l10n.r7NavImportExport,
@@ -178,7 +178,7 @@ class _HomeSidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.accentText : AppColors.muted;
+    final color = selected ? context.palette.accentText : context.palette.muted;
     final iconWidget = Badge(
       isLabelVisible: badge > 0,
       label: Text('$badge'),
@@ -197,7 +197,7 @@ class _HomeSidebarItem extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
-                color: selected ? AppColors.text : AppColors.muted,
+                color: selected ? context.palette.text : context.palette.muted,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
@@ -230,12 +230,12 @@ class _HomeSidebarItem extends StatelessWidget {
       ),
       child: Material(
         color: selected
-            ? AppColors.accentText.withValues(alpha: .12)
+            ? context.palette.accentText.withValues(alpha: .12)
             : Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: selected
-              ? BorderSide(color: AppColors.accentText.withValues(alpha: .22))
+              ? BorderSide(color: context.palette.accentText.withValues(alpha: .22))
               : BorderSide.none,
         ),
         clipBehavior: Clip.antiAlias,
@@ -293,10 +293,10 @@ class _HomeSidebarFooterMenu extends StatelessWidget {
       builder: (context, controller, _) {
         void toggle() =>
             controller.isOpen ? controller.close() : controller.open();
-        const icon = Icon(
+        final icon = Icon(
           Icons.import_export_rounded,
           size: 18,
-          color: AppColors.muted,
+          color: context.palette.muted,
         );
         return Semantics(
           button: true,
@@ -322,15 +322,15 @@ class _HomeSidebarFooterMenu extends StatelessWidget {
                               label,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
-                                color: AppColors.muted,
+                                color: context.palette.muted,
                               ),
                             ),
                           ),
                         ],
                       )
-                    : const Center(child: icon),
+                    : Center(child: icon),
               ),
             ),
           ),
