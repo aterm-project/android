@@ -107,6 +107,55 @@ Future<SessionWorkspaceController> _mobileWorkspace(WidgetTester tester) async {
 }
 
 void main() {
+  for (final grouped in [false, true]) {
+    testWidgets(
+      'Android long-press disconnect keeps close separate (grouped=$grouped)',
+      (tester) async {
+        final disconnected = <String>[], closed = <String>[];
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: _android,
+            home: Scaffold(
+              body: WorkspaceTabBar(
+                tabs: const [
+                  WorkspaceTab(
+                    id: 'a',
+                    title: 'alpha',
+                    isConnected: true,
+                    canDisconnect: true,
+                  ),
+                  WorkspaceTab(
+                    id: 'b',
+                    title: 'beta',
+                    isConnected: true,
+                    canDisconnect: true,
+                  ),
+                ],
+                groups: grouped
+                    ? const [
+                        ['a', 'b'],
+                      ]
+                    : const [],
+                selectedId: grouped ? 'b' : 'a',
+                onSelect: (_) {},
+                onClose: closed.add,
+                onDisconnect: disconnected.add,
+              ),
+            ),
+          ),
+        );
+        await _touchLongPress(
+          tester,
+          tester.getCenter(find.byKey(const ValueKey('workspace-tab-a'))),
+        );
+        expect(find.text('Disconnect'), findsOneWidget);
+        await tester.tap(find.text('Disconnect'));
+        await tester.pumpAndSettle();
+        expect(disconnected, [grouped ? 'b' : 'a']);
+        expect(closed, isEmpty);
+      },
+    );
+  }
   testWidgets(
     'Android grouped tab drags its selected member to change split axis at 390px',
     (tester) async {

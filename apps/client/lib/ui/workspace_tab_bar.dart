@@ -24,6 +24,7 @@ class WorkspaceTab {
     this.isFile = false,
     this.canDetach = true,
     this.canOpenFiles = true,
+    this.canDisconnect = false,
     this.icon,
     this.members = const [],
   });
@@ -31,11 +32,13 @@ class WorkspaceTab {
   final bool isHome, isConnected;
   final String? status;
   final bool isFile, canDetach, canOpenFiles;
+  final bool canDisconnect;
   final IconData? icon;
   final List<WorkspaceTab> members;
 }
 
 enum _TabCommand {
+  disconnect,
   close,
   closeOthers,
   duplicate,
@@ -77,11 +80,13 @@ class WorkspaceTabBar extends StatelessWidget {
     this.groups = const [],
     this.groupSelections = const {},
     this.onUnsplit,
+    this.onDisconnect,
   });
   final List<WorkspaceTab> tabs;
   final List<List<String>> groups;
   final Map<String, String> groupSelections;
   final ValueChanged<String>? onUnsplit;
+  final ValueChanged<String>? onDisconnect;
   final String selectedId;
   final ValueChanged<String> onSelect, onClose;
   final VoidCallback? onNewWindow;
@@ -187,6 +192,15 @@ class WorkspaceTabBar extends StatelessWidget {
             ),
           ),
         const PopupMenuDivider(height: 8),
+        if (onDisconnect != null &&
+            tab.members.any(
+              (m) => m.id == _selectionFor(tab) && m.canDisconnect,
+            ))
+          appMenuItem(
+            context,
+            value: 'disconnect',
+            child: AppMenuLabel(Icons.link_off, context.l10n.disconnect),
+          ),
         if (onUnsplit != null)
           appMenuItem(
             context,
@@ -209,6 +223,7 @@ class WorkspaceTabBar extends StatelessWidget {
     if (!context.mounted || action == null) return;
     if (action.startsWith('select:')) onSelect(action.substring(7));
     if (action == 'unsplit') onUnsplit?.call(_selectionFor(tab));
+    if (action == 'disconnect') onDisconnect?.call(_selectionFor(tab));
     if (action == 'close') _closeTab(tab);
   }
 
@@ -231,6 +246,12 @@ class WorkspaceTabBar extends StatelessWidget {
         Offset.zero & overlay.size,
       ),
       items: [
+        if (!tab.isFile && onDisconnect != null && tab.canDisconnect)
+          appMenuItem(
+            context,
+            value: _TabCommand.disconnect,
+            child: AppMenuLabel(Icons.link_off, context.l10n.disconnect),
+          ),
         if (!tab.isFile && tab.canOpenFiles && onSftp != null)
           appMenuItem(
             context,
@@ -343,6 +364,8 @@ class WorkspaceTabBar extends StatelessWidget {
     );
     if (!context.mounted || selected == null) return;
     switch (selected) {
+      case _TabCommand.disconnect:
+        onDisconnect?.call(tab.id);
       case _TabCommand.sftp:
         onSftp?.call(tab.id);
       case _TabCommand.scp:

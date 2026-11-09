@@ -1577,8 +1577,10 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       isCurrent: current,
       reconnect: () async {
         if (!current() || _busy) return;
+        final generation = session.connectionGeneration;
         final host = _hosts.where((h) => h.id == session.host.id).firstOrNull ?? session.host;
-        await _connectLocalHost(host, reuseSession: session, shouldContinue: current);
+        await _connectLocalHost(host, reuseSession: session,
+          shouldContinue: () => current() && session.connectionGeneration == generation);
         if (current()) session.recovery?.update(connected: session.connected.value,
           connecting: session.telnetState == 'connecting');
       },
@@ -2339,6 +2341,15 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       _detached.remove(id);
     }
     await session.close();
+  }
+
+  Future<void> _disconnectTerminalSession(String id) async {
+    final session = _sessions.where((s) => s.id == id).firstOrNull;
+    if (session == null) return;
+    if (session.console != null) return _closeTerminalTab(id);
+    if (session.desktop != null) return;
+    await session.disconnect();
+    if (mounted && !_disposing) _onSessionChanged();
   }
 
   void _closeTerminalTab(String id) {
@@ -4349,7 +4360,8 @@ _showMessage(
                 'local_ssh_disconnect',
                 context.l10n.disconnect,
                 Icons.link_off,
-                () => _closeTerminalTab(activeSession.id),
+                () => _disconnectTerminalSession(activeSession.id),
+                enabled: activeSession.connected.value || activeSession.recovery?.automaticEnabled == true,
               ),
             ],
           ];
@@ -4358,6 +4370,7 @@ _showMessage(
         child: Column(
           children: [
             WorkspaceTabBar(
+              onDisconnect: (id) => unawaited(_disconnectTerminalSession(id)),
               groups: _layout.groupedSessionIds,
               groupSelections: _layout.retainedGroupSelections,
               onUnsplit: _unsplitTerminalTab,
@@ -4387,6 +4400,9 @@ _showMessage(
                       id: session.id,
                       title: session.host.name,
                       isConnected: session.connected.value,
+                      canDisconnect: session.console == null && session.desktop == null &&
+                          (session.connected.value || session.telnetState == 'connecting' ||
+                            session.recovery?.automaticEnabled == true),
                       canOpenFiles: session.connection != null,
                       canDetach:
                           (session.connection != null ||
@@ -4615,7 +4631,7 @@ _showMessage(
                           theme: _savedTerminalThemeChoice,
                           shortcuts: _terminalShortcutBindings,
                           active: _selectedTabId == session.id,
-                          onDisconnect: () => _closeTerminalTab(session.id),
+                          onDisconnect: () => _disconnectTerminalSession(session.id),
                           onToolsChanged: () {
                             if (mounted) setState(() {});
                           },
@@ -6862,11 +6878,12 @@ class _LocalTerminalSession {
   }
 
   Future<void> attachSsh(SshConnection value, SessionLogRecorder? recorder) async {
+    final generation = connectionGeneration;
     final old = connection;
     await _stdout?.cancel();
     await _stderr?.cancel();
     await old?.close();
-    if (_closed) { await value.close(); return; }
+    if (_closed || connectionGeneration != generation) { await value.close(); return; }
     connection = value;
     log = recorder;
     _bindSsh(value);
@@ -6975,7 +6992,7 @@ class _LocalTerminalSession {
         columns: terminal.viewWidth,
         rows: terminal.viewHeight,
       );
-      if (_closed) {
+      if (_closed || cancellation.isCancelled || !identical(_telnetCancellation, cancellation)) {
         await session.close();
         return;
       }
@@ -7016,7 +7033,7 @@ class _LocalTerminalSession {
       telnetState = 'connected';
       connected.value = true;
     } catch (error) {
-      if (_closed) return;
+      if (_closed || cancellation.isCancelled || !identical(_telnetCancellation, cancellation)) return;
       _telnetCancellation = null;
       telnetState = 'failed';
       telnetError = error is TelnetException
@@ -7041,6 +7058,7 @@ class _LocalTerminalSession {
   HostRecord host;
   SshConnection? connection;
   SessionRecovery? recovery;
+  int connectionGeneration = 0;
   LocalConsole? console;
   String? consoleSerialPort;
   int? consoleBaudRate;
@@ -7063,6 +7081,24 @@ class _LocalTerminalSession {
   StreamSubscription<String>? _stdout, _stderr;
   bool _closed = false;
   Future<void>? _closing;
+  Future<void> disconnect() async {
+    if (_closed) return;
+    recovery?.blockAutomatic();
+    connectionGeneration++;
+    _telnetCancellation?.cancel();
+    _telnetCancellation = null;
+    final output = _stdout, errors = _stderr, oldTelnet = telnet;
+    _stdout = null; _stderr = null; telnet = null;
+    if (isTelnet) telnetState = 'disconnected';
+    telnetError = null;
+    log?.markClosed(SessionLogEndReason.user);
+    connected.value = false;
+    recovery?.update(connected: false);
+    await output?.cancel();
+    await errors?.cancel();
+    await oldTelnet?.close();
+    await connection?.close();
+  }
   Future<void> close() => _closing ??= _close();
   Future<void> _close() async {
     if (_closed) return;
@@ -7523,6 +7559,7 @@ throw StateError(context.l10n.snippetChanged);
               child: TerminalView(
                 _terminal,
                 key: const ValueKey('local_ssh_terminal_view'),
+                readOnly: !widget.session.connected.value,
                 controller: _terminalController,
                 scrollController: _terminalScrollController,
                 focusNode: _terminalFocus,

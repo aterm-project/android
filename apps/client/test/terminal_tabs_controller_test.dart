@@ -22,6 +22,57 @@ void main() {
   useAppLocaleFixture('zh');
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('manual SSH disconnect preserves the tab and pauses automatic reconnect until restore', () async {
+    final connections = <_RecordingConnection>[];
+    final fixture = await _Fixture.create(connector: ({required host, required credential, required verifyHostKey}) async {
+      final c = _RecordingConnection(); connections.add(c); return c;
+    });
+    final app = fixture.app;
+    try {
+      await app.openTerminalTab(_host('host-a', 'Alpha'));
+      final tab = app.activeTerminalTab!;
+      connections.single.emit('retained transcript');
+      await app.disconnectTerminalTab(tab.id);
+      expect(app.activeTerminalTab, same(tab));
+      expect(tab.state, 'disconnected');
+      expect(tab.connection, isNull);
+      expect(tab.recovery!.automaticEnabled, isFalse);
+      await Future<void>.delayed(const Duration(milliseconds: 5100));
+      expect(connections, hasLength(1));
+      await tab.recovery!.retry();
+      expect(connections, hasLength(2));
+      expect(app.activeTerminalTab, same(tab));
+      expect(tab.terminal.buffer.getText(), contains('retained transcript'));
+      expect(tab.recovery!.automaticEnabled, isTrue);
+    } finally { await app.closeWorkspace(); await fixture.database.close(); }
+  });
+
+  test('disconnect cancels a pending SSH restore and fences a late connector result', () async {
+    final late = Completer<SshConnection>();
+    var calls = 0;
+    final first = _RecordingConnection(), second = _RecordingConnection();
+    final fixture = await _Fixture.create(connector: ({required host, required credential, required verifyHostKey}) async {
+      return ++calls == 1 ? first : await late.future;
+    });
+    final app = fixture.app;
+    try {
+      await app.openTerminalTab(_host('host-a', 'Alpha'));
+      final tab = app.activeTerminalTab!;
+      await first.finishOutput();
+      await Future<void>.delayed(Duration.zero);
+      final restore = tab.recovery!.retry();
+      for (var i=0; calls<2 && i<50; i++) { await Future<void>.delayed(const Duration(milliseconds: 2)); }
+      expect(calls, 2);
+      await app.disconnectTerminalTab(tab.id);
+      late.complete(second); await restore;
+      expect(second.closeCount, greaterThan(0));
+      expect(tab.connection, isNull);
+      expect(tab.state, 'disconnected');
+      expect(tab.recovery!.automaticEnabled, isFalse);
+      expect(app.activeTerminalTab, same(tab));
+    } finally { await app.closeWorkspace(); await fixture.database.close(); }
+  });
+
   test('SSH restore reuses the same tab, scrollback and order without replaying input', () async {
     final connections = <_RecordingConnection>[];
     final fixture = await _Fixture.create(

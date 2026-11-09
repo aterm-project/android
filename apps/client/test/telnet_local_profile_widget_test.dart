@@ -264,6 +264,34 @@ void main() {
     final tabBar = tester.widget<WorkspaceTabBar>(find.byType(WorkspaceTabBar));
     final sessionTab = tabBar.tabs.where((tab) => !tab.isHome).single;
     expect(sessionTab.canOpenFiles, isFalse, reason: 'no SFTP for Telnet');
+    expect(sessionTab.canDisconnect, isTrue);
+    tabBar.onDisconnect!(sessionTab.id);
+    await pumpUntil(tester, () => channels.last.closed);
+    await tester.pump(const Duration(seconds: 6));
+    expect(
+      channels,
+      hasLength(2),
+      reason: 'Manual disconnect pauses automatic retries',
+    );
+    expect(
+      find.byKey(const ValueKey('session_restore_connection')),
+      findsOneWidget,
+    );
+    expect(find.text('Reconnect automatically every 5 seconds'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('session_restore_connection')));
+    await pumpUntil(
+      tester,
+      () =>
+          channels.length == 3 &&
+          find
+              .byKey(const ValueKey('session_restore_connection'))
+              .evaluate()
+              .isEmpty,
+    );
+    expect(
+      tester.widget<TerminalView>(telnetView()).terminal,
+      same(originalTerminal),
+    );
     tabBar.onClose(sessionTab.id);
     await pumpUntil(tester, () => channel.closed);
     await pumpUntil(tester, () => channels.last.closed);
