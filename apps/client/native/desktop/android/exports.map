@@ -1,0 +1,11 @@
+/* Android engine export list. Everything else, including the statically
+ * linked FreeRDP, WinPR and OpenSSL symbols, stays local. JNI_OnLoad is
+ * WinPR's own (libwinpr/utils/android.c); ART runs it on System.loadLibrary
+ * to record the JavaVM WinPR needs. */
+{
+  global:
+    aterm_rdp_*;
+    JNI_OnLoad;
+  local:
+    *;
+};

@@ -145,6 +145,13 @@ for abi in "${ABIS[@]}"; do
   dest="$OUT/jniLibs/$abi"
   mkdir -p "$dest"
   "$TOOLCHAIN/bin/llvm-strip" --strip-unneeded -o "$dest/libatermius_rdp.so" "$build/libatermius_rdp.so"
+
+  # On-device negative-path probe (adb only; not packaged in the APK).
+  probe="$OUT/probe/$abi"
+  mkdir -p "$probe"
+  declare -A PROBE_TARGET=([arm64-v8a]=aarch64-linux-android [x86_64]=x86_64-linux-android)
+  locked "$TOOLCHAIN/bin/clang" --target="${PROBE_TARGET[$abi]}$API_LEVEL" -O2 -Wall -Werror \
+    $PREFIX_MAP -Wl,-z,max-page-size=16384 -o "$probe/jni_probe" "$HERE/jni_probe.c"
 done
 
 # Apache-2.0 section 4: ship each upstream LICENSE and any NOTICE file.

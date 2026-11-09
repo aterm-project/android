@@ -6,6 +6,7 @@ that would not load or would not behave as the Dart FFI bindings expect:
 
 * ELF class/machine must match the ABI and the file must be a shared object;
 * every exported ``aterm_rdp_*`` entry point used by lib/desktop/direct/rdp_io.dart
+  and WinPR's ``JNI_OnLoad`` (run by System.loadLibrary to record the JavaVM)
   must be defined, and nothing else may be exported (static FreeRDP/OpenSSL
   symbols stay hidden so they cannot interpose on other libraries);
 * only Android system libraries may be NEEDED (no undeclared .so to package);
@@ -49,6 +50,7 @@ REQUIRED_EXPORTS = frozenset(
         "aterm_rdp_next_event",
         "aterm_rdp_free",
         "aterm_rdp_set_home",
+        "JNI_OnLoad",
     }
 )
 SYSTEM_LIBRARIES = frozenset({"libc.so", "libm.so", "libdl.so", "liblog.so", "libz.so"})
@@ -84,7 +86,9 @@ def check_library(tool: str, path: Path, abi: str) -> tuple[list[str], dict]:
             if fields[4] in ("GLOBAL", "WEAK") and fields[5] == "DEFAULT":
                 exports.add(fields[7].split("@")[0])
     missing = sorted(REQUIRED_EXPORTS - exports)
-    unexpected = sorted(name for name in exports if not name.startswith("aterm_rdp_"))
+    unexpected = sorted(
+        name for name in exports if not name.startswith("aterm_rdp_") and name != "JNI_OnLoad"
+    )
     if missing:
         errors.append(f"{abi}: missing exports {missing}")
     if unexpected:

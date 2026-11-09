@@ -30,11 +30,20 @@
 #if defined(__ANDROID__)
 #include <sys/stat.h>
 #include <pthread.h>
+#include <jni.h>
+// WinPR's Android string conversion (libwinpr/crt/unicode_android.c) asserts a
+// JavaVM, which only WinPR's own JNI_OnLoad (libwinpr/utils/android.c, exported
+// through android/exports.map) records. The app runs it with
+// System.loadLibrary("atermius_rdp"); a dart:ffi dlopen alone never does. Until
+// then the engine refuses to start instead of aborting the process.
+extern JavaVM* jniVm;
+static int jvm_ready(void) { return __atomic_load_n(&jniVm, __ATOMIC_ACQUIRE) != NULL; }
 // FreeRDP refuses to create settings without HOME (upstream aFreeRDP sets it to
 // the app files directory); Android app processes have none. Dart passes an
 // app-private directory before the first connection. An existing HOME is kept.
 static pthread_mutex_t home_lock = PTHREAD_MUTEX_INITIALIZER;
 API int aterm_rdp_set_home(const char* dir) {
+  if (!jvm_ready()) return 0;
   if (!dir || dir[0] != '/' || strlen(dir) >= PATH_MAX) return 0;
   struct stat st;
   if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) return 0;
@@ -678,6 +687,9 @@ API UINT32 aterm_rdp_features(void) {
 API void* aterm_rdp_create_ex(const char* host, int port, const char* user,
                               const char* password, const char* pin, const char* config) {
   if (!host || !*host || port < 1 || port > 65535 || !user || !password || !pin) return NULL;
+#if defined(__ANDROID__)
+  if (!jvm_ready()) return NULL;
+#endif
   AtermConfig cfg;
   if (!parse_config(config, &cfg)) { config_free(&cfg); return NULL; }
   const UINT32 features = aterm_rdp_features();

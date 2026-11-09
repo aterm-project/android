@@ -33,7 +33,7 @@ Windows 原生引擎提供文本/文件剪贴板与可用资源重定向的设�
 
 Android 上 RDP/VNC 只走直接连接，在会话标签和分屏内显示：VNC 由应用内 RFB 实现连接目标地址；RDP 由 APK 内引擎连接。连接使用系统路由和当前 VPN，不绑定特定网络，也不读取进程环境中的 HTTP(S) 代理；VPN 阻断目标时连接照常失败。任何模式（含已登录账户）都不会回退到本机 `127.0.0.1:4822` 或服务端桌面网关。未打包引擎的 APK 中，RDP 明确报告“无法启动 RDP 引擎”。
 
-证书流程与 Windows 相同：首次或变化的证书显示 SHA-256，用户确认保存后按该指纹重连。Android 引擎不读取系统 CA 库，CA 签发证书同样需要确认指纹。首版不提供文件夹、打印机、智能卡、音频、摄像头、USB 重定向，相关选项按引擎能力禁用；文本剪贴板与显示调整保留。引擎的 FreeRDP 配置目录位于应用私有目录。
+证书流程与 Windows 相同：首次或变化的证书显示 SHA-256，用户确认保存后按该指纹重连。Android 引擎不读取系统 CA 库，CA 签发证书同样需要确认指纹。首版不提供文件夹、打印机、智能卡、音频、摄像头、USB 重定向，相关选项按引擎能力禁用；文本剪贴板与显示调整保留。引擎的 FreeRDP 配置目录位于应用私有目录。WinPR 需要 JavaVM，`MainActivity` 启动时以 `System.loadLibrary` 加载引擎以运行其 `JNI_OnLoad`；未注册 JavaVM 时引擎拒绝创建连接，RDP 报告不可用而不会使应用退出。
 
 引擎构建：`apps/client/native/desktop/android/build_engine.sh` 用 NDK r28+ 及 `deps.lock` 中固定摘要的官方 OpenSSL 3.5.9 与 FreeRDP 3.33.0 源码包，生成每个 ABI 一个自包含 `.so`（依赖静态链接，16 KB 页对齐），并由 `verify_engine.py` 检查导出、依赖和对齐。脚本不联网，源码包需预先放入 `--deps` 目录。随后以 `-Patermius.rdpEngineDir=<输出目录>`（可加 `-Patermius.requireRdpEngine=true`）构建 APK，许可证随包放在 `assets/licenses/atermius_rdp/`；用 `integration/native/android_apk_abi_check.py --require-lib libatermius_rdp.so` 核对 APK。
 

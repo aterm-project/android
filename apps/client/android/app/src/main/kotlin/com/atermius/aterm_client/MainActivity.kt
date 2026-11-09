@@ -24,6 +24,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        loadRdpEngine()
         val owner = Any()
         leaseOwner = owner
         transferChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
@@ -124,6 +125,25 @@ class MainActivity : FlutterActivity() {
     }
 
     companion object {
+        /**
+         * The embedded RDP engine (libatermius_rdp.so, driven from Dart via
+         * FFI) needs WinPR's JNI_OnLoad to record the JavaVM; a dart:ffi
+         * dlopen never runs it. Loading through ART does, once per process.
+         * Without it the engine refuses to start and Dart reports RDP as
+         * unavailable. APKs built without the engine skip this.
+         */
+        @Volatile private var rdpEngineLoaded = false
+
+        @Synchronized private fun loadRdpEngine() {
+            if (rdpEngineLoaded) return
+            try {
+                System.loadLibrary("atermius_rdp")
+                rdpEngineLoaded = true
+            } catch (e: UnsatisfiedLinkError) {
+                // No packaged engine (or unsupported ABI): RDP stays unavailable.
+            }
+        }
+
         private val LEASE_ID = Regex("[A-Za-z0-9_-]{16,128}")
         private const val REQUEST_NOTIFICATIONS = 4108
     }

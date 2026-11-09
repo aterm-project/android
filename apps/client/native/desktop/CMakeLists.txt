@@ -148,11 +148,14 @@ target_include_directories(atermius_rdp PRIVATE
 set_target_properties(atermius_rdp PROPERTIES C_STANDARD 11)
 if(ANDROID)
   # One self-contained engine per ABI (android/build_engine.sh): FreeRDP, WinPR
-  # and OpenSSL are linked statically and kept out of the export table; only
-  # Android system libraries stay dynamic. 16 KB page alignment for Android 15+.
+  # and OpenSSL are linked statically; android/exports.map exports only the
+  # engine ABI plus WinPR's JNI_OnLoad. Only Android system libraries stay
+  # dynamic. 16 KB page alignment for Android 15+.
+  set(_exports "${CMAKE_CURRENT_SOURCE_DIR}/android/exports.map")
   target_link_libraries(atermius_rdp PRIVATE log)
-  target_link_options(atermius_rdp PRIVATE -Wl,--exclude-libs,ALL
-    -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
+  target_link_options(atermius_rdp PRIVATE "-Wl,--version-script=${_exports}"
+    -Wl,-u,JNI_OnLoad -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
+  set_target_properties(atermius_rdp PROPERTIES LINK_DEPENDS "${_exports}")
 endif()
 if(ATERMIUS_RDP_USB AND WIN32)
   add_custom_command(TARGET atermius_rdp POST_BUILD
