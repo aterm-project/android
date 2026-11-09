@@ -24,27 +24,25 @@ Windows、Linux、macOS 桌面支持监听；Web 和移动端显示能力说明�
 
 每次仅执行一个工具请求；命令超时最多 120 秒，工具总截止时间 130 秒。文本文件和命令输出上限 64 KiB，终端读取最多 2000 行，列表一页最多 200 项。工具日志只在内存保留最近 50 条名称和成功状态，停止服务后清空。
 
-## 客户端兼容
+## HTTP 客户端配置
 
-支持 Streamable HTTP JSON 响应：2025-03-26、2025-06-18、2025-11-25 的 `initialize` 流程，以及 2026-07-28 的请求元数据、方法头与 `server/discover`。本服务不使用 SSE 推送，GET 返回 405。请求需携带 `Authorization: Bearer …`、`Content-Type: application/json` 和 `Accept: application/json, text/event-stream`。
-
-仅支持 stdio 的客户端可使用仓库中的 `integration/mcp/stdio_bridge.py`，需要 Python 3，无第三方依赖：
+应用设置中复制的配置使用 Streamable HTTP，其结构如下。示例令牌必须替换为本次启用生成的值，只保存到受信客户端的私有配置：
 
 ```json
 {
   "mcpServers": {
     "atermius": {
-      "command": "python3",
-      "args": ["/absolute/path/to/atermius/integration/mcp/stdio_bridge.py"],
-      "env": {
-        "ATERMIUS_MCP_URL": "http://127.0.0.1:8765/mcp",
-        "ATERMIUS_MCP_TOKEN": "替换为本次启用生成的令牌，不含 Bearer 前缀"
+      "url": "http://127.0.0.1:8765/mcp",
+      "headers": {
+        "Authorization": "Bearer REPLACE_WITH_CURRENT_ENABLE_TOKEN"
       }
     }
   }
 }
 ```
 
-Windows 可将 command 改为已安装的 `python`，路径使用实际仓库路径。桥接器不启动应用、不监听公网、不跟随重定向，不使用环境代理。其 stdio 请求顺序执行；长请求期间取消请使用应用中的停止按钮，或等待工具截止时间。
+按外部客户端支持的 HTTP 配置语法调整。请求需包含 JSON Content-Type 及协议要求的 Accept/方法头；服务使用 JSON 响应，不提供 SSE 推送，GET 返回 405。应用复制配置与当前启用端口/令牌一致，停用后旧令牌失效。
 
-协议依据：[Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)、[2025-11-25 传输](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports)、[发现](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)。
+仅支持 stdio 的客户端需要另行配置兼容适配器；当前拆分仓库不附带旧说明中的 Python 桥接脚本。无需在运行机器克隆整个历史工程或公开监听端口。
+
+参考：[MCP Streamable HTTP 传输](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports)。
