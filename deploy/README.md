@@ -1,9 +1,8 @@
-# Self-hosted single-container deployment
+# Deployment reference
 
-The image build compiles the Flutter Web bundle and Rust server into the same
-container. The named Docker volume stores SQLite data and the instance signing
-keys. Host publishing is loopback-only by default; terminate TLS in a reverse
-proxy on the same machine before exposing the service remotely.
+The server image builds the API only. The browser frontend is built separately from the sibling Web repository. Start with the [English installation guide](../docs/INSTALLATION.en.md) or [中文安装指南](../docs/INSTALLATION.md) for API + Web, first account, HTTPS and temporary sharing. This page retains detailed operational/optional-overlay procedures.
+
+The following minimal commands are **API-only**; they do not serve the browser UI. For a Web or HTTPS stack, retain all of its active overlays in every command.
 
 From the repository root:
 

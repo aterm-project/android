@@ -32,15 +32,17 @@ anything the target account allows — use a dedicated low-privilege account.
 * `ATERMIUS_PUBLIC_ORIGIN` = the exact browser origin (e.g. `https://atermius.example.com`).
 * TLS in front (cookies are `__Host-` / `Secure`).
 
+Start with the complete [English installation flow](INSTALLATION.en.md) or [中文安装流程](INSTALLATION.md). It includes the separate Web image, exact HTTPS origin, Caddy/web-edge routing, administrator setup and target policy. Adding only a gateway overlay does not provision a usable HTTPS guest website.
+
+For an existing stack, retain **every** active Web/TLS/backup/etc. overlay and add `compose.desktop.yaml` and `compose.share.yaml`. The environment example keeps temporary links off: explicitly set `ATERMIUS_SHARE_LINKS_ENABLED=true` and a narrow `ATERMIUS_SHARE_ALLOW_CIDRS` before enabling them. Use `--env-file deploy/.env` consistently; `.env` variables affect the container only when the selected Compose files pass them through.
+
+After deployment, check the exact public origin:
+
 ```sh
-export ATERMIUS_PUBLIC_ORIGIN=https://atermius.example.com
-export ATERMIUS_SHARE_ALLOW_CIDRS=10.20.0.0/16        # networks guests may reach
-docker compose -f deploy/compose.yaml -f deploy/compose.desktop.yaml \
-  -f deploy/compose.share.yaml up -d --build
-curl -s "$ATERMIUS_PUBLIC_ORIGIN/api/v1/instance" | jq .capabilities
-# share_links, share_gateway_ssh, share_gateway_rdp and organizations appear only
-# when every prerequisite is present and valid.
+curl --fail https://atermius.example.com/api/v1/instance
 ```
+
+`share_links`, `share_gateway_ssh`, `share_gateway_rdp` and `organizations` appear only when their respective prerequisites are valid. Replace the example domain before running this check.
 
 PostgreSQL sync-core deployments: cloud routes are **not registered** and no
 capability is advertised; the existing PG scope guard keeps returning
@@ -93,7 +95,7 @@ policy also bounds what they may expose.
    the client applies the signed Vault member-role change (the server alone
    never changes an accepted member's cryptographic role; until then the
    server enforces the narrower of grant and signed role).
-5. Every owner operation (sealing, links, sharing-Vault copies, key
+4. Every owner operation (sealing, links, sharing-Vault copies, key
    delivery, role changes, member removal) is bound to the account, device,
    server, API session and Vault it started in. A sign-out, account or
    server switch, or a Vault selection that does not take effect (or is
@@ -103,7 +105,7 @@ policy also bounds what they may expose.
    not request another selection meanwhile. If the server had already
    completed a step (the Vault or the invitation exists), the error says so;
    nothing is undone silently and nothing is applied to the newer session.
-4. Activity: guest sessions (coarse IP /24 or /48, browser family), live
+5. Activity: guest sessions (coarse IP /24 or /48, browser family), live
    connections, metadata-only audit; end sessions; pause, rotate, revoke.
 
 ## Guest flow
@@ -167,5 +169,4 @@ at the simultaneous limit) and never charges an attempt.
 
 Instance backups do not contain the gateway key. After restoring to a new
 key, existing capsules report `stale_gateway_key` and links stop admitting new
-connections until owners share again. Deleting the key file revokes gateway
-access to every stored login.
+connections until owners share again. For immediate access removal, use link revocation/session termination or stop the service. Do not use deleting a key file as a substitute for revoking a running process's access. A new key loaded on restart makes prior capsules stale.

@@ -1,7 +1,7 @@
 # Caddy HTTPS edge deployment
 
-This runbook adds an optional Caddy edge to the existing single-container
-Compose deployment. The default `compose.yaml` behavior is unchanged. The
+This runbook adds an optional Caddy edge to the API deployment. For the separate Web image, also apply compose.web.yaml and compose.web-edge.yaml as described in [installation](../INSTALLATION.en.md).
+The default `compose.yaml` behavior is unchanged. The
 edge overlay clears the server's published port and exposes the same-origin
 Web/API/Relay service through Caddy. The origin joins the default and dedicated
 `caddy-backend` networks; Caddy joins only `caddy-backend`. Docker Compose 2.24

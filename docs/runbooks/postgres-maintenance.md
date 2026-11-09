@@ -178,6 +178,6 @@ subsystem's batch and can be retried by a later pass.
   maintenance-job route is supported; other PG admin controls remain outside
   this slice.
 
-The current implementation and test evidence are recorded in
-[implementation status](../IMPLEMENTATION-STATUS.md) and
-[`PROJECT_PLAN.md`](../../PROJECT_PLAN.md#283-当前完成状态).
+The supported boundaries and current source-check scope are recorded in
+[implementation status](../IMPLEMENTATION-STATUS.md). Follow the dated evidence
+in this runbook for its specific PostgreSQL slice; it is not a general PG parity claim.
