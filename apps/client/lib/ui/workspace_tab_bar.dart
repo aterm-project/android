@@ -9,6 +9,7 @@ import 'app_motion.dart';
 import 'session_workspace.dart';
 import 'window_caption.dart';
 import 'workspace_controls.dart';
+import 'fullscreen_menu.dart';
 import '../l10n/l10n.dart';
 
 @immutable
@@ -646,7 +647,10 @@ class WorkspaceTabBar extends StatelessWidget {
         ? Builder(
             builder: (strip) => _WorkspaceTabTouchDraggable(
               data: data,
-              feedback: feedback,
+              feedback: Transform.translate(
+                offset: const Offset(16, -48),
+                child: feedback,
+              ),
               dragAnchorStrategy: pointerDragAnchorStrategy,
               stripScrolls: () => _stripScrolls(strip),
               onDragUpdate: (details) => _autoScrollStrip(strip, details),
@@ -799,6 +803,7 @@ class WorkspaceTabBar extends StatelessWidget {
                       icon: const Icon(Icons.add_to_queue_outlined),
                     ),
                   ...actions,
+                  const FullscreenToolsMenu(),
                   if (onSearch != null)
                     IconButton(
                       key: const ValueKey('workspace_host_search_button'),
@@ -894,8 +899,13 @@ class _WorkspaceTabDragPointerState extends MultiDragPointerState {
   @override
   void checkForResolutionAfterMove() {
     final delta = pendingDelta!;
-    final moved = verticalOnly ? delta.dy.abs() : delta.distance;
-    if (moved > computeHitSlop(kind, gestureSettings)) {
+    final slop = computeHitSlop(kind, gestureSettings);
+    // Resolve a deliberate downward/diagonal pull before horizontal scroll
+    // wins the arena. Tiny vertical jitter on a swipe remains scrolling.
+    final moved = verticalOnly
+        ? delta.dy.abs() > slop * .75 && delta.dy.abs() >= delta.dx.abs() * .75
+        : delta.distance > slop;
+    if (moved) {
       resolve(GestureDisposition.accepted);
     }
   }

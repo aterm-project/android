@@ -15112,5 +15112,19 @@
   },
   "mcpAndroidProtected": "Background access is protected by the MCP notification.",
   "mcpAndroidForegroundOnly": "MCP works while this app is visible. Leaving the app revokes access.",
-  "mcpAndroidStarting": "Starting Android background protection…"
+  "mcpAndroidStarting": "Starting Android background protection…",
+  "desktopKeyboardShow": "Open keyboard and special keys",
+  "@desktopKeyboardShow": {},
+  "desktopKeyboardHide": "Hide keyboard and special keys",
+  "@desktopKeyboardHide": {},
+  "desktopTouchMode": "Touch input",
+  "@desktopTouchMode": {},
+  "desktopTrackpadMode": "Trackpad (mouse)",
+  "@desktopTrackpadMode": {},
+  "enterFullscreen": "Enter fullscreen",
+  "@enterFullscreen": {},
+  "exitFullscreen": "Exit fullscreen",
+  "@exitFullscreen": {},
+  "fullscreenUnavailable": "Fullscreen is unavailable for this window.",
+  "@fullscreenUnavailable": {}
 }

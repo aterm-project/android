@@ -16458,4 +16458,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mcpAndroidStarting => '正在启动 Android 后台保护…';
+
+  @override
+  String get desktopKeyboardShow => '打开键盘与特殊键';
+
+  @override
+  String get desktopKeyboardHide => '收起键盘与特殊键';
+
+  @override
+  String get desktopTouchMode => '触摸模式';
+
+  @override
+  String get desktopTrackpadMode => '触控板（鼠标）模式';
+
+  @override
+  String get enterFullscreen => '进入全屏';
+
+  @override
+  String get exitFullscreen => '退出全屏';
+
+  @override
+  String get fullscreenUnavailable => '当前窗口无法切换全屏。';
 }

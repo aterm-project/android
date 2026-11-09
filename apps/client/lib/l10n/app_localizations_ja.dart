@@ -17343,4 +17343,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get mcpAndroidStarting => 'Android のバックグラウンド保護を開始しています…';
+
+  @override
+  String get desktopKeyboardShow => 'キーボードと特殊キーを開く';
+
+  @override
+  String get desktopKeyboardHide => 'キーボードと特殊キーを閉じる';
+
+  @override
+  String get desktopTouchMode => 'タッチ操作';
+
+  @override
+  String get desktopTrackpadMode => 'トラックパッド（マウス）操作';
+
+  @override
+  String get enterFullscreen => '全画面表示';
+
+  @override
+  String get exitFullscreen => '全画面表示を終了';
+
+  @override
+  String get fullscreenUnavailable => 'このウィンドウでは全画面表示に切り替えられません。';
 }

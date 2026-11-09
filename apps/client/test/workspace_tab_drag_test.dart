@@ -75,24 +75,52 @@ Future<void> _dismissMenu(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-void main() {
-  test(
-    'layout reparenting keeps each live session exactly once and collapses closed panes',
-    () {
-      final layout = SessionWorkspaceController()..activate('a');
-      layout.split('b', 'a', SessionSplitEdge.right);
-      layout.split('c', 'b', SessionSplitEdge.bottom);
-      expect(layout.sessionIds, ['a', 'b', 'c']);
-      layout.split('a', 'c', SessionSplitEdge.top);
-      expect(layout.sessionIds.toSet(), {'a', 'b', 'c'});
-      expect(layout.sessionIds, hasLength(3));
-      layout.remove('c');
-      layout.remove('b');
-      expect(layout.root, isA<SessionWorkspacePane>());
-      expect(layout.sessionIds, ['a']);
-      layout.dispose();
-    },
+Future<SessionWorkspaceController> _mobileWorkspace(WidgetTester tester) async {
+  final layout = SessionWorkspaceController()..activate('b');
+  addTearDown(layout.dispose);
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: _android,
+      home: Scaffold(
+        body: Column(
+          children: [
+            WorkspaceTabBar(
+              tabs: _tabs,
+              selectedId: 'b',
+              onSelect: (_) {},
+              onClose: (_) {},
+              onReorder: (_, _) {},
+            ),
+            Expanded(
+              child: SessionWorkspaceView(
+                controller: layout,
+                terminalBuilder: (_, id) =>
+                    ColoredBox(color: Colors.black, child: Text('live:$id')),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
   );
+  return layout;
+}
+
+void main() {
+  test('layout reparenting keeps each live session exactly once and collapses closed panes', () {
+    final layout = SessionWorkspaceController()..activate('a');
+    layout.split('b', 'a', SessionSplitEdge.right);
+    layout.split('c', 'b', SessionSplitEdge.bottom);
+    expect(layout.sessionIds, ['a', 'b', 'c']);
+    layout.split('a', 'c', SessionSplitEdge.top);
+    expect(layout.sessionIds.toSet(), {'a', 'b', 'c'});
+    expect(layout.sessionIds, hasLength(3));
+    layout.remove('c');
+    layout.remove('b');
+    expect(layout.root, isA<SessionWorkspacePane>());
+    expect(layout.sessionIds, ['a']);
+    layout.dispose();
+  });
   testWidgets('mouse drag reorders SSH tabs while Home stays pinned', (
     tester,
   ) async {
@@ -922,4 +950,79 @@ void main() {
       findsNWidgets(2),
     );
   });
+  testWidgets('touch safe centre drop leaves layout and live sessions intact', (
+    tester,
+  ) async {
+    final layout = await _mobileWorkspace(tester);
+    final pane = tester.getRect(find.byKey(const ValueKey('session-pane-b')));
+    await _touchDrag(
+      tester,
+      tester.getCenter(find.byKey(const ValueKey('workspace-tab-a'))),
+      pane.center,
+    );
+    expect(layout.root, isA<SessionWorkspacePane>());
+    expect(layout.sessionIds, ['b']);
+    expect(find.text('live:b'), findsOneWidget);
+  });
+
+  testWidgets('touch corner jitter retains highlighted split direction', (
+    tester,
+  ) async {
+    final layout = await _mobileWorkspace(tester);
+    final pane = tester.getRect(find.byKey(const ValueKey('session-pane-b')));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('workspace-tab-a'))),
+      kind: PointerDeviceKind.touch,
+    );
+    await gesture.moveBy(const Offset(0, 30));
+    await tester.pump();
+    await gesture.moveTo(
+      pane.topLeft + Offset(pane.width * .08, pane.height * .50),
+    );
+    await tester.pump();
+    await gesture.moveTo(
+      pane.topLeft + Offset(pane.width * .09, pane.height * .10),
+    );
+    await tester.pump();
+    await gesture.moveTo(
+      pane.topLeft + Offset(pane.width * .11, pane.height * .10),
+    );
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(
+      layout.root,
+      isA<SessionWorkspaceSplit>().having(
+        (v) => v.axis,
+        'axis',
+        Axis.horizontal,
+      ),
+    );
+    expect(layout.sessionIds, ['a', 'b']);
+  });
+
+  testWidgets(
+    'touch diagonal pull lifts overflowing tabs before horizontal scrolling',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final layout = await _mobileWorkspace(tester);
+      final pane = tester.getRect(find.byKey(const ValueKey('session-pane-b')));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(const ValueKey('workspace-tab-a'))),
+        kind: PointerDeviceKind.touch,
+      );
+      await gesture.moveBy(const Offset(18, 17));
+      await tester.pump();
+      expect(_dragInFlight, findsOneWidget);
+      await gesture.moveTo(Offset(pane.left + 12, pane.center.dy));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(layout.root, isA<SessionWorkspaceSplit>());
+      expect(layout.sessionIds, ['a', 'b']);
+    },
+  );
 }

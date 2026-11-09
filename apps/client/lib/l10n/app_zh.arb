@@ -4862,5 +4862,12 @@
   "mcpForegroundNotificationStop": "停止 MCP",
   "mcpAndroidProtected": "MCP 通知已启用，可在后台保持连接。",
   "mcpAndroidForegroundOnly": "MCP 仅在本应用可见时运行。离开应用将撤销访问权限。",
-  "mcpAndroidStarting": "正在启动 Android 后台保护…"
+  "mcpAndroidStarting": "正在启动 Android 后台保护…",
+  "desktopKeyboardShow": "打开键盘与特殊键",
+  "desktopKeyboardHide": "收起键盘与特殊键",
+  "desktopTouchMode": "触摸模式",
+  "desktopTrackpadMode": "触控板（鼠标）模式",
+  "enterFullscreen": "进入全屏",
+  "exitFullscreen": "退出全屏",
+  "fullscreenUnavailable": "当前窗口无法切换全屏。"
 }

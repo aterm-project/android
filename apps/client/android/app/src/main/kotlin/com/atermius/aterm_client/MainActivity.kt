@@ -3,11 +3,17 @@ package com.atermius.aterm_client
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var fullscreenChannel: MethodChannel? = null
+    private var fullscreenRequested = false
+    private var savedSystemUiFlags: Int? = null
     private var transferChannel: MethodChannel? = null
     private var mcpChannel: MethodChannel? = null
     private var leaseOwner: Any? = null
@@ -16,6 +22,7 @@ class MainActivity : FlutterActivity() {
     override fun onResume() {
         super.onResume()
         resumed = true
+        if (fullscreenRequested) applyFullscreen(true)
         // Notification settings may have changed while the app was away
         // (e.g. in system settings); restore or downgrade MCP protection.
         McpForegroundLease.recheckNotifications(applicationContext)
@@ -25,6 +32,25 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         loadRdpEngine()
+        fullscreenChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
+            "atermius/fullscreen").also { channel ->
+            channel.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "get" -> result.success(fullscreenRequested)
+                    "set" -> {
+                        val enabled = call.argument<Boolean>("enabled")
+                        if (enabled == null) {
+                            result.error("invalid_arguments", "Expected enabled boolean", null)
+                        } else {
+                            fullscreenRequested = enabled
+                            applyFullscreen(enabled)
+                            result.success(fullscreenRequested)
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        }
         val owner = Any()
         leaseOwner = owner
         transferChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
@@ -74,6 +100,30 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
+    private fun applyFullscreen(enabled: Boolean) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            window.insetsController?.let { controller ->
+                controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                if (enabled) controller.hide(WindowInsets.Type.systemBars())
+                else controller.show(WindowInsets.Type.systemBars())
+            }
+        } else {
+            if (enabled && savedSystemUiFlags == null) savedSystemUiFlags = window.decorView.systemUiVisibility
+            window.decorView.systemUiVisibility = if (enabled)
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            else savedSystemUiFlags ?: View.SYSTEM_UI_FLAG_VISIBLE
+            if (!enabled) savedSystemUiFlags = null
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && fullscreenRequested) applyFullscreen(true)
+    }
+
     private fun startMcp(owner: Any, id: String, port: Int?, result: MethodChannel.Result, texts: List<String?>) {
         if (port == null || port !in 1..65535 || texts.any { it == null || it.isBlank() || it.length > 160 }) {
             result.error("invalid_arguments", "Invalid MCP foreground request", null)
@@ -121,6 +171,8 @@ class MainActivity : FlutterActivity() {
             McpForegroundLease.releaseOwner(it)
         }
         leaseOwner = null
+        fullscreenChannel?.setMethodCallHandler(null)
+        fullscreenChannel = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 

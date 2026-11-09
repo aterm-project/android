@@ -18426,4 +18426,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mcpAndroidStarting => 'Starting Android background protection…';
+
+  @override
+  String get desktopKeyboardShow => 'Open keyboard and special keys';
+
+  @override
+  String get desktopKeyboardHide => 'Hide keyboard and special keys';
+
+  @override
+  String get desktopTouchMode => 'Touch input';
+
+  @override
+  String get desktopTrackpadMode => 'Trackpad (mouse)';
+
+  @override
+  String get enterFullscreen => 'Enter fullscreen';
+
+  @override
+  String get exitFullscreen => 'Exit fullscreen';
+
+  @override
+  String get fullscreenUnavailable =>
+      'Fullscreen is unavailable for this window.';
 }

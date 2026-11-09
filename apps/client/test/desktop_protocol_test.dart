@@ -56,7 +56,11 @@ void main() {
       ScaffoldMessenger.of(tester.element(find.byType(DesktopView)))
           .clearSnackBars();
       await tester.pumpAndSettle();
-      expect(find.byType(LayoutBuilder), findsOneWidget);
+      expect(
+        tester.getRect(find.byKey(const ValueKey('desktop_remote_surface'))),
+        tester.getRect(find.byType(DesktopView)),
+        reason: 'Closed keyboard must leave the remote surface the full pane',
+      );
       expect(find.text('Send Ctrl+Alt+Delete'), findsNothing);
       await tester.tap(find.byTooltip('Remote desktop menu'));
       await tester.pumpAndSettle();

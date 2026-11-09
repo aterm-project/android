@@ -29079,6 +29079,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starting Android background protection…'**
   String get mcpAndroidStarting;
+
+  /// No description provided for @desktopKeyboardShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open keyboard and special keys'**
+  String get desktopKeyboardShow;
+
+  /// No description provided for @desktopKeyboardHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide keyboard and special keys'**
+  String get desktopKeyboardHide;
+
+  /// No description provided for @desktopTouchMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch input'**
+  String get desktopTouchMode;
+
+  /// No description provided for @desktopTrackpadMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Trackpad (mouse)'**
+  String get desktopTrackpadMode;
+
+  /// No description provided for @enterFullscreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter fullscreen'**
+  String get enterFullscreen;
+
+  /// No description provided for @exitFullscreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit fullscreen'**
+  String get exitFullscreen;
+
+  /// No description provided for @fullscreenUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Fullscreen is unavailable for this window.'**
+  String get fullscreenUnavailable;
 }
 
 class _AppLocalizationsDelegate

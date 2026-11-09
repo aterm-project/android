@@ -18473,4 +18473,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mcpAndroidStarting => 'Запускается фоновая защита Android…';
+
+  @override
+  String get desktopKeyboardShow => 'Открыть клавиатуру и специальные клавиши';
+
+  @override
+  String get desktopKeyboardHide => 'Скрыть клавиатуру и специальные клавиши';
+
+  @override
+  String get desktopTouchMode => 'Сенсорный ввод';
+
+  @override
+  String get desktopTrackpadMode => 'Тачпад (мышь)';
+
+  @override
+  String get enterFullscreen => 'Полноэкранный режим';
+
+  @override
+  String get exitFullscreen => 'Выйти из полноэкранного режима';
+
+  @override
+  String get fullscreenUnavailable =>
+      'Для этого окна недоступен полноэкранный режим.';
 }

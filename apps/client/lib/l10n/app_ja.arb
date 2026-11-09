@@ -4862,5 +4862,12 @@
   "mcpForegroundNotificationStop": "MCP を停止",
   "mcpAndroidProtected": "MCP 通知によりバックグラウンドでも接続できます。",
   "mcpAndroidForegroundOnly": "アプリの表示中のみ MCP を利用できます。アプリを離れるとアクセスは失効します。",
-  "mcpAndroidStarting": "Android のバックグラウンド保護を開始しています…"
+  "mcpAndroidStarting": "Android のバックグラウンド保護を開始しています…",
+  "desktopKeyboardShow": "キーボードと特殊キーを開く",
+  "desktopKeyboardHide": "キーボードと特殊キーを閉じる",
+  "desktopTouchMode": "タッチ操作",
+  "desktopTrackpadMode": "トラックパッド（マウス）操作",
+  "enterFullscreen": "全画面表示",
+  "exitFullscreen": "全画面表示を終了",
+  "fullscreenUnavailable": "このウィンドウでは全画面表示に切り替えられません。"
 }

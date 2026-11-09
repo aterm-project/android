@@ -4862,5 +4862,12 @@
   "mcpForegroundNotificationStop": "Остановить MCP",
   "mcpAndroidProtected": "Уведомление MCP обеспечивает доступ в фоновом режиме.",
   "mcpAndroidForegroundOnly": "MCP работает, пока приложение видно. При уходе из приложения доступ отзывается.",
-  "mcpAndroidStarting": "Запускается фоновая защита Android…"
+  "mcpAndroidStarting": "Запускается фоновая защита Android…",
+  "desktopKeyboardShow": "Открыть клавиатуру и специальные клавиши",
+  "desktopKeyboardHide": "Скрыть клавиатуру и специальные клавиши",
+  "desktopTouchMode": "Сенсорный ввод",
+  "desktopTrackpadMode": "Тачпад (мышь)",
+  "enterFullscreen": "Полноэкранный режим",
+  "exitFullscreen": "Выйти из полноэкранного режима",
+  "fullscreenUnavailable": "Для этого окна недоступен полноэкранный режим."
 }
