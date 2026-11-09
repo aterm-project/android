@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'app_menu.dart';
 
 import 'package:flutter/gestures.dart';
@@ -372,12 +374,72 @@ class WorkspaceTabBar extends StatelessWidget {
     }
   }
 
+  /// Opens the same menu a secondary click shows: the split-group menu for a
+  /// grouped tab, otherwise the per-tab menu. Home has no context menu.
+  void _contextMenu(BuildContext context, WorkspaceTab tab, Offset position) {
+    if (tab.isHome) return;
+    tab.members.isEmpty
+        ? _menu(context, tab, position)
+        : _groupMenu(context, tab, position);
+  }
+
+  /// Touch long-press menu: haptic confirmation like any Android long-press,
+  /// then exactly the secondary-click menu at the finger.
+  void _longPressMenu(BuildContext context, WorkspaceTab tab, Offset position) {
+    unawaited(Feedback.forLongPress(context));
+    _contextMenu(context, tab, position);
+  }
+
+  bool _isLiveTab(String id) => tabs.any((tab) => tab.id == id && !tab.isHome);
+
+  /// Whether the SSH tab strip around [strip] currently overflows, i.e. a
+  /// horizontal finger swipe has somewhere to scroll.
+  static bool _stripScrolls(BuildContext strip) {
+    if (!strip.mounted) return false;
+    final position = Scrollable.maybeOf(strip)?.position;
+    return position != null &&
+        position.hasContentDimensions &&
+        position.maxScrollExtent > position.minScrollExtent;
+  }
+
+  /// While a finger carries a tab along the strip, holding it near either end
+  /// of the strip reveals the hidden tabs so any reorder slot is reachable.
+  static void _autoScrollStrip(BuildContext strip, DragUpdateDetails details) {
+    if (!strip.mounted) return;
+    final scrollable = Scrollable.maybeOf(strip);
+    final box = scrollable?.context.findRenderObject();
+    if (scrollable == null || box is! RenderBox || !box.hasSize) return;
+    final position = scrollable.position;
+    if (!position.hasContentDimensions) return;
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    final point = details.globalPosition;
+    if (point.dy < rect.top || point.dy > rect.bottom) return;
+    const zone = 40.0, step = 12.0;
+    final delta = point.dx < rect.left + zone
+        ? -step
+        : point.dx > rect.right - zone
+        ? step
+        : 0.0;
+    final target = (position.pixels + delta).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if (target != position.pixels) position.jumpTo(target);
+  }
+
   Widget _tab(BuildContext context, WorkspaceTab tab, WindowBarMetrics bar) {
     final colors = Theme.of(context).colorScheme;
     final selected =
         tab.id == selectedId ||
         tab.members.any((member) => member.id == selectedId);
-    final content = Semantics(
+    // Touch platforms: a finger moves the tab at once (see
+    // [_WorkspaceTabTouchDraggable]) and a stationary long-press opens the
+    // secondary-click menu. Desktop mouse handling is unchanged.
+    final mobile = switch (Theme.of(context).platform) {
+      TargetPlatform.android || TargetPlatform.iOS => true,
+      _ => false,
+    };
+    Widget tabBody(BuildContext tabContext) => Semantics(
       container: true,
       explicitChildNodes: true,
       button: true,
@@ -394,13 +456,29 @@ class WorkspaceTabBar extends StatelessWidget {
                   : context.l10n.tabSemanticsInactive,
             ),
       onTap: () => onSelect(_selectionFor(tab)),
+      // TalkBack/VoiceOver double-tap-and-hold reaches the same menu.
+      onLongPress: tab.isHome || !mobile
+          ? null
+          : () {
+              final box = tabContext.findRenderObject();
+              if (box is! RenderBox || !box.hasSize) return;
+              _contextMenu(
+                context,
+                tab,
+                box.localToGlobal(box.size.center(Offset.zero)),
+              );
+            },
       selected: selected,
       child: GestureDetector(
         onSecondaryTapDown: tab.isHome
             ? null
-            : (event) => tab.members.isEmpty
-                  ? _menu(context, tab, event.globalPosition)
-                  : _groupMenu(context, tab, event.globalPosition),
+            : (event) => _contextMenu(context, tab, event.globalPosition),
+        // Wins the arena only if the finger stays within touch slop for the
+        // long-press timeout; any earlier motion goes to the tab drag or the
+        // strip scroll instead.
+        onLongPressStart: tab.isHome || !mobile
+            ? null
+            : (details) => _longPressMenu(context, tab, details.globalPosition),
         child: Padding(
           padding: EdgeInsets.fromLTRB(
             tab.isHome ? 8 : 3,
@@ -519,6 +597,7 @@ class WorkspaceTabBar extends StatelessWidget {
         ),
       ),
     );
+    final content = Builder(builder: tabBody);
     if (tab.members.isNotEmpty) {
       return Tooltip(
         message: tab.members
@@ -561,18 +640,20 @@ class WorkspaceTabBar extends StatelessWidget {
       if (!viewport.contains(details.offset)) onDetach!(tab.id);
     }
 
-    final mobile = switch (Theme.of(context).platform) {
-      TargetPlatform.android || TargetPlatform.iOS => true,
-      _ => false,
-    };
     final draggable = mobile
-        ? LongPressDraggable<WorkspaceTabDragData>(
-            data: data,
-            feedback: feedback,
-            dragAnchorStrategy: pointerDragAnchorStrategy,
-            onDragEnd: dragEnd,
-            childWhenDragging: Opacity(opacity: .35, child: content),
-            child: content,
+        // Builder: a context inside the strip's Scrollable, stable for the
+        // lifetime of the draggable (the recognizer is created only once).
+        ? Builder(
+            builder: (strip) => _WorkspaceTabTouchDraggable(
+              data: data,
+              feedback: feedback,
+              dragAnchorStrategy: pointerDragAnchorStrategy,
+              stripScrolls: () => _stripScrolls(strip),
+              onDragUpdate: (details) => _autoScrollStrip(strip, details),
+              onDragEnd: dragEnd,
+              childWhenDragging: Opacity(opacity: .35, child: content),
+              child: content,
+            ),
           )
         : Draggable<WorkspaceTabDragData>(
             data: data,
@@ -587,9 +668,14 @@ class WorkspaceTabBar extends StatelessWidget {
       onWillAcceptWithDetails: (details) =>
           onReorder != null &&
           details.data.scope == dragScope &&
-          details.data.tabId != tab.id,
-      onAcceptWithDetails: (details) =>
-          onReorder?.call(details.data.tabId, tab.id),
+          details.data.tabId != tab.id &&
+          _isLiveTab(details.data.tabId),
+      // Re-checked at drop: a tab closed mid-gesture is never re-inserted.
+      onAcceptWithDetails: (details) {
+        if (_isLiveTab(details.data.tabId)) {
+          onReorder?.call(details.data.tabId, tab.id);
+        }
+      },
       builder: (context, candidates, _) => DecoratedBox(
         decoration: BoxDecoration(
           border: Border(
@@ -671,9 +757,13 @@ class WorkspaceTabBar extends StatelessWidget {
                               DragTarget<WorkspaceTabDragData>(
                                 onWillAcceptWithDetails: (details) =>
                                     onReorder != null &&
-                                    details.data.scope == dragScope,
-                                onAcceptWithDetails: (details) =>
-                                    onReorder?.call(details.data.tabId, null),
+                                    details.data.scope == dragScope &&
+                                    _isLiveTab(details.data.tabId),
+                                onAcceptWithDetails: (details) {
+                                  if (_isLiveTab(details.data.tabId)) {
+                                    onReorder?.call(details.data.tabId, null);
+                                  }
+                                },
                                 builder: (context, candidates, _) {
                                   final gap = SizedBox(
                                     width: gapWidth,
@@ -739,6 +829,80 @@ class WorkspaceTabBar extends StatelessWidget {
       },
     );
   }
+}
+
+/// Touch-platform tab drag. Unlike [LongPressDraggable] it starts as soon as
+/// the finger leaves touch slop, so a stationary long-press stays free to open
+/// the context menu. When the strip overflows, a touch drag only starts on
+/// vertical motion and horizontal swipes keep scrolling the strip; the
+/// lifted tab can then be carried back along the strip to reorder it. Mouse
+/// and trackpad pointers always drag immediately, as on desktop.
+class _WorkspaceTabTouchDraggable extends Draggable<WorkspaceTabDragData> {
+  const _WorkspaceTabTouchDraggable({
+    required super.data,
+    required super.feedback,
+    required super.child,
+    required this.stripScrolls,
+    super.childWhenDragging,
+    super.dragAnchorStrategy,
+    super.onDragUpdate,
+    super.onDragEnd,
+  });
+
+  final bool Function() stripScrolls;
+
+  @override
+  MultiDragGestureRecognizer createRecognizer(
+    GestureMultiDragStartCallback onStart,
+  ) =>
+      _WorkspaceTabDragRecognizer(stripScrolls: stripScrolls)
+        ..onStart = onStart;
+}
+
+class _WorkspaceTabDragRecognizer extends MultiDragGestureRecognizer {
+  _WorkspaceTabDragRecognizer({required this.stripScrolls})
+    : super(debugOwner: null);
+
+  final bool Function() stripScrolls;
+
+  @override
+  MultiDragPointerState createNewPointerState(PointerDownEvent event) =>
+      _WorkspaceTabDragPointerState(
+        event.position,
+        event.kind,
+        gestureSettings,
+        verticalOnly:
+            event.kind != PointerDeviceKind.mouse &&
+            event.kind != PointerDeviceKind.trackpad &&
+            stripScrolls(),
+      );
+
+  @override
+  String get debugDescription => 'workspace tab drag';
+}
+
+class _WorkspaceTabDragPointerState extends MultiDragPointerState {
+  _WorkspaceTabDragPointerState(
+    super.initialPosition,
+    super.kind,
+    super.gestureSettings, {
+    required this.verticalOnly,
+  });
+
+  final bool verticalOnly;
+
+  @override
+  void checkForResolutionAfterMove() {
+    final delta = pendingDelta!;
+    final moved = verticalOnly ? delta.dy.abs() : delta.distance;
+    if (moved > computeHitSlop(kind, gestureSettings)) {
+      resolve(GestureDisposition.accepted);
+    }
+  }
+
+  @override
+  void accepted(GestureMultiDragStartCallback starter) =>
+      starter(initialPosition);
 }
 
 /// New tab: 160 ms fade + 6 px lift. Paint-only, so the tab's hit area,
