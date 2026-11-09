@@ -16,6 +16,7 @@ class DesktopMobileControls extends StatefulWidget {
   const DesktopMobileControls({
     super.key,
     required this.focus,
+    this.unicodeText = true,
     required this.onActivate,
     required this.send,
     required this.connected,
@@ -25,6 +26,10 @@ class DesktopMobileControls extends StatefulWidget {
     required this.keybarHeight,
   });
   final FocusNode focus;
+
+  /// RDP needs Unicode text packets for uppercase/punctuation without Shift.
+  /// VNC uses its standard Latin-1 keysyms; Unicode keysyms start above 255.
+  final bool unicodeText;
   final VoidCallback onActivate;
   final void Function(List<Object>) send;
   final bool connected, trackpad;
@@ -223,7 +228,9 @@ class DesktopMobileControlsState extends State<DesktopMobileControls>
           9 => 0xff09,
           8 => 0xff08,
           _ =>
-            _modifiers.values.any((value) => value != _Latch.off) && rune <= 255
+            rune <= 255 &&
+                    (!widget.unicodeText ||
+                        _modifiers.values.any((value) => value != _Latch.off))
                 ? rune
                 : 0x01000000 | rune,
         });
