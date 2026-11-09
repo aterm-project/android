@@ -34,6 +34,32 @@ val flutterDisableAbiFiltering =
 val flutterAbiFilters: List<String>? =
     if (flutterSplitPerAbi || flutterDisableAbiFiltering) null else flutterTargetAbis
 
+// Embedded RDP engine built from source by
+// apps/client/native/desktop/android/build_engine.sh (FreeRDP + OpenSSL linked
+// into one libatermius_rdp.so per ABI). -Patermius.rdpEngineDir=<OUT> (or
+// ATERMIUS_ANDROID_RDP_ENGINE_DIR) packages OUT/jniLibs/<abi>/libatermius_rdp.so
+// and its licenses. Without it the APK has no RDP engine and Android RDP
+// reports that the engine is unavailable; it never falls back to a local
+// guacd. -Patermius.requireRdpEngine=true turns a missing engine into a build
+// failure. The engine is built for arm64-v8a and x86_64 only.
+val rdpEngineSupportedAbis = listOf("arm64-v8a", "x86_64")
+val rdpEngineDir: File? =
+    (project.findProperty("atermius.rdpEngineDir")?.toString()
+        ?: System.getenv("ATERMIUS_ANDROID_RDP_ENGINE_DIR"))
+        ?.takeIf { it.isNotBlank() }
+        ?.let { file(it) }
+val requireRdpEngine =
+    project.findProperty("atermius.requireRdpEngine")?.toString()?.toBoolean() ?: false
+if (rdpEngineDir != null || requireRdpEngine) {
+    val dir = rdpEngineDir
+        ?: throw GradleException("atermius.requireRdpEngine=true needs -Patermius.rdpEngineDir")
+    val abis = flutterTargetAbis?.filter { it in rdpEngineSupportedAbis } ?: rdpEngineSupportedAbis
+    val missing = abis.filter { !File(dir, "jniLibs/$it/libatermius_rdp.so").isFile }
+    if (missing.isNotEmpty()) {
+        throw GradleException("RDP engine missing for $missing in $dir (run build_engine.sh)")
+    }
+}
+
 android {
     namespace = "com.atermius.aterm_client"
     compileSdk = flutter.compileSdkVersion
@@ -62,6 +88,14 @@ android {
                 abiFilters.clear()
                 abiFilters.addAll(abis)
             }
+        }
+    }
+
+    rdpEngineDir?.let { dir ->
+        sourceSets.getByName("main") {
+            jniLibs.srcDir(File(dir, "jniLibs"))
+            // Apache-2.0 notices for FreeRDP and OpenSSL ship with the engine.
+            assets.srcDir(File(dir, "assets"))
         }
     }
 

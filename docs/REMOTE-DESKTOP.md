@@ -7,6 +7,7 @@
 | 路径 | 前提与范围 |
 | --- | --- |
 | Windows 原生 RDP | 与应用匹配的 `atermius_rdp.dll` bundle，直接连接目标，不依赖 guacd |
+| Android 原生 RDP | APK 内的 `libatermius_rdp.so`（arm64-v8a、x86_64），直接连接目标，不依赖 guacd 或外部查看器 |
 | 原生 VNC | 使用应用中的直接 RFB 实现，具体平台取决于构建和运行能力 |
 | 账户模式浏览器 RDP/VNC | 服务端配置 guacd、来源和目标策略 |
 | 临时访客 SSH/RDP | 单独的可信分享网关，要求 SQLite、HTTPS、胶囊与链接策略 |
@@ -28,6 +29,14 @@ Windows 原生引擎提供文本/文件剪贴板与可用资源重定向的设�
 
 远程桌面获得焦点后，按键发往远端；Windows 的 **Ctrl+Alt+Home** 打开本机会话菜单，其他绑定按应用设置处理。
 
+## Android 直接连接
+
+Android 上 RDP/VNC 只走直接连接，在会话标签和分屏内显示：VNC 由应用内 RFB 实现连接目标地址；RDP 由 APK 内引擎连接。连接使用系统路由和当前 VPN，不绑定特定网络，也不读取进程环境中的 HTTP(S) 代理；VPN 阻断目标时连接照常失败。任何模式（含已登录账户）都不会回退到本机 `127.0.0.1:4822` 或服务端桌面网关。未打包引擎的 APK 中，RDP 明确报告“无法启动 RDP 引擎”。
+
+证书流程与 Windows 相同：首次或变化的证书显示 SHA-256，用户确认保存后按该指纹重连。Android 引擎不读取系统 CA 库，CA 签发证书同样需要确认指纹。首版不提供文件夹、打印机、智能卡、音频、摄像头、USB 重定向，相关选项按引擎能力禁用；文本剪贴板与显示调整保留。引擎的 FreeRDP 配置目录位于应用私有目录。
+
+引擎构建：`apps/client/native/desktop/android/build_engine.sh` 用 NDK r28+ 及 `deps.lock` 中固定摘要的官方 OpenSSL 3.5.9 与 FreeRDP 3.33.0 源码包，生成每个 ABI 一个自包含 `.so`（依赖静态链接，16 KB 页对齐），并由 `verify_engine.py` 检查导出、依赖和对齐。脚本不联网，源码包需预先放入 `--deps` 目录。随后以 `-Patermius.rdpEngineDir=<输出目录>`（可加 `-Patermius.requireRdpEngine=true`）构建 APK，许可证随包放在 `assets/licenses/atermius_rdp/`；用 `integration/native/android_apk_abi_check.py --require-lib libatermius_rdp.so` 核对 APK。
+
 ## 网关部署
 
 网关可访问目标登录信息、画面和输入，是受信组件。仅将 guacd 放在受控私有网络，限制目标范围，不向外发布 4822。普通 SSH 字节 Relay 不需要 guacd。
@@ -40,6 +49,6 @@ Windows 直接 RDP 构建步骤见[桌面仓库指南](https://github.com/aterm-
 
 RDP 目标的 NLA、域策略、所有键盘布局、资源/剪贴板组合仍需相应环境验证。VNC 支持的传统 RFB 传输不提供端到端加密，未实现所有专有/VeNCrypt 认证；传统剪贴板按 Latin-1 处理，不承诺完整 Unicode 剪贴板。当前源码 CI 的组件/协议检查不等于新的 Windows/macOS/Android/iOS 可视 GUI 验收。
 
-针对性测试入口为 `apps/client/test/desktop_protocol_test.dart`、`desktop_host_editor_test.dart` 及显式启用的网关/Console 验收文件。跨仓服务端链路参考[集成说明](https://github.com/aterm-project/server/blob/main/docs/INTEGRATION.md)。环境条件不足的跳过不算真实目标通过；物理硬件和当前安装包验收单独记录。
+针对性测试入口为 `apps/client/test/desktop_protocol_test.dart`、`desktop_host_editor_test.dart`、Android 路由的 `android_direct_desktop_test.dart`/`android_desktop_route_test.dart` 及显式启用的网关/Console 验收文件。跨仓服务端链路参考[集成说明](https://github.com/aterm-project/server/blob/main/docs/INTEGRATION.md)。环境条件不足的跳过不算真实目标通过；物理硬件和当前安装包验收单独记录。
 
 参考：[Guacamole 协议](https://guacamole.apache.org/doc/gug/guacamole-protocol.html)、[RDP 配置](https://guacamole.apache.org/doc/gug/configuring-guacamole.html)、[Flutter Windows 分发](https://docs.flutter.dev/platform-integration/windows/building)。

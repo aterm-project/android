@@ -20,6 +20,8 @@ For every advertised ABI this checks:
 
 Optional ``--target-platform`` (Flutter names) or ``--abis`` require an exact
 ABI set, and ``--mode`` requires debug (JIT) or release/profile (AOT).
+``--require-lib NAME`` (repeatable) requires that library in every advertised
+ABI, e.g. ``libatermius_rdp.so`` for the embedded RDP engine.
 
 Read-only, standard library only; never installs, signs or extracts to disk.
 Exit status: 0 complete, 1 incomplete/mismatched, 2 unreadable input.
@@ -72,7 +74,8 @@ def _elf_problem(data: bytes, abi: str) -> str | None:
     return None
 
 
-def check_apk(path: Path, abis: set[str] | None = None, mode: str | None = None) -> dict:
+def check_apk(path: Path, abis: set[str] | None = None, mode: str | None = None,
+              require: tuple[str, ...] = ()) -> dict:
     errors: list[str] = []
     libraries: dict[str, list[str]] = {}
     with zipfile.ZipFile(path) as apk:
@@ -114,6 +117,9 @@ def check_apk(path: Path, abis: set[str] | None = None, mode: str | None = None)
         if missing:
             kind = "plugin-only ABI" if not {"libflutter.so", "libapp.so"} & present else "incomplete ABI"
             errors.append(f"{abi}: {kind}, missing {', '.join(missing)}")
+        absent = [name for name in require if name not in present]
+        if absent:
+            errors.append(f"{abi}: required library missing: {', '.join(absent)}")
     if jit:
         for name in JIT_FILES:
             if ASSETS + name not in names:
@@ -236,6 +242,18 @@ def self_test() -> int:
               native={"android_arm": assets, "android_arm64": assets, "android_x64": assets})),
         ("expected mode mismatch", False, {"mode": "release"},
          dict(libs={"x86_64": ["libflutter.so"]}, jit=True)),
+        ("RDP engine in both ABIs", True,
+         {"abis": {"arm64-v8a", "x86_64"}, "require": ("libatermius_rdp.so",)},
+         dict(libs={"arm64-v8a": full + ["libatermius_rdp.so"],
+                    "x86_64": full + ["libatermius_rdp.so"]},
+              native={"android_arm64": assets, "android_x64": assets})),
+        ("RDP engine missing in x86_64", False, {"require": ("libatermius_rdp.so",)},
+         dict(libs={"arm64-v8a": full + ["libatermius_rdp.so"], "x86_64": full},
+              native={"android_arm64": assets, "android_x64": assets})),
+        ("RDP engine wrong ELF machine", False, {"require": ("libatermius_rdp.so",)},
+         dict(libs={"arm64-v8a": full},
+              native={"android_arm64": assets},
+              raw={"lib/arm64-v8a/libatermius_rdp.so": _elf("x86_64")})),
     ]
     failed = 0
     with tempfile.TemporaryDirectory() as root:
@@ -256,6 +274,8 @@ def main() -> int:
     group.add_argument("--target-platform", help="Flutter platforms, e.g. android-arm64,android-x64")
     group.add_argument("--abis", help="exact ABI set, e.g. arm64-v8a,x86_64")
     parser.add_argument("--mode", choices=("debug", "profile", "release"))
+    parser.add_argument("--require-lib", action="append", default=[], metavar="NAME",
+                        help="library required in every advertised ABI (repeatable)")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -266,7 +286,7 @@ def main() -> int:
     status = 0
     for path in args.apk:
         try:
-            report = check_apk(path, expected, args.mode)
+            report = check_apk(path, expected, args.mode, tuple(args.require_lib))
         except (OSError, zipfile.BadZipFile) as error:
             print(json.dumps({"apk": str(path), "ok": False, "errors": [str(error)]}))
             status = max(status, 2)

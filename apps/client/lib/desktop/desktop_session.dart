@@ -45,10 +45,16 @@ class DesktopSession extends ChangeNotifier {
   @visibleForTesting
   final DirectDesktopConnection Function(HostRecord host)?
   directConnectionForTesting;
+  /// Whether this client connects to [protocol] Hosts itself (no gateway).
+  /// Android is direct-only: desktops never go through a local or server
+  /// gateway there. RDP uses the engine packaged in the APK, and
+  /// [connectLocal] reports plainly when an APK was built without it.
   static bool supportsDirect(HostProtocol protocol) =>
       !kIsWeb &&
       (protocol == HostProtocol.vnc ||
-          (protocol == HostProtocol.rdp && bundledRdpAvailable));
+          (protocol == HostProtocol.rdp &&
+              (bundledRdpAvailable ||
+                  defaultTargetPlatform == TargetPlatform.android)));
   @visibleForTesting
   final void Function(Object)? onErrorForTesting;
   final display = DesktopDisplay();
@@ -358,6 +364,12 @@ class DesktopSession extends ChangeNotifier {
         guacdPort == null &&
         host.protocol == HostProtocol.rdp &&
         !bundledRdpAvailable) {
+      // Android cannot host a local guacd: RDP there uses only the engine
+      // packaged in the APK, and an APK without it reports that plainly.
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        _fail(currentL10n.couldntStartTheRdpEngineCheck);
+        return;
+      }
       await _connectLocalGateway(host, 4822);
       return;
     }

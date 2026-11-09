@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 import '../rdp_features.dart';
 import '../rdp_file_clipboard.dart';
@@ -14,11 +15,37 @@ import 'connection.dart';
 import 'rdp_file_transfer_io.dart';
 import '../../l10n/l10n.dart';
 
-// Windows packages ship the engine. Other native platforms retain their
-// existing gateway path until their own engine packaging is enabled.
+// Windows packages ship the engine beside the executable. Android APKs ship
+// libatermius_rdp.so (native/desktop/android/build_engine.sh) in the app's
+// native library directory and are detected by loading it. Other native
+// platforms retain their existing gateway path until their own engine
+// packaging is enabled.
 bool get bundledRdpAvailable =>
     Platform.isWindows ||
-    Platform.environment.containsKey('ATERMIUS_RDP_LIBRARY');
+    Platform.environment.containsKey('ATERMIUS_RDP_LIBRARY') ||
+    (Platform.isAndroid && _androidEngineLoads);
+
+bool? _androidEngine;
+bool get _androidEngineLoads => _androidEngine ??= () {
+  try {
+    final library = DynamicLibrary.open(_libraryPath);
+    // Android engines need an app-private HOME before FreeRDP starts.
+    return library.providesSymbol('aterm_rdp_create_ex') &&
+        library.providesSymbol('aterm_rdp_set_home');
+  } catch (_) {
+    return false;
+  }
+}();
+
+/// App-private directory used as the engine's HOME on Android, where app
+/// processes have none and FreeRDP refuses to start without it.
+Future<String> _androidEngineHome() async {
+  final directory = Directory(
+    path.join((await getApplicationSupportDirectory()).path, 'rdp-engine'),
+  );
+  await directory.create(recursive: true);
+  return directory.path;
+}
 
 String get _libraryPath =>
     Platform.environment['ATERMIUS_RDP_LIBRARY'] ??
@@ -72,6 +99,11 @@ class RdpConnection implements DirectDesktopConnection {
     final library = _libraryPath;
     unawaited(() async {
       try {
+        final home = Platform.isAndroid ? await _androidEngineHome() : '';
+        if (connection._closed) {
+          connection._message(null);
+          return;
+        }
         await Isolate.spawn(
           _rdpWorker,
           [
@@ -83,6 +115,7 @@ class RdpConnection implements DirectDesktopConnection {
             password,
             pin,
             config,
+            home,
           ],
           onExit: connection._messages.sendPort,
           errorsAreFatal: true,
@@ -238,6 +271,18 @@ void _rdpWorker(List<dynamic> args) {
   try {
     api = _RdpNative(DynamicLibrary.open(args[1] as String));
     final config = args[7] as String;
+    final home = args[8] as String;
+    if (home.isNotEmpty) {
+      final setHome = api.setHome;
+      final native = home.toNativeUtf8();
+      try {
+        if (setHome == null || setHome(native) != 1) {
+          throw StateError(currentL10n.couldntStartTheRdpEngineCheck);
+        }
+      } finally {
+        calloc.free(native);
+      }
+    }
     if (config.isNotEmpty && api.createEx == null) {
       throw StateError(currentL10n.theRdpEngineIsTooOld);
     }
@@ -795,6 +840,13 @@ class _RdpNative {
                   _NextEvent
                 >('aterm_rdp_next_event')
           : null,
+      setHome = library.providesSymbol('aterm_rdp_set_home')
+          ? library
+                .lookupFunction<
+                  Int32 Function(Pointer<Utf8>),
+                  int Function(Pointer<Utf8>)
+                >('aterm_rdp_set_home')
+          : null,
       free = library
           .lookupFunction<
             Void Function(Pointer<Void>),
@@ -815,5 +867,6 @@ class _RdpNative {
   final _RequestFile? requestFile;
   final _NextEvent? nextEvent;
   final int Function(Pointer<Void>)? canResize;
+  final int Function(Pointer<Utf8>)? setHome;
   final void Function(Pointer<Void>) free;
 }
