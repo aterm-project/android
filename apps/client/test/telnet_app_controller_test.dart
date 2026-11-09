@@ -152,6 +152,35 @@ void main() {
   useAppLocaleFixture('en');
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('Telnet manual restore keeps tab identity and old screen', () async {
+    final (app, database, _) = await _controller();
+    final channels = <_PendingChannel>[];
+    app.telnetConnectorForTesting = (_, _) async {
+      final channel = _PendingChannel();
+      channels.add(channel);
+      return channel;
+    };
+    try {
+      await app.openTerminalTab(_telnetHost(2323));
+      final tab = app.activeTerminalTab!;
+      channels.single.incoming.add(
+        Uint8List.fromList('existing output'.codeUnits),
+      );
+      await Future<void>.delayed(Duration.zero);
+      await channels.single.incoming.close();
+      await _until(() => tab.state == 'disconnected');
+      await tab.recovery!.retry();
+      expect(channels, hasLength(2));
+      expect(app.activeTerminalTab, same(tab));
+      expect(tab.state, 'connected');
+      expect(tab.terminal.buffer.getText(), contains('existing output'));
+    } finally {
+      await app.closeWorkspace();
+      await database.close();
+    }
+  });
+
+
   test('opens a real Telnet tab, routes I/O and never sends credentials',
       () async {
     final server = await _Server.start();

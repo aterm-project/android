@@ -47,6 +47,10 @@ RDP 目标的 NLA、域策略、所有键盘布局、资源/剪贴板组合仍�
 
 ## Keyboard, pointer and fullscreen controls
 
+Android 的键盘、触摸/鼠标切换和三点参数菜单位于同一个贴边悬浮按钮组，可共同拖动。常规手机及左右分屏内横向并排，极窄面板改为纵向排列。Android 全屏会隐藏应用标签栏和状态栏，将当前面板铺满内容区；退出按钮或系统返回恢复原有分屏和会话。组合标签也可以拖动其中当前选中的会话，以重新排列分屏；连接与终端记录不会复制或重建。
+
+账户与本地配置下的 SSH、Telnet、RDP、VNC 会话断开后可点击“恢复连接”。SSH/Telnet 已建立的会话中断后每 5 秒尝试重连；首次连接失败由用户手动重试，主机密钥拒绝停止自动弹窗重试。恢复保留原标签、分屏位置及终端记录，不重放先前输入。关闭标签、锁定配置、切换账户或 Vault 后，旧作用域不能继续重连；主机密钥和 RDP 证书仍执行原有验证流程。
+
 On Android, RDP and VNC show a dock on the edge of each pane. The keyboard button opens the system keyboard together with a special-key bar. Ctrl/Alt/Shift/Win apply to the next key after a single tap; double-tap to lock, then tap again to release. Composed text is sent when the IME commits it. The adjacent button switches between direct touch and a relative mouse touchpad. In touchpad mode, tap clicks at the cursor, slide moves it, two fingers scroll or right-click, and a second tap held down drags. The dock can move vertically or to the opposite edge and stays inside the resized pane above the keyboard.
 
 The navigation bar's Tools menu and remote desktop's three-dot menu provide Enter fullscreen / Exit fullscreen. Windows covers the current monitor and restores its saved placement; macOS uses native fullscreen Spaces; Android hides system bars through its own-window insets controller; iOS uses supported manual overlays. Web uses the browser fullscreen API and follows browser exit events. An unavailable platform operation keeps the normal window and reports the failure. System-owned window captions may remain visible in Android desktop windowing mode.

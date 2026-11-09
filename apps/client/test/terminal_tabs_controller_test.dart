@@ -22,6 +22,39 @@ void main() {
   useAppLocaleFixture('zh');
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('SSH restore reuses the same tab, scrollback and order without replaying input', () async {
+    final connections = <_RecordingConnection>[];
+    final fixture = await _Fixture.create(
+      connector:
+          ({required host, required credential, required verifyHostKey}) async {
+            final connection = _RecordingConnection();
+            connections.add(connection);
+            return connection;
+          },
+    );
+    final app = fixture.app;
+    try {
+      await app.openTerminalTab(_host('host-a', 'Alpha'));
+      final tab = app.activeTerminalTab!;
+      connections.single.emit('original scrollback');
+      await connections.single.finishOutput();
+      await Future<void>.delayed(Duration.zero);
+      expect(tab.state, 'disconnected');
+      expect(tab.recovery!.interrupted, isTrue);
+      await tab.recovery!.retry();
+      expect(connections, hasLength(2));
+      expect(app.activeTerminalTab, same(tab));
+      expect(app.terminalTabs, [tab]);
+      expect(tab.state, 'connected');
+      expect(tab.terminal.buffer.getText(), contains('original scrollback'));
+      expect(connections.last.inputs, isEmpty);
+    } finally {
+      await app.closeWorkspace();
+      await fixture.database.close();
+    }
+  });
+
+
   test('legacy SFTP compatibility caps reads and rejects oversize before a save picker', () async {
     const limit = 16 * 1024 * 1024;
     final file = _CompatibilitySftpFile(Uint8List(limit + 1)..fillRange(0, limit + 1, 7));

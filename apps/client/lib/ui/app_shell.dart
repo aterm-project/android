@@ -94,6 +94,7 @@ import 'workspace_tab_bar.dart';
 import 'session_workspace.dart';
 import 'workspace_controls.dart';
 import 'workspace_status_bar.dart';
+import 'session_recovery_overlay.dart';
 import 'transfer_dialog.dart';
 import '../platform/application_windows.dart';
 import 'new_window.dart';
@@ -9066,7 +9067,11 @@ class _TerminalPageState extends State<_TerminalPage> {
       }
       return ExcludeFocus(
         excluding: widget.sessionWorkspace.selectedId != id,
-        child: _temporarySessionPane(id),
+        child: SessionRecoveryOverlay(
+          recovery: app.terminalTabFor(id)?.desktop == null
+              ? app.terminalTabFor(id)?.recovery : null,
+          child: _temporarySessionPane(id),
+        ),
       );
     },
   );

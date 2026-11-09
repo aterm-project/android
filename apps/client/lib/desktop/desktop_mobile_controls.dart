@@ -24,6 +24,7 @@ class DesktopMobileControls extends StatefulWidget {
     required this.onTogglePointer,
     required this.onKeyboardChanged,
     required this.keybarHeight,
+    this.menu,
   });
   final FocusNode focus;
 
@@ -36,6 +37,7 @@ class DesktopMobileControls extends StatefulWidget {
   final VoidCallback onTogglePointer;
   final ValueChanged<bool> onKeyboardChanged;
   final double keybarHeight;
+  final Widget? menu;
   @override
   State<DesktopMobileControls> createState() => DesktopMobileControlsState();
 }
@@ -373,13 +375,14 @@ class DesktopMobileControlsState extends State<DesktopMobileControls>
     descendantsAreFocusable: false,
     child: LayoutBuilder(
       builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 96;
-        final dockHeight = narrow ? 96.0 : 48.0;
+        final buttonCount = widget.menu == null ? 2 : 3;
+        final narrow = constraints.maxWidth < buttonCount * 48;
+        final dockHeight = narrow ? buttonCount * 48.0 : 48.0;
         final maxY = math.max(
           0.0,
           constraints.maxHeight - widget.keybarHeight - dockHeight,
         );
-        final minY = math.min(52.0, maxY);
+        const minY = 0.0;
         final travelY = maxY - minY;
         final buttons = <Widget>[
           IconButton(
@@ -411,6 +414,8 @@ class DesktopMobileControlsState extends State<DesktopMobileControls>
               constraints: const BoxConstraints.tightFor(width: 48, height: 48),
             ),
           ),
+          if (widget.menu != null)
+            SizedBox(width: 48, height: 48, child: widget.menu),
         ];
         return Stack(
           children: [

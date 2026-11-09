@@ -4869,5 +4869,7 @@
   "desktopTrackpadMode": "トラックパッド（マウス）操作",
   "enterFullscreen": "全画面表示",
   "exitFullscreen": "全画面表示を終了",
-  "fullscreenUnavailable": "このウィンドウでは全画面表示に切り替えられません。"
+  "fullscreenUnavailable": "このウィンドウでは全画面表示に切り替えられません。",
+  "restoreConnection": "再接続",
+  "reconnectEveryFiveSeconds": "5 秒ごとに自動再接続"
 }

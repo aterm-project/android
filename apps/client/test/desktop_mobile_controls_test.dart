@@ -50,6 +50,30 @@ Future<void> _open(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('Android three controls share the same draggable edge dock', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 760);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await _mount(tester);
+    final dock = find.byKey(const ValueKey('desktop_edge_dock'));
+    final menu = find.byTooltip('Remote desktop menu');
+    expect(find.descendant(of: dock, matching: menu), findsOneWidget);
+    final keyboard = find.byKey(const ValueKey('desktop_keyboard_toggle'));
+    final pointer = find.byKey(const ValueKey('desktop_pointer_mode_toggle'));
+    expect(tester.getCenter(menu).dy, tester.getCenter(keyboard).dy);
+    expect(tester.getCenter(pointer).dy, tester.getCenter(keyboard).dy);
+    await tester.drag(dock, const Offset(-280, 170));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(dock).left, 0);
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    expect(find.text('Send Ctrl+Alt+Delete'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'Android dock opens and closes actual IME client plus special keys',
     (tester) async {
