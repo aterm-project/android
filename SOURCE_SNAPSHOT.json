@@ -6,7 +6,7 @@
   "reviewed_source_manifest_sha256": "b1bc711d04b9aed4e15dabeb18510e4b6248daf016d102dacdd6db4db6919fd1",
   "file_sha256": {
     "apps/client/.gitignore": "441eaa1de5b3db9fae056e7503567e9f8dd94173e1389c60f76956abf729015a",
-    "apps/client/README.md": "33b611b340818a2b73a886e526dff4d4b489d2816a57146d5becdd8f0da6a361",
+    "apps/client/README.md": "89e9b9d69bcb47009f8413e5cf51316581e4aa27eba4b7b8f97c63bf83127512",
     "apps/client/analysis_options.yaml": "759fd8e77b2a3d5bd9eee71b4c0a05d1b34d5dba95f5ecd3824705901d9c96f6",
     "apps/client/integration/native/device_profile_probe.dart": "cd74b84ef8fe69cdda480aa0927737aa1021b550766e228c93eff5e04d90e6c3",
     "apps/client/integration/native/local_resume_probe.dart": "1cce0e1830780efc718a1b1af47ff39cb540f200795107eb97318752d9108486",
@@ -44,7 +44,7 @@
     "apps/client/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png": "93ae7d494fad0fb30cbf3ae746a39c4bc7a0f8bbf87fbb587a3f3c01f3c5ce20",
     "apps/client/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png": "93ae7d494fad0fb30cbf3ae746a39c4bc7a0f8bbf87fbb587a3f3c01f3c5ce20",
     "apps/client/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png": "93ae7d494fad0fb30cbf3ae746a39c4bc7a0f8bbf87fbb587a3f3c01f3c5ce20",
-    "apps/client/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md": "a985b626c4f7546a8ba392d135e9226c3547c8e2b46895f5f2bdf40d7b14ef9f",
+    "apps/client/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md": "bd47699ca4abab9a687091633d9cc217d3ce504509f83474e6cb7bdaa91d6170",
     "apps/client/ios/Runner/Base.lproj/LaunchScreen.storyboard": "857e61203b3deafb05766d8fcda898b86a7cb6f3d5e385ecc9926c4d698215e9",
     "apps/client/ios/Runner/Base.lproj/Main.storyboard": "fd367b6c43006d61b730f674970dd48b9f662c8f2264e52ffc1558102a2c9f2d",
     "apps/client/ios/Runner/Info.plist": "ea021b90a268108d79a591e5405941ec7039517846755812c970a5c1d0d6d558",
@@ -761,8 +761,8 @@
     "apps/client/test/xterm_osc_parser_test.dart": "10f696e9644b683b4c68ef800677067400342fdd594153666d04cac2250e53af",
     "apps/client/tool/process_lock_probe.dart": "f15e22a39387fbc60a51cb7c1e871282a04c8622f608a364ae825ad6ca68a12f",
     "docs/LOCAL-SHELL.md": "c4189e01a68c791c05fab9e2394a9d378522d20339688cd86b9db89f0ca3cfb2",
-    "docs/REMOTE-DESKTOP.md": "36574e8f1554d1300bc9f8433532777726058b7ad9248cf724f46cd045ccd77e",
-    "docs/TELNET.md": "d558b7d6c97e1d7941bf02e8dc4160e8d1c4fd1edf77ed7feebc869fe5ee56f6",
+    "docs/REMOTE-DESKTOP.md": "bf1bd08ab94567c6c4365e54f4c067fc498987cd3bdb9929a3961171c5ec1919",
+    "docs/TELNET.md": "76a4c093ebbadc96ad8c9d38a53fafa60e91320f3787f094a0eeb0abb1edc29e",
     "packages/dartssh2/CHANGELOG.md": "e7910a381b75678618dfe512d5495304bf6b7afba49b9885037c1ef80e7bd47e",
     "packages/dartssh2/LICENSE": "465afc358e3c3520109a7fd728d333e3101c71ad32d143181313bf406232808b",
     "packages/dartssh2/README.md": "d7e15f56c3a5aaadee04e8a1fc98e4b3beebe6c0b7aefca01384bd0f680f90e0",
@@ -1315,7 +1315,7 @@
     "packages/xterm/lib/xterm.dart": "570f9244568e75d1e6446e26b115a2ef5380f1cda5b49f99fd8f102f25f8bb3f",
     "packages/xterm/lib/zmodem.dart": "a7b40f11594647b345f5f134abe09d087c68ab39865c394721511f34b7af1b27",
     "packages/xterm/pubspec.yaml": "bfbff9492cd6c1d9ff42ab80020005d892f0b85342d79b718b09fbf87fc95ece",
-    "protocol/API-CONTRACT.md": "3fc1b5f94da7d4b770ec6d35f8896113a1f1e50d4916ab4f9236f3384c6b40bd",
+    "protocol/API-CONTRACT.md": "5ef81ef189fd3e6bf1949bbbf6a881156cfb06bc34854e18ec8ded87af231495",
     "protocol/RECORD-REDACTION-v1.md": "6bb636eca086c51d220b252c45e106222aa7bcaa948564f15f9f0e3ea9b08e9f",
     "protocol/TERMINAL-COLLABORATION.md": "8e175acf03bfda8a10191ff3fcebba7ca546a3b5abebcb53b6fad16162700516",
     "protocol/sync-fixtures/record-envelope-v1.json": "f6cdb32b88d5e69b94b223ec3bb90d45210539c6bfe31e3d45595d4d8adbba90",
@@ -1328,5 +1328,32 @@
     "apps/client/ios/Runner/GeneratedPluginRegistrant.h",
     "apps/client/ios/Runner/GeneratedPluginRegistrant.m"
   ],
-  "native_device_acceptance": "No new device acceptance from source publication"
+  "native_device_acceptance": "No new device acceptance from source publication",
+  "documentation_update": {
+    "date": "2026-11-09",
+    "purpose": "First-party README, install/onboarding/deployment and navigation cleanup",
+    "application_code_unchanged": true,
+    "hash_overrides": {
+      "apps/client/README.md": {
+        "cloud_source_sha256": "33b611b340818a2b73a886e526dff4d4b489d2816a57146d5becdd8f0da6a361",
+        "documentation_sha256": "89e9b9d69bcb47009f8413e5cf51316581e4aa27eba4b7b8f97c63bf83127512"
+      },
+      "apps/client/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md": {
+        "cloud_source_sha256": "a985b626c4f7546a8ba392d135e9226c3547c8e2b46895f5f2bdf40d7b14ef9f",
+        "documentation_sha256": "bd47699ca4abab9a687091633d9cc217d3ce504509f83474e6cb7bdaa91d6170"
+      },
+      "docs/REMOTE-DESKTOP.md": {
+        "cloud_source_sha256": "36574e8f1554d1300bc9f8433532777726058b7ad9248cf724f46cd045ccd77e",
+        "documentation_sha256": "bf1bd08ab94567c6c4365e54f4c067fc498987cd3bdb9929a3961171c5ec1919"
+      },
+      "docs/TELNET.md": {
+        "cloud_source_sha256": "d558b7d6c97e1d7941bf02e8dc4160e8d1c4fd1edf77ed7feebc869fe5ee56f6",
+        "documentation_sha256": "76a4c093ebbadc96ad8c9d38a53fafa60e91320f3787f094a0eeb0abb1edc29e"
+      },
+      "protocol/API-CONTRACT.md": {
+        "cloud_source_sha256": "3fc1b5f94da7d4b770ec6d35f8896113a1f1e50d4916ab4f9236f3384c6b40bd",
+        "documentation_sha256": "5ef81ef189fd3e6bf1949bbbf6a881156cfb06bc34854e18ec8ded87af231495"
+      }
+    }
+  }
 }

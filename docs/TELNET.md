@@ -89,4 +89,4 @@ around SSH or an OS `telnet` binary. No external program is launched.
 - No transport write-backlog cap beyond the per-write 1 MiB limit (the OS/
   WebSocket sink buffers).
 - Telnet tabs cannot be detached to a separate window (same as Console).
-- Termius CSV import still reports `telnet` rows as an unsupported protocol.
+- Termius-compatible CSV import now recognizes `telnet`; review import/export previews for protocol-specific omissions. See [transfer formats](IMPORT_EXPORT.md).
