@@ -580,6 +580,7 @@ class DesktopSession extends ChangeNotifier {
     try {
       while (!_closed && _pendingFrames.isNotEmpty) {
         final frame = _pendingFrames.removeFirst();
+        final frameAttempt = _directAttempt;
         try {
           await display.frame(
             frame.width,
@@ -590,12 +591,15 @@ class DesktopSession extends ChangeNotifier {
             regionWidth: frame.regionWidth,
             regionHeight: frame.regionHeight,
           );
+          if (_closed || frameAttempt != _directAttempt) continue;
           if (!_closed) _frameUpdates.add(frame);
           if (!_closed && state != 'connected') {
             _setupTimeout?.cancel();
             state = 'connected';
             notifyListeners();
           }
+        } catch (_) {
+          if (frameAttempt == _directAttempt) rethrow;
         } finally {
           frame.onConsumed?.call();
         }
