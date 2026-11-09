@@ -11,6 +11,7 @@ import 'window_caption.dart';
 import 'workspace_controls.dart';
 import 'fullscreen_menu.dart';
 import '../l10n/l10n.dart';
+import '../platform/fullscreen.dart';
 
 @immutable
 class WorkspaceTab {
@@ -598,9 +599,9 @@ class WorkspaceTabBar extends StatelessWidget {
         ),
       ),
     );
-    final content = Builder(builder: tabBody);
+    Widget content = Builder(builder: tabBody);
     if (tab.members.isNotEmpty) {
-      return Tooltip(
+      content = Tooltip(
         message: tab.members
             .map(
               (member) =>
@@ -614,7 +615,10 @@ class WorkspaceTabBar extends StatelessWidget {
       );
     }
     if (tab.isHome) return content;
-    final data = WorkspaceTabDragData(tabId: tab.id, scope: dragScope);
+    final data = WorkspaceTabDragData(
+      tabId: _selectionFor(tab),
+      scope: dragScope,
+    );
     final feedback = Material(
       elevation: 8,
       color: colors.surfaceContainerHighest,
@@ -700,8 +704,11 @@ class WorkspaceTabBar extends StatelessWidget {
     final chrome = WindowChromeScope.of(context);
     final visibleTabs = _displayTabs;
     return ListenableBuilder(
-      listenable: chrome,
+      listenable: Listenable.merge([chrome, FullscreenController.instance]),
       builder: (context, _) {
+        if (Theme.of(context).platform == TargetPlatform.android &&
+            FullscreenController.instance.enabled)
+          return const SizedBox.shrink();
         final embedded = chrome.supported && chrome.state.enabled;
         final bar = WindowBarMetrics.of(context, chrome);
         // Dense native-height bar: every trailing icon (including callers'

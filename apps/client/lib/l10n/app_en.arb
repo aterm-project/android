@@ -15126,5 +15126,7 @@
   "exitFullscreen": "Exit fullscreen",
   "@exitFullscreen": {},
   "fullscreenUnavailable": "Fullscreen is unavailable for this window.",
-  "@fullscreenUnavailable": {}
+  "@fullscreenUnavailable": {},
+  "restoreConnection": "Restore connection",
+  "reconnectEveryFiveSeconds": "Reconnect automatically every 5 seconds"
 }

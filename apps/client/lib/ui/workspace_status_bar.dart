@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_motion.dart';
+import '../platform/fullscreen.dart';
 
 class WorkspaceStatusBar extends StatelessWidget {
   const WorkspaceStatusBar({
@@ -19,7 +20,15 @@ class WorkspaceStatusBar extends StatelessWidget {
   final Widget? transfer;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: FullscreenController.instance,
+    builder: (context, _) => _build(context),
+  );
+
+  Widget _build(BuildContext context) {
+    if (Theme.of(context).platform == TargetPlatform.android &&
+        FullscreenController.instance.enabled)
+      return const SizedBox.shrink();
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
       return const SizedBox.shrink();
     }

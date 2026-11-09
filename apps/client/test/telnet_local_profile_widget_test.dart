@@ -99,11 +99,7 @@ void main() {
       ),
     );
     await repository.createGroup(
-      GroupRecord(
-        id: groupId,
-        name: 'Lab',
-        defaultCredentialId: credentialId,
-      ),
+      GroupRecord(id: groupId, name: 'Lab', defaultCredentialId: credentialId),
     );
     final saved = await repository.createHost(
       HostRecord(
@@ -228,7 +224,9 @@ void main() {
     expect(screen(tester), contains('unencrypted'));
     final channel = channels.single;
     channel.emit([
-      TelnetCommand.iac, TelnetCommand.will, TelnetOption.echo,
+      TelnetCommand.iac,
+      TelnetCommand.will,
+      TelnetOption.echo,
       ...'Password: '.codeUnits,
     ]);
     await pumpUntil(tester, () => screen(tester).contains('Password:'));
@@ -236,7 +234,31 @@ void main() {
     expect(wire, isNot(contains(_secret)));
     expect(wire, isNot(contains('local-admin')));
     // Proactive NAWS offer and DO SGA/ECHO only; nothing else.
-    expect(channel.sent.where((b) => b != TelnetCommand.iac).length, lessThan(16));
+    expect(
+      channel.sent.where((b) => b != TelnetCommand.iac).length,
+      lessThan(16),
+    );
+
+    final originalTerminal = tester.widget<TerminalView>(telnetView()).terminal;
+    await channel.incoming.close();
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('session_restore_connection')),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(milliseconds: 4999));
+    expect(channels, hasLength(1));
+    await tester.pump(const Duration(milliseconds: 1));
+    await pumpUntil(tester, () => channels.length == 2);
+    expect(
+      tester.widget<TerminalView>(telnetView()).terminal,
+      same(originalTerminal),
+    );
+    expect(screen(tester), contains('Password:'));
+    expect(
+      find.byKey(const ValueKey('session_restore_connection')),
+      findsNothing,
+    );
 
     // Closing the session through the workspace closes the transport.
     final tabBar = tester.widget<WorkspaceTabBar>(find.byType(WorkspaceTabBar));
@@ -244,6 +266,7 @@ void main() {
     expect(sessionTab.canOpenFiles, isFalse, reason: 'no SFTP for Telnet');
     tabBar.onClose(sessionTab.id);
     await pumpUntil(tester, () => channel.closed);
+    await pumpUntil(tester, () => channels.last.closed);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
     await tester.runAsync(

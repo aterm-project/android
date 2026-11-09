@@ -4869,5 +4869,7 @@
   "desktopTrackpadMode": "Тачпад (мышь)",
   "enterFullscreen": "Полноэкранный режим",
   "exitFullscreen": "Выйти из полноэкранного режима",
-  "fullscreenUnavailable": "Для этого окна недоступен полноэкранный режим."
+  "fullscreenUnavailable": "Для этого окна недоступен полноэкранный режим.",
+  "restoreConnection": "Восстановить соединение",
+  "reconnectEveryFiveSeconds": "Автоподключение каждые 5 секунд"
 }
