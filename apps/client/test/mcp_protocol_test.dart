@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:aterm_client/domain/models.dart';
+import 'package:aterm_client/mcp/mcp_access_policy_store.dart';
 import 'package:aterm_client/mcp/mcp_protocol.dart';
 import 'package:aterm_client/mcp/mcp_service.dart';
 import 'package:aterm_client/mcp/mcp_workspace.dart';
@@ -193,7 +194,8 @@ void main() {
 
   test('live loopback MCP authenticates, rejects browser origins and revokes tokens', () async {
     final h = _Harness();
-    final service = McpService()..attach(h.workspace);
+    final service = McpService(policyStore: MemoryMcpAccessPolicyStore())
+      ..attach(h.workspace);
     var http = HttpClient();
     try {
       await service.start(port: 0);
@@ -321,6 +323,7 @@ class _Harness {
         id: 's1',
         name: 'test',
         kind: 'ssh',
+        hostId: 'h1',
         state: 'connected',
         isAlive: () => unlocked,
         focus: () {},
@@ -340,7 +343,11 @@ class _Harness {
     validateAccess: () {
       if (!unlocked) throw const McpToolException('locked', 'Locked');
     },
-    allowOperations: () => operations,
+    access: (host) => host == null
+        ? McpAccessMode.denied
+        : operations
+        ? McpAccessMode.readWrite
+        : McpAccessMode.readOnly,
   );
 }
 
