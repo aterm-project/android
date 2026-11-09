@@ -11,6 +11,7 @@ import 'package:aterm_client/ui/mcp_settings_panel.dart';
 import 'package:aterm_client/ui/responsive_layout.dart';
 import 'package:aterm_client/ui/settings_scaffold.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Records what the panel asks the policy layer to do. Only the contract
@@ -472,6 +473,137 @@ void main() {
     expect(find.byKey(const ValueKey('mcp_machine_no_match')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  for (final (size, platform) in [
+    (phone, TargetPlatform.android),
+    (desktop, TargetPlatform.windows),
+  ]) {
+    testWidgets(
+      'accessibility ${size.width.toInt()} px ${platform.name}: port and '
+      'machine fields are their own nodes, sized to the field, with only '
+      'their own labels',
+      (tester) async {
+        final semantics = tester.ensureSemantics();
+        // More than 6 hosts, so the machine search field is shown too.
+        final service = _FakeMcpService(hosts: _hosts(8))..isRunning = false;
+        await _pump(tester, service, size: size, platform: platform);
+        final l10n = lookupAppLocalizations(const Locale('en'));
+        // Text from elsewhere in the same cards must not leak into a field.
+        final unrelated = [
+          l10n.externalAiAccess,
+          l10n.letExternalAiUseTheHosts,
+          l10n.off,
+          l10n.readOnlyModeCanStillRead,
+          l10n.listensOn127001,
+          l10n.mcpAndroidBackgroundHint,
+          l10n.mcpMachineAccessTitle,
+          l10n.mcpMachineAccessDescription,
+          l10n.mcpDefaultAccessTitle,
+        ];
+
+        SemanticsNode textFieldNode(Finder field) {
+          final node = tester.getSemantics(
+            find.descendant(of: field, matching: find.byType(EditableText)),
+          );
+          expect(node.flagsCollection.isTextField, isTrue);
+          return node;
+        }
+
+        void expectOwnText(SemanticsNode node, String expected, String what) {
+          final data = node.getSemanticsData();
+          final all = '${data.label}\n${data.hint}\n${data.value}';
+          expect(all, contains(expected), reason: what);
+          for (final text in unrelated) {
+            expect(all, isNot(contains(text)), reason: '$what has "$text"');
+          }
+        }
+
+        void expectRectNear(SemanticsNode node, Finder field, String what) {
+          final nodeRect = MatrixUtils.transformRect(
+            node.transform ?? Matrix4.identity(),
+            node.rect,
+          );
+          // Node rect is in its parent's coordinates; compare sizes, which
+          // are what screen readers and UI automation report as bounds.
+          final fieldRect = tester.getRect(field);
+          expect(
+            nodeRect.height,
+            lessThan(fieldRect.height + 24),
+            reason: what,
+          );
+          expect(
+            nodeRect.width,
+            lessThanOrEqualTo(fieldRect.width + 1),
+            reason: what,
+          );
+        }
+
+        final port = find.byKey(const ValueKey('mcp_port'));
+        final portNode = textFieldNode(port);
+        expectOwnText(portNode, l10n.localListeningPort, 'port');
+        expect(portNode.getSemanticsData().value, '8765');
+        expectRectNear(portNode, port, 'port');
+        final card = find.ancestor(of: port, matching: find.byType(Card));
+        expect(
+          portNode.rect.height,
+          lessThan(tester.getRect(card).height / 2),
+          reason: 'port node must not span the whole service card',
+        );
+
+        // The machine search field sits in the machine card with the same
+        // risk of being merged into it.
+        final search = find.byKey(const ValueKey('mcp_machine_search'));
+        await tester.ensureVisible(search);
+        await tester.pumpAndSettle();
+        final searchNode = textFieldNode(search);
+        expectOwnText(searchNode, l10n.mcpSearchMachines, 'search');
+        expectRectNear(searchNode, search, 'search');
+
+        // Each machine choice is a separate control named for its machine.
+        for (final (id, name) in [
+          (mcpLocalDeviceHostId, l10n.mcpLocalDeviceName),
+          ('host-0', 'production-database-primary-eu-west-replica-0'),
+          ('host-1', 'server-1'),
+        ]) {
+          final field = _hostField(id);
+          await tester.ensureVisible(field);
+          await tester.pumpAndSettle();
+          final node = tester.getSemantics(field);
+          final data = node.getSemanticsData();
+          final all = '${data.label}\n${data.hint}\n${data.value}';
+          expect(all, contains(name), reason: id);
+          for (final text in unrelated) {
+            expect(all, isNot(contains(text)), reason: '$id has "$text"');
+          }
+          for (final other in ['server-2', if (id != 'host-1') 'server-1']) {
+            expect(all, isNot(contains(other)), reason: '$id has "$other"');
+          }
+          expect(
+            node.rect.height,
+            lessThan(
+              tester
+                      .getRect(find.byKey(const ValueKey('mcp_machine_access')))
+                      .height /
+                  4,
+            ),
+            reason: '$id node must not span the machine card',
+          );
+        }
+
+        // The default-access radios stay individually focusable.
+        for (final mode in McpAccessMode.values) {
+          final data = tester
+              .getSemantics(
+                find.byKey(ValueKey('mcp_default_access_${mode.name}')),
+              )
+              .getSemanticsData();
+          expect(data.label, contains(mcpAccessModeLabel(l10n, mode)));
+          expect(data.label, isNot(contains(l10n.mcpMachineAccessDescription)));
+        }
+        semantics.dispose();
+      },
+    );
+  }
 
   testWidgets('stopping revokes from the same button on every platform', (
     tester,

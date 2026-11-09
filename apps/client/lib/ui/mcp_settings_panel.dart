@@ -206,6 +206,8 @@ class _McpSettingsPanelState extends State<McpSettingsPanel> {
     final defaultMode = ready ? service.defaultAccess : McpAccessMode.denied;
     final endpoint = service.endpoint;
     return SettingsCard(
+      // Holds fields and buttons: keep each control its own a11y node.
+      semanticContainer: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -394,6 +396,8 @@ class _McpSettingsPanelState extends State<McpSettingsPanel> {
 
     return SettingsCard(
       key: const ValueKey('mcp_machine_access'),
+      // Holds fields and buttons: keep each control its own a11y node.
+      semanticContainer: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

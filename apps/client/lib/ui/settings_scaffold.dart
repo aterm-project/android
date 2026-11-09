@@ -260,12 +260,25 @@ class SettingsCards extends StatelessWidget {
 }
 
 class SettingsCard extends StatelessWidget {
-  const SettingsCard({required this.child, super.key});
+  const SettingsCard({
+    required this.child,
+    this.semanticContainer = true,
+    super.key,
+  });
   final Widget child;
+
+  /// Passed to [Card.semanticContainer]. Keep the default for read-only cards
+  /// (they are announced as one block). Pass false for cards that hold
+  /// interactive controls such as text fields: otherwise a field that does not
+  /// form its own semantics boundary is merged into the card node, so Android
+  /// accessibility and UI automation report the field with the whole card's
+  /// bounds and all of the card's text as its label.
+  final bool semanticContainer;
 
   @override
   Widget build(BuildContext context) => Card(
     margin: EdgeInsets.zero,
+    semanticContainer: semanticContainer,
     child: Padding(
       padding: EdgeInsets.all(AppDensity.of(context).space6),
       child: child,
