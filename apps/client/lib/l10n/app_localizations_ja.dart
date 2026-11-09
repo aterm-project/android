@@ -17364,4 +17364,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get fullscreenUnavailable => 'このウィンドウでは全画面表示に切り替えられません。';
+
+  @override
+  String get restoreConnection => '再接続';
+
+  @override
+  String get reconnectEveryFiveSeconds => '5 秒ごとに自動再接続';
 }

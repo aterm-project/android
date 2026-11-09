@@ -29121,6 +29121,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fullscreen is unavailable for this window.'**
   String get fullscreenUnavailable;
+
+  /// No description provided for @restoreConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore connection'**
+  String get restoreConnection;
+
+  /// No description provided for @reconnectEveryFiveSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect automatically every 5 seconds'**
+  String get reconnectEveryFiveSeconds;
 }
 
 class _AppLocalizationsDelegate

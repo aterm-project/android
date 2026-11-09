@@ -34,6 +34,7 @@ class DesktopSession extends ChangeNotifier {
     this.saveRdpCertificate,
     this.directConnectionForTesting,
     this.saveDisplaySettings,
+    this.reconnectAllowed,
   });
 
   /// Persists in-session display changes to the Host (optional). Must apply
@@ -45,6 +46,7 @@ class DesktopSession extends ChangeNotifier {
   @visibleForTesting
   final DirectDesktopConnection Function(HostRecord host)?
   directConnectionForTesting;
+
   /// Whether this client connects to [protocol] Hosts itself (no gateway).
   /// Android is direct-only: desktops never go through a local or server
   /// gateway there. RDP uses the engine packaged in the APK, and
@@ -64,6 +66,31 @@ class DesktopSession extends ChangeNotifier {
   StreamSubscription<List<String>>? _subscription;
   Timer? _setupTimeout;
   bool _closed = false;
+  bool _disposed = false, _reconnecting = false;
+  Future<void>? _closing;
+  Future<void> Function()? _reconnect;
+  final bool Function()? reconnectAllowed;
+  bool get canReconnect =>
+      !_disposed && _reconnect != null && (reconnectAllowed?.call() ?? true);
+
+  Future<void> reconnect() async {
+    if (!canReconnect || _reconnecting || state != 'disconnected') return;
+    _reconnecting = true;
+    try {
+      await close();
+      if (!canReconnect) return;
+      _closed = false;
+      _closing = null;
+      error = null;
+      state = 'connecting';
+      displayGeneration++;
+      notifyListeners();
+      await _reconnect!();
+    } finally {
+      _reconnecting = false;
+    }
+  }
+
   DirectDesktopConnection? _direct;
   StreamSubscription<DesktopEvent>? _directSubscription;
   final Queue<DesktopFrame> _pendingFrames = Queue();
@@ -115,7 +142,11 @@ class DesktopSession extends ChangeNotifier {
   /// Change the resolution for this session, and persist it when possible.
   /// [width]/[height] null selects automatic (fit window); [server] selects
   /// the VNC server-chosen size.
-  Future<void> changeResolution({int? width, int? height, bool server = false}) async {
+  Future<void> changeResolution({
+    int? width,
+    int? height,
+    bool server = false,
+  }) async {
     final host = _host;
     if (host == null || _closed) return;
     final fixed = width != null && height != null;
@@ -129,7 +160,11 @@ class DesktopSession extends ChangeNotifier {
         return;
       }
       _rdp = fixed
-          ? _rdp.copyWith(resolution: RdpResolutionMode.fixed, width: width, height: height)
+          ? _rdp.copyWith(
+              resolution: RdpResolutionMode.fixed,
+              width: width,
+              height: height,
+            )
           : _rdp.copyWith(resolution: RdpResolutionMode.fitWindow);
       if (fixed) {
         if (serverResize == true) {
@@ -142,7 +177,11 @@ class DesktopSession extends ChangeNotifier {
       _vnc = server
           ? _vnc.copyWith(resolution: VncResolutionMode.server)
           : fixed
-          ? _vnc.copyWith(resolution: VncResolutionMode.fixed, width: width, height: height)
+          ? _vnc.copyWith(
+              resolution: VncResolutionMode.fixed,
+              width: width,
+              height: height,
+            )
           : _vnc.copyWith(resolution: VncResolutionMode.fitWindow);
       if (serverResize != true && !server) {
         onNotice?.call(currentL10n.thisVncServerDoesntSupportResizing);
@@ -183,6 +222,7 @@ class DesktopSession extends ChangeNotifier {
       onNotice?.call(currentL10n.theResolutionSettingAppliesToThis);
     }
   }
+
   bool get fileClipboardEnabled =>
       rdpConfig?.text.contains('\nclipboard_files=1\n') == true;
   bool get isDirect => _direct != null;
@@ -204,7 +244,8 @@ class DesktopSession extends ChangeNotifier {
     notifyListeners();
     try {
       final save = saveRdpCertificate;
-      if (save == null) throw StateError(currentL10n.thisHostCantSaveCertificates);
+      if (save == null)
+        throw StateError(currentL10n.thisHostCantSaveCertificates);
       final saved = await save(request.host, request.sha256);
       if (_closed || !identical(request, certificateRequest)) return false;
       if (saved.id != request.host.id ||
@@ -242,6 +283,7 @@ class DesktopSession extends ChangeNotifier {
   }
 
   Future<void> connect(ApiClient api, String deviceId, HostRecord host) async {
+    _reconnect = () => connect(api, deviceId, host);
     try {
       if (host.protocol.isTerminal || host.validate() != null)
         throw const FormatException('Invalid desktop Host');
@@ -285,9 +327,7 @@ class DesktopSession extends ChangeNotifier {
         }),
       );
     } catch (_) {
-      _fail(
-        currentL10n.unableToConnectCheckTheDesktop,
-      );
+      _fail(currentL10n.unableToConnectCheckTheDesktop);
     }
   }
 
@@ -336,7 +376,11 @@ class DesktopSession extends ChangeNotifier {
                   if (frame['type'] == 'authenticated' && !opened) {
                     opened = true;
                     channel.sink.add(
-                      jsonEncode({'type': 'open', 'width': width, 'height': height}),
+                      jsonEncode({
+                        'type': 'open',
+                        'width': width,
+                        'height': height,
+                      }),
                     );
                   }
                   onControl?.call(frame);
@@ -358,6 +402,7 @@ class DesktopSession extends ChangeNotifier {
   }
 
   Future<void> connectLocal(HostRecord host, {int? guacdPort}) async {
+    _reconnect = () => connectLocal(_host ?? host, guacdPort: guacdPort);
     // An explicit port remains available to the gateway integration tests and
     // existing Linux installations. Native UI sessions use direct transports.
     if (directConnectionForTesting == null &&
@@ -405,7 +450,8 @@ class DesktopSession extends ChangeNotifier {
       serverResize = null;
       lastResize = null;
       String config = '';
-      if (host.protocol == HostProtocol.rdp && directConnectionForTesting == null) {
+      if (host.protocol == HostProtocol.rdp &&
+          directConnectionForTesting == null) {
         try {
           config = _rdpConfigFor(host);
         } on FormatException catch (e) {
@@ -460,14 +506,19 @@ class DesktopSession extends ChangeNotifier {
               lastResize = event.result;
               final message = switch (event.result!) {
                 DesktopResizeResult.applied => null,
-                DesktopResizeResult.prohibited => currentL10n.theServerRefusedTheResize,
-                DesktopResizeResult.outOfResources => currentL10n.theServerLacksTheResourcesFor,
-                DesktopResizeResult.invalidLayout => currentL10n.theServerDoesntAcceptThisResolution,
-                DesktopResizeResult.unsupported => currentL10n.theServerDoesntSupportResizingOnly2,
+                DesktopResizeResult.prohibited =>
+                  currentL10n.theServerRefusedTheResize,
+                DesktopResizeResult.outOfResources =>
+                  currentL10n.theServerLacksTheResourcesFor,
+                DesktopResizeResult.invalidLayout =>
+                  currentL10n.theServerDoesntAcceptThisResolution,
+                DesktopResizeResult.unsupported =>
+                  currentL10n.theServerDoesntSupportResizingOnly2,
               };
               if (message != null) onNotice?.call(message);
             }
-            if (first && host.protocol == HostProtocol.vnc &&
+            if (first &&
+                host.protocol == HostProtocol.vnc &&
                 _vnc.resolution == VncResolutionMode.fixed) {
               send(['size', _vnc.width, _vnc.height, true]);
             }
@@ -478,7 +529,10 @@ class DesktopSession extends ChangeNotifier {
             notifyListeners();
           } else if (event is DesktopFileTransfer) {
             transfer = event.finished ? null : event;
-            if (event.error != null) onNotice?.call(currentL10n.couldntSaveRemoteFilesError('${event.error}'));
+            if (event.error != null)
+              onNotice?.call(
+                currentL10n.couldntSaveRemoteFilesError('${event.error}'),
+              );
             final saved = event.savedPaths;
             if (saved != null) onFilesSaved?.call(saved);
             notifyListeners();
@@ -577,9 +631,7 @@ class DesktopSession extends ChangeNotifier {
     display.send = send;
     _setupTimeout = Timer(
       const Duration(seconds: 30),
-      () => _fail(
-        currentL10n.remoteDesktopSetupTimedOutCheck,
-      ),
+      () => _fail(currentL10n.remoteDesktopSetupTimedOutCheck),
     );
     var handshakePending = localHost != null;
     _subscription = decodeGuacamole(bytes)
@@ -693,7 +745,9 @@ class DesktopSession extends ChangeNotifier {
     );
     rdpConfig = config;
     if (config.unavailable.isNotEmpty) {
-      onNotice?.call(currentL10n.thisClientCantProvideJoinThe(config.unavailable.join('、')));
+      onNotice?.call(
+        currentL10n.thisClientCantProvideJoinThe(config.unavailable.join('、')),
+      );
     }
     return config.text;
   }
@@ -719,10 +773,9 @@ class DesktopSession extends ChangeNotifier {
       throw FormatException(currentL10n.clipboardTextIsTurnedOffFor);
     }
     final bytes = utf8.encode(text);
-    if (bytes.length > 65536)
-      {
-throw FormatException(currentL10n.clipboardIsLimitedTo64Kib);
-}
+    if (bytes.length > 65536) {
+      throw FormatException(currentL10n.clipboardIsLimitedTo64Kib);
+    }
     if (_direct != null) {
       _direct!.paste(text);
       return;
@@ -746,7 +799,9 @@ throw FormatException(currentL10n.clipboardIsLimitedTo64Kib);
     unawaited(close());
   }
 
-  Future<void> close() async {
+  Future<void> close() => _closing ??= _close();
+
+  Future<void> _close() async {
     if (_closed) return;
     try {
       send(['disconnect']);
@@ -776,6 +831,7 @@ throw FormatException(currentL10n.clipboardIsLimitedTo64Kib);
 
   @override
   void dispose() {
+    _disposed = true;
     onNotice = null;
     onFilesSaved = null;
     unawaited(_frameUpdates.close());

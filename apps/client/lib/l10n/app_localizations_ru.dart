@@ -18495,4 +18495,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get fullscreenUnavailable =>
       'Для этого окна недоступен полноэкранный режим.';
+
+  @override
+  String get restoreConnection => 'Восстановить соединение';
+
+  @override
+  String get reconnectEveryFiveSeconds => 'Автоподключение каждые 5 секунд';
 }

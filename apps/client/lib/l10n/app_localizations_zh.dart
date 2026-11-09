@@ -16479,4 +16479,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fullscreenUnavailable => '当前窗口无法切换全屏。';
+
+  @override
+  String get restoreConnection => '恢复连接';
+
+  @override
+  String get reconnectEveryFiveSeconds => '每 5 秒自动重连';
 }

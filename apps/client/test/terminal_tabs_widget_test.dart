@@ -209,7 +209,9 @@ void main() {
       );
       expect(find.text('2 SSH'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Close Alpha'));
+      await tester.tap(find.byKey(ValueKey('pane-handle-${alpha.id}')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('pane-close-${alpha.id}')));
       await tester.pump();
       expect(app.terminalTabs.map((tab) => tab.id), [beta.id]);
       expect(app.activeTerminalTabId, beta.id);

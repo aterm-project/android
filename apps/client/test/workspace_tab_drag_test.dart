@@ -107,6 +107,58 @@ Future<SessionWorkspaceController> _mobileWorkspace(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'Android grouped tab drags its selected member to change split axis at 390px',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 760);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final layout = SessionWorkspaceController()
+        ..activate('b')
+        ..split('a', 'b', SessionSplitEdge.right);
+      addTearDown(layout.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: _android,
+          home: Scaffold(
+            body: ListenableBuilder(
+              listenable: layout,
+              builder: (context, _) => Column(
+                children: [
+                  WorkspaceTabBar(
+                    tabs: _tabs,
+                    selectedId: layout.selectedId!,
+                    groups: layout.groupedSessionIds,
+                    groupSelections: layout.retainedGroupSelections,
+                    onSelect: (_) {},
+                    onClose: (_) {},
+                  ),
+                  Expanded(
+                    child: SessionWorkspaceView(
+                      controller: layout,
+                      terminalBuilder: (_, id) => ColoredBox(
+                        color: Colors.black,
+                        child: Text('live:$id'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      final target = tester.getRect(find.text('live:b'));
+      await _touchDrag(
+        tester,
+        tester.getCenter(find.byKey(const ValueKey('workspace-tab-b'))),
+        Offset(target.center.dx, target.top + 10),
+      );
+      expect((layout.root! as SessionWorkspaceSplit).axis, Axis.vertical);
+      expect(layout.sessionIds, ['a', 'b']);
+      expect(tester.takeException(), isNull);
+    },
+  );
   test('layout reparenting keeps each live session exactly once and collapses closed panes', () {
     final layout = SessionWorkspaceController()..activate('a');
     layout.split('b', 'a', SessionSplitEdge.right);

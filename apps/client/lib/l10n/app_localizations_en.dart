@@ -18448,4 +18448,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fullscreenUnavailable =>
       'Fullscreen is unavailable for this window.';
+
+  @override
+  String get restoreConnection => 'Restore connection';
+
+  @override
+  String get reconnectEveryFiveSeconds =>
+      'Reconnect automatically every 5 seconds';
 }
