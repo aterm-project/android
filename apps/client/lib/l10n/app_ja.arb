@@ -4801,5 +4801,73 @@
   "cloudAccessApplyRoleMessage": "{user} は{role}になります。このデバイスから新しいメンバー一覧に署名し、Vault 鍵をローテーションします。",
   "cloudAccessErrorScopeChanged": "この操作中にアカウント、サーバー、または選択中の Vault が変わりました。何も送信していません。もう一度お試しください。",
   "cloudAccessErrorNotSynced": "共有 Vault は作成されましたがまだ同期されていません。メンバーを追加する前に同期してください。",
-  "cloudAccessErrorScopeEndedCommitted": "サーバーがこの操作の一部（Vault や招待の作成など）を完了した後に、アカウント、サーバー、または選択中の Vault が変わりました。その部分は取り消されていません。確認してから再試行してください。"
+  "cloudAccessErrorScopeEndedCommitted": "サーバーがこの操作の一部（Vault や招待の作成など）を完了した後に、アカウント、サーバー、または選択中の Vault が変わりました。その部分は取り消されていません。確認してから再試行してください。",
+  "directDesktopSignInHint": "サインイン情報は暗号化して保存されます。このデバイスはホストに直接接続し、その接続にのみ使用します。ゲートウェイは経由しません。",
+  "keybarCtrlGuidance": "Ctrl: タップで次のキーのみ、ダブルタップでロック",
+  "@keybarCtrlGuidance": {
+    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarAltGuidance": "Alt: タップで次のキーのみ、ダブルタップでロック",
+  "@keybarAltGuidance": {
+    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarModifierOff": "オフ",
+  "@keybarModifierOff": {
+    "description": "Accessibility value of a released terminal keybar modifier."
+  },
+  "keybarModifierArmed": "次のキーのみ",
+  "@keybarModifierArmed": {
+    "description": "Accessibility value of a terminal keybar modifier armed for one key."
+  },
+  "keybarModifierLocked": "ロック中",
+  "@keybarModifierLocked": {
+    "description": "Accessibility value of a locked terminal keybar modifier."
+  },
+  "keybarPinExpanded": "追加キーを常に表示",
+  "@keybarPinExpanded": {
+    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
+  },
+  "mcpAccessModeDenied": "拒否",
+  "mcpAccessModeReadOnly": "読み取り専用",
+  "mcpAccessModeReadWrite": "読み書き",
+  "mcpAccessModeDeniedDescription": "外部 AI はこのマシンを参照も使用もできません。ホストとセッションの一覧にも表示されません。",
+  "mcpAccessModeReadOnlyDescription": "外部 AI はマシンを一覧表示し、既に開いているセッションの出力とファイルを読み取れます。接続、入力、コマンド実行、ファイルの変更はできません。",
+  "mcpAccessModeReadWriteDescription": "外部 AI はさらに、セッションの接続・切り替え・切断、ターミナル入力、コマンド実行、ファイルの書き込みを行えます。ホストキーとサインインの確認は引き続き表示されます。",
+  "mcpMachineAccessTitle": "マシンへのアクセス",
+  "mcpMachineAccessDescription": "外部 AI が各マシンで行えることを選択します。この設定は現在のワークスペースごとにこのデバイスに保存され、同期されません。MCP を停止すると、ここでの選択にかかわらずすべてのアクセスが取り消されます。",
+  "mcpDefaultAccessTitle": "すべてのマシンの既定",
+  "mcpDefaultAccessDescription": "個別に設定していないすべてのマシンに適用されます。後から追加したマシンも含みます。",
+  "mcpPerMachineTitle": "マシンごとの設定",
+  "mcpCustomizedCount": "個別設定のマシン: {count}",
+  "mcpLocalDeviceName": "このデバイス（ローカルコンソール）",
+  "mcpLocalDeviceDetail": "保存済みホストに関連付けられていないローカルターミナルセッション",
+  "mcpHostUseDefault": "既定（{mode}）",
+  "mcpHostCustom": "個別設定",
+  "mcpHostAccessFor": "{name} のアクセス",
+  "mcpSearchMachines": "マシンを検索",
+  "mcpNoMachinesMatch": "「{query}」に一致するマシンはありません。",
+  "mcpNoSavedMachines": "このワークスペースにはまだ保存済みのホストがありません。",
+  "mcpShowMoreMachines": "さらに {count} 台を表示",
+  "mcpAccessLoading": "マシンのアクセス設定を読み込んでいます…",
+  "mcpAccessUnavailable": "マシンのアクセス設定を現在利用できません。読み込まれるまで、外部 AI はすべてのマシンで拒否されます。",
+  "mcpAccessSaveFailed": "アクセス設定を保存できませんでした。もう一度お試しください。",
+  "mcpConfirmReadWriteDefaultTitle": "すべてのマシンで読み書きを許可しますか？",
+  "mcpConfirmReadWriteDefaultBody": "接続トークンを持つ AI は、個別に設定していないすべてのマシン（後から追加したマシンを含む）に接続し、入力し、コマンドを実行し、ファイルを変更できます。ホストキーとサインインの確認は引き続き表示されます。",
+  "mcpConfirmReadWriteDefaultConfirm": "読み書きを許可",
+  "mcpRunningDefaultAccess": "実行中 · 既定: {mode}",
+  "mcpAndroidForwardingHint": "MCP はこのデバイスのループバックアドレスでのみ待ち受けます。USB デバッグで接続したコンピューター上の AI から使用するには、コンピューターで次のコマンドを実行し、コピーした設定をそこで使用してください:",
+  "mcpAndroidBackgroundHint": "MCP の実行中は通知が表示され、他のアプリに切り替えた後も外部 AI が引き続き使用できます。通知から停止する、ロックする、またはサインアウトするとトークンは取り消されます。通知を表示できない場合、アプリを離れると MCP は停止します。",
+  "mcpForegroundNotificationTitle": "外部 AI 連携がオンです",
+  "mcpForegroundNotificationText": "MCP は 127.0.0.1:{port} で待ち受けています。停止するとアクセストークンが取り消されます。",
+  "mcpForegroundNotificationStop": "MCP を停止",
+  "mcpAndroidProtected": "MCP 通知によりバックグラウンドでも接続できます。",
+  "mcpAndroidForegroundOnly": "アプリの表示中のみ MCP を利用できます。アプリを離れるとアクセスは失効します。",
+  "mcpAndroidStarting": "Android のバックグラウンド保護を開始しています…",
+  "desktopKeyboardShow": "キーボードと特殊キーを開く",
+  "desktopKeyboardHide": "キーボードと特殊キーを閉じる",
+  "desktopTouchMode": "タッチ操作",
+  "desktopTrackpadMode": "トラックパッド（マウス）操作",
+  "enterFullscreen": "全画面表示",
+  "exitFullscreen": "全画面表示を終了",
+  "fullscreenUnavailable": "このウィンドウでは全画面表示に切り替えられません。"
 }

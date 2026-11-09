@@ -34,11 +34,13 @@ class WorkspaceOverflowMenu extends StatelessWidget {
   const WorkspaceOverflowMenu({
     required this.actions,
     this.tooltip,
+    this.onOpened,
     this.child,
     super.key,
   });
   final List<WorkspaceAction> actions;
   final String? tooltip;
+  final VoidCallback? onOpened;
   final Widget? child;
 
   @override
@@ -47,6 +49,7 @@ class WorkspaceOverflowMenu extends StatelessWidget {
     shape: Theme.of(context).popupMenuTheme.shape ?? workspaceMenuShape,
     clipBehavior: Clip.antiAlias,
     tooltip: tooltip ?? context.l10n.more,
+    onOpened: onOpened,
     icon: child == null ? const Icon(Icons.more_horiz) : null,
     child: child,
     onSelected: (id) async {

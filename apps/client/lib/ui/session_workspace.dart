@@ -589,7 +589,7 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
     ),
   );
 
-  SessionSplitEdge _edgeAt(Offset global) {
+  SessionSplitEdge? _edgeAt(Offset global) {
     final box = context.findRenderObject()! as RenderBox;
     final local = box.globalToLocal(global);
     final x = local.dx / box.size.width, y = local.dy / box.size.height;
@@ -599,27 +599,48 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
       SessionSplitEdge.top: y,
       SessionSplitEdge.bottom: 1 - y,
     };
-    return distances.entries.reduce((a, b) => a.value < b.value ? a : b).key;
+    final nearest = distances.entries.reduce(
+      (a, b) => a.value < b.value ? a : b,
+    );
+    final mobile =
+        Theme.of(context).platform == TargetPlatform.android ||
+        Theme.of(context).platform == TargetPlatform.iOS;
+    if (mobile) {
+      // The centre is a safe no-split region. Keep an already highlighted
+      // edge near a corner to prevent left/top flicker from finger jitter.
+      if (nearest.value > .30) return null;
+      if (_edge != null &&
+          distances[_edge]! <= .30 &&
+          distances[_edge]! - nearest.value < .08)
+        return _edge;
+    }
+    return nearest.key;
   }
 
   @override
   Widget build(BuildContext context) => DragTarget<WorkspaceTabDragData>(
-    onWillAcceptWithDetails: (details) =>
-        details.data.scope == widget.scope &&
-        details.data.tabId != widget.sessionId &&
-        (widget.acceptsSession?.call(details.data.tabId) ?? true) &&
-        (widget.acceptsSession?.call(widget.sessionId) ?? true),
+    onWillAcceptWithDetails: (details) {
+      final accepts =
+          details.data.scope == widget.scope &&
+          details.data.tabId != widget.sessionId &&
+          (widget.acceptsSession?.call(details.data.tabId) ?? true) &&
+          (widget.acceptsSession?.call(widget.sessionId) ?? true);
+      _edge = accepts ? _edgeAt(details.offset) : null;
+      return accepts;
+    },
     onMove: (details) => setState(() => _edge = _edgeAt(details.offset)),
     onLeave: (_) => setState(() => _edge = null),
     onAcceptWithDetails: (details) {
-      if (widget.acceptsSession?.call(details.data.tabId) == false ||
+      if (details.data.scope != widget.scope ||
+          details.data.tabId == widget.sessionId ||
+          widget.acceptsSession?.call(details.data.tabId) == false ||
           widget.acceptsSession?.call(widget.sessionId) == false) {
         setState(() => _edge = null);
         return;
       }
       final edge = _edgeAt(details.offset);
       setState(() => _edge = null);
-      widget.onDrop(details.data.tabId, edge);
+      if (edge != null) widget.onDrop(details.data.tabId, edge);
     },
     builder: (context, candidates, _) => Focus(
       focusNode: _controlsFocus,

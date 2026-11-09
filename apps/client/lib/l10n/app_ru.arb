@@ -4801,5 +4801,73 @@
   "cloudAccessApplyRoleMessage": "{user} получит роль «{role}». С этого устройства будет подписан новый список участников и выполнена ротация ключа Vault.",
   "cloudAccessErrorScopeChanged": "Во время действия изменились учётная запись, сервер или выбранный Vault. Ничего не отправлено; повторите.",
   "cloudAccessErrorNotSynced": "Общий Vault создан, но ещё не синхронизирован. Синхронизируйте его перед добавлением участников.",
-  "cloudAccessErrorScopeEndedCommitted": "Учётная запись, сервер или выбранный Vault изменились после того, как сервер уже выполнил часть действия (например, создал Vault или приглашение). Эта часть не отменена; проверьте её перед повтором."
+  "cloudAccessErrorScopeEndedCommitted": "Учётная запись, сервер или выбранный Vault изменились после того, как сервер уже выполнил часть действия (например, создал Vault или приглашение). Эта часть не отменена; проверьте её перед повтором.",
+  "directDesktopSignInHint": "Данные для входа хранятся в зашифрованном виде. Это устройство подключается к хосту напрямую и использует их только для этого подключения, без шлюза.",
+  "keybarCtrlGuidance": "Ctrl: нажмите для следующей клавиши, дважды — чтобы зафиксировать",
+  "@keybarCtrlGuidance": {
+    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarAltGuidance": "Alt: нажмите для следующей клавиши, дважды — чтобы зафиксировать",
+  "@keybarAltGuidance": {
+    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarModifierOff": "Выкл.",
+  "@keybarModifierOff": {
+    "description": "Accessibility value of a released terminal keybar modifier."
+  },
+  "keybarModifierArmed": "Только следующая клавиша",
+  "@keybarModifierArmed": {
+    "description": "Accessibility value of a terminal keybar modifier armed for one key."
+  },
+  "keybarModifierLocked": "Зафиксирован",
+  "@keybarModifierLocked": {
+    "description": "Accessibility value of a locked terminal keybar modifier."
+  },
+  "keybarPinExpanded": "Не скрывать дополнительные клавиши",
+  "@keybarPinExpanded": {
+    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
+  },
+  "mcpAccessModeDenied": "Запрещено",
+  "mcpAccessModeReadOnly": "Только чтение",
+  "mcpAccessModeReadWrite": "Чтение и запись",
+  "mcpAccessModeDeniedDescription": "Внешний ИИ не видит и не может использовать машину. Она не попадает в списки хостов и сеансов.",
+  "mcpAccessModeReadOnlyDescription": "Внешний ИИ видит машину и может читать вывод и файлы уже открытых сеансов. Подключаться, вводить текст, выполнять команды и изменять файлы он не может.",
+  "mcpAccessModeReadWriteDescription": "Внешний ИИ также может подключать, переключать и закрывать сеансы, вводить текст в терминал, выполнять команды и записывать файлы. Запросы ключа хоста и входа по-прежнему появляются.",
+  "mcpMachineAccessTitle": "Доступ к машинам",
+  "mcpMachineAccessDescription": "Выберите, что внешний ИИ может делать на каждой машине. Настройки хранятся на этом устройстве для текущего рабочего пространства и не синхронизируются. Остановка MCP отзывает весь доступ независимо от выбранного здесь.",
+  "mcpDefaultAccessTitle": "По умолчанию для всех машин",
+  "mcpDefaultAccessDescription": "Применяется ко всем машинам без собственной настройки, включая добавленные позже.",
+  "mcpPerMachineTitle": "Настройки для отдельных машин",
+  "mcpCustomizedCount": "Машин с собственной настройкой: {count}",
+  "mcpLocalDeviceName": "Это устройство (локальная консоль)",
+  "mcpLocalDeviceDetail": "Локальные сеансы терминала, не связанные с сохранённым хостом",
+  "mcpHostUseDefault": "По умолчанию ({mode})",
+  "mcpHostCustom": "Своя настройка",
+  "mcpHostAccessFor": "Доступ для {name}",
+  "mcpSearchMachines": "Поиск машин",
+  "mcpNoMachinesMatch": "Нет машин, соответствующих «{query}».",
+  "mcpNoSavedMachines": "В этом рабочем пространстве пока нет сохранённых хостов.",
+  "mcpShowMoreMachines": "Показать ещё: {count}",
+  "mcpAccessLoading": "Загрузка настроек доступа к машинам…",
+  "mcpAccessUnavailable": "Настройки доступа к машинам сейчас недоступны. Пока они не загрузятся, внешнему ИИ запрещён доступ ко всем машинам.",
+  "mcpAccessSaveFailed": "Не удалось сохранить настройку доступа. Повторите попытку.",
+  "mcpConfirmReadWriteDefaultTitle": "Разрешить чтение и запись на всех машинах?",
+  "mcpConfirmReadWriteDefaultBody": "Любой ИИ с токеном подключения сможет подключаться, вводить текст, выполнять команды и изменять файлы на всех машинах без собственной настройки, включая добавленные позже. Запросы ключа хоста и входа по-прежнему появляются.",
+  "mcpConfirmReadWriteDefaultConfirm": "Разрешить чтение и запись",
+  "mcpRunningDefaultAccess": "Работает · По умолчанию: {mode}",
+  "mcpAndroidForwardingHint": "MCP прослушивает только адрес обратной петли этого устройства. Чтобы использовать его из ИИ на компьютере, подключённом по отладке USB, выполните на компьютере эту команду, а затем используйте там скопированную конфигурацию:",
+  "mcpAndroidBackgroundHint": "Пока MCP работает, Atermius показывает уведомление, чтобы внешний ИИ мог продолжать работу после перехода в другое приложение. Остановка из уведомления, блокировка или выход отзывают токен. Если уведомление показать нельзя, MCP останавливается при выходе из приложения.",
+  "mcpForegroundNotificationTitle": "Доступ внешнего ИИ включён",
+  "mcpForegroundNotificationText": "MCP прослушивает 127.0.0.1:{port}. Остановите его, чтобы отозвать токен доступа.",
+  "mcpForegroundNotificationStop": "Остановить MCP",
+  "mcpAndroidProtected": "Уведомление MCP обеспечивает доступ в фоновом режиме.",
+  "mcpAndroidForegroundOnly": "MCP работает, пока приложение видно. При уходе из приложения доступ отзывается.",
+  "mcpAndroidStarting": "Запускается фоновая защита Android…",
+  "desktopKeyboardShow": "Открыть клавиатуру и специальные клавиши",
+  "desktopKeyboardHide": "Скрыть клавиатуру и специальные клавиши",
+  "desktopTouchMode": "Сенсорный ввод",
+  "desktopTrackpadMode": "Тачпад (мышь)",
+  "enterFullscreen": "Полноэкранный режим",
+  "exitFullscreen": "Выйти из полноэкранного режима",
+  "fullscreenUnavailable": "Для этого окна недоступен полноэкранный режим."
 }
