@@ -1,8 +1,10 @@
-This directory retains cross-repository integration fixtures. Use the combined
-workspace helper described in ../../docs/INTEGRATION.md before running them; they
-require both the server source and built web frontend.
+# Browser integration fixture reference
 
-# Web profile acceptance
+[Setup the combined API/Web workspace](https://github.com/aterm-project/server/blob/main/docs/INTEGRATION.md)
+
+Commands and paths below assume the **assembled test workspace**, including both API source and the compiled frontend. They are not directly runnable from an API-only or Web-only checkout. Historical acceptance counts belong to their named version/run; they are not a current full-suite pass. Missing environment/fixture skips require explicit reporting. Use only disposable test accounts and targets.
+
+## Web profile acceptance
 
 `WEB-IT-01` runs the compiled Flutter Web app in two isolated Chromium browser
 contexts against a disposable local Rust server and SQLite database. It uses

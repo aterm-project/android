@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Atermius terminal">
+<rect width="64" height="64" rx="18" fill="#315bcc"/>
+<rect x="15" y="19" width="34" height="26" rx="3" fill="none" stroke="white" stroke-width="3"/>
+<path d="m22 26 6 6-6 6m11 0h8" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
