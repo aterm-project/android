@@ -22738,7 +22738,7 @@ abstract class AppLocalizations {
   /// No description provided for @theBrowserAndMobileAppsDont.
   ///
   /// In en, this message translates to:
-  /// **'The browser and mobile apps don\'t provide a local MCP listener. Enable it after opening the workspace in the Windows, Linux or macOS desktop client.'**
+  /// **'This version of Atermius doesn\'t provide a local MCP listener. Enable it after opening the workspace in the Windows, Linux, macOS or Android app.'**
   String get theBrowserAndMobileAppsDont;
 
   /// No description provided for @portMustBe102465535.
@@ -28821,6 +28821,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The account, server or selected Vault changed after the server had already completed part of this action (for example, created the Vault or the invitation). That part was not undone; review it before trying again.'**
   String get cloudAccessErrorScopeEndedCommitted;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Denied'**
+  String get mcpAccessModeDenied;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only'**
+  String get mcpAccessModeReadOnly;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Read & write'**
+  String get mcpAccessModeReadWrite;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'External AI can\'t see or use the machine. It\'s left out of host and session lists.'**
+  String get mcpAccessModeDeniedDescription;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'External AI can list the machine and read output and files of sessions that are already open. It can\'t connect, type, run commands or change files.'**
+  String get mcpAccessModeReadOnlyDescription;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'External AI can also connect, focus and close sessions, send terminal input, run commands and write files. Host key and sign-in prompts still appear.'**
+  String get mcpAccessModeReadWriteDescription;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Machine access'**
+  String get mcpMachineAccessTitle;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what external AI may do on each machine. These settings are kept on this device for the current workspace and aren\'t synced. Stopping MCP revokes all access, whatever is chosen here.'**
+  String get mcpMachineAccessDescription;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Default for all machines'**
+  String get mcpDefaultAccessTitle;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to every machine without its own setting, including machines added later.'**
+  String get mcpDefaultAccessDescription;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Per-machine settings'**
+  String get mcpPerMachineTitle;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Machines with their own setting: {count}'**
+  String mcpCustomizedCount(int count);
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'This device (local console)'**
+  String get mcpLocalDeviceName;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Local terminal sessions that aren\'t tied to a saved host'**
+  String get mcpLocalDeviceDetail;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Default ({mode})'**
+  String mcpHostUseDefault(String mode);
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get mcpHostCustom;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Access for {name}'**
+  String mcpHostAccessFor(String name);
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Search machines'**
+  String get mcpSearchMachines;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'No machines match “{query}”.'**
+  String mcpNoMachinesMatch(String query);
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'No saved hosts in this workspace yet.'**
+  String get mcpNoSavedMachines;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} more'**
+  String mcpShowMoreMachines(int count);
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Loading machine access settings…'**
+  String get mcpAccessLoading;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Machine access settings aren\'t available right now. Until they load, external AI is denied on every machine.'**
+  String get mcpAccessUnavailable;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the access setting. Try again.'**
+  String get mcpAccessSaveFailed;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Allow read & write on all machines?'**
+  String get mcpConfirmReadWriteDefaultTitle;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Any AI holding the connection token could connect to, type into, run commands on and change files on every machine without its own setting, including machines added later. Host key and sign-in prompts still appear.'**
+  String get mcpConfirmReadWriteDefaultBody;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Allow read & write'**
+  String get mcpConfirmReadWriteDefaultConfirm;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Running · Default: {mode}'**
+  String mcpRunningDefaultAccess(String mode);
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'MCP listens only on this device\'s loopback address. To use it from AI on a computer connected with USB debugging, run this on the computer, then use the copied configuration there:'**
+  String get mcpAndroidForwardingHint;
+
+  /// Settings › AI / MCP machine access (external AI permission UI).
+  ///
+  /// In en, this message translates to:
+  /// **'While MCP runs, Atermius shows a notification so external AI can keep using it after you switch apps. Stopping it from the notification, locking or signing out revokes the token. If the notification can\'t be shown, MCP stops when you leave the app.'**
+  String get mcpAndroidBackgroundHint;
+
+  /// Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder).
+  ///
+  /// In en, this message translates to:
+  /// **'External AI access is on'**
+  String get mcpForegroundNotificationTitle;
+
+  /// Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder).
+  ///
+  /// In en, this message translates to:
+  /// **'MCP is listening on 127.0.0.1:{port}. Stop it to revoke the access token.'**
+  String mcpForegroundNotificationText(int port);
+
+  /// Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder).
+  ///
+  /// In en, this message translates to:
+  /// **'Stop MCP'**
+  String get mcpForegroundNotificationStop;
+
+  /// No description provided for @mcpAndroidProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Background access is protected by the MCP notification.'**
+  String get mcpAndroidProtected;
+
+  /// No description provided for @mcpAndroidForegroundOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP works while this app is visible. Leaving the app revokes access.'**
+  String get mcpAndroidForegroundOnly;
+
+  /// No description provided for @mcpAndroidStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting Android background protection…'**
+  String get mcpAndroidStarting;
 }
 
 class _AppLocalizationsDelegate

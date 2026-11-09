@@ -4834,5 +4834,8 @@
   "mcpAndroidBackgroundHint": "MCP の実行中は通知が表示され、他のアプリに切り替えた後も外部 AI が引き続き使用できます。通知から停止する、ロックする、またはサインアウトするとトークンは取り消されます。通知を表示できない場合、アプリを離れると MCP は停止します。",
   "mcpForegroundNotificationTitle": "外部 AI 連携がオンです",
   "mcpForegroundNotificationText": "MCP は 127.0.0.1:{port} で待ち受けています。停止するとアクセストークンが取り消されます。",
-  "mcpForegroundNotificationStop": "MCP を停止"
+  "mcpForegroundNotificationStop": "MCP を停止",
+  "mcpAndroidProtected": "MCP 通知によりバックグラウンドでも接続できます。",
+  "mcpAndroidForegroundOnly": "アプリの表示中のみ MCP を利用できます。アプリを離れるとアクセスは失効します。",
+  "mcpAndroidStarting": "Android のバックグラウンド保護を開始しています…"
 }

@@ -5,6 +5,7 @@ import '../domain/models.dart';
 import '../l10n/l10n.dart';
 import '../mcp/mcp_access_policy.dart';
 import '../mcp/mcp_service.dart';
+import '../mcp/mcp_listener_lifecycle.dart';
 import '../mcp/mcp_tools.dart';
 import 'app_theme.dart';
 import 'responsive_layout.dart';
@@ -185,7 +186,10 @@ class _McpSettingsPanelState extends State<McpSettingsPanel> {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: service,
+    listenable: Listenable.merge([
+      service,
+      if (McpListenerLifecycle.installed case final lifecycle?) lifecycle,
+    ]),
     builder: (context, _) => SettingsCards(
       children: [
         _serviceCard(context),
@@ -234,6 +238,21 @@ class _McpSettingsPanelState extends State<McpSettingsPanel> {
                     : context.palette.muted,
               ),
             ),
+            if (McpListenerLifecycle.installed case final lifecycle?
+                when service.running && identical(service, McpService.instance))
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  switch (lifecycle.mode) {
+                    McpBackgroundMode.protected => l10n.mcpAndroidProtected,
+                    McpBackgroundMode.foregroundOnly =>
+                      l10n.mcpAndroidForegroundOnly,
+                    _ => l10n.mcpAndroidStarting,
+                  },
+                  key: const ValueKey('mcp_android_lifecycle_status'),
+                  style: TextStyle(color: context.palette.muted),
+                ),
+              ),
             const SizedBox(height: 12),
             TextField(
               key: const ValueKey('mcp_port'),

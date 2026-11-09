@@ -13618,7 +13618,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get theBrowserAndMobileAppsDont =>
-      'ブラウザ版とモバイル版ではローカルの MCP リスナーを利用できません。Windows、Linux、macOS のデスクトップクライアントでワークスペースを開いてから有効にしてください。';
+      'このバージョンの Atermius ではローカルの MCP リスナーを利用できません。Windows、Linux、macOS、Android のアプリでワークスペースを開いてから有効にしてください。';
 
   @override
   String get portMustBe102465535 => 'ポートの範囲は 1024〜65535 です。';
@@ -17189,4 +17189,136 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get cloudAccessErrorScopeEndedCommitted =>
       'サーバーがこの操作の一部（Vault や招待の作成など）を完了した後に、アカウント、サーバー、または選択中の Vault が変わりました。その部分は取り消されていません。確認してから再試行してください。';
+
+  @override
+  String get mcpAccessModeDenied => '拒否';
+
+  @override
+  String get mcpAccessModeReadOnly => '読み取り専用';
+
+  @override
+  String get mcpAccessModeReadWrite => '読み書き';
+
+  @override
+  String get mcpAccessModeDeniedDescription =>
+      '外部 AI はこのマシンを参照も使用もできません。ホストとセッションの一覧にも表示されません。';
+
+  @override
+  String get mcpAccessModeReadOnlyDescription =>
+      '外部 AI はマシンを一覧表示し、既に開いているセッションの出力とファイルを読み取れます。接続、入力、コマンド実行、ファイルの変更はできません。';
+
+  @override
+  String get mcpAccessModeReadWriteDescription =>
+      '外部 AI はさらに、セッションの接続・切り替え・切断、ターミナル入力、コマンド実行、ファイルの書き込みを行えます。ホストキーとサインインの確認は引き続き表示されます。';
+
+  @override
+  String get mcpMachineAccessTitle => 'マシンへのアクセス';
+
+  @override
+  String get mcpMachineAccessDescription =>
+      '外部 AI が各マシンで行えることを選択します。この設定は現在のワークスペースごとにこのデバイスに保存され、同期されません。MCP を停止すると、ここでの選択にかかわらずすべてのアクセスが取り消されます。';
+
+  @override
+  String get mcpDefaultAccessTitle => 'すべてのマシンの既定';
+
+  @override
+  String get mcpDefaultAccessDescription =>
+      '個別に設定していないすべてのマシンに適用されます。後から追加したマシンも含みます。';
+
+  @override
+  String get mcpPerMachineTitle => 'マシンごとの設定';
+
+  @override
+  String mcpCustomizedCount(int count) {
+    return '個別設定のマシン: $count';
+  }
+
+  @override
+  String get mcpLocalDeviceName => 'このデバイス（ローカルコンソール）';
+
+  @override
+  String get mcpLocalDeviceDetail => '保存済みホストに関連付けられていないローカルターミナルセッション';
+
+  @override
+  String mcpHostUseDefault(String mode) {
+    return '既定（$mode）';
+  }
+
+  @override
+  String get mcpHostCustom => '個別設定';
+
+  @override
+  String mcpHostAccessFor(String name) {
+    return '$name のアクセス';
+  }
+
+  @override
+  String get mcpSearchMachines => 'マシンを検索';
+
+  @override
+  String mcpNoMachinesMatch(String query) {
+    return '「$query」に一致するマシンはありません。';
+  }
+
+  @override
+  String get mcpNoSavedMachines => 'このワークスペースにはまだ保存済みのホストがありません。';
+
+  @override
+  String mcpShowMoreMachines(int count) {
+    return 'さらに $count 台を表示';
+  }
+
+  @override
+  String get mcpAccessLoading => 'マシンのアクセス設定を読み込んでいます…';
+
+  @override
+  String get mcpAccessUnavailable =>
+      'マシンのアクセス設定を現在利用できません。読み込まれるまで、外部 AI はすべてのマシンで拒否されます。';
+
+  @override
+  String get mcpAccessSaveFailed => 'アクセス設定を保存できませんでした。もう一度お試しください。';
+
+  @override
+  String get mcpConfirmReadWriteDefaultTitle => 'すべてのマシンで読み書きを許可しますか？';
+
+  @override
+  String get mcpConfirmReadWriteDefaultBody =>
+      '接続トークンを持つ AI は、個別に設定していないすべてのマシン（後から追加したマシンを含む）に接続し、入力し、コマンドを実行し、ファイルを変更できます。ホストキーとサインインの確認は引き続き表示されます。';
+
+  @override
+  String get mcpConfirmReadWriteDefaultConfirm => '読み書きを許可';
+
+  @override
+  String mcpRunningDefaultAccess(String mode) {
+    return '実行中 · 既定: $mode';
+  }
+
+  @override
+  String get mcpAndroidForwardingHint =>
+      'MCP はこのデバイスのループバックアドレスでのみ待ち受けます。USB デバッグで接続したコンピューター上の AI から使用するには、コンピューターで次のコマンドを実行し、コピーした設定をそこで使用してください:';
+
+  @override
+  String get mcpAndroidBackgroundHint =>
+      'MCP の実行中は通知が表示され、他のアプリに切り替えた後も外部 AI が引き続き使用できます。通知から停止する、ロックする、またはサインアウトするとトークンは取り消されます。通知を表示できない場合、アプリを離れると MCP は停止します。';
+
+  @override
+  String get mcpForegroundNotificationTitle => '外部 AI 連携がオンです';
+
+  @override
+  String mcpForegroundNotificationText(int port) {
+    return 'MCP は 127.0.0.1:$port で待ち受けています。停止するとアクセストークンが取り消されます。';
+  }
+
+  @override
+  String get mcpForegroundNotificationStop => 'MCP を停止';
+
+  @override
+  String get mcpAndroidProtected => 'MCP 通知によりバックグラウンドでも接続できます。';
+
+  @override
+  String get mcpAndroidForegroundOnly =>
+      'アプリの表示中のみ MCP を利用できます。アプリを離れるとアクセスは失効します。';
+
+  @override
+  String get mcpAndroidStarting => 'Android のバックグラウンド保護を開始しています…';
 }

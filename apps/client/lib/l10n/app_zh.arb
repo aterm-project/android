@@ -4834,5 +4834,8 @@
   "mcpAndroidBackgroundHint": "MCP 运行期间，Atermius 会显示一条通知，以便你切换到其他应用后外部 AI 仍可继续使用。从通知中停止、锁定或退出登录都会撤销令牌。如果无法显示通知，离开应用时 MCP 会停止。",
   "mcpForegroundNotificationTitle": "外部 AI 接入已开启",
   "mcpForegroundNotificationText": "MCP 正在监听 127.0.0.1:{port}。停止即可撤销访问令牌。",
-  "mcpForegroundNotificationStop": "停止 MCP"
+  "mcpForegroundNotificationStop": "停止 MCP",
+  "mcpAndroidProtected": "MCP 通知已启用，可在后台保持连接。",
+  "mcpAndroidForegroundOnly": "MCP 仅在本应用可见时运行。离开应用将撤销访问权限。",
+  "mcpAndroidStarting": "正在启动 Android 后台保护…"
 }

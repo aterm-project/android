@@ -15076,13 +15076,15 @@
     "description": "Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder).",
     "placeholders": {
       "port": {
-        "type": "int",
-        "format": "decimalPattern"
+        "type": "int"
       }
     }
   },
   "mcpForegroundNotificationStop": "Stop MCP",
   "@mcpForegroundNotificationStop": {
     "description": "Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder)."
-  }
+  },
+  "mcpAndroidProtected": "Background access is protected by the MCP notification.",
+  "mcpAndroidForegroundOnly": "MCP works while this app is visible. Leaving the app revokes access.",
+  "mcpAndroidStarting": "Starting Android background protection…"
 }

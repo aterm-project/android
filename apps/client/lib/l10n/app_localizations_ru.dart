@@ -14524,7 +14524,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get theBrowserAndMobileAppsDont =>
-      'В браузере и мобильных приложениях локальный MCP-слушатель недоступен. Включите его, открыв рабочее пространство в настольном клиенте для Windows, Linux или macOS.';
+      'В этой версии Atermius локальный MCP-слушатель недоступен. Включите его, открыв рабочее пространство в приложении для Windows, Linux, macOS или Android.';
 
   @override
   String get portMustBe102465535 => 'Порт должен быть в диапазоне 1024–65535.';
@@ -18312,4 +18312,141 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get cloudAccessErrorScopeEndedCommitted =>
       'Учётная запись, сервер или выбранный Vault изменились после того, как сервер уже выполнил часть действия (например, создал Vault или приглашение). Эта часть не отменена; проверьте её перед повтором.';
+
+  @override
+  String get mcpAccessModeDenied => 'Запрещено';
+
+  @override
+  String get mcpAccessModeReadOnly => 'Только чтение';
+
+  @override
+  String get mcpAccessModeReadWrite => 'Чтение и запись';
+
+  @override
+  String get mcpAccessModeDeniedDescription =>
+      'Внешний ИИ не видит и не может использовать машину. Она не попадает в списки хостов и сеансов.';
+
+  @override
+  String get mcpAccessModeReadOnlyDescription =>
+      'Внешний ИИ видит машину и может читать вывод и файлы уже открытых сеансов. Подключаться, вводить текст, выполнять команды и изменять файлы он не может.';
+
+  @override
+  String get mcpAccessModeReadWriteDescription =>
+      'Внешний ИИ также может подключать, переключать и закрывать сеансы, вводить текст в терминал, выполнять команды и записывать файлы. Запросы ключа хоста и входа по-прежнему появляются.';
+
+  @override
+  String get mcpMachineAccessTitle => 'Доступ к машинам';
+
+  @override
+  String get mcpMachineAccessDescription =>
+      'Выберите, что внешний ИИ может делать на каждой машине. Настройки хранятся на этом устройстве для текущего рабочего пространства и не синхронизируются. Остановка MCP отзывает весь доступ независимо от выбранного здесь.';
+
+  @override
+  String get mcpDefaultAccessTitle => 'По умолчанию для всех машин';
+
+  @override
+  String get mcpDefaultAccessDescription =>
+      'Применяется ко всем машинам без собственной настройки, включая добавленные позже.';
+
+  @override
+  String get mcpPerMachineTitle => 'Настройки для отдельных машин';
+
+  @override
+  String mcpCustomizedCount(int count) {
+    return 'Машин с собственной настройкой: $count';
+  }
+
+  @override
+  String get mcpLocalDeviceName => 'Это устройство (локальная консоль)';
+
+  @override
+  String get mcpLocalDeviceDetail =>
+      'Локальные сеансы терминала, не связанные с сохранённым хостом';
+
+  @override
+  String mcpHostUseDefault(String mode) {
+    return 'По умолчанию ($mode)';
+  }
+
+  @override
+  String get mcpHostCustom => 'Своя настройка';
+
+  @override
+  String mcpHostAccessFor(String name) {
+    return 'Доступ для $name';
+  }
+
+  @override
+  String get mcpSearchMachines => 'Поиск машин';
+
+  @override
+  String mcpNoMachinesMatch(String query) {
+    return 'Нет машин, соответствующих «$query».';
+  }
+
+  @override
+  String get mcpNoSavedMachines =>
+      'В этом рабочем пространстве пока нет сохранённых хостов.';
+
+  @override
+  String mcpShowMoreMachines(int count) {
+    return 'Показать ещё: $count';
+  }
+
+  @override
+  String get mcpAccessLoading => 'Загрузка настроек доступа к машинам…';
+
+  @override
+  String get mcpAccessUnavailable =>
+      'Настройки доступа к машинам сейчас недоступны. Пока они не загрузятся, внешнему ИИ запрещён доступ ко всем машинам.';
+
+  @override
+  String get mcpAccessSaveFailed =>
+      'Не удалось сохранить настройку доступа. Повторите попытку.';
+
+  @override
+  String get mcpConfirmReadWriteDefaultTitle =>
+      'Разрешить чтение и запись на всех машинах?';
+
+  @override
+  String get mcpConfirmReadWriteDefaultBody =>
+      'Любой ИИ с токеном подключения сможет подключаться, вводить текст, выполнять команды и изменять файлы на всех машинах без собственной настройки, включая добавленные позже. Запросы ключа хоста и входа по-прежнему появляются.';
+
+  @override
+  String get mcpConfirmReadWriteDefaultConfirm => 'Разрешить чтение и запись';
+
+  @override
+  String mcpRunningDefaultAccess(String mode) {
+    return 'Работает · По умолчанию: $mode';
+  }
+
+  @override
+  String get mcpAndroidForwardingHint =>
+      'MCP прослушивает только адрес обратной петли этого устройства. Чтобы использовать его из ИИ на компьютере, подключённом по отладке USB, выполните на компьютере эту команду, а затем используйте там скопированную конфигурацию:';
+
+  @override
+  String get mcpAndroidBackgroundHint =>
+      'Пока MCP работает, Atermius показывает уведомление, чтобы внешний ИИ мог продолжать работу после перехода в другое приложение. Остановка из уведомления, блокировка или выход отзывают токен. Если уведомление показать нельзя, MCP останавливается при выходе из приложения.';
+
+  @override
+  String get mcpForegroundNotificationTitle => 'Доступ внешнего ИИ включён';
+
+  @override
+  String mcpForegroundNotificationText(int port) {
+    return 'MCP прослушивает 127.0.0.1:$port. Остановите его, чтобы отозвать токен доступа.';
+  }
+
+  @override
+  String get mcpForegroundNotificationStop => 'Остановить MCP';
+
+  @override
+  String get mcpAndroidProtected =>
+      'Уведомление MCP обеспечивает доступ в фоновом режиме.';
+
+  @override
+  String get mcpAndroidForegroundOnly =>
+      'MCP работает, пока приложение видно. При уходе из приложения доступ отзывается.';
+
+  @override
+  String get mcpAndroidStarting => 'Запускается фоновая защита Android…';
 }

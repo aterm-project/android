@@ -1394,6 +1394,8 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
   /// The forwarding scope (repository/profile lifetime) changed: pending
   /// connect-and-start requests are dropped even while the page is hidden.
   void _notifyForwardingScopeChanged() {
+    // Never notify MCP listeners from inside this State's setState callback.
+    scheduleMicrotask(McpService.instance.workspaceChanged);
     if (!_disposing && mounted) _portForwardChanges.fire();
   }
 

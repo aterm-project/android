@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- External-AI grants belong only to this device, never to a restore. -->
+    <exclude domain="file" path="mcp-access-v1/" />
+</full-backup-content>

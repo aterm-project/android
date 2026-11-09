@@ -12836,7 +12836,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get theBrowserAndMobileAppsDont =>
-      '浏览器和移动端不提供本机 MCP 监听。请在 Windows、Linux 或 macOS 桌面客户端打开工作区后启用。';
+      '此版本的 Atermius 不提供本机 MCP 监听。请在 Windows、Linux、macOS 或 Android 应用中打开工作区后启用。';
 
   @override
   String get portMustBe102465535 => '端口范围为 1024–65535。';
@@ -16308,4 +16308,133 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get cloudAccessErrorScopeEndedCommitted =>
       '服务器已完成此操作的一部分（例如已创建 Vault 或邀请）后，账户、服务器或所选 Vault 发生了变更。该部分不会被撤销；请先检查后再重试。';
+
+  @override
+  String get mcpAccessModeDenied => '拒绝';
+
+  @override
+  String get mcpAccessModeReadOnly => '只读';
+
+  @override
+  String get mcpAccessModeReadWrite => '读写';
+
+  @override
+  String get mcpAccessModeDeniedDescription =>
+      '外部 AI 无法看到或使用该机器，主机和会话列表中也不会出现。';
+
+  @override
+  String get mcpAccessModeReadOnlyDescription =>
+      '外部 AI 可以列出该机器，并读取已打开会话的输出和文件，但不能连接、输入、执行命令或修改文件。';
+
+  @override
+  String get mcpAccessModeReadWriteDescription =>
+      '外部 AI 还可以连接、切换和关闭会话，发送终端输入，执行命令和写入文件。主机密钥和登录提示仍会照常出现。';
+
+  @override
+  String get mcpMachineAccessTitle => '机器访问权限';
+
+  @override
+  String get mcpMachineAccessDescription =>
+      '选择外部 AI 在每台机器上可以执行的操作。这些设置按当前工作区保存在本设备上，不会同步。停止 MCP 会撤销所有访问，与此处的选择无关。';
+
+  @override
+  String get mcpDefaultAccessTitle => '所有机器的默认权限';
+
+  @override
+  String get mcpDefaultAccessDescription => '适用于所有未单独设置的机器，包括之后添加的机器。';
+
+  @override
+  String get mcpPerMachineTitle => '单独设置';
+
+  @override
+  String mcpCustomizedCount(int count) {
+    return '单独设置的机器：$count';
+  }
+
+  @override
+  String get mcpLocalDeviceName => '本设备（本地控制台）';
+
+  @override
+  String get mcpLocalDeviceDetail => '未关联已保存主机的本地终端会话';
+
+  @override
+  String mcpHostUseDefault(String mode) {
+    return '默认（$mode）';
+  }
+
+  @override
+  String get mcpHostCustom => '已单独设置';
+
+  @override
+  String mcpHostAccessFor(String name) {
+    return '$name 的访问权限';
+  }
+
+  @override
+  String get mcpSearchMachines => '搜索机器';
+
+  @override
+  String mcpNoMachinesMatch(String query) {
+    return '没有与“$query”匹配的机器。';
+  }
+
+  @override
+  String get mcpNoSavedMachines => '当前工作区还没有已保存的主机。';
+
+  @override
+  String mcpShowMoreMachines(int count) {
+    return '再显示 $count 台';
+  }
+
+  @override
+  String get mcpAccessLoading => '正在加载机器访问权限…';
+
+  @override
+  String get mcpAccessUnavailable => '机器访问权限暂时不可用。在加载完成前，外部 AI 在所有机器上均被拒绝。';
+
+  @override
+  String get mcpAccessSaveFailed => '无法保存访问权限设置，请重试。';
+
+  @override
+  String get mcpConfirmReadWriteDefaultTitle => '允许在所有机器上读写？';
+
+  @override
+  String get mcpConfirmReadWriteDefaultBody =>
+      '持有连接令牌的任何 AI 都可以在所有未单独设置的机器（包括之后添加的机器）上连接、输入、执行命令和修改文件。主机密钥和登录提示仍会照常出现。';
+
+  @override
+  String get mcpConfirmReadWriteDefaultConfirm => '允许读写';
+
+  @override
+  String mcpRunningDefaultAccess(String mode) {
+    return '运行中 · 默认：$mode';
+  }
+
+  @override
+  String get mcpAndroidForwardingHint =>
+      'MCP 仅监听本设备的回环地址。要让通过 USB 调试连接的电脑上的 AI 使用它，请在电脑上运行以下命令，然后在电脑上使用复制的配置：';
+
+  @override
+  String get mcpAndroidBackgroundHint =>
+      'MCP 运行期间，Atermius 会显示一条通知，以便你切换到其他应用后外部 AI 仍可继续使用。从通知中停止、锁定或退出登录都会撤销令牌。如果无法显示通知，离开应用时 MCP 会停止。';
+
+  @override
+  String get mcpForegroundNotificationTitle => '外部 AI 接入已开启';
+
+  @override
+  String mcpForegroundNotificationText(int port) {
+    return 'MCP 正在监听 127.0.0.1:$port。停止即可撤销访问令牌。';
+  }
+
+  @override
+  String get mcpForegroundNotificationStop => '停止 MCP';
+
+  @override
+  String get mcpAndroidProtected => 'MCP 通知已启用，可在后台保持连接。';
+
+  @override
+  String get mcpAndroidForegroundOnly => 'MCP 仅在本应用可见时运行。离开应用将撤销访问权限。';
+
+  @override
+  String get mcpAndroidStarting => '正在启动 Android 后台保护…';
 }

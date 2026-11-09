@@ -317,7 +317,7 @@ class McpService extends ChangeNotifier {
       );
     }
     if (!supported) {
-      throw UnsupportedError('MCP listening requires the desktop application.');
+      throw UnsupportedError('MCP listening is unavailable on this platform.');
     }
     final generation = ++_generation;
     _starting = true;
@@ -372,6 +372,13 @@ class McpService extends ChangeNotifier {
         return;
       }
       _listener = listener;
+      if (listener is McpObservableListener) {
+        unawaited(
+          listener.done.then((_) {
+            if (generation == _generation) unawaited(stop());
+          }),
+        );
+      }
     } catch (_) {
       protocol?.close();
       if (generation == _generation) {

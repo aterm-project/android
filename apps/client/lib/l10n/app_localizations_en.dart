@@ -14500,7 +14500,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get theBrowserAndMobileAppsDont =>
-      'The browser and mobile apps don\'t provide a local MCP listener. Enable it after opening the workspace in the Windows, Linux or macOS desktop client.';
+      'This version of Atermius doesn\'t provide a local MCP listener. Enable it after opening the workspace in the Windows, Linux, macOS or Android app.';
 
   @override
   String get portMustBe102465535 => 'Port must be 1024–65535.';
@@ -18266,4 +18266,140 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cloudAccessErrorScopeEndedCommitted =>
       'The account, server or selected Vault changed after the server had already completed part of this action (for example, created the Vault or the invitation). That part was not undone; review it before trying again.';
+
+  @override
+  String get mcpAccessModeDenied => 'Denied';
+
+  @override
+  String get mcpAccessModeReadOnly => 'Read-only';
+
+  @override
+  String get mcpAccessModeReadWrite => 'Read & write';
+
+  @override
+  String get mcpAccessModeDeniedDescription =>
+      'External AI can\'t see or use the machine. It\'s left out of host and session lists.';
+
+  @override
+  String get mcpAccessModeReadOnlyDescription =>
+      'External AI can list the machine and read output and files of sessions that are already open. It can\'t connect, type, run commands or change files.';
+
+  @override
+  String get mcpAccessModeReadWriteDescription =>
+      'External AI can also connect, focus and close sessions, send terminal input, run commands and write files. Host key and sign-in prompts still appear.';
+
+  @override
+  String get mcpMachineAccessTitle => 'Machine access';
+
+  @override
+  String get mcpMachineAccessDescription =>
+      'Choose what external AI may do on each machine. These settings are kept on this device for the current workspace and aren\'t synced. Stopping MCP revokes all access, whatever is chosen here.';
+
+  @override
+  String get mcpDefaultAccessTitle => 'Default for all machines';
+
+  @override
+  String get mcpDefaultAccessDescription =>
+      'Applies to every machine without its own setting, including machines added later.';
+
+  @override
+  String get mcpPerMachineTitle => 'Per-machine settings';
+
+  @override
+  String mcpCustomizedCount(int count) {
+    return 'Machines with their own setting: $count';
+  }
+
+  @override
+  String get mcpLocalDeviceName => 'This device (local console)';
+
+  @override
+  String get mcpLocalDeviceDetail =>
+      'Local terminal sessions that aren\'t tied to a saved host';
+
+  @override
+  String mcpHostUseDefault(String mode) {
+    return 'Default ($mode)';
+  }
+
+  @override
+  String get mcpHostCustom => 'Custom';
+
+  @override
+  String mcpHostAccessFor(String name) {
+    return 'Access for $name';
+  }
+
+  @override
+  String get mcpSearchMachines => 'Search machines';
+
+  @override
+  String mcpNoMachinesMatch(String query) {
+    return 'No machines match “$query”.';
+  }
+
+  @override
+  String get mcpNoSavedMachines => 'No saved hosts in this workspace yet.';
+
+  @override
+  String mcpShowMoreMachines(int count) {
+    return 'Show $count more';
+  }
+
+  @override
+  String get mcpAccessLoading => 'Loading machine access settings…';
+
+  @override
+  String get mcpAccessUnavailable =>
+      'Machine access settings aren\'t available right now. Until they load, external AI is denied on every machine.';
+
+  @override
+  String get mcpAccessSaveFailed =>
+      'Couldn\'t save the access setting. Try again.';
+
+  @override
+  String get mcpConfirmReadWriteDefaultTitle =>
+      'Allow read & write on all machines?';
+
+  @override
+  String get mcpConfirmReadWriteDefaultBody =>
+      'Any AI holding the connection token could connect to, type into, run commands on and change files on every machine without its own setting, including machines added later. Host key and sign-in prompts still appear.';
+
+  @override
+  String get mcpConfirmReadWriteDefaultConfirm => 'Allow read & write';
+
+  @override
+  String mcpRunningDefaultAccess(String mode) {
+    return 'Running · Default: $mode';
+  }
+
+  @override
+  String get mcpAndroidForwardingHint =>
+      'MCP listens only on this device\'s loopback address. To use it from AI on a computer connected with USB debugging, run this on the computer, then use the copied configuration there:';
+
+  @override
+  String get mcpAndroidBackgroundHint =>
+      'While MCP runs, Atermius shows a notification so external AI can keep using it after you switch apps. Stopping it from the notification, locking or signing out revokes the token. If the notification can\'t be shown, MCP stops when you leave the app.';
+
+  @override
+  String get mcpForegroundNotificationTitle => 'External AI access is on';
+
+  @override
+  String mcpForegroundNotificationText(int port) {
+    return 'MCP is listening on 127.0.0.1:$port. Stop it to revoke the access token.';
+  }
+
+  @override
+  String get mcpForegroundNotificationStop => 'Stop MCP';
+
+  @override
+  String get mcpAndroidProtected =>
+      'Background access is protected by the MCP notification.';
+
+  @override
+  String get mcpAndroidForegroundOnly =>
+      'MCP works while this app is visible. Leaving the app revokes access.';
+
+  @override
+  String get mcpAndroidStarting => 'Starting Android background protection…';
 }

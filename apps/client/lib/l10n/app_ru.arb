@@ -4834,5 +4834,8 @@
   "mcpAndroidBackgroundHint": "Пока MCP работает, Atermius показывает уведомление, чтобы внешний ИИ мог продолжать работу после перехода в другое приложение. Остановка из уведомления, блокировка или выход отзывают токен. Если уведомление показать нельзя, MCP останавливается при выходе из приложения.",
   "mcpForegroundNotificationTitle": "Доступ внешнего ИИ включён",
   "mcpForegroundNotificationText": "MCP прослушивает 127.0.0.1:{port}. Остановите его, чтобы отозвать токен доступа.",
-  "mcpForegroundNotificationStop": "Остановить MCP"
+  "mcpForegroundNotificationStop": "Остановить MCP",
+  "mcpAndroidProtected": "Уведомление MCP обеспечивает доступ в фоновом режиме.",
+  "mcpAndroidForegroundOnly": "MCP работает, пока приложение видно. При уходе из приложения доступ отзывается.",
+  "mcpAndroidStarting": "Запускается фоновая защита Android…"
 }

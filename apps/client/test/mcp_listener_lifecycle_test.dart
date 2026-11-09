@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:aterm_client/domain/models.dart';
 import 'package:aterm_client/mcp/mcp_listener_lifecycle.dart';
+import 'package:aterm_client/mcp/mcp_access_policy_store_io.dart';
 import 'package:aterm_client/mcp/mcp_service.dart';
 import 'package:aterm_client/mcp/mcp_workspace.dart';
 import 'package:aterm_client/platform/mcp_foreground.dart';
@@ -532,7 +533,14 @@ void main() {
   test(
     'real McpService: native revoke closes the listener and its token',
     () async {
-      final service = McpService()
+      final policyDirectory = await Directory.systemTemp.createTemp(
+        'mcp-lifecycle-',
+      );
+      final service = McpService(
+        policyStore: FileMcpAccessPolicyStore(
+          directory: () async => policyDirectory,
+        ),
+      )
         ..attach(
           McpWorkspace(
             scope: () => 'fixture:lifecycle',
@@ -593,6 +601,7 @@ void main() {
         l.dispose();
         await service.stop();
         service.dispose();
+        await policyDirectory.delete(recursive: true);
       }
     },
   );

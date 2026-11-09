@@ -11,7 +11,9 @@
     <application
         android:label="aterm_client"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <service
             android:name=".TransferForegroundService"
             android:exported="false"

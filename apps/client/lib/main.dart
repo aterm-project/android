@@ -7,6 +7,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sodium/sodium_sumo.dart';
 
 import 'app_controller.dart';
+import 'mcp/mcp_listener_lifecycle.dart';
+import 'mcp/mcp_service.dart';
+import 'platform/mcp_foreground.dart';
 import 'desktop/window/desktop_window.dart';
 import 'desktop/window/desktop_window_page.dart';
 import 'platform/application_windows.dart';
@@ -55,6 +58,17 @@ import 'ui/cloud_access/guest_app.dart';
 
 Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
+  McpListenerLifecycle.install(
+    McpService.instance,
+    text: () => McpForegroundText(
+      channelName: currentL10n.externalAiAccess,
+      title: currentL10n.mcpForegroundNotificationTitle,
+      body: currentL10n.mcpForegroundNotificationText(
+        McpService.instance.endpoint?.port ?? 8765,
+      ),
+      stopLabel: currentL10n.mcpForegroundNotificationStop,
+    ),
+  );
   // Bounded browser-drop policy + central drop cleanup before any root runs.
   initializeFileDrop();
   if (kIsWeb) {
