@@ -13,6 +13,51 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  for (final hasSession in [false, true]) {
+    testWidgets(
+      'Android Home keeps its fullscreen exit menu (sessions=$hasSession)',
+      (tester) async {
+        var native = false;
+        final controller = FullscreenController(
+          supported: true,
+          read: () async => native,
+          changes: const Stream.empty(),
+          apply: (value) async => native = value,
+        );
+        FullscreenController.debugInstance = controller;
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.android),
+            home: Scaffold(
+              body: WorkspaceTabBar(
+                tabs: [
+                  const WorkspaceTab(id: 'home', title: 'Home', isHome: true),
+                  if (hasSession) const WorkspaceTab(id: 'ssh', title: 'SSH'),
+                ],
+                selectedId: 'home',
+                onSelect: (_) {},
+                onClose: (_) {},
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.byTooltip('Tools'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Enter fullscreen'));
+        await tester.pumpAndSettle();
+        expect(controller.enabled, isTrue);
+        expect(find.byTooltip('Tools'), findsOneWidget);
+        await tester.tap(find.byTooltip('Tools'));
+        await tester.pumpAndSettle();
+        expect(find.text('Exit fullscreen'), findsOneWidget);
+        await tester.tap(find.text('Exit fullscreen'));
+        await tester.pumpAndSettle();
+        expect(controller.enabled, isFalse);
+        await tester.pumpWidget(const SizedBox.shrink());
+        controller.dispose();
+      },
+    );
+  }
   testWidgets(
     'Android fullscreen isolates active pane and restores the same split states',
     (tester) async {
