@@ -8,6 +8,8 @@ import 'app_motion.dart';
 import 'app_density.dart';
 import 'wallpaper.dart';
 import '../l10n/l10n.dart';
+import '../platform/fullscreen.dart';
+import 'fullscreen_menu.dart';
 
 @immutable
 class WorkspaceTabDragData {
@@ -300,11 +302,17 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
   final _paneKeys = <String, GlobalKey>{};
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: widget.controller,
+    animation: Listenable.merge([
+      widget.controller,
+      FullscreenController.instance,
+    ]),
     builder: (context, _) => LayoutBuilder(
       builder: (context, constraints) {
         final root = widget.controller.root;
         if (root == null) return const SizedBox.shrink();
+        final immersive =
+            Theme.of(context).platform == TargetPlatform.android &&
+            FullscreenController.instance.enabled;
         final panes = <({String id, Rect bounds})>[];
         final dividers =
             <({SessionWorkspaceSplit split, Rect bounds, double usable})>[];
@@ -344,68 +352,98 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
 
         layout(root, Offset.zero & constraints.biggest);
         final grouped = panes.length > 1;
-        return Stack(
-          clipBehavior: Clip.hardEdge,
-          children: [
-            for (final pane in panes)
-              Positioned.fromRect(
-                key: ValueKey('position-${pane.id}'),
-                rect: pane.bounds,
-                child: _SessionPaneDropTarget(
-                  key: _paneKeys.putIfAbsent(pane.id, () => GlobalKey()),
-                  sessionId: pane.id,
-                  scope: widget.dragScope,
-                  acceptsSession: widget.acceptsSession,
-                  selected: widget.controller.selectedId == pane.id,
-                  compactActions:
-                      pane.bounds.width <
-                      ((grouped && widget.onUnsplit != null ? 1 : 0) +
-                                  (grouped && widget.onClose != null ? 1 : 0) +
-                                  (widget.onDuplicate != null ? 1 : 0)) *
-                              (AppDensity.of(context).isCompact ? 36 : 48) +
-                          16,
-                  label: widget.paneLabel?.call(pane.id) ?? pane.id,
-                  status: widget.paneStatus?.call(pane.id),
-                  onUnsplit: grouped && widget.onUnsplit != null
-                      ? () => widget.onUnsplit!(pane.id)
-                      : null,
-                  onClose: grouped && widget.onClose != null
-                      ? () => widget.onClose!(pane.id)
-                      : null,
-                  onDuplicate: widget.onDuplicate == null
-                      ? null
-                      : () => widget.onDuplicate!(pane.id),
-                  onSelect: () {
-                    widget.controller.activate(pane.id);
-                    widget.onSelect?.call(pane.id);
-                  },
-                  onDrop: (source, edge) {
-                    widget.controller.split(source, pane.id, edge);
-                    widget.onSelect?.call(source);
-                  },
-                  child: widget.terminalBuilder(context, pane.id),
+        return PopScope(
+          canPop: !immersive,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && immersive) toggleAppFullscreen(context);
+          },
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              for (final pane in panes)
+                Positioned.fromRect(
+                  key: ValueKey('position-${pane.id}'),
+                  rect: immersive && widget.controller.selectedId == pane.id
+                      ? Offset.zero & constraints.biggest
+                      : pane.bounds,
+                  child: Offstage(
+                    offstage:
+                        immersive && widget.controller.selectedId != pane.id,
+                    child: _SessionPaneDropTarget(
+                      key: _paneKeys.putIfAbsent(pane.id, () => GlobalKey()),
+                      sessionId: pane.id,
+                      scope: widget.dragScope,
+                      acceptsSession: widget.acceptsSession,
+                      selected: widget.controller.selectedId == pane.id,
+                      compactActions:
+                          pane.bounds.width <
+                          ((grouped && widget.onUnsplit != null ? 1 : 0) +
+                                      (grouped && widget.onClose != null
+                                          ? 1
+                                          : 0) +
+                                      (widget.onDuplicate != null ? 1 : 0)) *
+                                  (AppDensity.of(context).isCompact ? 36 : 48) +
+                              16,
+                      label: widget.paneLabel?.call(pane.id) ?? pane.id,
+                      status: widget.paneStatus?.call(pane.id),
+                      onUnsplit: grouped && widget.onUnsplit != null
+                          ? () => widget.onUnsplit!(pane.id)
+                          : null,
+                      onClose: grouped && widget.onClose != null
+                          ? () => widget.onClose!(pane.id)
+                          : null,
+                      onDuplicate: widget.onDuplicate == null
+                          ? null
+                          : () => widget.onDuplicate!(pane.id),
+                      onSelect: () {
+                        widget.controller.activate(pane.id);
+                        widget.onSelect?.call(pane.id);
+                      },
+                      onDrop: (source, edge) {
+                        widget.controller.split(source, pane.id, edge);
+                        widget.onSelect?.call(source);
+                      },
+                      child: widget.terminalBuilder(context, pane.id),
+                    ),
+                  ),
                 ),
-              ),
-            for (final divider in dividers)
-              Positioned.fromRect(
-                key: ObjectKey(divider.split),
-                rect: divider.bounds,
-                child: _SessionDivider(
-                  axis: divider.split.axis,
-                  onDrag: (delta) {
-                    if (divider.usable > 0)
-                      widget.controller.resize(
-                        divider.split,
-                        divider.split.ratio +
-                            (divider.split.axis == Axis.horizontal
-                                    ? delta.dx
-                                    : delta.dy) /
-                                divider.usable,
-                      );
-                  },
+              if (!immersive)
+                for (final divider in dividers)
+                  Positioned.fromRect(
+                    key: ObjectKey(divider.split),
+                    rect: divider.bounds,
+                    child: _SessionDivider(
+                      axis: divider.split.axis,
+                      onDrag: (delta) {
+                        if (divider.usable > 0)
+                          widget.controller.resize(
+                            divider.split,
+                            divider.split.ratio +
+                                (divider.split.axis == Axis.horizontal
+                                        ? delta.dx
+                                        : delta.dy) /
+                                    divider.usable,
+                          );
+                      },
+                    ),
+                  ),
+              if (immersive)
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: Material(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    shape: const CircleBorder(),
+                    child: IconButton(
+                      key: const ValueKey('workspace_exit_fullscreen'),
+                      tooltip: context.l10n.exitFullscreen,
+                      onPressed: () => toggleAppFullscreen(context),
+                      icon: const Icon(Icons.fullscreen_exit),
+                    ),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       },
     ),

@@ -25,3 +25,5 @@ jobs:
       - run: flutter build web --release --no-web-resources-cdn
         working-directory: apps/client
       - run: python3 tools/verify_cloud_proxy.py --web-root apps/client/build/web
+      - run: flutter test --concurrency=2 test/session_recovery_test.dart test/desktop_reconnect_test.dart test/telnet_app_controller_test.dart test/terminal_tabs_controller_test.dart test/telnet_local_profile_widget_test.dart test/terminal_tabs_widget_test.dart
+        working-directory: apps/client

@@ -749,9 +749,34 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text(
-                    session.error!,
-                    style: const TextStyle(color: Colors.redAccent),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          context.l10n.connectionLost,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          session.error!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                        if (session.state == 'disconnected' &&
+                            session.canReconnect) ...[
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            key: const ValueKey('desktop_restore_connection'),
+                            onPressed: session.reconnect,
+                            icon: const Icon(Icons.refresh),
+                            label: Text(context.l10n.restoreConnection),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -812,6 +837,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
                   connected: session.state == 'connected',
                   trackpad: _touch.trackpad,
                   keybarHeight: keybarHeight,
+                  menu: widget.embeddedMenu ? menuButton() : null,
                   onKeyboardChanged: (value) {
                     if (mounted && _keyboardOpen != value)
                       setState(() => _keyboardOpen = value);
@@ -824,7 +850,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
                   },
                 ),
               ),
-            if (widget.embeddedMenu)
+            if (widget.embeddedMenu && !_mobilePlatform)
               Positioned(
                 top: 4,
                 right: 4,

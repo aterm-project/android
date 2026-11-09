@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:aterm_client/platform/fullscreen.dart';
 import 'package:aterm_client/platform/fullscreen_native.dart' as native;
 import 'package:aterm_client/ui/fullscreen_menu.dart';
+import 'package:aterm_client/ui/session_workspace.dart';
+import 'package:aterm_client/ui/workspace_tab_bar.dart';
+import 'package:aterm_client/ui/workspace_status_bar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +13,79 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  testWidgets(
+    'Android fullscreen isolates active pane and restores the same split states',
+    (tester) async {
+      final controller = FullscreenController(
+        supported: true,
+        read: () async => false,
+        changes: const Stream.empty(),
+        apply: (value) async => value,
+      );
+      FullscreenController.debugInstance = controller;
+      final layout = SessionWorkspaceController()
+        ..activate('a')
+        ..split('b', 'a', SessionSplitEdge.right);
+      final keys = {'a': GlobalKey(), 'b': GlobalKey()};
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.android),
+          home: Scaffold(
+            body: Column(
+              children: [
+                WorkspaceTabBar(
+                  tabs: const [
+                    WorkspaceTab(id: 'a', title: 'alpha'),
+                    WorkspaceTab(id: 'b', title: 'beta'),
+                  ],
+                  selectedId: 'b',
+                  onSelect: (_) {},
+                  onClose: (_) {},
+                ),
+                Expanded(
+                  child: SessionWorkspaceView(
+                    controller: layout,
+                    terminalBuilder: (_, id) => TextField(key: keys[id]),
+                  ),
+                ),
+                const WorkspaceStatusBar(
+                  status: 'connected',
+                  detail: 'test',
+                  sessionCount: 2,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      final originalA = keys['a']!.currentState,
+          originalB = keys['b']!.currentState;
+      final splitWidth = tester.getSize(find.byKey(keys['b']!)).width;
+      await controller.toggle();
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('workspace_navigation_bar')),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('workspace_status_bar')), findsNothing);
+      expect(find.byKey(keys['a']!), findsNothing);
+      expect(keys['a']!.currentState, same(originalA));
+      expect(keys['b']!.currentState, same(originalB));
+      expect(
+        tester.getSize(find.byKey(keys['b']!)).width,
+        greaterThan(splitWidth),
+      );
+      expect(find.byKey(const ValueKey('session-divider')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('workspace_exit_fullscreen')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(keys['a']!), findsOneWidget);
+      expect(tester.getSize(find.byKey(keys['b']!)).width, splitWidth);
+      expect(layout.sessionIds, ['a', 'b']);
+      await tester.pumpWidget(const SizedBox.shrink());
+      layout.dispose();
+      controller.dispose();
+    },
+  );
   tearDown(() {
     FullscreenController.debugInstance = null;
     debugDefaultTargetPlatformOverride = null;

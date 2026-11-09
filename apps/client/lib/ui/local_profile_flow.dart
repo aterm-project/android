@@ -64,6 +64,8 @@ import '../ssh/host_operating_system_persistence.dart';
 import '../terminal/terminal_search.dart';
 import '../terminal/mirrored_terminal.dart';
 import '../terminal/session_log.dart';
+import '../terminal/session_recovery.dart';
+import 'session_recovery_overlay.dart';
 import '../platform/application_windows.dart';
 import 'session_workspace.dart';
 import 'ssh_forwarding_page.dart';
@@ -1551,12 +1553,36 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
   }
 
   void _addDeviceSession(_LocalTerminalSession session) {
+    _installLocalRecovery(session);
     session.connected.addListener(_onSessionChanged);
     setState(() {
       _sessions.add(session);
       _selectedTabId = session.id;
       _layout.activate(session.id);
     });
+    session.recovery?.update(connected: session.connected.value,
+      connecting: session.telnetState == 'connecting' || session.desktop?.state == 'connecting');
+  }
+
+  void _installLocalRecovery(_LocalTerminalSession session) {
+    if (session.recovery != null || session.console != null) return;
+    final profile = _activeProfile, repository = _repository;
+    final saved = _hosts.any((h) => h.id == session.host.id);
+    bool current() => mounted && !_disposing &&
+        identical(_activeProfile, profile) && identical(_repository, repository) &&
+        _sessions.contains(session) && !session._closed &&
+        (!saved || _hosts.any((h) => h.id == session.host.id));
+    session.recovery = SessionRecovery(
+      automatic: session.host.protocol.isTerminal,
+      isCurrent: current,
+      reconnect: () async {
+        if (!current() || _busy) return;
+        final host = _hosts.where((h) => h.id == session.host.id).firstOrNull ?? session.host;
+        await _connectLocalHost(host, reuseSession: session, shouldContinue: current);
+        if (current()) session.recovery?.update(connected: session.connected.value,
+          connecting: session.telnetState == 'connecting');
+      },
+    );
   }
 
   /// Starts a local shell ([shell], default system shell) or a serial console
@@ -1739,6 +1765,7 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     HostRecord host, {
     bool Function()? shouldContinue,
     void Function(_LocalTerminalSession session)? onSessionOpened,
+    _LocalTerminalSession? reuseSession,
   }) async {
     if (kIsWeb) {
       // A browser LocalVault has no authenticated Relay and cannot open raw
@@ -1756,6 +1783,15 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
         return;
       }
       // Plaintext, interactive login: no credential is resolved or sent.
+      if (reuseSession != null) {
+        reuseSession.host = host;
+        reuseSession.telnetState = 'connecting';
+        reuseSession.telnetError = null;
+        final cancellation = TelnetConnectCancellation();
+        reuseSession._telnetCancellation = cancellation;
+        await reuseSession._connectTelnet(localTelnetConnector, cancellation);
+        return;
+      }
       final tab = _LocalTerminalSession.telnet(
         host,
         connector: localTelnetConnector,
@@ -1770,6 +1806,10 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       return;
     }
     if (host.protocol != HostProtocol.ssh) {
+      if (reuseSession != null) {
+        await reuseSession.desktop?.reconnect();
+        return;
+      }
       if (_activeProfile == null || _busy) return;
       final repository = _repository;
       final profile = _activeProfile;
@@ -1793,6 +1833,7 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       }
 
       final desktop = DesktopSession(
+        reconnectAllowed: current,
         saveRdpCertificate: (reviewed, pin) async {
           final saved = await RdpCertificatePersistence.saveLocal(
             repository: repository,
@@ -1854,24 +1895,21 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       }
       if (!mounted) return;
       log?.markConnected();
-      final session = _LocalTerminalSession(
-        host: host,
-        connection: connection,
-        log: log,
-      );
+      final session = reuseSession ?? _LocalTerminalSession(
+        host: host, connection: connection, log: log);
+      if (reuseSession != null) {
+        await session.attachSsh(connection, log);
+        session.host = host;
+      }
       log = null; // The tab now owns the log row.
-      session.connected.addListener(_onSessionChanged);
-      setState(() {
-        _sessions.add(session);
-        _selectedTabId = session.id;
-        _layout.activate(session.id);
-      });
+      if (reuseSession == null) _addDeviceSession(session);
       unawaited(
         _observeHostOperatingSystem(session, repository, _activeProfile),
       );
       connection = null; // The tab now owns the connection.
       onSessionOpened?.call(session);
     } on SshHostKeyVerificationException catch (error) {
+      reuseSession?.recovery?.blockAutomatic();
       log?.markFailed(error);
       if (_isCurrentOperation(generation)) {
         setState(() {
@@ -2218,6 +2256,11 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
   }
 
   void _onSessionChanged() {
+    for (final session in _sessions) {
+      session.recovery?.update(connected: session.connected.value,
+        connecting: session.telnetState == 'connecting' ||
+          session.desktop?.state == 'connecting' || session.desktop?.state == 'certificate');
+    }
     _files.retainConnections({
       for (final session in _sessions)
         if (session.connected.value && session.connection != null)
@@ -4523,7 +4566,7 @@ _showMessage(
                           );
                         }
                         if (session.isTelnet) {
-                          return ExcludeFocus(
+                          return SessionRecoveryOverlay(recovery: session.recovery, child: ExcludeFocus(
                             excluding: _selectedTabId != id,
                             child: TerminalView(
                               session.terminal,
@@ -4541,7 +4584,7 @@ _showMessage(
                                 _savedTerminalThemeChoice,
                               ),
                             ),
-                          );
+                          ));
                         }
                         if (session.console != null) {
                           return ExcludeFocus(
@@ -4562,7 +4605,7 @@ _showMessage(
                             ),
                           );
                         }
-                        return _LocalSshTerminalDialog(
+                        return SessionRecoveryOverlay(recovery: session.recovery, child: _LocalSshTerminalDialog(
                           key: session.viewKey,
                           session: session,
                           host: session.host,
@@ -4576,7 +4619,7 @@ _showMessage(
                           onToolsChanged: () {
                             if (mounted) setState(() {});
                           },
-                        );
+                        ));
                       },
                     ),
                   ),
@@ -6815,6 +6858,22 @@ class _LocalTerminalSession {
     required SshConnection connection,
     this.log,
   }) : connection = connection {
+    _bindSsh(connection);
+  }
+
+  Future<void> attachSsh(SshConnection value, SessionLogRecorder? recorder) async {
+    final old = connection;
+    await _stdout?.cancel();
+    await _stderr?.cancel();
+    await old?.close();
+    if (_closed) { await value.close(); return; }
+    connection = value;
+    log = recorder;
+    _bindSsh(value);
+    connected.value = true;
+  }
+
+  void _bindSsh(SshConnection connection) {
     terminal.onOutput = connection.input;
     terminal.onResize = (width, height, _, _) =>
         connection.resize(width, height);
@@ -6824,11 +6883,13 @@ class _LocalTerminalSession {
         log?.output(text);
       },
       onError: (Object error) {
+        if (_closed || !identical(this.connection, connection)) return;
+        connected.value = false;
         terminal.write(currentL10n.sshOutputStreamError);
         log?.markClosed(SessionLogEndReason.error, error: error);
       },
       onDone: () {
-        if (_closed) return;
+        if (_closed || !identical(this.connection, connection)) return;
         connected.value = false;
         terminal.write(currentL10n.sshConnectionClosed);
         log?.markClosed(SessionLogEndReason.remote);
@@ -6848,7 +6909,7 @@ class _LocalTerminalSession {
   /// Session-log lifecycle handle (SSH tabs only; null when logging is
   /// unavailable). Output reaches it only if transcript capture was enabled
   /// before this session started.
-  final SessionLogRecorder? log;
+  SessionLogRecorder? log;
   _LocalTerminalSession.console(
     LocalConsole value, {
     String? title,
@@ -6978,7 +7039,8 @@ class _LocalTerminalSession {
   }
   final String id = const Uuid().v4();
   HostRecord host;
-  final SshConnection? connection;
+  SshConnection? connection;
+  SessionRecovery? recovery;
   LocalConsole? console;
   String? consoleSerialPort;
   int? consoleBaudRate;
@@ -7005,6 +7067,8 @@ class _LocalTerminalSession {
   Future<void> _close() async {
     if (_closed) return;
     _closed = true;
+    recovery?.dispose();
+    recovery = null;
     log?.markClosed(SessionLogEndReason.user);
     connected.value = false;
     terminal.onOutput = null;

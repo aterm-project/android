@@ -52,6 +52,7 @@ import 'ssh/tmux_service.dart';
 import 'terminal/terminal_collaboration_service.dart';
 import 'terminal/mirrored_terminal.dart';
 import 'terminal/session_log.dart';
+import 'terminal/session_recovery.dart';
 import 'telnet/telnet_errors.dart';
 import 'telnet/telnet_session.dart';
 import 'telnet/telnet_transport.dart';
@@ -294,11 +295,12 @@ class TerminalTabSession {
   String state = 'connecting';
   String? errorMessage;
   bool closed = false;
+  SessionRecovery? recovery;
 
   /// Session-log lifecycle row for this SSH tab (sanitized; transcript only
   /// when the user enabled recording before the tab opened).
   SessionLogRecorder? log;
-  final Completer<void> sshAuthenticationCancelled = Completer<void>();
+  Completer<void> sshAuthenticationCancelled = Completer<void>();
   final Map<String, String> connectionCredentialFingerprints = {};
   final Map<String, String> connectionHostSnapshots = {};
   final Map<String, VerifiedTerminalHostKey> verifiedHostKeys = {};
@@ -19934,7 +19936,54 @@ class AppController extends ChangeNotifier {
     _activeTerminalTabId = tab.id;
     selectedHost = host;
     page = WorkspacePage.terminal;
+    _installTerminalRecovery(tab);
     return tab;
+  }
+
+  void _installTerminalRecovery(TerminalTabSession tab) {
+    if (tab.recovery != null) return;
+    final savedHostId = hosts.any((h) => h.id == tab.host?.id) ? tab.host?.id : null;
+    final authGeneration = _authContextGeneration;
+    final vaultGeneration = _vaultSelectionGeneration;
+    final apiGeneration = _apiGeneration;
+    final accountId = session?.accountId;
+    final deviceId = identity?.deviceId;
+    final vaultId = activeVault?.id;
+    tab.recovery = SessionRecovery(
+      automatic: tab.host?.protocol.isTerminal == true,
+      isCurrent: () => _isTerminalTabOpen(tab) && !workspaceLocked &&
+          stage == ClientStage.workspace &&
+          _authContextGeneration == authGeneration &&
+          _vaultSelectionGeneration == vaultGeneration &&
+          _apiGeneration == apiGeneration && session?.accountId == accountId &&
+          identity?.deviceId == deviceId && activeVault?.id == vaultId &&
+          (savedHostId == null || hosts.any((h) => h.id == savedHostId)),
+      reconnect: () => reconnectTerminalTab(tab.id),
+    );
+  }
+
+  Future<void> reconnectTerminalTab(String id) async {
+    final tab = _terminalTabs[id];
+    if (tab == null || tab.recovery?.available != true ||
+        tab.state == 'connecting' || tab.state == 'connected') return;
+    final savedHost = tab.host;
+    if (savedHost == null) return;
+    final host = hosts.where((h) => h.id == savedHost.id).firstOrNull ?? savedHost;
+    try {
+      if (tab.desktop != null) {
+        await tab.desktop!.reconnect();
+      } else {
+        await _openTerminalTab(host, reuseTab: tab);
+      }
+    } on SshHostKeyVerificationException {
+      tab.recovery?.blockAutomatic();
+      rethrow;
+    } finally {
+      if (_isTerminalTabOpen(tab)) {
+        tab.recovery?.update(connected: tab.state == 'connected',
+          connecting: tab.state == 'connecting');
+      }
+    }
   }
 
   Future<void> _openDesktopTab(
@@ -19961,6 +20010,7 @@ class AppController extends ChangeNotifier {
         session?.accountId == reviewedAccount &&
         identity?.deviceId == reviewedDevice;
     final desktop = DesktopSession(
+      reconnectAllowed: () => current() && tab.recovery?.available == true,
       saveRdpCertificate: (reviewed, pin) async {
         final saved = await RdpCertificatePersistence.saveCloud(
           controller: this,
@@ -19991,6 +20041,8 @@ class AppController extends ChangeNotifier {
       if (!_isTerminalTabOpen(tab)) return;
       tab.state = desktop.state;
       tab.errorMessage = desktop.error;
+      tab.recovery?.update(connected: desktop.state == 'connected',
+          connecting: desktop.state == 'connecting' || desktop.state == 'certificate');
       _notifyListenersIfAlive();
     });
     onTabOpened?.call(tab.id);
@@ -20013,6 +20065,7 @@ class AppController extends ChangeNotifier {
     HostRecord host, {
     String? expectedVaultId,
     void Function(String tabId)? onTabOpened,
+    TerminalTabSession? reuseTab,
   }) async {
     final issue = host.validate();
     if (issue != null) throw StateError(issue);
@@ -20033,7 +20086,10 @@ class AppController extends ChangeNotifier {
     if (useRelay && (client == null || deviceId == null || session == null)) {
       throw const TelnetException(TelnetFailure.unsupportedPlatform);
     }
-    final tab = _addDeviceTab(host);
+    final tab = reuseTab ?? _addDeviceTab(host);
+    tab.host = host;
+    tab.state = 'connecting';
+    tab.errorMessage = null;
     final reviewedVault = activeVault?.id;
     final reviewedAccount = session?.accountId;
     final reviewedDevice = identity?.deviceId;
@@ -20085,6 +20141,7 @@ class AppController extends ChangeNotifier {
       tab.telnetCancellation = null;
       tab.state = 'connected';
       tab.errorMessage = null;
+      tab.recovery?.update(connected: true);
       tab.log?.markConnected();
       tab.outputSubscription = telnet.output.listen(
         (text) {
@@ -20113,6 +20170,7 @@ class AppController extends ChangeNotifier {
       tab.log?.markFailed(error);
       tab.state = 'failed';
       tab.errorMessage = friendlyError(error);
+      tab.recovery?.update(connected: false);
       _setError(friendlyError(error));
       rethrow;
     }
@@ -20128,6 +20186,7 @@ class AppController extends ChangeNotifier {
     tab.outputSubscription = null;
     tab.telnet = null;
     tab.state = 'disconnected';
+    tab.recovery?.update(connected: false);
     tab.log?.markClosed(
       error == null ? SessionLogEndReason.remote : SessionLogEndReason.error,
       error: error,
@@ -20289,12 +20348,14 @@ class AppController extends ChangeNotifier {
     HostRecord host, {
     String? expectedVaultId,
     void Function(String tabId)? onTabOpened,
+    TerminalTabSession? reuseTab,
   }) async {
     if (host.protocol == HostProtocol.telnet) {
       return _openTelnetTab(
         host,
         expectedVaultId: expectedVaultId,
         onTabOpened: onTabOpened,
+        reuseTab: reuseTab,
       );
     }
     if (host.protocol != HostProtocol.ssh) {
@@ -20303,7 +20364,7 @@ class AppController extends ChangeNotifier {
     final initialKnownHostAccountId = session?.accountId;
     final initialKnownHostDeviceId = identity?.deviceId;
     final initialKnownHostVaultId = activeVault?.id;
-    if (_terminalTabs.length >= maxTerminalTabs) {
+    if (reuseTab == null && _terminalTabs.length >= maxTerminalTabs) {
       throw StateError(
         currentL10n.upToMaxterminaltabsSshTerminalTabs(maxTerminalTabs),
       );
@@ -20388,10 +20449,21 @@ class AppController extends ChangeNotifier {
     if (session == null || identity == null) {
       throw StateError(currentL10n.unlockTheVaultFirst2);
     }
-    selectedHost = host;
-    page = WorkspacePage.terminal;
-    final id = _uuid.v4();
-    final tab = _createTerminalTab(id: id, host: host);
+    if (reuseTab != null && reuseTab.recovery?.available != true) return;
+    if (reuseTab == null) {
+      selectedHost = host;
+      page = WorkspacePage.terminal;
+    }
+    final id = reuseTab?.id ?? _uuid.v4();
+    final tab = reuseTab ?? _createTerminalTab(id: id, host: host);
+    tab.host = host;
+    tab.state = 'connecting';
+    tab.errorMessage = null;
+    tab.connectionCancellation = SshConnectCancellation();
+    tab.sshAuthenticationCancelled = Completer<void>();
+    tab.connectionCredentialFingerprints.clear();
+    tab.connectionHostSnapshots.clear();
+    tab.verifiedHostKeys.clear();
     tab.connectionCredentialFingerprints.addAll(
       connectionCredentialFingerprints,
     );
@@ -20401,8 +20473,11 @@ class AppController extends ChangeNotifier {
           jumpRouteSnapshots[index].$1;
     }
     _terminalTabs[id] = tab;
-    _terminalTabOrder.add(id);
-    _activeTerminalTabId = id;
+    if (reuseTab == null) {
+      _terminalTabOrder.add(id);
+      _activeTerminalTabId = id;
+    }
+    _installTerminalRecovery(tab);
     tab.log = sessionLogs.begin(host: host, viaJump: jumpRoute.isNotEmpty);
     tab.shellHistoryRestoration = _restoreTerminalShellHistory(tab);
     unawaited(tab.shellHistoryRestoration);
@@ -20799,7 +20874,7 @@ class AppController extends ChangeNotifier {
         if (!_isTerminalTabOpen(tab)) return;
       }
 
-      if (!_isTerminalTabOpen(tab)) {
+      if (!_isTerminalTabOpen(tab) || (reuseTab != null && tab.recovery?.available != true)) {
         await connection.close();
         return;
       }
@@ -20808,6 +20883,7 @@ class AppController extends ChangeNotifier {
       tab.connectionCancellation = null;
       tab.state = 'connected';
       tab.errorMessage = null;
+      tab.recovery?.update(connected: true);
       tab.log?.markConnected();
       tab.outputSubscription = connection.output.listen(
         (text) {
@@ -20837,6 +20913,7 @@ class AppController extends ChangeNotifier {
             : SshHostKeyVerificationException(hostKeyFailure!),
       );
       tab.state = 'failed';
+      tab.recovery?.update(connected: false);
       tab.errorMessage = friendlyError(
         hostKeyFailure == null
             ? error
@@ -20870,6 +20947,7 @@ class AppController extends ChangeNotifier {
     tab.sftp = null;
     tab.sftpOpening = null;
     tab.state = 'disconnected';
+    tab.recovery?.update(connected: false);
     tab.log?.markClosed(
       error == null ? SessionLogEndReason.remote : SessionLogEndReason.error,
       error: error,
@@ -21218,6 +21296,8 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _closeTerminalTabResources(TerminalTabSession tab) async {
+    tab.recovery?.dispose();
+    tab.recovery = null;
     tab.log?.markClosed(SessionLogEndReason.user);
     final desktop = tab.desktop;
     tab.desktop = null;
