@@ -40,11 +40,16 @@ enum McpBackgroundMode {
   /// Listening; waiting for the foreground service to confirm.
   starting,
 
-  /// Listening and kept reachable in the background by a visible Android
-  /// foreground service whose Stop action revokes the token.
+  /// Listening and kept reachable in the background by an Android foreground
+  /// service whose ongoing notification (with a Stop action that revokes the
+  /// token) Android reports as displayable.
   protected,
 
-  /// Listening only while the app is visible. Leaving the app revokes.
+  /// Listening only while the app is visible; leaving the app revokes. Used
+  /// when no foreground service runs, and also when one runs but its
+  /// notification cannot be shown (permission denied, app or channel
+  /// notifications blocked): background access must always stay visible and
+  /// stoppable.
   foregroundOnly,
 }
 
@@ -54,9 +59,14 @@ enum McpBackgroundMode {
 ///   service lease with an ongoing notification and Stop action.
 /// * Listener stops for any reason -> lease released, notification removed.
 /// * Notification Stop / task removal / service death -> token revoked.
-/// * No foreground service (denied, failed, timed out) -> the token is revoked
-///   as soon as the app is hidden, because a frozen process would otherwise
-///   hold a valid token while silently dropping requests.
+/// * No foreground service (denied, failed, timed out) or no displayable
+///   notification -> foreground-only: the token is revoked as soon as the app
+///   is hidden, because background access must stay visible and stoppable and
+///   a frozen process would otherwise hold a valid token.
+/// * Notifications disabled while protected -> foreground-only when the app
+///   is visible, immediate revocation when it is in the background.
+/// * Notifications become displayable while the app is visible and the
+///   service runs -> protected again.
 /// * Flutter engine detaching -> token revoked.
 class McpListenerLifecycle extends ChangeNotifier with WidgetsBindingObserver {
   McpListenerLifecycle({
@@ -108,6 +118,7 @@ class McpListenerLifecycle extends ChangeNotifier with WidgetsBindingObserver {
 
   McpBackgroundMode _mode = McpBackgroundMode.inactive;
   bool _notificationsVisible = false;
+  bool _serviceActive = false;
   String? _lastRevocation;
 
   McpBackgroundMode get mode => _mode;
@@ -115,9 +126,14 @@ class McpListenerLifecycle extends ChangeNotifier with WidgetsBindingObserver {
   /// Whether Android reported the ongoing notification as displayable.
   bool get notificationsVisible => _notificationsVisible;
 
+  /// Whether the native foreground service holds the current lease. It may be
+  /// active in [McpBackgroundMode.foregroundOnly] while notifications are
+  /// hidden, so that granting them can restore protection without a restart.
+  bool get serviceActive => _serviceActive;
+
   /// Why the platform last revoked access (`user_stop`, `task_removed`,
   /// `timeout`, `service_destroyed`, `replaced`, `background_unprotected`,
-  /// `detached`, `unknown`), or null. Cleared on the next start.
+  /// `notifications_hidden`, `detached`, `unknown`), or null. Cleared on the next start.
   String? get lastRevocation => _lastRevocation;
 
   bool get _inBackground =>
@@ -125,8 +141,9 @@ class McpListenerLifecycle extends ChangeNotifier with WidgetsBindingObserver {
       _appState == AppLifecycleState.paused ||
       _appState == AppLifecycleState.detached;
 
-  void _set(McpBackgroundMode mode, {bool? notifications}) {
+  void _set(McpBackgroundMode mode, {bool? notifications, bool? service}) {
     _mode = mode;
+    if (service != null) _serviceActive = service;
     if (notifications != null) _notificationsVisible = notifications;
     if (!_disposed) notifyListeners();
   }
@@ -148,7 +165,7 @@ class McpListenerLifecycle extends ChangeNotifier with WidgetsBindingObserver {
     _lease = id;
     _leasePort = port;
     _lastRevocation = null;
-    _set(McpBackgroundMode.starting, notifications: false);
+    _set(McpBackgroundMode.starting, notifications: false, service: false);
     unawaited(_requestGrant(id, port));
   }
 
@@ -168,18 +185,34 @@ class McpListenerLifecycle extends ChangeNotifier with WidgetsBindingObserver {
     if (!grant.active) {
       // A timed-out request may still start natively later; release it.
       unawaited(_stopNative(id));
-      _set(McpBackgroundMode.foregroundOnly, notifications: false);
+      _set(
+        McpBackgroundMode.foregroundOnly,
+        notifications: false,
+        service: false,
+      );
       if (_inBackground) await _revoke('background_unprotected');
       return;
     }
-    _set(McpBackgroundMode.protected, notifications: grant.notifications);
+    // The service runs, but without a displayable notification background
+    // access would be invisible and unstoppable from the shade: keep the
+    // lease (so a later grant can restore protection) but stay foreground-only.
+    _set(
+      grant.notifications
+          ? McpBackgroundMode.protected
+          : McpBackgroundMode.foregroundOnly,
+      notifications: grant.notifications,
+      service: true,
+    );
+    if (!grant.notifications && _inBackground) {
+      await _revoke('background_unprotected');
+    }
   }
 
   void _release() {
     final id = _lease;
     _lease = null;
     _leasePort = null;
-    _set(McpBackgroundMode.inactive, notifications: false);
+    _set(McpBackgroundMode.inactive, notifications: false, service: false);
     if (id != null) unawaited(_stopNative(id));
   }
 
@@ -196,7 +229,7 @@ class McpListenerLifecycle extends ChangeNotifier with WidgetsBindingObserver {
     _lease = null;
     _leasePort = null;
     _lastRevocation = reason;
-    _set(McpBackgroundMode.inactive, notifications: false);
+    _set(McpBackgroundMode.inactive, notifications: false, service: false);
     if (native && id != null) unawaited(_stopNative(id));
     // Stop even without a lease: a running listener must never outlive the
     // reason for revocation.
@@ -209,9 +242,32 @@ class McpListenerLifecycle extends ChangeNotifier with WidgetsBindingObserver {
       case McpForegroundRevoked(:final reason):
         unawaited(_revoke(reason, native: false));
       case McpForegroundNotifications(:final visible):
-        if (_mode == McpBackgroundMode.protected) {
-          _set(_mode, notifications: visible);
-        }
+        _notificationsChanged(visible);
+    }
+  }
+
+  void _notificationsChanged(bool visible) {
+    // While starting, the grant reply carries the authoritative value; the
+    // native side only reports changes for an acknowledged lease.
+    if (!_serviceActive || _mode == McpBackgroundMode.starting) return;
+    if (!visible) {
+      if (_mode != McpBackgroundMode.protected) {
+        _set(_mode, notifications: false);
+      } else if (_inBackground) {
+        // Notification blocked while nobody can see the app: the user has no
+        // visible way left to stop access, so revoke now.
+        unawaited(_revoke('notifications_hidden'));
+      } else {
+        _set(McpBackgroundMode.foregroundOnly, notifications: false);
+      }
+      return;
+    }
+    // Only restore protection while the app is visible; a foreground-only
+    // listener in the background has already been revoked.
+    if (_mode == McpBackgroundMode.foregroundOnly && !_inBackground) {
+      _set(McpBackgroundMode.protected, notifications: true);
+    } else {
+      _set(_mode, notifications: true);
     }
   }
 

@@ -1,12 +1,16 @@
 package com.atermius.aterm_client
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.drawable.Icon
 import android.os.Build
@@ -38,6 +42,7 @@ internal object McpForegroundLease {
         val id: String,
         val texts: Texts,
         var ready: ((Boolean) -> Unit)?,
+        var visible: Boolean? = null,
     )
 
     private val handler = Handler(Looper.getMainLooper())
@@ -97,12 +102,42 @@ internal object McpForegroundLease {
         if (current.owner === owner && current.id == id) end(current, reason = null)
     }
 
-    /** Notification permission answer: refresh the notification and report. */
-    fun notificationsChanged(owner: Any, visible: Boolean) {
+    /**
+     * Whether the MCP notification (and its Stop action) can actually be shown:
+     * app notifications enabled, POST_NOTIFICATIONS granted on API 33+, and
+     * the MCP channel not blocked by the user.
+     */
+    fun notificationsVisible(context: Context): Boolean = try {
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val permitted = Build.VERSION.SDK_INT < 33 ||
+            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        val channelOpen = Build.VERSION.SDK_INT < 26 ||
+            manager.getNotificationChannel(McpForegroundService.CHANNEL)?.importance !=
+            NotificationManager.IMPORTANCE_NONE
+        permitted && manager.areNotificationsEnabled() && channelOpen
+    } catch (_: RuntimeException) { false }
+
+    /** Visibility recorded at ACK time for the acknowledged lease. */
+    fun acknowledgedVisibility(id: String, visible: Boolean) {
         val current = lease ?: return
-        if (current.owner !== owner) return
+        if (current.id == id && current.ready == null) current.visible = visible
+    }
+
+    /**
+     * Re-evaluates notification visibility (permission answer, activity
+     * resume, app/channel block broadcast) and reports only real changes for
+     * an acknowledged lease, so Dart can downgrade to foreground-only, revoke
+     * in the background, or restore protection.
+     */
+    fun recheckNotifications(context: Context) {
+        val current = lease ?: return
+        if (current.ready != null || service == null) return
+        val visible = notificationsVisible(context)
+        if (current.visible == visible) return
+        current.visible = visible
         if (visible) service?.refresh(current.texts)
-        listeners[owner]?.notifications?.invoke(current.id, visible)
+        listeners[current.owner]?.notifications?.invoke(current.id, visible)
     }
 
     fun started(instance: McpForegroundService) {
@@ -162,6 +197,35 @@ internal object McpForegroundLease {
  */
 class McpForegroundService : Service() {
     private var finishing = false
+    private var blockReceiver: BroadcastReceiver? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        // The user can block the app's or the MCP channel's notifications from
+        // system settings while Atermius is in the background. Both
+        // broadcasts are sent by the system only to this package (API 28+).
+        if (Build.VERSION.SDK_INT >= 28) {
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    McpForegroundLease.recheckNotifications(applicationContext)
+                }
+            }
+            val filter = IntentFilter().apply {
+                addAction(NotificationManager.ACTION_APP_BLOCK_STATE_CHANGED)
+                addAction(NotificationManager.ACTION_NOTIFICATION_CHANNEL_BLOCK_STATE_CHANGED)
+            }
+            try {
+                if (Build.VERSION.SDK_INT >= 33) {
+                    registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+                } else {
+                    @Suppress("UnspecifiedRegisterReceiverFlag")
+                    registerReceiver(receiver, filter)
+                }
+                blockReceiver = receiver
+            } catch (_: RuntimeException) {
+            }
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -258,12 +322,14 @@ class McpForegroundService : Service() {
     }
 
     override fun onDestroy() {
+        blockReceiver?.let { try { unregisterReceiver(it) } catch (_: RuntimeException) {} }
+        blockReceiver = null
         McpForegroundLease.revoke(this, "service_destroyed")
         super.onDestroy()
     }
 
     companion object {
-        private const val CHANNEL = "atermius_mcp"
+        internal const val CHANNEL = "atermius_mcp"
         private const val NOTIFICATION_ID = 4108
         private const val REQUEST_STOP = 1
         private const val REQUEST_OPEN = 2

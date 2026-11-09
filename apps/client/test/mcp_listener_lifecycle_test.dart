@@ -282,22 +282,213 @@ void main() {
     expect(lifecycle.mode, McpBackgroundMode.protected);
   });
 
-  test(
-    'notification permission answer updates visibility for current lease',
-    () async {
+  group('notification visibility', () {
+    void serviceWithoutNotification() {
       native = (call) async => call.method == 'start'
           ? {'active': true, 'notifications': false}
           : null;
+    }
+
+    String lease() =>
+        calls.lastWhere((c) => c.method == 'start').arguments['leaseId']
+            as String;
+
+    Future<void> notifications(bool visible, [String? id]) => fromNative(
+      'notifications',
+      {'leaseId': id ?? lease(), 'visible': visible},
+    );
+
+    test('active service without a notification is foreground-only', () async {
+      serviceWithoutNotification();
       target.startListening();
       await settle();
+      expect(lifecycle.mode, McpBackgroundMode.foregroundOnly);
+      expect(lifecycle.serviceActive, isTrue);
       expect(lifecycle.notificationsVisible, isFalse);
-      await fromNative('notifications', {
-        'leaseId': calls.single.arguments['leaseId'],
-        'visible': true,
-      });
+      // The lease is kept so a later grant can restore protection.
+      expect(calls.map((c) => c.method), ['start']);
+      expect(target.running, isTrue);
+
+      lifecycleState(AppLifecycleState.inactive); // permission dialog/shade
+      await settle();
+      expect(target.running, isTrue);
+
+      lifecycleState(AppLifecycleState.hidden);
+      await settle();
+      expect(target.running, isFalse);
+      expect(lifecycle.lastRevocation, 'background_unprotected');
+      expect(lifecycle.serviceActive, isFalse);
+      expect(calls.map((c) => c.method), ['start', 'stop']);
+      expect(calls.last.arguments['leaseId'], calls.first.arguments['leaseId']);
+    });
+
+    test('paused without a notification also revokes', () async {
+      serviceWithoutNotification();
+      target.startListening();
+      await settle();
+      lifecycleState(AppLifecycleState.paused);
+      await settle();
+      expect(target.running, isFalse);
+      expect(calls.last.method, 'stop');
+    });
+
+    test(
+      'granting notifications in the foreground restores protection',
+      () async {
+        serviceWithoutNotification();
+        target.startListening();
+        await settle();
+        expect(lifecycle.mode, McpBackgroundMode.foregroundOnly);
+        await notifications(true);
+        expect(lifecycle.mode, McpBackgroundMode.protected);
+        expect(lifecycle.notificationsVisible, isTrue);
+
+        lifecycleState(AppLifecycleState.hidden);
+        lifecycleState(AppLifecycleState.paused);
+        await settle();
+        expect(target.running, isTrue);
+        expect(target.stops, 0);
+        expect(calls.map((c) => c.method), ['start']);
+      },
+    );
+
+    test('notifications disabled in the foreground downgrade, then background revokes', () async {
+      target.startListening();
+      await settle();
+      expect(lifecycle.mode, McpBackgroundMode.protected);
+      await notifications(false);
+      expect(lifecycle.mode, McpBackgroundMode.foregroundOnly);
+      expect(lifecycle.notificationsVisible, isFalse);
+      expect(target.running, isTrue, reason: 'still visible in the app');
+      expect(calls.map((c) => c.method), ['start']);
+
+      lifecycleState(AppLifecycleState.hidden);
+      await settle();
+      expect(target.running, isFalse);
+      expect(lifecycle.lastRevocation, 'background_unprotected');
+      expect(calls.map((c) => c.method), ['start', 'stop']);
+    });
+
+    test('downgrade and restore can repeat while the app is visible', () async {
+      target.startListening();
+      await settle();
+      await notifications(false);
+      expect(lifecycle.mode, McpBackgroundMode.foregroundOnly);
+      await notifications(true);
+      expect(lifecycle.mode, McpBackgroundMode.protected);
+      lifecycleState(AppLifecycleState.paused);
+      await settle();
+      expect(target.running, isTrue);
+    });
+
+    test('notifications disabled while protected in the background revoke immediately', () async {
+      target.startListening();
+      await settle();
+      lifecycleState(AppLifecycleState.hidden);
+      lifecycleState(AppLifecycleState.paused);
+      await settle();
+      expect(target.running, isTrue);
+
+      await notifications(false);
+      expect(target.running, isFalse);
+      expect(target.stops, 1);
+      expect(lifecycle.mode, McpBackgroundMode.inactive);
+      expect(lifecycle.lastRevocation, 'notifications_hidden');
+      // The native service is released too: no service without a token.
+      expect(calls.map((c) => c.method), ['start', 'stop']);
+
+      // Returning to the app does not silently restart anything.
+      lifecycleState(AppLifecycleState.resumed);
+      await notifications(true, calls.first.arguments['leaseId'] as String);
+      expect(target.running, isFalse);
+      expect(lifecycle.mode, McpBackgroundMode.inactive);
+    });
+
+    test('stale-lease visibility events never downgrade or revoke', () async {
+      target.startListening(8765);
+      await settle();
+      final old = lease();
+      await target.stop();
+      target.startListening(9876);
+      await settle();
+      expect(lifecycle.mode, McpBackgroundMode.protected);
+      lifecycleState(AppLifecycleState.paused);
+      await settle();
+
+      await notifications(false, old);
+      await notifications(false, 'lease-unknown-00000000');
+      expect(target.running, isTrue);
+      expect(lifecycle.mode, McpBackgroundMode.protected);
       expect(lifecycle.notificationsVisible, isTrue);
-    },
-  );
+    });
+
+    test(
+      'visibility events while starting do not pre-empt the grant',
+      () async {
+        final ack = Completer<Object?>();
+        native = (call) async => call.method == 'start' ? ack.future : null;
+        target.startListening();
+        await settle();
+        await notifications(true);
+        expect(lifecycle.mode, McpBackgroundMode.starting);
+        ack.complete({'active': true, 'notifications': false});
+        await settle();
+        expect(lifecycle.mode, McpBackgroundMode.foregroundOnly);
+        expect(lifecycle.notificationsVisible, isFalse);
+      },
+    );
+
+    test(
+      'hidden before an ACK without notification revokes and releases',
+      () async {
+        final ack = Completer<Object?>();
+        native = (call) async => call.method == 'start' ? ack.future : null;
+        target.startListening();
+        await settle();
+        lifecycleState(AppLifecycleState.hidden);
+        await settle();
+        expect(target.running, isTrue);
+        ack.complete({'active': true, 'notifications': false});
+        await settle();
+        expect(target.running, isFalse);
+        expect(lifecycle.lastRevocation, 'background_unprotected');
+        expect(calls.map((c) => c.method), ['start', 'stop']);
+      },
+    );
+
+    test(
+      'notification grant cannot protect a listener without a service',
+      () async {
+        native = (call) async => call.method == 'start'
+            ? {'active': false, 'notifications': false}
+            : null;
+        target.startListening();
+        await settle();
+        await notifications(true);
+        expect(lifecycle.mode, McpBackgroundMode.foregroundOnly);
+        expect(lifecycle.serviceActive, isFalse);
+        lifecycleState(AppLifecycleState.hidden);
+        await settle();
+        expect(target.running, isFalse);
+      },
+    );
+
+    test(
+      'user stop after a downgrade still revokes without a native echo',
+      () async {
+        target.startListening();
+        await settle();
+        await notifications(false);
+        await fromNative('revoked', {
+          'leaseId': lease(),
+          'reason': 'user_stop',
+        });
+        expect(target.running, isFalse);
+        expect(lifecycle.lastRevocation, 'user_stop');
+        expect(calls.map((c) => c.method), ['start']);
+      },
+    );
+  });
 
   test(
     'disabled platform channel never claims background protection',

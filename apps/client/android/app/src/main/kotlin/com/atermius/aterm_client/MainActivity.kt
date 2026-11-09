@@ -1,7 +1,6 @@
 package com.atermius.aterm_client
 
 import android.Manifest
-import android.app.NotificationManager
 import android.content.pm.PackageManager
 import android.os.Build
 import io.flutter.embedding.android.FlutterActivity
@@ -14,7 +13,13 @@ class MainActivity : FlutterActivity() {
     private var leaseOwner: Any? = null
     private var resumed = false
 
-    override fun onResume() { super.onResume(); resumed = true }
+    override fun onResume() {
+        super.onResume()
+        resumed = true
+        // Notification settings may have changed while the app was away
+        // (e.g. in system settings); restore or downgrade MCP protection.
+        McpForegroundLease.recheckNotifications(applicationContext)
+    }
     override fun onPause() { resumed = false; super.onPause() }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -81,20 +86,18 @@ class MainActivity : FlutterActivity() {
         }
         val strings = McpForegroundLease.Texts(texts[0]!!, texts[1]!!, texts[2]!!, texts[3]!!)
         McpForegroundLease.start(applicationContext, owner, id, strings) { active ->
-            val visible = active && notificationsVisible()
+            val visible = active && McpForegroundLease.notificationsVisible(applicationContext)
+            if (active) McpForegroundLease.acknowledgedVisibility(id, visible)
             result.success(mapOf("active" to active, "notifications" to visible))
+            // Without a visible notification Dart keeps MCP foreground-only.
             if (active && !visible) requestNotificationPermission()
         }
     }
 
-    private fun notificationsVisible(): Boolean = try {
-        getSystemService(NotificationManager::class.java).areNotificationsEnabled()
-    } catch (_: RuntimeException) { false }
-
     private fun requestNotificationPermission() {
         // Only on the explicit MCP start; Android suppresses repeated prompts
-        // after the user declines. Without it the service is still listed in
-        // the system's active-apps (Task Manager) panel.
+        // after the user declines. Until notifications are visible Dart keeps
+        // MCP foreground-only (revoked when the app is hidden).
         if (Build.VERSION.SDK_INT < 33 || !resumed) return
         if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
         requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
@@ -103,7 +106,7 @@ class MainActivity : FlutterActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != REQUEST_NOTIFICATIONS) return
-        leaseOwner?.let { McpForegroundLease.notificationsChanged(it, notificationsVisible()) }
+        McpForegroundLease.recheckNotifications(applicationContext)
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {

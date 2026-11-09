@@ -19,9 +19,11 @@ Android 与桌面端使用同一个监听实现：只绑定设备的 `127.0.0.1`
 在 **设置 → AI / MCP** 中启用服务是唯一的启动方式，且必须在应用可见时进行（Android 12 起禁止后台启动前台服务）。
 
 1. 监听成功后，应用启动一个不导出（`exported=false`）的前台服务，类型为 `specialUse`，并显示常驻通知“外部 AI 访问已开启”，正文只含 `127.0.0.1:<端口>`，不含令牌。锁屏上通知内容为私密。
-2. Android 13 及以上首次启用时会请求通知权限，仅为显示该通知及其 **停止** 按钮。拒绝后服务仍会出现在系统通知栏的“使用中的应用”（Task Manager）列表中，可在那里停止应用；也可回到应用设置中停止。
+2. Android 13 及以上首次启用时会请求通知权限，仅为显示该通知及其 **停止** 按钮。只有通知确实可以显示（已授予通知权限、未关闭应用通知、未屏蔽“External AI (MCP)”通知渠道）时，MCP 才能在后台保持；否则按第 4 条的仅前台模式处理。
 3. 通知中的 **停止**、从最近任务中划掉应用、系统终止前台服务或进程、Flutter 引擎销毁、监听套接字意外关闭，都会停止 MCP 并使令牌失效。服务使用 `START_NOT_STICKY`，进程被杀后不会自动恢复，令牌也不会被持久化；需要重新启用并更新 AI 端配置。
-4. 若前台服务无法启动（被系统拒绝、超时等），MCP 只在应用可见时有效：应用一旦进入后台（`hidden`/`paused`），立即停止并撤销令牌，避免进程被冻结后令牌仍然有效但请求无响应。下拉通知栏、权限对话框等短暂遮挡（`inactive`）不会触发撤销。
+4. 若前台服务无法启动（被系统拒绝、超时等），或通知无法显示，MCP 只在应用可见时有效：应用一旦进入后台（`hidden`/`paused`），立即停止并撤销令牌，避免后台访问既不可见也无法从通知停止，或进程被冻结后令牌仍然有效但请求无响应。下拉通知栏、权限对话框等短暂遮挡（`inactive`）不会触发撤销。
+   - 在应用内（可见时）授予通知权限或重新开启通知后，无需重新启用即可恢复后台保持。
+   - 已在后台保持时，若在系统设置中关闭应用通知或屏蔽 MCP 渠道，立即撤销令牌；若在应用可见时关闭，则降为仅前台模式。撤回已授予的通知权限会由系统直接结束进程，令牌随之失效。
 5. 应用内锁定、退出、切换 Profile / 账户 / Vault 与桌面端一致，会撤销授权。与 Windows 一致，设备锁屏本身不会停止 MCP；需要锁屏即撤销时请在锁屏前停止服务。
 
 ## 外部 AI 的连接方式
@@ -80,6 +82,7 @@ ssh -N -R 127.0.0.1:8765:127.0.0.1:8765 <用户>@<电脑地址>
 
 - The Android listener is the desktop one: IPv4 loopback only, unchanged Host/Origin/Bearer/size/timeout limits, plus a 16-connection cap because every app on the device can reach loopback. The 256-bit in-memory token is the security boundary.
 - Enabling MCP (an explicit action while the app is visible) starts an unexported `specialUse` foreground service with an ongoing notification whose **Stop** action revokes the token. Android 13+ asks for the notification permission at that moment only.
-- Notification Stop, task removal, service/process death, engine teardown or socket loss stop MCP and invalidate the token; `START_NOT_STICKY`, nothing persisted. Without a foreground service, MCP is revoked as soon as the app is hidden. In-app lock/logout/workspace switch revoke as on desktop; device screen lock does not (same as Windows).
+- MCP stays alive in the background only while that notification can really be shown (permission granted, app notifications on, MCP channel not blocked). Otherwise it is foreground-only and revoked when the app is hidden/paused. Granting notifications while the app is visible restores background protection; blocking them while protected downgrades to foreground-only in the foreground and revokes immediately in the background.
+- Notification Stop, task removal, service/process death, engine teardown or socket loss stop MCP and invalidate the token; `START_NOT_STICKY`, nothing persisted. Without a foreground service or a visible notification, MCP is revoked as soon as the app is hidden. In-app lock/logout/workspace switch revoke as on desktop; device screen lock does not (same as Windows).
 - Forward with identical ports so `Host` stays `127.0.0.1:<port>`: `adb forward tcp:8765 tcp:8765`, or `ssh -L 127.0.0.1:8765:127.0.0.1:8765 …` / `ssh -R 127.0.0.1:8765:127.0.0.1:8765 …`. Never `adb -a`, `ssh -g`, `GatewayPorts`, LAN binds or Host-rewriting proxies.
 - Limits: Play distribution needs a special-use declaration; Android 14+ notifications are dismissible (the service stays in Active apps); no wakelock, so screen-off deep sleep may delay requests; aggressive OEM battery managers may kill the service (token is then gone).
