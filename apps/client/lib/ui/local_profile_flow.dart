@@ -1578,11 +1578,20 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       automatic: session.host.protocol.isTerminal,
       isCurrent: current,
       reconnect: () async {
-        if (!current() || _busy) return;
+        if (!current()) return;
         final generation = session.connectionGeneration;
+        bool attemptCurrent() =>
+            current() && session.connectionGeneration == generation;
+        // SSH owns a profile operation while authenticating. Queue another
+        // SSH retry behind it instead of losing this five-second retry slot.
+        // Telnet reuses its own session and can reconnect independently.
+        while (!session.isTelnet && _busy && attemptCurrent()) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        }
+        if (!attemptCurrent()) return;
         final host = _hosts.where((h) => h.id == session.host.id).firstOrNull ?? session.host;
         await _connectLocalHost(host, reuseSession: session,
-          shouldContinue: () => current() && session.connectionGeneration == generation);
+          shouldContinue: attemptCurrent);
         if (current()) session.recovery?.update(connected: session.connected.value,
           connecting: session.telnetState == 'connecting');
       },
@@ -1780,7 +1789,8 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       return;
     }
     if (host.protocol == HostProtocol.telnet) {
-      if (_activeProfile == null || _busy) return;
+      if (_activeProfile == null || (_busy && reuseSession == null) ||
+          shouldContinue?.call() == false) return;
       final issue = host.validate();
       if (issue != null) {
         _showMessage(issue);

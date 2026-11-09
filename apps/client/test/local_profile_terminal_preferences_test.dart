@@ -1576,6 +1576,8 @@ void main() {
     final browser = tester.widget<RemoteFileWorkspace>(
       find.byType(RemoteFileWorkspace),
     );
+    final fileTransport =
+        (browser.controller.connection.client as _FakeClient).sftpClient;
     await tester.tap(find.text('work'));
     await pumpUntilVisible(tester, find.text('inside.txt'));
     expect(browser.controller.path, '/work');
@@ -1623,16 +1625,19 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('New folder'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField), 'reports');
+    final nameInput = find.byKey(const ValueKey('file_manager_name_input'));
+    await pumpUntilVisible(tester, nameInput);
+    await tester.enterText(nameInput, 'reports');
+    await tester.pump();
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(sshHarness.sftpClients.last.createdDirectories, ['/work/reports']);
+    expect(fileTransport.createdDirectories, ['/work/reports']);
     await tester.tap(find.byTooltip('Close ${fileTab.title}'));
     await tester.pumpAndSettle();
     expect(browser.controller.isClosed, isTrue);
     expect(session.closed, false);
-    expect(sshHarness.sftpClients.last.closed, 2);
+    expect(fileTransport.closed, 2);
     await tester.tap(find.byKey(ValueKey('workspace-tab-${terminalTab.id}')));
     await tester.pumpAndSettle();
     await terminalAction(tester, 'local_ssh_open_sftp');
