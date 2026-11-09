@@ -14976,4 +14976,1336 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get telnetInputTooLarge => '粘贴内容过大，无法通过 Telnet 发送（上限 1 MiB）。未发送任何内容。';
+
+  @override
+  String get accountSettingsTitle => '账户与登录';
+
+  @override
+  String get accountSettingsDescription => '查看此设备使用的账户和服务器、管理会话，或登录账户。';
+
+  @override
+  String get accountSettingsCurrentMode => '当前模式';
+
+  @override
+  String get accountSettingsModeAccount => '账户与同步';
+
+  @override
+  String get accountSettingsModeLocal => '仅本地（此设备）';
+
+  @override
+  String get accountSettingsSignedInAs => '登录身份';
+
+  @override
+  String get accountSettingsServer => '服务器';
+
+  @override
+  String get accountSettingsSessionUnlocked => '已在此设备上登录并解锁';
+
+  @override
+  String get accountSettingsActiveVault => '当前保险库';
+
+  @override
+  String get accountSettingsNoVault => '未选择保险库';
+
+  @override
+  String get accountSettingsInstanceAdmin => '实例管理员';
+
+  @override
+  String get accountSettingsSessionActions => '会话';
+
+  @override
+  String get accountSettingsSecurityAction => '密码、两步验证与恢复';
+
+  @override
+  String get accountSettingsSignOutTitle => '要退出此账户吗？';
+
+  @override
+  String get accountSettingsSignOutBody =>
+      '此设备上该账户的已打开会话将被关闭。加密的保险库数据仍保留在服务器上，再次登录时需要输入账户密码。';
+
+  @override
+  String get accountSettingsSwitchToLocalTitle => '要切换到本地模式吗？';
+
+  @override
+  String get accountSettingsSwitchToLocalBody =>
+      '此设备上的账户工作区及其已打开的会话将被关闭。账户中的任何内容都不会复制到本地配置文件。';
+
+  @override
+  String get accountSettingsLocalNotSignedIn => '未登录账户';
+
+  @override
+  String get accountSettingsLocalSyncRequiresAccount =>
+      '本地配置文件仅存储在此设备上，不会同步。如需在设备之间同步主机，请登录你的 Atermius 服务器账户。';
+
+  @override
+  String get accountSettingsSignIn => '登录或连接服务器';
+
+  @override
+  String get accountSettingsSignInTitle => '要打开账户登录吗？';
+
+  @override
+  String get accountSettingsSignInBody =>
+      '本地配置文件将被锁定，其已打开的会话将被关闭。本地主机仍保留在此设备上，不会被上传。登录后，你可以在“数据与迁移”中查看是否迁移它们。';
+
+  @override
+  String get themeSettingTitle => '主题';
+
+  @override
+  String themeSettingSystemResolved(Object theme) {
+    return '跟随系统 · 当前为$theme';
+  }
+
+  @override
+  String get themeOptionSystem => '跟随系统';
+
+  @override
+  String get themeSettingDescription => '更改应用的窗口、菜单和面板。终端颜色和远程桌面画面保持各自的配色。';
+
+  @override
+  String get themeOptionLight => '浅色';
+
+  @override
+  String get themeOptionDark => '深色';
+
+  @override
+  String get themeSettingSaveFailed => '主题已在本次运行中切换，但无法保存到此设备。';
+
+  @override
+  String get syncSettingsPreferenceSaveFailed => '无法在此设备上保存此选项。它将在应用重启前有效。';
+
+  @override
+  String get syncSettingsSyncingNow => '正在同步…';
+
+  @override
+  String get syncSettingsDeviceOnly => '这些同步选项仅适用于此设备。';
+
+  @override
+  String get syncSettingsPreferenceSaving => '正在保存…';
+
+  @override
+  String get syncSettingsAutomaticOffDescription =>
+      '此设备已关闭。编辑会以加密形式保留在此设备的队列中，直到你选择“立即同步”或重新开启自动同步。';
+
+  @override
+  String get syncSettingsNever => '从未';
+
+  @override
+  String get syncSettingsSignInRequired => '同步需要在此设备上登录账户。';
+
+  @override
+  String syncSettingsResultNotCompleted(String status) {
+    return '同步未完成。当前状态：$status。';
+  }
+
+  @override
+  String get syncSettingsWaitingToUpload => '等待上传';
+
+  @override
+  String syncSettingsResultFailed(String error) {
+    return '同步未完成：$error';
+  }
+
+  @override
+  String syncSettingsQueuedWhileOff(int count) {
+    return '此设备上排队的加密更改：$count。选择“立即同步”或开启自动同步后会上传。';
+  }
+
+  @override
+  String get syncSettingsTitle => '同步';
+
+  @override
+  String syncSettingsResultPending(int count) {
+    return '同步已运行，但仍有加密更改等待上传：$count。';
+  }
+
+  @override
+  String get syncSettingsAutomaticTitle => '自动同步';
+
+  @override
+  String get syncSettingsPreferenceLoading => '正在加载此设备的同步选项…加载完成后才会开始自动同步。';
+
+  @override
+  String get syncSettingsPreferenceReadFailedShort =>
+      '在能读取已保存的选项之前，自动同步将保持暂停。请重试，或选择一个设置来替换它。';
+
+  @override
+  String get syncSettingsResultCompleted => '同步完成。没有等待上传的内容。';
+
+  @override
+  String get syncSettingsAutomaticOnDescription => '编辑会在后台上传，其他设备的更改会在后台下载。';
+
+  @override
+  String get syncSettingsPreferenceReadFailed => '已暂停：无法读取此设备保存的选项。';
+
+  @override
+  String get syncSettingsSyncNow => '立即同步';
+
+  @override
+  String get syncSettingsStatus => '状态';
+
+  @override
+  String get settingsThemeShortcutsTitle => '快捷键';
+
+  @override
+  String get settingsThemeShortcutsDescription => '选择在终端中使用的键盘快捷键。';
+
+  @override
+  String get settingsThemeTitle => '主题';
+
+  @override
+  String settingsThemeOverlayActive(String name) {
+    return '本设备上的终端当前改用设备配色 $name。选择已保存的主题或保存其他主题后，将切换回来。';
+  }
+
+  @override
+  String get settingsThemeDescription => '选择应用的浅色或深色模式、终端字号和终端配色。';
+
+  @override
+  String get wallpaperSettingTitle => '壁纸';
+
+  @override
+  String get wallpaperSettingDescription =>
+      '在应用和终端窗格后方显示一张图片。只有图片会被模糊，文字、控件、终端文字和远程桌面画面始终保持清晰。';
+
+  @override
+  String get wallpaperChooseImage => '选择图片…';
+
+  @override
+  String get wallpaperReplaceImage => '更换图片…';
+
+  @override
+  String get wallpaperReset => '移除壁纸';
+
+  @override
+  String get wallpaperNoImage => '未设置壁纸';
+
+  @override
+  String get wallpaperPreviewLabel => '壁纸预览';
+
+  @override
+  String get wallpaperLoading => '正在加载壁纸…';
+
+  @override
+  String get wallpaperMissing => '已保存的壁纸图片丢失或无法读取。请选择新图片或移除壁纸。';
+
+  @override
+  String get wallpaperModeTitle => '布局';
+
+  @override
+  String get wallpaperModeWindow => '整个窗口';
+
+  @override
+  String get wallpaperModeWindowHint => '一张图片铺满整个窗口。';
+
+  @override
+  String get wallpaperModePanes => '跟随分屏';
+
+  @override
+  String get wallpaperModePanesHint => '每个终端窗格各自显示图片，并随调整大小和重新排列而变化。';
+
+  @override
+  String wallpaperBlurValue(String value) {
+    return '模糊：$value';
+  }
+
+  @override
+  String wallpaperErrorTooLarge(int limit) {
+    return '此图片超过 $limit MB。';
+  }
+
+  @override
+  String get wallpaperErrorUnsupported => '请选择 PNG、JPEG 或静态 WebP 图片。';
+
+  @override
+  String get wallpaperErrorCorrupt => '无法读取此图片，文件可能已损坏。';
+
+  @override
+  String wallpaperErrorDimensions(int side) {
+    return '此图片尺寸过大（每边最多 $side 像素）。';
+  }
+
+  @override
+  String get wallpaperErrorStorage => '无法在此设备上保存壁纸。';
+
+  @override
+  String get wallpaperSaveFailed => '壁纸已在本次运行中更改，但无法保存到此设备。';
+
+  @override
+  String get wallpaperDeviceNote => '图片副本保存在此设备上的应用存储中。独立窗口在打开时使用相同的壁纸。';
+
+  @override
+  String get fileManagerPasteInto => '粘贴到文件夹';
+
+  @override
+  String get fileManagerPathCopied => '路径已复制';
+
+  @override
+  String fileManagerCopying(String name) {
+    return '正在复制“$name”…';
+  }
+
+  @override
+  String get fileManagerDropFailed => '无法读取拖放的项目，未上传任何内容。';
+
+  @override
+  String get fileManagerOperationUnsupported => '此连接不支持文件管理操作。';
+
+  @override
+  String fileManagerDeleteConfirm(String name) {
+    return '删除“$name”？此操作无法撤销。';
+  }
+
+  @override
+  String get fileManagerOpen => '打开';
+
+  @override
+  String get fileManagerPasteHere => '粘贴到此处';
+
+  @override
+  String fileManagerUploading(String name, int index, int count) {
+    return '正在上传“$name”（$index/$count）…';
+  }
+
+  @override
+  String fileManagerMoveConfirm(String name, String folder) {
+    return '将“$name”移动到“$folder”？';
+  }
+
+  @override
+  String get fileManagerNameConflictTitle => '名称已被使用';
+
+  @override
+  String get fileManagerSkip => '跳过';
+
+  @override
+  String fileManagerClipboardCut(String name) {
+    return '已剪切“$name”——在此标签页中粘贴即可移动';
+  }
+
+  @override
+  String fileManagerRenameTitle(String name) {
+    return '重命名“$name”';
+  }
+
+  @override
+  String fileManagerDeleteFolderConfirm(String name, int count) {
+    return '删除文件夹“$name”及其中的 $count 个项目？符号链接只会被移除，不会被跟随。此操作无法撤销。';
+  }
+
+  @override
+  String get fileManagerClearClipboard => '清除文件剪贴板';
+
+  @override
+  String get fileManagerRename => '重命名';
+
+  @override
+  String fileManagerErrorUnsupportedEntry(String name) {
+    return '“$name”是符号链接、特殊文件或名称不受支持。文件夹复制不会跟随或重建此类项目，因此未复制任何内容。';
+  }
+
+  @override
+  String get fileManagerKeepBoth => '保留两者';
+
+  @override
+  String fileManagerErrorFileTooLarge(String name) {
+    return '“$name”超过单个文件 1 GiB 的复制上限。';
+  }
+
+  @override
+  String get fileManagerCut => '剪切';
+
+  @override
+  String get fileManagerDropNothingAccepted => '此处只能拖放文件。文件夹和指向其他位置的链接不会上传。';
+
+  @override
+  String get fileManagerPaste => '粘贴';
+
+  @override
+  String get fileManagerErrorSourceChanged => '该项目已在服务器上更改或消失。请刷新后重试。';
+
+  @override
+  String fileManagerErrorExists(String name) {
+    return '此处已存在“$name”，未替换任何内容。';
+  }
+
+  @override
+  String get fileManagerMoveTitle => '移动项目';
+
+  @override
+  String get fileManagerErrorIntoItself => '无法将文件夹移动或复制到其自身内部。';
+
+  @override
+  String get fileManagerCancelled => '已取消。未做其他更改。';
+
+  @override
+  String fileManagerDropTooManyFiles(int count) {
+    return '每次最多拖放 $count 个文件。';
+  }
+
+  @override
+  String get fileManagerBusy => '另一个文件操作仍在进行中。';
+
+  @override
+  String get fileManagerCopyPath => '复制路径';
+
+  @override
+  String fileManagerNameConflictKeepBoth(String name) {
+    return '此文件夹中已存在“$name”。是否在新名称后添加“(copy)”以保留两者？现有项目不会被替换。';
+  }
+
+  @override
+  String fileManagerMoving(String name) {
+    return '正在移动“$name”…';
+  }
+
+  @override
+  String fileManagerClipboardCopied(String name) {
+    return '已复制“$name”——可在此标签页中粘贴';
+  }
+
+  @override
+  String get fileManagerDropNeedsSftp => '拖放的文件通过 SFTP 上传。请使用 SFTP 打开此文件夹后再上传。';
+
+  @override
+  String fileManagerDeleting(String name) {
+    return '正在删除“$name”…';
+  }
+
+  @override
+  String fileManagerUploadSummary(int uploaded, int skipped, int failed) {
+    return '已上传 $uploaded · 已跳过 $skipped · 失败 $failed';
+  }
+
+  @override
+  String get fileManagerInvalidName => '请使用不含斜杠、反斜杠或控制字符的单个名称。';
+
+  @override
+  String fileManagerErrorLimitExceeded(int entries, int depth) {
+    return '此文件夹过大，无法执行文件管理操作（上限 $entries 项、$depth 层或 2 GiB）。未做任何更改。';
+  }
+
+  @override
+  String get fileManagerCopy => '复制';
+
+  @override
+  String get fileManagerDropTargetChanged =>
+      '检查拖放内容时，此文件标签页的文件夹或连接已变化。未上传任何内容，请重新拖放文件。';
+
+  @override
+  String fileManagerUploadConflict(String name) {
+    return '此文件夹中已存在“$name”。是否以新的“(copy)”名称上传，或跳过？现有文件不会被替换。';
+  }
+
+  @override
+  String get fileManagerMove => '移动';
+
+  @override
+  String get homeAddSerialConsoleDetail => '以 8N1 打开本机的 COM 端口。不会在服务器上运行任何内容。';
+
+  @override
+  String get homeSharingThisDevice => '在本设备在线';
+
+  @override
+  String get homeAddShell => 'Shell（系统默认）';
+
+  @override
+  String homeSharingSharedPresenceUnknown(int members) {
+    return '已共享 · $members 名成员 · 状态未知';
+  }
+
+  @override
+  String get homeSharingLoading => '正在加载成员…';
+
+  @override
+  String get homeAddTooltip => '添加主机，或打开本地 Shell / 串口 Console';
+
+  @override
+  String get homeAddButton => '添加';
+
+  @override
+  String get homeSharingLocalOnly => '仅本地';
+
+  @override
+  String get homeAddSerialConsolePort => '串口';
+
+  @override
+  String homeSharingMore(int count, String names) {
+    return '另外 $count 人：\n$names';
+  }
+
+  @override
+  String get homeAddSerialConsoleOpen => '打开 Console';
+
+  @override
+  String homeSharingSharedOnline(int members, int online) {
+    return '已共享 · $members 名成员 · $online 人在线';
+  }
+
+  @override
+  String get homeAddSerialConsoleBaud => '波特率';
+
+  @override
+  String homeSharingYou(String name) {
+    return '$name（你）';
+  }
+
+  @override
+  String get homeAddSerialConsoleTitle => '打开串口 Console';
+
+  @override
+  String get homeAddSerialConsole => '串口 Console（COM）…';
+
+  @override
+  String get homeSharingLocalDetail =>
+      '此本地配置文件仅加密保存在本设备上。它没有保险库成员，其他人无法看到，也不会发送在线状态。登录账户保险库即可与他人共享主机。';
+
+  @override
+  String get homeAddSerialConsoleUnavailable => '串口 Console（仅 Windows 应用）';
+
+  @override
+  String get homeSharingPresenceUnknown => '状态未知';
+
+  @override
+  String get homeSharingOffline => '离线';
+
+  @override
+  String get homeSharingMembersUnavailable => '成员未加载';
+
+  @override
+  String get homeSharingLocalTooltip => '本设备上的本地配置文件 — 未与任何人共享';
+
+  @override
+  String get homeSharingDetailsTooltip => '查看保险库成员和在线状态';
+
+  @override
+  String get homeSharingIndividual => '仅你自己';
+
+  @override
+  String get homeSharingOnline => '在线';
+
+  @override
+  String sidebarResizeWidthValue(int width) {
+    return '宽 $width 像素';
+  }
+
+  @override
+  String get sidebarResizeHint => '拖动，或使用左右方向键调整宽度';
+
+  @override
+  String get sidebarResizeHandle => '调整侧栏宽度';
+
+  @override
+  String get fileEditLaunchFailed => '没有应用能打开此文件。';
+
+  @override
+  String get fileEditAtomicUnsupported => '此服务器不支持原子替换文件，因此未上传任何内容。';
+
+  @override
+  String get fileEditUpload => '上传';
+
+  @override
+  String get fileEditLocalRejected => '本地副本已不再是其私有文件夹中的普通文件。未上传任何内容。';
+
+  @override
+  String get fileEditConflictTitle => '服务器副本已更改';
+
+  @override
+  String fileEditUploadedChangedAgain(String name) {
+    return '已上传“$name”，但发送期间本地又发生了更改。准备好后请再次上传。';
+  }
+
+  @override
+  String get fileEditBlockedType => '此类文件打开时可能会被执行，因此不会在外部打开。请改用“编辑文本”或“下载”。';
+
+  @override
+  String get fileEditStatusRejected => '本地副本已被拒绝';
+
+  @override
+  String fileEditFooterTitle(int count) {
+    return '正在外部编辑（$count）';
+  }
+
+  @override
+  String get fileEditOpenExternal => '在外部应用中打开';
+
+  @override
+  String get fileEditSessionChanged => '此文件标签页的连接已关闭或已更改。未上传任何内容。';
+
+  @override
+  String get fileEditStatusChanged => '本地已更改 — 未上传';
+
+  @override
+  String fileEditTooMany(int count) {
+    return '最多可同时在外部编辑 $count 个文件。';
+  }
+
+  @override
+  String get fileEditLocalMissing => '本地副本已丢失。未上传任何内容。';
+
+  @override
+  String get fileEditNotRegular => '只能在外部编辑普通远程文件。';
+
+  @override
+  String get fileEditStatusWatching => '正在监视保存';
+
+  @override
+  String get fileEditIgnore => '忽略';
+
+  @override
+  String fileEditOpened(String name) {
+    return '已在外部打开“$name”。在那里保存后，请在下方选择“上传”。';
+  }
+
+  @override
+  String get fileEditTooLarge => '只能在外部编辑不超过 10 MiB 的文件。';
+
+  @override
+  String get fileEditLocalTooLarge => '本地副本超过 10 MiB。未上传任何内容。';
+
+  @override
+  String get fileEditStatusUploading => '正在上传…';
+
+  @override
+  String get fileEditUnavailable => '外部编辑需要桌面应用。请使用“编辑文本”在此修改该文件。';
+
+  @override
+  String fileEditConflictMessage(String name) {
+    return '打开后，服务器上的“$name”已被更改。要用本地版本替换服务器副本吗？';
+  }
+
+  @override
+  String get fileEditStatusConflict => '服务器上的文件也已更改';
+
+  @override
+  String fileEditUploaded(String name) {
+    return '已上传“$name”。';
+  }
+
+  @override
+  String get fileEditStop => '停止监视';
+
+  @override
+  String get fileEditStatusFailed => '上传失败 — 已保留本地更改';
+
+  @override
+  String get fileEditKeepLocal => '保留本地';
+
+  @override
+  String get fileEditReplace => '替换服务器副本';
+
+  @override
+  String get cloudAccessShareMenu => '共享…';
+
+  @override
+  String cloudAccessShareTitle(String name) {
+    return '共享 $name';
+  }
+
+  @override
+  String get cloudAccessClose => '关闭';
+
+  @override
+  String get cloudAccessTabMembers => '成员与团队';
+
+  @override
+  String get cloudAccessTabLinks => '临时链接';
+
+  @override
+  String get cloudAccessGatewayTrustNotice =>
+      '访客通过本服务器的网关连接。为此，该 Host 的登录信息会加密交给服务器网关保管，直到链接被撤销或过期。服务器运营者（或入侵服务器者）可以解开它并看到会话内容。访客不会通过此功能获得密码或私钥，但在会话中可以执行该账户允许的任何操作。请使用专用的低权限账户。';
+
+  @override
+  String get cloudAccessLinksHeading => '此 Host 的链接';
+
+  @override
+  String get cloudAccessNewLink => '新建链接';
+
+  @override
+  String get cloudAccessNoLinks => '尚无临时链接。';
+
+  @override
+  String get cloudAccessStatusActive => '有效';
+
+  @override
+  String get cloudAccessStatusScheduled => '已排期';
+
+  @override
+  String get cloudAccessStatusExpired => '已过期';
+
+  @override
+  String get cloudAccessStatusPaused => '已暂停';
+
+  @override
+  String get cloudAccessStatusSuspended => '已挂起';
+
+  @override
+  String get cloudAccessStatusRevoked => '已撤销';
+
+  @override
+  String cloudAccessValidUntil(String time) {
+    return '有效至 $time';
+  }
+
+  @override
+  String cloudAccessRedemptionCount(String used, String max) {
+    return '已打开 $used/$max';
+  }
+
+  @override
+  String cloudAccessActiveSessions(String count) {
+    return '$count 个活动';
+  }
+
+  @override
+  String get cloudAccessMore => '更多';
+
+  @override
+  String get cloudAccessActivity => '活动';
+
+  @override
+  String get cloudAccessPause => '暂停';
+
+  @override
+  String get cloudAccessResume => '恢复';
+
+  @override
+  String get cloudAccessRotate => '更换密钥';
+
+  @override
+  String get cloudAccessRevoke => '撤销';
+
+  @override
+  String get cloudAccessRevokeLinkTitle => '撤销此链接？';
+
+  @override
+  String get cloudAccessRevokeLinkMessage =>
+      '链接立即失效，活动的访客会话会在几秒内关闭。撤销无法撤回访客已在 Host 上执行的操作。';
+
+  @override
+  String get cloudAccessRotateTitle => '生成新的链接密钥？';
+
+  @override
+  String get cloudAccessRotateMessage => '当前网址将失效，其访客会被断开。你将获得一个新网址用于发送。';
+
+  @override
+  String get cloudAccessScheduleStart => '稍后开始';
+
+  @override
+  String get cloudAccessStartsNow => '立即开始';
+
+  @override
+  String get cloudAccessPickStart => '请选择开始时间';
+
+  @override
+  String get cloudAccessLifetime => '有效期';
+
+  @override
+  String get cloudAccessOneHour => '1 小时';
+
+  @override
+  String get cloudAccessOneDay => '24 小时';
+
+  @override
+  String get cloudAccessOneWeek => '7 天';
+
+  @override
+  String get cloudAccessCustom => '自定义…';
+
+  @override
+  String cloudAccessWindowSummary(String start, String end, String utc) {
+    return '从 $start 到 $end（本地时间；UTC $utc）。以服务器时钟为准。';
+  }
+
+  @override
+  String get cloudAccessEndBeforeStart => '结束时间必须晚于开始时间且在未来。';
+
+  @override
+  String get cloudAccessMaxRedemptions => '链接可打开次数';
+
+  @override
+  String get cloudAccessMaxRedemptionsHelp => '默认 1。每个点击“继续”的浏览器消耗一次。';
+
+  @override
+  String get cloudAccessUnlimited => '不限';
+
+  @override
+  String get cloudAccessRedemptionsRange => '请输入 1–1000，或选择“不限”。';
+
+  @override
+  String get cloudAccessMaxConnections => '连接尝试次数（可选）';
+
+  @override
+  String get cloudAccessMaxConnectionsHelp => '留空表示不限。被拒绝的尝试不计数。';
+
+  @override
+  String get cloudAccessConnectionsRange => '请输入正整数或留空。';
+
+  @override
+  String get cloudAccessConcurrent => '同时连接数';
+
+  @override
+  String get cloudAccessViewOnly => '仅观看';
+
+  @override
+  String get cloudAccessViewOnlyHelp => '服务器会阻止键盘、鼠标与粘贴。';
+
+  @override
+  String get cloudAccessClipboardToRemote => '允许粘贴到 Host';
+
+  @override
+  String get cloudAccessClipboardFromRemote => '允许从 Host 复制';
+
+  @override
+  String get cloudAccessFilesLocked => '访客无法使用文件传输、驱动器、打印与录制。';
+
+  @override
+  String get cloudAccessCustomSlug => '自定义地址（可选）';
+
+  @override
+  String get cloudAccessCustomSlugHelp =>
+      '3–48 个小写字母、数字或连字符。地址不是密码，可能被猜到，请避免敏感词。';
+
+  @override
+  String get cloudAccessGuestTitle => '向访客显示的标题（可选）';
+
+  @override
+  String get cloudAccessGuestTitleHelp => '使用链接密钥加密，服务器无法读取。';
+
+  @override
+  String get cloudAccessCancel => '取消';
+
+  @override
+  String get cloudAccessCreateLink => '创建链接';
+
+  @override
+  String get cloudAccessLinkReady => '链接已创建';
+
+  @override
+  String get cloudAccessCopyLink => '复制链接';
+
+  @override
+  String get cloudAccessCopied => '已复制';
+
+  @override
+  String get cloudAccessShownOnce => '完整链接仅显示这一次。如丢失，请更换密钥。';
+
+  @override
+  String get cloudAccessSendSafely =>
+      '任何持有此链接的人都可以打开。请只通过可信渠道发送；部分邮件扫描器可能会打开并消耗链接。';
+
+  @override
+  String get cloudAccessDone => '完成';
+
+  @override
+  String get cloudAccessBack => '返回';
+
+  @override
+  String cloudAccessActivityFor(String link) {
+    return '活动 · $link';
+  }
+
+  @override
+  String get cloudAccessGuestSessions => '访客会话';
+
+  @override
+  String get cloudAccessNoSessions => '尚无人打开此链接。';
+
+  @override
+  String cloudAccessSessionSince(String time) {
+    return '自 $time 起活动';
+  }
+
+  @override
+  String cloudAccessSessionEnded(String reason) {
+    return '已结束（$reason）';
+  }
+
+  @override
+  String get cloudAccessTerminate => '结束会话';
+
+  @override
+  String get cloudAccessAuditEvents => '审计（仅元数据）';
+
+  @override
+  String get cloudAccessMembersExplainer =>
+      '成员通过加密 Vault 获得此 Host。只有在你逐一确认对方设备后，接收者才会获得 Vault 密钥；组织管理员无法自行获得。';
+
+  @override
+  String get cloudAccessDedicatedVault => '仅共享此 Host';
+
+  @override
+  String get cloudAccessDedicatedVaultHelp =>
+      '将创建一个新的共享 Vault，只包含此 Host 的副本及下列项目。当前 Vault 中的其他 Host 和凭据保持私密。';
+
+  @override
+  String get cloudAccessSharingVaultName => '共享 Vault 名称';
+
+  @override
+  String cloudAccessSharingVaultDefaultName(String name) {
+    return '共享 · $name';
+  }
+
+  @override
+  String get cloudAccessWillCopy => '将被复制：';
+
+  @override
+  String cloudAccessDependencyJumpHost(String name) {
+    return '跳板主机 $name';
+  }
+
+  @override
+  String cloudAccessDependencyCredential(String name) {
+    return '凭据 $name';
+  }
+
+  @override
+  String cloudAccessDependencyKnownHost(String key) {
+    return '受信任的主机密钥 $key';
+  }
+
+  @override
+  String cloudAccessDependencyGroup(String name) {
+    return '不复制分组 $name';
+  }
+
+  @override
+  String cloudAccessBlockerMissingJump(String name) {
+    return '$name 使用的跳板主机不在此 Vault 中。';
+  }
+
+  @override
+  String cloudAccessBlockerMissingCredential(String name) {
+    return '$name 引用的凭据不在此 Vault 中。';
+  }
+
+  @override
+  String cloudAccessBlockerJumpLoop(String name) {
+    return '$name 的跳板链存在循环。';
+  }
+
+  @override
+  String get cloudAccessConsentCopy => '我同意将上述项目复制到新 Vault。';
+
+  @override
+  String get cloudAccessCreateSharingVault => '创建共享 Vault';
+
+  @override
+  String get cloudAccessWholeVaultHeading => '或共享整个 Vault';
+
+  @override
+  String get cloudAccessWholeVaultHelp => '接收者将看到当前 Vault 中的所有 Host、凭据和代码片段。';
+
+  @override
+  String get cloudAccessManageWholeVault => '管理整个 Vault 的访问';
+
+  @override
+  String get cloudAccessAttachOrg => '选择组织';
+
+  @override
+  String get cloudAccessAttachOrgHelp => '授权针对你管理的某个组织的成员和团队。';
+
+  @override
+  String get cloudAccessAttach => '使用';
+
+  @override
+  String get cloudAccessManageOrganizations => '管理组织';
+
+  @override
+  String cloudAccessGrantsIn(String org) {
+    return '$org 中的访问';
+  }
+
+  @override
+  String get cloudAccessAddGrant => '添加成员或团队';
+
+  @override
+  String cloudAccessTeamLabel(String name) {
+    return '团队 $name';
+  }
+
+  @override
+  String get cloudAccessRoleViewer => '查看者';
+
+  @override
+  String get cloudAccessRoleEditor => '编辑者';
+
+  @override
+  String get cloudAccessRemove => '移除';
+
+  @override
+  String get cloudAccessKeyDistribution => '等待密钥';
+
+  @override
+  String get cloudAccessKeyDistributionHelp =>
+      '在分发 Vault 密钥前，请通过其他渠道与接收者核对每个指纹。';
+
+  @override
+  String get cloudAccessWaitingForDevice => '等待接收者在设备上打开“组织”';
+
+  @override
+  String get cloudAccessWaitingForOwner => '等待你确认';
+
+  @override
+  String get cloudAccessWaitingForRecipient => '密钥已发送，等待接收者接受';
+
+  @override
+  String get cloudAccessRoleDiffers => '签名角色与授权不同；需轮换或重新邀请以更改';
+
+  @override
+  String cloudAccessDeviceFingerprint(String fingerprint) {
+    return '设备 $fingerprint';
+  }
+
+  @override
+  String get cloudAccessConfirmFingerprintTitle => '确认此设备';
+
+  @override
+  String cloudAccessConfirmFingerprintMessage(String user, String fingerprint) {
+    return '将 Vault 密钥交付给 $user 的设备 $fingerprint？仅在 $user 已向你确认此指纹时继续。';
+  }
+
+  @override
+  String get cloudAccessDeliverKey => '交付密钥';
+
+  @override
+  String get cloudAccessRemovalPending =>
+      '服务器访问已被阻止。请轮换 Vault 密钥以在加密层面移除此成员，并更换其见过的凭据。';
+
+  @override
+  String get cloudAccessKeepDirect => '保留为直接成员';
+
+  @override
+  String get cloudAccessRotateToRemove => '轮换密钥';
+
+  @override
+  String get cloudAccessRestrictedToViewer => '在签名角色更新前仅可查看';
+
+  @override
+  String get cloudAccessOrganizations => '组织';
+
+  @override
+  String get cloudAccessOrganizationsSubtitle => '成员、团队与邀请';
+
+  @override
+  String get cloudAccessOrganizationsExplainer =>
+      '组织名称、成员、角色与团队对本服务器可见。加入组织本身不会给你任何 Vault 密钥。';
+
+  @override
+  String get cloudAccessPendingJoin => '你打开了组织邀请——请查看';
+
+  @override
+  String get cloudAccessJoinOrganization => '加入组织';
+
+  @override
+  String get cloudAccessJoinLinkField => '邀请链接';
+
+  @override
+  String get cloudAccessJoinInvalid => '这不是有效的邀请链接。';
+
+  @override
+  String get cloudAccessReview => '查看';
+
+  @override
+  String cloudAccessJoinSummary(String inviter, String role) {
+    return '$inviter 邀请你成为$role';
+  }
+
+  @override
+  String get cloudAccessJoin => '加入';
+
+  @override
+  String get cloudAccessJoined => '已加入。Vault 所有者仍需确认你的设备，你才会收到共享 Vault。';
+
+  @override
+  String get cloudAccessSharedVaultKeys => '共享 Vault 密钥';
+
+  @override
+  String get cloudAccessSharedVaultKeysHelp => '发布本设备的公钥，并接受所有者已确认本设备的 Vault。';
+
+  @override
+  String get cloudAccessCheckDeliveries => '检查共享 Vault';
+
+  @override
+  String cloudAccessDeliveriesAccepted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已添加 $count 个共享 Vault。',
+      zero: '没有新的共享 Vault。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cloudAccessYourOrganizations => '你的组织';
+
+  @override
+  String get cloudAccessNewOrganization => '新建组织';
+
+  @override
+  String get cloudAccessOrganizationName => '组织名称';
+
+  @override
+  String get cloudAccessNoOrganizations => '你尚未加入任何组织。';
+
+  @override
+  String cloudAccessMemberCount(String count) {
+    return '$count 名成员';
+  }
+
+  @override
+  String get cloudAccessOrgRoleOwner => '所有者';
+
+  @override
+  String get cloudAccessOrgRoleAdmin => '管理员';
+
+  @override
+  String get cloudAccessOrgRoleMember => '成员';
+
+  @override
+  String get cloudAccessSave => '保存';
+
+  @override
+  String get cloudAccessMembers => '成员';
+
+  @override
+  String get cloudAccessInviteMember => '邀请';
+
+  @override
+  String get cloudAccessInviteUsername => '用户名（可选）';
+
+  @override
+  String get cloudAccessInviteUsernameHelp => '将邀请限定于某个现有账户。新用户需先获得实例管理员的账户邀请。';
+
+  @override
+  String get cloudAccessRole => '角色';
+
+  @override
+  String get cloudAccessInitialTeam => '团队';
+
+  @override
+  String get cloudAccessNoTeam => '无团队';
+
+  @override
+  String get cloudAccessCreateInvitation => '创建邀请';
+
+  @override
+  String get cloudAccessInvitationReady => '邀请链接已创建';
+
+  @override
+  String get cloudAccessCopyInvitation => '复制邀请链接';
+
+  @override
+  String get cloudAccessLeave => '退出';
+
+  @override
+  String get cloudAccessRemoveMemberTitle => '从组织中移除？';
+
+  @override
+  String get cloudAccessRemoveMemberMessage =>
+      '通过组织授权获得的访问将被立即阻止。随后 Vault 所有者应轮换受影响 Vault 的密钥。';
+
+  @override
+  String get cloudAccessTeams => '团队';
+
+  @override
+  String get cloudAccessNewTeam => '新建团队';
+
+  @override
+  String get cloudAccessTeamName => '团队名称';
+
+  @override
+  String cloudAccessTeamMembers(String team) {
+    return '$team 的成员';
+  }
+
+  @override
+  String get cloudAccessInvitations => '邀请';
+
+  @override
+  String get cloudAccessAnyAccount => '任意账户';
+
+  @override
+  String get cloudAccessErrorGeneric => '请求未能完成。';
+
+  @override
+  String get cloudAccessErrorLinksUnavailable => '此服务器未配置临时链接。';
+
+  @override
+  String get cloudAccessErrorOrganizationsUnavailable => '此服务器未启用组织。';
+
+  @override
+  String get cloudAccessErrorProtocolUnavailable => '此服务器不支持共享该 Host 的协议。';
+
+  @override
+  String get cloudAccessErrorOwnerRequired => '只有 Vault 所有者可以通过链接共享。';
+
+  @override
+  String get cloudAccessErrorJumpHost => '使用跳板主机的 Host 无法通过网关共享。';
+
+  @override
+  String get cloudAccessErrorPortForward => '带有端口转发配置的 Host 无法通过网关共享。';
+
+  @override
+  String get cloudAccessErrorHostKeyRequired => '共享前请先连接一次并信任此 Host 的 SSH 密钥。';
+
+  @override
+  String get cloudAccessErrorCertificateRequired =>
+      '共享前请先连接一次并信任此 Host 的 RDP 证书。';
+
+  @override
+  String get cloudAccessErrorLoginRequired => '共享前请为此 Host 保存登录信息。';
+
+  @override
+  String get cloudAccessErrorHostChanged => 'Host 已更改或尚未同步。请同步后重试。';
+
+  @override
+  String get cloudAccessErrorPlanBlocked => '请先解决列出的问题。';
+
+  @override
+  String get cloudAccessErrorTargetDenied => '服务器的共享策略不允许此 Host 地址。';
+
+  @override
+  String get cloudAccessErrorSlugTaken => '此地址不可用。';
+
+  @override
+  String get cloudAccessErrorSlugInvalid => '请使用 3–48 个小写字母、数字或中间连字符。';
+
+  @override
+  String get cloudAccessErrorTooManyLinks => '活动链接过多，请先撤销一些。';
+
+  @override
+  String get cloudAccessErrorInvalidOptions => '服务器不允许这些链接选项。';
+
+  @override
+  String get cloudAccessErrorOrgRoleRequired => '需要组织所有者或管理员角色。';
+
+  @override
+  String get cloudAccessErrorOrgCreationRestricted => '此处只有实例管理员可以创建组织。';
+
+  @override
+  String get cloudAccessErrorLastOwner => '组织至少需要一位所有者。';
+
+  @override
+  String get cloudAccessErrorInvitationUnavailable => '此邀请不可用。';
+
+  @override
+  String get cloudAccessErrorAccountNotFound => '没有使用此用户名的活动账户。';
+
+  @override
+  String get cloudAccessErrorRateLimited => '尝试次数过多，请稍后再试。';
+
+  @override
+  String get cloudAccessGuestWindowTitle => 'Atermius 共享访问';
+
+  @override
+  String get cloudAccessGuestLanding => '你收到了一个 Atermius 临时访问链接';
+
+  @override
+  String get cloudAccessGuestLandingHelp =>
+      '在你点击继续之前不会发生任何事。继续可能会消耗该链接的一次可用次数。';
+
+  @override
+  String get cloudAccessGuestContinue => '继续';
+
+  @override
+  String get cloudAccessGuestHeading => '共享访问';
+
+  @override
+  String cloudAccessGuestValidUntil(String time) {
+    return '此会话于 $time 结束';
+  }
+
+  @override
+  String get cloudAccessGuestViewOnly => '仅观看';
+
+  @override
+  String get cloudAccessGuestInteractive => '可交互';
+
+  @override
+  String get cloudAccessGuestClipboardOn => '允许剪贴板';
+
+  @override
+  String get cloudAccessGuestClipboardOff => '剪贴板关闭';
+
+  @override
+  String get cloudAccessGuestConnect => '连接';
+
+  @override
+  String get cloudAccessGuestDisconnect => '断开';
+
+  @override
+  String get cloudAccessGuestLeave => '结束我的访问';
+
+  @override
+  String get cloudAccessGuestLeft => '你的访问已结束，可以关闭此标签页。';
+
+  @override
+  String get cloudAccessGuestTrustNote => '此会话经由分享者的 Atermius 服务器，服务器可以看到会话内容。';
+
+  @override
+  String get cloudAccessGuestUnavailable => '此链接不可用。';
+
+  @override
+  String get cloudAccessGuestAskOwner => '请联系分享者重新发送链接。';
+
+  @override
+  String get cloudAccessGuestNotYetValid => '此链接尚未生效。';
+
+  @override
+  String get cloudAccessGuestExpired => '此链接已过期。';
+
+  @override
+  String get cloudAccessGuestExhausted => '此链接已被使用。';
+
+  @override
+  String get cloudAccessGuestSuspended => '此链接已被所有者暂停或撤销。';
+
+  @override
+  String get cloudAccessGuestSessionEnded => '你的会话已结束。';
+
+  @override
+  String get cloudAccessGuestBusy => '当前连接过多，请稍后再试。';
+
+  @override
+  String get cloudAccessGuestExpiringSoon => '5 分钟后结束';
+
+  @override
+  String get cloudAccessGuestClosed => '连接已关闭。';
+
+  @override
+  String get cloudAccessGuestClosedRevoked => '访问已被所有者撤销或更改。';
+
+  @override
+  String get cloudAccessGuestClosedExpired => '访问时间已结束。';
+
+  @override
+  String get cloudAccessGuestClosedTarget => '无法连接 Host，或其身份与受信任的身份不符。';
+
+  @override
+  String get cloudAccessGuestClosedProtocol => '因出现意外消息，连接已关闭。';
+
+  @override
+  String cloudAccessApplyRole(String role) {
+    return '设为$role';
+  }
+
+  @override
+  String get cloudAccessApplyRoleTitle => '更改此成员的角色？';
+
+  @override
+  String cloudAccessApplyRoleMessage(String user, String role) {
+    return '$user 将成为$role。这会从本设备签署新的成员清单并轮换 Vault 密钥。';
+  }
+
+  @override
+  String get cloudAccessErrorScopeChanged =>
+      '此操作期间账户、服务器或所选 Vault 已变更，未发送任何内容，请重试。';
+
+  @override
+  String get cloudAccessErrorNotSynced => '共享 Vault 已创建但尚未同步。请先同步再添加成员。';
+
+  @override
+  String get cloudAccessErrorScopeEndedCommitted =>
+      '服务器已完成此操作的一部分（例如已创建 Vault 或邀请）后，账户、服务器或所选 Vault 发生了变更。该部分不会被撤销；请先检查后再重试。';
 }

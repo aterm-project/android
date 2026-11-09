@@ -107,8 +107,12 @@ class _AuthFlowState extends State<AuthFlow> {
                       center: const Alignment(-0.72, -0.7),
                       radius: 1.1,
                       colors: [
-                        const Color(0xFF193061).withValues(alpha: .34),
-                        AppColors.background,
+                        context.palette.isDark
+                            ? const Color(0xFF193061).withValues(alpha: .34)
+                            : context.palette.accentContainer.withValues(
+                                alpha: .6,
+                              ),
+                        context.palette.background,
                       ],
                     ),
                   ),
@@ -140,14 +144,14 @@ class _AuthFlowState extends State<AuthFlow> {
                 ),
               ),
               if (app.busy)
-                const Positioned(
+                Positioned(
                   left: 0,
                   right: 0,
                   top: 0,
                   child: LinearProgressIndicator(
                     minHeight: 2,
-                    color: AppColors.lime,
-                    backgroundColor: AppColors.surface,
+                    color: context.palette.lime,
+                    backgroundColor: context.palette.surface,
                   ),
                 ),
             ],
@@ -183,12 +187,12 @@ class _AuthFlowState extends State<AuthFlow> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: AppColors.accent,
+              color: context.palette.accent,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.terminal_rounded,
-              color: AppColors.onAccent,
+              color: context.palette.onAccent,
               size: 26,
             ),
           ),
@@ -220,8 +224,8 @@ class _AuthFlowState extends State<AuthFlow> {
       Text(
         context.l10n.aPrivateSshWorkspaceThatSyncs,
         textAlign: compact ? TextAlign.center : TextAlign.left,
-        style: const TextStyle(
-          color: AppColors.muted,
+        style: TextStyle(
+          color: context.palette.muted,
           fontSize: 15,
           height: 1.65,
         ),
@@ -273,7 +277,7 @@ class _AuthFlowState extends State<AuthFlow> {
               : stage == ClientStage.register
               ? context.l10n.theFirstAccountCreatesItsVault
               : context.l10n.yourPasswordUnlocksTheAccountKey,
-          style: const TextStyle(color: AppColors.muted, height: 1.5),
+          style: TextStyle(color: context.palette.muted, height: 1.5),
         ),
         const SizedBox(height: 24),
         if (stage == ClientStage.server) _serverForm(),
@@ -292,14 +296,14 @@ class _AuthFlowState extends State<AuthFlow> {
         const SizedBox(height: 16),
         Row(
           children: [
-            const Icon(Icons.shield_outlined, color: AppColors.teal, size: 18),
+            Icon(Icons.shield_outlined, color: context.palette.teal, size: 18),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 context.l10n.secretsAreEncryptedInThisClient,
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.muted.withValues(alpha: .95),
+                  color: context.palette.muted.withValues(alpha: .95),
                 ),
               ),
             ),
@@ -344,8 +348,8 @@ class _AuthFlowState extends State<AuthFlow> {
       const SizedBox(height: 12),
       Text(
         context.l10n.remoteServersRequireHttpsHttpIs,
-        style: const TextStyle(
-          color: AppColors.muted,
+        style: TextStyle(
+          color: context.palette.muted,
           fontSize: 12,
           height: 1.5,
         ),
@@ -434,8 +438,8 @@ class _AuthFlowState extends State<AuthFlow> {
       ),
       Text(
         context.l10n.useTheAccountNameAndMaster,
-        style: const TextStyle(
-          color: AppColors.muted,
+        style: TextStyle(
+          color: context.palette.muted,
           fontSize: 12,
           height: 1.45,
         ),
@@ -469,7 +473,7 @@ class _AuthFlowState extends State<AuthFlow> {
           usingRecovery
               ? context.l10n.mfaChallengeRecovery(challenge.expiresAt.toLocal())
               : context.l10n.mfaChallengeTotp(challenge.expiresAt.toLocal()),
-          style: const TextStyle(color: AppColors.muted, height: 1.45),
+          style: TextStyle(color: context.palette.muted, height: 1.45),
         ),
         const SizedBox(height: 14),
         TextField(
@@ -635,8 +639,8 @@ class _AuthFlowState extends State<AuthFlow> {
           isBootstrap
               ? context.l10n.theBootstrapTokenIsOneUse
               : context.l10n.thisOneUseInvitationIsBound,
-          style: const TextStyle(
-            color: AppColors.muted,
+          style: TextStyle(
+            color: context.palette.muted,
             fontSize: 12,
             height: 1.5,
           ),
@@ -916,7 +920,7 @@ class _AuthFlowState extends State<AuthFlow> {
                             style: Theme.of(dialogContext).textTheme.bodySmall
                                 ?.copyWith(
                                   color: copyFeedback!
-                                      ? AppColors.teal
+                                      ? context.palette.teal
                                       : Theme.of(dialogContext)
                                             .colorScheme
                                             .error,
@@ -1168,7 +1172,7 @@ class _InstanceIdentityRollbackRecoveryState
     final canConfirm =
         !widget.app.busy && _fingerprint.text == recovery.candidateFingerprint;
     return Card(
-      color: const Color(0xFF302719),
+      color: context.palette.warningContainer,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -1196,7 +1200,7 @@ class _InstanceIdentityRollbackRecoveryState
             const SizedBox(height: 9),
             Text(
               context.l10n.previouslyTrustedFingerprintSha256,
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              style: TextStyle(color: context.palette.muted, fontSize: 11),
             ),
             SelectableText(
               recovery.pinnedFingerprint,
@@ -1209,7 +1213,7 @@ class _InstanceIdentityRollbackRecoveryState
             const SizedBox(height: 8),
             Text(
               context.l10n.fingerprintReturnedByThisServerSha,
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              style: TextStyle(color: context.palette.muted, fontSize: 11),
             ),
             SelectableText(
               recovery.candidateFingerprint,
@@ -1265,7 +1269,7 @@ class _InstanceIdentityRollbackRecoveryState
           width: 105,
           child: Text(
             label,
-            style: const TextStyle(color: AppColors.muted, fontSize: 11),
+            style: TextStyle(color: context.palette.muted, fontSize: 11),
           ),
         ),
         Expanded(
@@ -1312,10 +1316,10 @@ class _FeatureRow extends StatelessWidget {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: AppColors.lime.withValues(alpha: .11),
+          color: context.palette.lime.withValues(alpha: .11),
           borderRadius: BorderRadius.circular(11),
         ),
-        child: Icon(icon, size: 20, color: AppColors.lime),
+        child: Icon(icon, size: 20, color: context.palette.lime),
       ),
       const SizedBox(width: 12),
       Expanded(
@@ -1326,7 +1330,7 @@ class _FeatureRow extends StatelessWidget {
             const SizedBox(height: 3),
             Text(
               subtitle,
-              style: const TextStyle(fontSize: 12, color: AppColors.muted),
+              style: TextStyle(fontSize: 12, color: context.palette.muted),
             ),
           ],
         ),
@@ -1343,16 +1347,16 @@ class _Pill extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
     decoration: BoxDecoration(
-      color: AppColors.lime.withValues(alpha: .11),
+      color: context.palette.lime.withValues(alpha: .11),
       borderRadius: BorderRadius.circular(30),
-      border: Border.all(color: AppColors.lime.withValues(alpha: .25)),
+      border: Border.all(color: context.palette.lime.withValues(alpha: .25)),
     ),
     child: Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 9,
         letterSpacing: .9,
-        color: AppColors.lime,
+        color: context.palette.lime,
         fontWeight: FontWeight.w700,
       ),
     ),
@@ -1366,7 +1370,7 @@ class _MessageBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = error ? AppColors.red : AppColors.teal;
+    final color = error ? context.palette.red : context.palette.teal;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

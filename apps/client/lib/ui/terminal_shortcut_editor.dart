@@ -95,13 +95,13 @@ class TerminalShortcutKeycaps extends StatelessWidget {
                 constraints: const BoxConstraints(minWidth: 22),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceSoft,
+                  color: context.palette.surfaceSoft,
                   borderRadius: BorderRadius.circular(5),
-                  border: const Border(
-                    top: BorderSide(color: AppColors.line),
-                    left: BorderSide(color: AppColors.line),
-                    right: BorderSide(color: AppColors.line),
-                    bottom: BorderSide(color: AppColors.line, width: 2),
+                  border: Border(
+                    top: BorderSide(color: context.palette.line),
+                    left: BorderSide(color: context.palette.line),
+                    right: BorderSide(color: context.palette.line),
+                    bottom: BorderSide(color: context.palette.line, width: 2),
                   ),
                 ),
                 child: Text(
@@ -303,22 +303,22 @@ class _TerminalShortcutEditorState extends State<TerminalShortcutEditor> {
             key: ValueKey('terminal_shortcut_recording_${action.name}'),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.accentContainer,
+              color: context.palette.accentContainer,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Semantics(
               liveRegion: true,
               child: Text(
                 l10n.r7UiShortcutRecording,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11.5,
-                  color: AppColors.onAccentContainer,
+                  color: context.palette.onAccentContainer,
                 ),
               ),
             ),
           )
         : problem == _RowProblem.invalid
-        ? const Icon(Icons.error_outline, size: 18, color: AppColors.orange)
+        ? Icon(Icons.error_outline, size: 18, color: context.palette.orange)
         : TerminalShortcutKeycaps(
             key: ValueKey('terminal_shortcut_keycaps_${action.name}'),
             chord: TerminalShortcutBindings.normalizeChord(controller.text),

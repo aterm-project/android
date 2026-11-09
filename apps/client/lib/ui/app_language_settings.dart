@@ -36,7 +36,7 @@ class AppLanguageSettings extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.translate, size: 20, color: AppColors.muted),
+                Icon(Icons.translate, size: 20, color: context.palette.muted),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -50,7 +50,7 @@ class AppLanguageSettings extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 l10n.languageSettingDescription,
-                style: const TextStyle(color: AppColors.muted, height: 1.4),
+                style: TextStyle(color: context.palette.muted, height: 1.4),
               ),
             ],
             const SizedBox(height: 8),
@@ -72,8 +72,8 @@ class AppLanguageSettings extends StatelessWidget {
               key: const ValueKey('app_language_storage_note'),
               style: TextStyle(
                 color: languages.writeFailed
-                    ? AppColors.orange
-                    : AppColors.muted,
+                    ? context.palette.orange
+                    : context.palette.muted,
                 fontSize: 12,
               ),
             ),
@@ -109,10 +109,10 @@ class _LanguageOption extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       selected: selected,
-      selectedTileColor: AppColors.accent.withValues(alpha: 0.16),
+      selectedTileColor: context.palette.accent.withValues(alpha: 0.16),
       leading: Icon(
         selected ? Icons.radio_button_checked : Icons.radio_button_off,
-        color: selected ? AppColors.accentText : AppColors.muted,
+        color: selected ? context.palette.accentText : context.palette.muted,
         size: 20,
       ),
       title: Text(label, maxLines: 2, overflow: TextOverflow.ellipsis),

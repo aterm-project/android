@@ -9,6 +9,7 @@ import '../terminal/live_terminal_window.dart';
 import 'app_motion.dart';
 import 'terminal_palette.dart';
 import 'terminal_keybar.dart';
+import 'wallpaper.dart';
 import 'window_caption.dart';
 import '../l10n/l10n.dart';
 
@@ -190,7 +191,8 @@ class _LiveTerminalWindowPageState extends State<LiveTerminalWindowPage> {
                   ),
                 ),
                 Expanded(
-                  child: TerminalView(
+                  child: WallpaperPaneBackdrop(
+                    child: TerminalView(
                     client.terminal,
                     // Credential-free child window: no Vault preference is
                     // available, so it uses this device's palette overlay or
@@ -204,10 +206,13 @@ class _LiveTerminalWindowPageState extends State<LiveTerminalWindowPage> {
                     readOnly: !client.connected,
                     hardwareKeyboardOnly: false,
                     padding: const EdgeInsets.all(12),
+                    backgroundOpacity:
+                        wallpaperTerminalBackgroundOpacity(context),
                     textStyle: const TerminalStyle(
                       fontFamily: 'monospace',
                       fontSize: 14,
                     ),
+                  ),
                   ),
                 ),
                 TerminalKeybar(

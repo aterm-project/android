@@ -16869,4 +16869,1447 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get telnetInputTooLarge =>
       'Вставленный текст слишком велик для отправки по Telnet (предел 1 МиБ). Ничего не отправлено.';
+
+  @override
+  String get accountSettingsTitle => 'Аккаунт и вход';
+
+  @override
+  String get accountSettingsDescription =>
+      'Аккаунт и сервер, которые использует это устройство, управление сеансом и вход в аккаунт.';
+
+  @override
+  String get accountSettingsCurrentMode => 'Текущий режим';
+
+  @override
+  String get accountSettingsModeAccount => 'Аккаунт и синхронизация';
+
+  @override
+  String get accountSettingsModeLocal => 'Только локально (это устройство)';
+
+  @override
+  String get accountSettingsSignedInAs => 'Вход выполнен как';
+
+  @override
+  String get accountSettingsServer => 'Сервер';
+
+  @override
+  String get accountSettingsSessionUnlocked =>
+      'Вход выполнен, на этом устройстве разблокировано';
+
+  @override
+  String get accountSettingsActiveVault => 'Текущее хранилище';
+
+  @override
+  String get accountSettingsNoVault => 'Хранилище не выбрано';
+
+  @override
+  String get accountSettingsInstanceAdmin => 'Администратор экземпляра';
+
+  @override
+  String get accountSettingsSessionActions => 'Сеанс';
+
+  @override
+  String get accountSettingsSecurityAction =>
+      'Пароль, двухфакторная защита и восстановление';
+
+  @override
+  String get accountSettingsSignOutTitle => 'Выйти из этого аккаунта?';
+
+  @override
+  String get accountSettingsSignOutBody =>
+      'Открытые сеансы этого аккаунта на этом устройстве будут закрыты. Зашифрованные данные хранилища остаются на сервере; для повторного входа потребуется пароль аккаунта.';
+
+  @override
+  String get accountSettingsSwitchToLocalTitle =>
+      'Переключиться на локальный режим?';
+
+  @override
+  String get accountSettingsSwitchToLocalBody =>
+      'Рабочее пространство аккаунта и его открытые сеансы на этом устройстве будут закрыты. Ничего из аккаунта не копируется в локальные профили.';
+
+  @override
+  String get accountSettingsLocalNotSignedIn => 'Вход в аккаунт не выполнен';
+
+  @override
+  String get accountSettingsLocalSyncRequiresAccount =>
+      'Локальные профили хранятся только на этом устройстве и не синхронизируются. Чтобы синхронизировать хосты между устройствами, войдите в аккаунт на своём сервере Atermius.';
+
+  @override
+  String get accountSettingsSignIn => 'Войти или подключиться к серверу';
+
+  @override
+  String get accountSettingsSignInTitle => 'Открыть вход в аккаунт?';
+
+  @override
+  String get accountSettingsSignInBody =>
+      'Локальный профиль будет заблокирован, а его открытые сеансы закрыты. Локальные хосты остаются на этом устройстве и не выгружаются. После входа перенос можно проверить в разделе «Данные и миграция».';
+
+  @override
+  String get themeSettingTitle => 'Тема';
+
+  @override
+  String themeSettingSystemResolved(Object theme) {
+    return 'Как в системе · сейчас $theme';
+  }
+
+  @override
+  String get themeOptionSystem => 'Как в системе';
+
+  @override
+  String get themeSettingDescription =>
+      'Меняет вид окон, меню и панелей приложения. Цвета терминала и изображение удалённого рабочего стола сохраняют свою палитру.';
+
+  @override
+  String get themeOptionLight => 'Светлая';
+
+  @override
+  String get themeOptionDark => 'Тёмная';
+
+  @override
+  String get themeSettingSaveFailed =>
+      'Тема изменена для этого сеанса, но её не удалось сохранить на этом устройстве.';
+
+  @override
+  String get syncSettingsPreferenceSaveFailed =>
+      'Не удалось сохранить эту настройку на устройстве. Она действует до перезапуска приложения.';
+
+  @override
+  String get syncSettingsSyncingNow => 'Синхронизация…';
+
+  @override
+  String get syncSettingsDeviceOnly =>
+      'Эти настройки синхронизации действуют только на этом устройстве.';
+
+  @override
+  String get syncSettingsPreferenceSaving => 'Сохранение…';
+
+  @override
+  String get syncSettingsAutomaticOffDescription =>
+      'Выключено на этом устройстве. Изменения хранятся в зашифрованной очереди устройства, пока вы не нажмёте «Синхронизировать сейчас» или снова не включите автоматическую синхронизацию.';
+
+  @override
+  String get syncSettingsNever => 'Никогда';
+
+  @override
+  String get syncSettingsSignInRequired =>
+      'Для синхронизации войдите в аккаунт на этом устройстве.';
+
+  @override
+  String syncSettingsResultNotCompleted(String status) {
+    return 'Синхронизация не завершена. Текущее состояние: $status.';
+  }
+
+  @override
+  String get syncSettingsWaitingToUpload => 'Ожидают отправки';
+
+  @override
+  String syncSettingsResultFailed(String error) {
+    return 'Синхронизация не завершена: $error';
+  }
+
+  @override
+  String syncSettingsQueuedWhileOff(int count) {
+    return 'Зашифрованных изменений в очереди устройства: $count. Они будут отправлены после нажатия «Синхронизировать сейчас» или включения автоматической синхронизации.';
+  }
+
+  @override
+  String get syncSettingsTitle => 'Синхронизация';
+
+  @override
+  String syncSettingsResultPending(int count) {
+    return 'Синхронизация выполнена, но зашифрованные изменения ещё ожидают отправки: $count.';
+  }
+
+  @override
+  String get syncSettingsAutomaticTitle => 'Автоматическая синхронизация';
+
+  @override
+  String get syncSettingsPreferenceLoading =>
+      'Загрузка настройки синхронизации этого устройства… Автоматическая синхронизация начнётся после загрузки.';
+
+  @override
+  String get syncSettingsPreferenceReadFailedShort =>
+      'Автоматическая синхронизация остаётся приостановленной, пока сохранённую настройку не удастся прочитать. Повторите попытку или выберите настройку заново.';
+
+  @override
+  String get syncSettingsResultCompleted =>
+      'Синхронизация завершена. Ничего не ожидает отправки.';
+
+  @override
+  String get syncSettingsAutomaticOnDescription =>
+      'Изменения отправляются, а изменения с других устройств загружаются в фоне.';
+
+  @override
+  String get syncSettingsPreferenceReadFailed =>
+      'Приостановлено: не удалось прочитать сохранённую настройку устройства.';
+
+  @override
+  String get syncSettingsSyncNow => 'Синхронизировать сейчас';
+
+  @override
+  String get syncSettingsStatus => 'Состояние';
+
+  @override
+  String get settingsThemeShortcutsTitle => 'Сочетания клавиш';
+
+  @override
+  String get settingsThemeShortcutsDescription =>
+      'Выберите сочетания клавиш для работы в терминалах.';
+
+  @override
+  String get settingsThemeTitle => 'Тема';
+
+  @override
+  String settingsThemeOverlayActive(String name) {
+    return 'Сейчас терминалы на этом устройстве используют палитру устройства $name. Выберите сохранённую тему или сохраните другую, чтобы вернуться к ней.';
+  }
+
+  @override
+  String get settingsThemeDescription =>
+      'Выберите светлый или тёмный режим приложения, размер шрифта и цвета терминала.';
+
+  @override
+  String get wallpaperSettingTitle => 'Обои';
+
+  @override
+  String get wallpaperSettingDescription =>
+      'Показывает изображение за приложением и панелями терминала. Размывается только изображение: текст, элементы управления, текст терминала и удалённый рабочий стол остаются чёткими.';
+
+  @override
+  String get wallpaperChooseImage => 'Выбрать изображение…';
+
+  @override
+  String get wallpaperReplaceImage => 'Заменить изображение…';
+
+  @override
+  String get wallpaperReset => 'Убрать обои';
+
+  @override
+  String get wallpaperNoImage => 'Обои не выбраны';
+
+  @override
+  String get wallpaperPreviewLabel => 'Предпросмотр обоев';
+
+  @override
+  String get wallpaperLoading => 'Загрузка обоев…';
+
+  @override
+  String get wallpaperMissing =>
+      'Сохранённое изображение обоев отсутствует или не читается. Выберите новое изображение или уберите обои.';
+
+  @override
+  String get wallpaperModeTitle => 'Расположение';
+
+  @override
+  String get wallpaperModeWindow => 'Всё окно';
+
+  @override
+  String get wallpaperModeWindowHint => 'Одно изображение на всё окно.';
+
+  @override
+  String get wallpaperModePanes => 'По панелям';
+
+  @override
+  String get wallpaperModePanesHint =>
+      'Каждая панель терминала показывает своё изображение и следует за изменением размера и порядка.';
+
+  @override
+  String wallpaperBlurValue(String value) {
+    return 'Размытие: $value';
+  }
+
+  @override
+  String wallpaperErrorTooLarge(int limit) {
+    return 'Изображение больше $limit МБ.';
+  }
+
+  @override
+  String get wallpaperErrorUnsupported =>
+      'Выберите изображение PNG, JPEG или статичный WebP.';
+
+  @override
+  String get wallpaperErrorCorrupt =>
+      'Не удалось прочитать изображение. Возможно, файл повреждён.';
+
+  @override
+  String wallpaperErrorDimensions(int side) {
+    return 'Изображение слишком большое (не более $side пикс. по стороне).';
+  }
+
+  @override
+  String get wallpaperErrorStorage =>
+      'Не удалось сохранить обои на этом устройстве.';
+
+  @override
+  String get wallpaperSaveFailed =>
+      'Обои изменены для этого сеанса, но их не удалось сохранить на этом устройстве.';
+
+  @override
+  String get wallpaperDeviceNote =>
+      'Копия изображения хранится в хранилище приложения на этом устройстве. Отдельные окна при открытии используют те же обои.';
+
+  @override
+  String get fileManagerPasteInto => 'Вставить в папку';
+
+  @override
+  String get fileManagerPathCopied => 'Путь скопирован';
+
+  @override
+  String fileManagerCopying(String name) {
+    return 'Копирование «$name»…';
+  }
+
+  @override
+  String get fileManagerDropFailed =>
+      'Не удалось прочитать перетащенные элементы. Ничего не загружено.';
+
+  @override
+  String get fileManagerOperationUnsupported =>
+      'Это подключение не поддерживает операции файлового менеджера.';
+
+  @override
+  String fileManagerDeleteConfirm(String name) {
+    return 'Удалить «$name»? Это действие нельзя отменить.';
+  }
+
+  @override
+  String get fileManagerOpen => 'Открыть';
+
+  @override
+  String get fileManagerPasteHere => 'Вставить сюда';
+
+  @override
+  String fileManagerUploading(String name, int index, int count) {
+    return 'Загрузка «$name» ($index/$count)…';
+  }
+
+  @override
+  String fileManagerMoveConfirm(String name, String folder) {
+    return 'Переместить «$name» в «$folder»?';
+  }
+
+  @override
+  String get fileManagerNameConflictTitle => 'Имя уже занято';
+
+  @override
+  String get fileManagerSkip => 'Пропустить';
+
+  @override
+  String fileManagerClipboardCut(String name) {
+    return 'Вырезано «$name» — вставьте в этой вкладке, чтобы переместить';
+  }
+
+  @override
+  String fileManagerRenameTitle(String name) {
+    return 'Переименовать «$name»';
+  }
+
+  @override
+  String fileManagerDeleteFolderConfirm(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count элемента',
+      many: '$count элементов',
+      few: '$count элемента',
+      one: '$count элемент',
+    );
+    return 'Удалить папку «$name» и $_temp0 внутри? Символические ссылки удаляются, а не раскрываются. Это действие нельзя отменить.';
+  }
+
+  @override
+  String get fileManagerClearClipboard => 'Очистить буфер файлов';
+
+  @override
+  String get fileManagerRename => 'Переименовать';
+
+  @override
+  String fileManagerErrorUnsupportedEntry(String name) {
+    return '«$name» — символическая ссылка, специальный файл или имя не поддерживается. Копирование папок не следует по ним и не воссоздаёт их, поэтому ничего не скопировано.';
+  }
+
+  @override
+  String get fileManagerKeepBoth => 'Сохранить оба';
+
+  @override
+  String fileManagerErrorFileTooLarge(String name) {
+    return '«$name» превышает лимит копирования 1 ГиБ на файл.';
+  }
+
+  @override
+  String get fileManagerCut => 'Вырезать';
+
+  @override
+  String get fileManagerDropNothingAccepted =>
+      'Сюда можно перетаскивать только файлы. Папки и ссылки на другие места не загружаются.';
+
+  @override
+  String get fileManagerPaste => 'Вставить';
+
+  @override
+  String get fileManagerErrorSourceChanged =>
+      'Элемент изменён или удалён на сервере. Обновите список и повторите.';
+
+  @override
+  String fileManagerErrorExists(String name) {
+    return '«$name» здесь уже существует. Ничего не заменено.';
+  }
+
+  @override
+  String get fileManagerMoveTitle => 'Переместить элемент';
+
+  @override
+  String get fileManagerErrorIntoItself =>
+      'Нельзя переместить или скопировать папку в саму себя.';
+
+  @override
+  String get fileManagerCancelled => 'Отменено. Больше ничего не изменено.';
+
+  @override
+  String fileManagerDropTooManyFiles(int count) {
+    return 'За один раз можно перетащить не более $count файлов.';
+  }
+
+  @override
+  String get fileManagerBusy => 'Другое действие с файлами ещё выполняется.';
+
+  @override
+  String get fileManagerCopyPath => 'Копировать путь';
+
+  @override
+  String fileManagerNameConflictKeepBoth(String name) {
+    return '«$name» уже есть в этой папке. Сохранить оба, добавив «(copy)» к новому имени? Существующий элемент не будет заменён.';
+  }
+
+  @override
+  String fileManagerMoving(String name) {
+    return 'Перемещение «$name»…';
+  }
+
+  @override
+  String fileManagerClipboardCopied(String name) {
+    return 'Скопировано «$name» — вставьте в этой вкладке';
+  }
+
+  @override
+  String get fileManagerDropNeedsSftp =>
+      'Перетащенные файлы загружаются по SFTP. Откройте эту папку через SFTP.';
+
+  @override
+  String fileManagerDeleting(String name) {
+    return 'Удаление «$name»…';
+  }
+
+  @override
+  String fileManagerUploadSummary(int uploaded, int skipped, int failed) {
+    return 'Загружено: $uploaded · пропущено: $skipped · ошибок: $failed';
+  }
+
+  @override
+  String get fileManagerInvalidName =>
+      'Используйте одно имя без косой черты, обратной косой черты и управляющих символов.';
+
+  @override
+  String fileManagerErrorLimitExceeded(int entries, int depth) {
+    return 'Папка слишком велика для этого действия (лимит $entries элементов, $depth уровней вложенности или 2 ГиБ). Ничего не изменено.';
+  }
+
+  @override
+  String get fileManagerCopy => 'Копировать';
+
+  @override
+  String get fileManagerDropTargetChanged =>
+      'Пока проверялись перетащенные файлы, папка или подключение вкладки изменились. Ничего не загружено — перетащите файлы снова.';
+
+  @override
+  String fileManagerUploadConflict(String name) {
+    return '«$name» уже есть в этой папке. Загрузить под новым именем с «(copy)» или пропустить? Существующий файл не будет заменён.';
+  }
+
+  @override
+  String get fileManagerMove => 'Переместить';
+
+  @override
+  String get homeAddSerialConsoleDetail =>
+      'Открывает COM-порт этого компьютера в режиме 8N1. На сервере ничего не запускается.';
+
+  @override
+  String get homeSharingThisDevice => 'В сети на этом устройстве';
+
+  @override
+  String get homeAddShell => 'Shell (по умолчанию в системе)';
+
+  @override
+  String homeSharingSharedPresenceUnknown(int members) {
+    return 'Общий доступ · участников: $members · статус неизвестен';
+  }
+
+  @override
+  String get homeSharingLoading => 'Загрузка участников…';
+
+  @override
+  String get homeAddTooltip =>
+      'Добавить хост или открыть локальный Shell / последовательную консоль';
+
+  @override
+  String get homeAddButton => 'Добавить';
+
+  @override
+  String get homeSharingLocalOnly => 'Только локально';
+
+  @override
+  String get homeAddSerialConsolePort => 'Последовательный порт';
+
+  @override
+  String homeSharingMore(int count, String names) {
+    return 'Ещё $count:\n$names';
+  }
+
+  @override
+  String get homeAddSerialConsoleOpen => 'Открыть консоль';
+
+  @override
+  String homeSharingSharedOnline(int members, int online) {
+    return 'Общий доступ · участников: $members · в сети: $online';
+  }
+
+  @override
+  String get homeAddSerialConsoleBaud => 'Скорость (бод)';
+
+  @override
+  String homeSharingYou(String name) {
+    return '$name (вы)';
+  }
+
+  @override
+  String get homeAddSerialConsoleTitle => 'Открыть последовательную консоль';
+
+  @override
+  String get homeAddSerialConsole => 'Последовательная консоль (COM)…';
+
+  @override
+  String get homeSharingLocalDetail =>
+      'Этот локальный профиль хранится в зашифрованном виде только на этом устройстве. У него нет участников хранилища, другие его не видят, и статус присутствия не отправляется. Войдите в хранилище аккаунта, чтобы делиться хостами с другими.';
+
+  @override
+  String get homeAddSerialConsoleUnavailable =>
+      'Последовательная консоль (только приложение для Windows)';
+
+  @override
+  String get homeSharingPresenceUnknown => 'Статус неизвестен';
+
+  @override
+  String get homeSharingOffline => 'Не в сети';
+
+  @override
+  String get homeSharingMembersUnavailable => 'Участники не загружены';
+
+  @override
+  String get homeSharingLocalTooltip =>
+      'Локальный профиль на этом устройстве — ни с кем не общий';
+
+  @override
+  String get homeSharingDetailsTooltip =>
+      'Показать участников хранилища и статус в сети';
+
+  @override
+  String get homeSharingIndividual => 'Только вы';
+
+  @override
+  String get homeSharingOnline => 'В сети';
+
+  @override
+  String sidebarResizeWidthValue(int width) {
+    return 'Ширина $width пикс.';
+  }
+
+  @override
+  String get sidebarResizeHint =>
+      'Перетащите или используйте стрелки влево и вправо, чтобы изменить ширину';
+
+  @override
+  String get sidebarResizeHandle => 'Изменить ширину боковой панели';
+
+  @override
+  String get fileEditLaunchFailed =>
+      'Не найдено приложение, которое может открыть этот файл.';
+
+  @override
+  String get fileEditAtomicUnsupported =>
+      'Этот сервер не поддерживает атомарную замену файлов, поэтому ничего не загружено.';
+
+  @override
+  String get fileEditUpload => 'Загрузить';
+
+  @override
+  String get fileEditLocalRejected =>
+      'Локальная копия больше не является обычным файлом в своей личной папке. Ничего не загружено.';
+
+  @override
+  String get fileEditConflictTitle => 'Копия на сервере изменилась';
+
+  @override
+  String fileEditUploadedChangedAgain(String name) {
+    return '«$name» загружен, но во время отправки он снова изменился локально. Загрузите его ещё раз, когда будете готовы.';
+  }
+
+  @override
+  String get fileEditBlockedType =>
+      'Файл такого типа может запуститься при открытии, поэтому он не открывается во внешнем приложении. Используйте «Редактировать текст» или «Скачать».';
+
+  @override
+  String get fileEditStatusRejected => 'Локальная копия отклонена';
+
+  @override
+  String fileEditFooterTitle(int count) {
+    return 'Внешнее редактирование ($count)';
+  }
+
+  @override
+  String get fileEditOpenExternal => 'Открыть во внешнем приложении';
+
+  @override
+  String get fileEditSessionChanged =>
+      'Подключение этой вкладки файлов закрыто или изменилось. Ничего не загружено.';
+
+  @override
+  String get fileEditStatusChanged => 'Изменён локально — не загружен';
+
+  @override
+  String fileEditTooMany(int count) {
+    return 'Одновременно во внешних приложениях можно редактировать не более $count файлов.';
+  }
+
+  @override
+  String get fileEditLocalMissing =>
+      'Локальная копия отсутствует. Ничего не загружено.';
+
+  @override
+  String get fileEditNotRegular =>
+      'Во внешних приложениях можно редактировать только обычные удалённые файлы.';
+
+  @override
+  String get fileEditStatusWatching => 'Ожидание сохранения';
+
+  @override
+  String get fileEditIgnore => 'Игнорировать';
+
+  @override
+  String fileEditOpened(String name) {
+    return '«$name» открыт во внешнем приложении. После сохранения нажмите «Загрузить» ниже.';
+  }
+
+  @override
+  String get fileEditTooLarge =>
+      'Во внешних приложениях можно редактировать только файлы до 10 МиБ.';
+
+  @override
+  String get fileEditLocalTooLarge =>
+      'Локальная копия больше 10 МиБ. Ничего не загружено.';
+
+  @override
+  String get fileEditStatusUploading => 'Загрузка…';
+
+  @override
+  String get fileEditUnavailable =>
+      'Внешнее редактирование доступно только в настольном приложении. Чтобы изменить файл здесь, используйте «Редактировать текст».';
+
+  @override
+  String fileEditConflictMessage(String name) {
+    return '«$name» изменился на сервере после открытия. Заменить копию на сервере локальной версией?';
+  }
+
+  @override
+  String get fileEditStatusConflict => 'Также изменён на сервере';
+
+  @override
+  String fileEditUploaded(String name) {
+    return '«$name» загружен.';
+  }
+
+  @override
+  String get fileEditStop => 'Прекратить отслеживание';
+
+  @override
+  String get fileEditStatusFailed =>
+      'Ошибка загрузки — локальные изменения сохранены';
+
+  @override
+  String get fileEditKeepLocal => 'Оставить локально';
+
+  @override
+  String get fileEditReplace => 'Заменить копию на сервере';
+
+  @override
+  String get cloudAccessShareMenu => 'Поделиться…';
+
+  @override
+  String cloudAccessShareTitle(String name) {
+    return 'Поделиться: $name';
+  }
+
+  @override
+  String get cloudAccessClose => 'Закрыть';
+
+  @override
+  String get cloudAccessTabMembers => 'Участники и команды';
+
+  @override
+  String get cloudAccessTabLinks => 'Временные ссылки';
+
+  @override
+  String get cloudAccessGatewayTrustNotice =>
+      'Гости подключаются через шлюз этого сервера. Для этого данные входа этого Host запечатываются ключом шлюза сервера до отзыва или истечения ссылки. Оператор сервера (или тот, кто взломает сервер) может их открыть и видеть сеанс. Гости не получают пароль или ключ через эту функцию, но в сеансе могут делать всё, что разрешено учётной записи. Используйте отдельную учётную запись с минимальными правами.';
+
+  @override
+  String get cloudAccessLinksHeading => 'Ссылки для этого Host';
+
+  @override
+  String get cloudAccessNewLink => 'Новая ссылка';
+
+  @override
+  String get cloudAccessNoLinks => 'Временных ссылок пока нет.';
+
+  @override
+  String get cloudAccessStatusActive => 'Активна';
+
+  @override
+  String get cloudAccessStatusScheduled => 'Запланирована';
+
+  @override
+  String get cloudAccessStatusExpired => 'Истекла';
+
+  @override
+  String get cloudAccessStatusPaused => 'Приостановлена';
+
+  @override
+  String get cloudAccessStatusSuspended => 'Заблокирована';
+
+  @override
+  String get cloudAccessStatusRevoked => 'Отозвана';
+
+  @override
+  String cloudAccessValidUntil(String time) {
+    return 'до $time';
+  }
+
+  @override
+  String cloudAccessRedemptionCount(String used, String max) {
+    return 'открыта $used/$max';
+  }
+
+  @override
+  String cloudAccessActiveSessions(String count) {
+    return 'активных: $count';
+  }
+
+  @override
+  String get cloudAccessMore => 'Ещё';
+
+  @override
+  String get cloudAccessActivity => 'Активность';
+
+  @override
+  String get cloudAccessPause => 'Приостановить';
+
+  @override
+  String get cloudAccessResume => 'Возобновить';
+
+  @override
+  String get cloudAccessRotate => 'Новый секрет';
+
+  @override
+  String get cloudAccessRevoke => 'Отозвать';
+
+  @override
+  String get cloudAccessRevokeLinkTitle => 'Отозвать эту ссылку?';
+
+  @override
+  String get cloudAccessRevokeLinkMessage =>
+      'Ссылка сразу перестанет работать, активные гостевые сеансы закроются в течение нескольких секунд. Отзыв не отменяет того, что гости уже сделали на Host.';
+
+  @override
+  String get cloudAccessRotateTitle => 'Выпустить новый секрет?';
+
+  @override
+  String get cloudAccessRotateMessage =>
+      'Текущий адрес перестанет работать, его гости будут отключены. Вы получите новый адрес для отправки.';
+
+  @override
+  String get cloudAccessScheduleStart => 'Начать позже';
+
+  @override
+  String get cloudAccessStartsNow => 'Начинается сейчас';
+
+  @override
+  String get cloudAccessPickStart => 'Выберите время начала';
+
+  @override
+  String get cloudAccessLifetime => 'Срок действия';
+
+  @override
+  String get cloudAccessOneHour => '1 час';
+
+  @override
+  String get cloudAccessOneDay => '24 часа';
+
+  @override
+  String get cloudAccessOneWeek => '7 дней';
+
+  @override
+  String get cloudAccessCustom => 'Другое…';
+
+  @override
+  String cloudAccessWindowSummary(String start, String end, String utc) {
+    return 'С $start до $end (местное время; UTC $utc). Решает часы сервера.';
+  }
+
+  @override
+  String get cloudAccessEndBeforeStart =>
+      'Окончание должно быть позже начала и в будущем.';
+
+  @override
+  String get cloudAccessMaxRedemptions => 'Сколько раз можно открыть ссылку';
+
+  @override
+  String get cloudAccessMaxRedemptionsHelp =>
+      'По умолчанию 1. Каждый браузер, нажавший «Продолжить», расходует одно открытие.';
+
+  @override
+  String get cloudAccessUnlimited => 'Без ограничений';
+
+  @override
+  String get cloudAccessRedemptionsRange =>
+      'Введите от 1 до 1000 или выберите «Без ограничений».';
+
+  @override
+  String get cloudAccessMaxConnections => 'Попыток подключения (необязательно)';
+
+  @override
+  String get cloudAccessMaxConnectionsHelp =>
+      'Оставьте пустым для снятия ограничения. Отклонённые попытки не считаются.';
+
+  @override
+  String get cloudAccessConnectionsRange =>
+      'Введите положительное число или оставьте пустым.';
+
+  @override
+  String get cloudAccessConcurrent => 'Одновременных подключений';
+
+  @override
+  String get cloudAccessViewOnly => 'Только просмотр';
+
+  @override
+  String get cloudAccessViewOnlyHelp =>
+      'Клавиатура, мышь и вставка блокируются сервером.';
+
+  @override
+  String get cloudAccessClipboardToRemote => 'Разрешить вставку в Host';
+
+  @override
+  String get cloudAccessClipboardFromRemote => 'Разрешить копирование из Host';
+
+  @override
+  String get cloudAccessFilesLocked =>
+      'Передача файлов, диски, печать и запись для гостей отключены.';
+
+  @override
+  String get cloudAccessCustomSlug => 'Свой адрес (необязательно)';
+
+  @override
+  String get cloudAccessCustomSlugHelp =>
+      '3–48 строчных букв, цифр или дефисов. Адрес — не пароль: его можно угадать, избегайте конфиденциальных слов.';
+
+  @override
+  String get cloudAccessGuestTitle => 'Заголовок для гостя (необязательно)';
+
+  @override
+  String get cloudAccessGuestTitleHelp =>
+      'Шифруется секретом ссылки; сервер не может его прочитать.';
+
+  @override
+  String get cloudAccessCancel => 'Отмена';
+
+  @override
+  String get cloudAccessCreateLink => 'Создать ссылку';
+
+  @override
+  String get cloudAccessLinkReady => 'Ссылка создана';
+
+  @override
+  String get cloudAccessCopyLink => 'Копировать ссылку';
+
+  @override
+  String get cloudAccessCopied => 'Скопировано';
+
+  @override
+  String get cloudAccessShownOnce =>
+      'Полная ссылка показывается только сейчас. Если она потеряна, выпустите новый секрет.';
+
+  @override
+  String get cloudAccessSendSafely =>
+      'Открыть ссылку может любой, у кого она есть. Отправляйте только по доверенному каналу; некоторые почтовые сканеры открывают ссылки и расходуют их.';
+
+  @override
+  String get cloudAccessDone => 'Готово';
+
+  @override
+  String get cloudAccessBack => 'Назад';
+
+  @override
+  String cloudAccessActivityFor(String link) {
+    return 'Активность · $link';
+  }
+
+  @override
+  String get cloudAccessGuestSessions => 'Гостевые сеансы';
+
+  @override
+  String get cloudAccessNoSessions => 'Эту ссылку ещё никто не открывал.';
+
+  @override
+  String cloudAccessSessionSince(String time) {
+    return 'Активен с $time';
+  }
+
+  @override
+  String cloudAccessSessionEnded(String reason) {
+    return 'Завершён ($reason)';
+  }
+
+  @override
+  String get cloudAccessTerminate => 'Завершить сеанс';
+
+  @override
+  String get cloudAccessAuditEvents => 'Аудит (только метаданные)';
+
+  @override
+  String get cloudAccessMembersExplainer =>
+      'Участники получают этот Host через зашифрованный Vault. Ключ Vault получатели получают только после того, как вы подтвердите каждое их устройство; администраторы организации не могут получить его сами.';
+
+  @override
+  String get cloudAccessDedicatedVault => 'Поделиться только этим Host';
+
+  @override
+  String get cloudAccessDedicatedVaultHelp =>
+      'Будет создан новый Vault для совместного доступа с копией этого Host и только перечисленными ниже элементами. Другие Host и учётные данные текущего Vault остаются закрытыми.';
+
+  @override
+  String get cloudAccessSharingVaultName => 'Название общего Vault';
+
+  @override
+  String cloudAccessSharingVaultDefaultName(String name) {
+    return 'Общий · $name';
+  }
+
+  @override
+  String get cloudAccessWillCopy => 'Будет скопировано:';
+
+  @override
+  String cloudAccessDependencyJumpHost(String name) {
+    return 'Промежуточный узел $name';
+  }
+
+  @override
+  String cloudAccessDependencyCredential(String name) {
+    return 'Учётные данные $name';
+  }
+
+  @override
+  String cloudAccessDependencyKnownHost(String key) {
+    return 'Доверенный ключ узла $key';
+  }
+
+  @override
+  String cloudAccessDependencyGroup(String name) {
+    return 'Группа $name не копируется';
+  }
+
+  @override
+  String cloudAccessBlockerMissingJump(String name) {
+    return '$name использует промежуточный узел не из этого Vault.';
+  }
+
+  @override
+  String cloudAccessBlockerMissingCredential(String name) {
+    return '$name ссылается на учётные данные не из этого Vault.';
+  }
+
+  @override
+  String cloudAccessBlockerJumpLoop(String name) {
+    return 'У $name цикл промежуточных узлов.';
+  }
+
+  @override
+  String get cloudAccessConsentCopy =>
+      'Я разрешаю скопировать в новый Vault именно эти элементы.';
+
+  @override
+  String get cloudAccessCreateSharingVault => 'Создать общий Vault';
+
+  @override
+  String get cloudAccessWholeVaultHeading => 'Или поделиться всем Vault';
+
+  @override
+  String get cloudAccessWholeVaultHelp =>
+      'Получатели увидят все Host, учётные данные и фрагменты текущего Vault.';
+
+  @override
+  String get cloudAccessManageWholeVault => 'Управлять доступом ко всему Vault';
+
+  @override
+  String get cloudAccessAttachOrg => 'Выберите организацию';
+
+  @override
+  String get cloudAccessAttachOrgHelp =>
+      'Права выдаются участникам и командам управляемой вами организации.';
+
+  @override
+  String get cloudAccessAttach => 'Выбрать';
+
+  @override
+  String get cloudAccessManageOrganizations => 'Управлять организациями';
+
+  @override
+  String cloudAccessGrantsIn(String org) {
+    return 'Доступ в $org';
+  }
+
+  @override
+  String get cloudAccessAddGrant => 'Добавить участника или команду';
+
+  @override
+  String cloudAccessTeamLabel(String name) {
+    return 'Команда $name';
+  }
+
+  @override
+  String get cloudAccessRoleViewer => 'Просмотр';
+
+  @override
+  String get cloudAccessRoleEditor => 'Редактор';
+
+  @override
+  String get cloudAccessRemove => 'Удалить';
+
+  @override
+  String get cloudAccessKeyDistribution => 'Ожидают ключей';
+
+  @override
+  String get cloudAccessKeyDistributionHelp =>
+      'Перед передачей ключа Vault сверьте каждый отпечаток с получателем по другому каналу.';
+
+  @override
+  String get cloudAccessWaitingForDevice =>
+      'Ожидается, что получатель откроет «Организации» на устройстве';
+
+  @override
+  String get cloudAccessWaitingForOwner => 'Готово к вашему подтверждению';
+
+  @override
+  String get cloudAccessWaitingForRecipient =>
+      'Ключ отправлен; ожидается принятие получателем';
+
+  @override
+  String get cloudAccessRoleDiffers =>
+      'Подписанная роль отличается от выданной; для изменения выполните ротацию или повторное приглашение';
+
+  @override
+  String cloudAccessDeviceFingerprint(String fingerprint) {
+    return 'Устройство $fingerprint';
+  }
+
+  @override
+  String get cloudAccessConfirmFingerprintTitle => 'Подтвердите устройство';
+
+  @override
+  String cloudAccessConfirmFingerprintMessage(String user, String fingerprint) {
+    return 'Передать ключ Vault устройству $user $fingerprint? Продолжайте, только если $user подтвердил вам этот отпечаток.';
+  }
+
+  @override
+  String get cloudAccessDeliverKey => 'Передать ключ';
+
+  @override
+  String get cloudAccessRemovalPending =>
+      'Доступ на сервере уже заблокирован. Выполните ротацию ключа Vault, чтобы удалить участника криптографически, и смените учётные данные, которые он видел.';
+
+  @override
+  String get cloudAccessKeepDirect => 'Оставить прямым участником';
+
+  @override
+  String get cloudAccessRotateToRemove => 'Ротация ключа';
+
+  @override
+  String get cloudAccessRestrictedToViewer =>
+      'Только просмотр, пока подписанная роль не обновлена';
+
+  @override
+  String get cloudAccessOrganizations => 'Организации';
+
+  @override
+  String get cloudAccessOrganizationsSubtitle =>
+      'Участники, команды и приглашения';
+
+  @override
+  String get cloudAccessOrganizationsExplainer =>
+      'Названия организаций, участники, роли и команды видны этому серверу. Вступление в организацию само по себе не даёт ключей Vault.';
+
+  @override
+  String get cloudAccessPendingJoin =>
+      'Вы открыли приглашение в организацию — просмотрите его';
+
+  @override
+  String get cloudAccessJoinOrganization => 'Вступить в организацию';
+
+  @override
+  String get cloudAccessJoinLinkField => 'Ссылка-приглашение';
+
+  @override
+  String get cloudAccessJoinInvalid =>
+      'Это недействительная ссылка-приглашение.';
+
+  @override
+  String get cloudAccessReview => 'Просмотреть';
+
+  @override
+  String cloudAccessJoinSummary(String inviter, String role) {
+    return 'Приглашение от $inviter, роль: $role';
+  }
+
+  @override
+  String get cloudAccessJoin => 'Вступить';
+
+  @override
+  String get cloudAccessJoined =>
+      'Вы вступили. Владельцам Vault ещё нужно подтвердить ваше устройство, прежде чем вы получите общий Vault.';
+
+  @override
+  String get cloudAccessSharedVaultKeys => 'Ключи общих Vault';
+
+  @override
+  String get cloudAccessSharedVaultKeysHelp =>
+      'Публикует открытые ключи этого устройства и принимает Vault, владельцы которых подтвердили это устройство.';
+
+  @override
+  String get cloudAccessCheckDeliveries => 'Проверить общие Vault';
+
+  @override
+  String cloudAccessDeliveriesAccepted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Добавлено $count общих Vault.',
+      many: 'Добавлено $count общих Vault.',
+      few: 'Добавлено $count общих Vault.',
+      one: 'Добавлен $count общий Vault.',
+      zero: 'Новых общих Vault нет.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cloudAccessYourOrganizations => 'Ваши организации';
+
+  @override
+  String get cloudAccessNewOrganization => 'Новая организация';
+
+  @override
+  String get cloudAccessOrganizationName => 'Название организации';
+
+  @override
+  String get cloudAccessNoOrganizations =>
+      'Вы пока не состоите ни в одной организации.';
+
+  @override
+  String cloudAccessMemberCount(String count) {
+    return 'участников: $count';
+  }
+
+  @override
+  String get cloudAccessOrgRoleOwner => 'Владелец';
+
+  @override
+  String get cloudAccessOrgRoleAdmin => 'Администратор';
+
+  @override
+  String get cloudAccessOrgRoleMember => 'Участник';
+
+  @override
+  String get cloudAccessSave => 'Сохранить';
+
+  @override
+  String get cloudAccessMembers => 'Участники';
+
+  @override
+  String get cloudAccessInviteMember => 'Пригласить';
+
+  @override
+  String get cloudAccessInviteUsername => 'Имя пользователя (необязательно)';
+
+  @override
+  String get cloudAccessInviteUsernameHelp =>
+      'Ограничьте приглашение одной существующей учётной записью. Новым людям сначала нужно приглашение учётной записи от администратора экземпляра.';
+
+  @override
+  String get cloudAccessRole => 'Роль';
+
+  @override
+  String get cloudAccessInitialTeam => 'Команда';
+
+  @override
+  String get cloudAccessNoTeam => 'Без команды';
+
+  @override
+  String get cloudAccessCreateInvitation => 'Создать приглашение';
+
+  @override
+  String get cloudAccessInvitationReady => 'Ссылка-приглашение создана';
+
+  @override
+  String get cloudAccessCopyInvitation => 'Копировать ссылку-приглашение';
+
+  @override
+  String get cloudAccessLeave => 'Выйти';
+
+  @override
+  String get cloudAccessRemoveMemberTitle => 'Удалить из организации?';
+
+  @override
+  String get cloudAccessRemoveMemberMessage =>
+      'Доступ через права организации блокируется сразу. Затем владельцам Vault следует выполнить ротацию ключей затронутых Vault.';
+
+  @override
+  String get cloudAccessTeams => 'Команды';
+
+  @override
+  String get cloudAccessNewTeam => 'Новая команда';
+
+  @override
+  String get cloudAccessTeamName => 'Название команды';
+
+  @override
+  String cloudAccessTeamMembers(String team) {
+    return 'Участники $team';
+  }
+
+  @override
+  String get cloudAccessInvitations => 'Приглашения';
+
+  @override
+  String get cloudAccessAnyAccount => 'Любая учётная запись';
+
+  @override
+  String get cloudAccessErrorGeneric => 'Не удалось выполнить запрос.';
+
+  @override
+  String get cloudAccessErrorLinksUnavailable =>
+      'На этом сервере временные ссылки не настроены.';
+
+  @override
+  String get cloudAccessErrorOrganizationsUnavailable =>
+      'На этом сервере организации не включены.';
+
+  @override
+  String get cloudAccessErrorProtocolUnavailable =>
+      'Протокол этого Host нельзя использовать для совместного доступа на этом сервере.';
+
+  @override
+  String get cloudAccessErrorOwnerRequired =>
+      'Делиться по ссылкам может только владелец Vault.';
+
+  @override
+  String get cloudAccessErrorJumpHost =>
+      'Host с промежуточным узлом нельзя открыть через шлюз.';
+
+  @override
+  String get cloudAccessErrorPortForward =>
+      'Host с профилями переадресации портов нельзя открыть через шлюз.';
+
+  @override
+  String get cloudAccessErrorHostKeyRequired =>
+      'Перед тем как поделиться, подключитесь один раз и доверьтесь SSH-ключу этого Host.';
+
+  @override
+  String get cloudAccessErrorCertificateRequired =>
+      'Перед тем как поделиться, подключитесь один раз и доверьтесь RDP-сертификату этого Host.';
+
+  @override
+  String get cloudAccessErrorLoginRequired =>
+      'Перед тем как поделиться, сохраните данные входа для этого Host.';
+
+  @override
+  String get cloudAccessErrorHostChanged =>
+      'Host изменён или ещё не синхронизирован. Синхронизируйте и повторите.';
+
+  @override
+  String get cloudAccessErrorPlanBlocked =>
+      'Сначала устраните перечисленные проблемы.';
+
+  @override
+  String get cloudAccessErrorTargetDenied =>
+      'Адрес этого Host запрещён политикой совместного доступа сервера.';
+
+  @override
+  String get cloudAccessErrorSlugTaken => 'Этот адрес недоступен.';
+
+  @override
+  String get cloudAccessErrorSlugInvalid =>
+      'Используйте 3–48 строчных букв, цифр или дефисов внутри.';
+
+  @override
+  String get cloudAccessErrorTooManyLinks =>
+      'Слишком много активных ссылок. Сначала отзовите часть.';
+
+  @override
+  String get cloudAccessErrorInvalidOptions =>
+      'Сервер не допускает такие параметры ссылки.';
+
+  @override
+  String get cloudAccessErrorOrgRoleRequired =>
+      'Нужна роль владельца или администратора организации.';
+
+  @override
+  String get cloudAccessErrorOrgCreationRestricted =>
+      'Здесь создавать организации могут только администраторы экземпляра.';
+
+  @override
+  String get cloudAccessErrorLastOwner =>
+      'В организации должен быть хотя бы один владелец.';
+
+  @override
+  String get cloudAccessErrorInvitationUnavailable =>
+      'Это приглашение недоступно.';
+
+  @override
+  String get cloudAccessErrorAccountNotFound =>
+      'Нет активной учётной записи с таким именем.';
+
+  @override
+  String get cloudAccessErrorRateLimited =>
+      'Слишком много попыток. Подождите и повторите.';
+
+  @override
+  String get cloudAccessGuestWindowTitle => 'Общий доступ Atermius';
+
+  @override
+  String get cloudAccessGuestLanding =>
+      'Вы получили ссылку временного доступа Atermius';
+
+  @override
+  String get cloudAccessGuestLandingHelp =>
+      'Ничего не произойдёт, пока вы не продолжите. Продолжение может израсходовать одно из разрешённых открытий ссылки.';
+
+  @override
+  String get cloudAccessGuestContinue => 'Продолжить';
+
+  @override
+  String get cloudAccessGuestHeading => 'Общий доступ';
+
+  @override
+  String cloudAccessGuestValidUntil(String time) {
+    return 'Сеанс завершится $time';
+  }
+
+  @override
+  String get cloudAccessGuestViewOnly => 'Только просмотр';
+
+  @override
+  String get cloudAccessGuestInteractive => 'Интерактивно';
+
+  @override
+  String get cloudAccessGuestClipboardOn => 'Буфер обмена разрешён';
+
+  @override
+  String get cloudAccessGuestClipboardOff => 'Буфер обмена отключён';
+
+  @override
+  String get cloudAccessGuestConnect => 'Подключиться';
+
+  @override
+  String get cloudAccessGuestDisconnect => 'Отключиться';
+
+  @override
+  String get cloudAccessGuestLeave => 'Завершить доступ';
+
+  @override
+  String get cloudAccessGuestLeft =>
+      'Доступ завершён. Эту вкладку можно закрыть.';
+
+  @override
+  String get cloudAccessGuestTrustNote =>
+      'Этот сеанс идёт через сервер Atermius владельца ссылки, и сервер может его видеть.';
+
+  @override
+  String get cloudAccessGuestUnavailable => 'Эта ссылка недоступна.';
+
+  @override
+  String get cloudAccessGuestAskOwner =>
+      'Попросите отправителя прислать новую ссылку.';
+
+  @override
+  String get cloudAccessGuestNotYetValid => 'Эта ссылка ещё не действует.';
+
+  @override
+  String get cloudAccessGuestExpired => 'Срок действия ссылки истёк.';
+
+  @override
+  String get cloudAccessGuestExhausted => 'Эта ссылка уже использована.';
+
+  @override
+  String get cloudAccessGuestSuspended =>
+      'Владелец приостановил или отозвал эту ссылку.';
+
+  @override
+  String get cloudAccessGuestSessionEnded => 'Ваш сеанс завершён.';
+
+  @override
+  String get cloudAccessGuestBusy =>
+      'Сейчас слишком много подключений. Повторите чуть позже.';
+
+  @override
+  String get cloudAccessGuestExpiringSoon => 'Завершится через 5 минут';
+
+  @override
+  String get cloudAccessGuestClosed => 'Соединение закрыто.';
+
+  @override
+  String get cloudAccessGuestClosedRevoked =>
+      'Владелец отозвал или изменил доступ.';
+
+  @override
+  String get cloudAccessGuestClosedExpired => 'Время доступа истекло.';
+
+  @override
+  String get cloudAccessGuestClosedTarget =>
+      'Host недоступен или не совпал с доверенной идентичностью.';
+
+  @override
+  String get cloudAccessGuestClosedProtocol =>
+      'Соединение закрыто из-за неожиданного сообщения.';
+
+  @override
+  String cloudAccessApplyRole(String role) {
+    return 'Сделать: $role';
+  }
+
+  @override
+  String get cloudAccessApplyRoleTitle => 'Изменить роль участника?';
+
+  @override
+  String cloudAccessApplyRoleMessage(String user, String role) {
+    return '$user получит роль «$role». С этого устройства будет подписан новый список участников и выполнена ротация ключа Vault.';
+  }
+
+  @override
+  String get cloudAccessErrorScopeChanged =>
+      'Во время действия изменились учётная запись, сервер или выбранный Vault. Ничего не отправлено; повторите.';
+
+  @override
+  String get cloudAccessErrorNotSynced =>
+      'Общий Vault создан, но ещё не синхронизирован. Синхронизируйте его перед добавлением участников.';
+
+  @override
+  String get cloudAccessErrorScopeEndedCommitted =>
+      'Учётная запись, сервер или выбранный Vault изменились после того, как сервер уже выполнил часть действия (например, создал Vault или приглашение). Эта часть не отменена; проверьте её перед повтором.';
 }

@@ -870,7 +870,7 @@ class _LocalToSyncMigrationScreenState
                 const SizedBox(height: 9),
                 Text(
                   context.l10n.theClientDecryptsAndValidatesEvery,
-                  style: const TextStyle(color: AppColors.muted, height: 1.5),
+                  style: TextStyle(color: context.palette.muted, height: 1.5),
                 ),
                 const SizedBox(height: 18),
                 if (_loadingProfiles)
@@ -922,7 +922,7 @@ class _LocalToSyncMigrationScreenState
           if (_profiles.isEmpty)
             Text(
               context.l10n.noLocalOnlyProfileExistsIn,
-              style: const TextStyle(color: AppColors.muted, height: 1.45),
+              style: TextStyle(color: context.palette.muted, height: 1.45),
             )
           else ...[
             DropdownButtonFormField<String>(
@@ -977,7 +977,7 @@ class _LocalToSyncMigrationScreenState
       padding: const EdgeInsets.all(18),
       child: Row(
         children: [
-          const Icon(Icons.lock_outline, color: AppColors.teal),
+          Icon(Icons.lock_outline, color: context.palette.teal),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -1007,7 +1007,7 @@ class _LocalToSyncMigrationScreenState
           const SizedBox(height: 7),
           Text(
             context.l10n.allLocalRecordsArePreflightedBefore,
-            style: const TextStyle(color: AppColors.muted, height: 1.45),
+            style: TextStyle(color: context.palette.muted, height: 1.45),
           ),
           const SizedBox(height: 11),
           TextField(
@@ -1049,7 +1049,7 @@ class _LocalToSyncMigrationScreenState
             const SizedBox(height: 5),
             Text(
               context.l10n.stageditemcountItemcountEncryptedRecordsStagedTarget(journal.stagedItemCount, journal.itemCount, journal.targetVaultId.substring(0, 8)),
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             if (frozen) ...[
               const SizedBox(height: 10),
@@ -1143,7 +1143,7 @@ class _StatusCard extends StatelessWidget {
               else
                 Icon(
                   complete ? Icons.cloud_done_outlined : Icons.sync_outlined,
-                  color: complete ? AppColors.teal : AppColors.orange,
+                  color: complete ? context.palette.teal : context.palette.orange,
                 ),
               const SizedBox(width: 10),
               Expanded(child: Text(text, style: const TextStyle(height: 1.4))),
@@ -1153,12 +1153,12 @@ class _StatusCard extends StatelessWidget {
             const SizedBox(height: 12),
             LinearProgressIndicator(
               value: (stagedCount / totalCount).clamp(0, 1).toDouble(),
-              color: complete ? AppColors.teal : AppColors.lime,
+              color: complete ? context.palette.teal : context.palette.lime,
             ),
             const SizedBox(height: 5),
             Text(
               context.l10n.stagedcountTotalcountEncryptedRecordsStaged(stagedCount, totalCount),
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              style: TextStyle(color: context.palette.muted, fontSize: 11),
             ),
           ],
         ],
@@ -1175,8 +1175,8 @@ class _MessageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
     color: error
-        ? AppColors.red.withValues(alpha: .12)
-        : AppColors.teal.withValues(alpha: .12),
+        ? context.palette.red.withValues(alpha: .12)
+        : context.palette.teal.withValues(alpha: .12),
     child: Padding(
       padding: const EdgeInsets.all(14),
       child: Text(text, style: const TextStyle(height: 1.4)),

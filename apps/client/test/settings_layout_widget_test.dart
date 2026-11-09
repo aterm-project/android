@@ -96,7 +96,8 @@ void main() {
           if (_captureDir.isNotEmpty &&
               [
                 'workspace',
-                'terminal',
+                'appearance',
+                'shortcuts',
                 'security',
                 'access',
               ].contains(section)) {

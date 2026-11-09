@@ -277,8 +277,8 @@ class _AccountMfaPanelState extends State<AccountMfaPanel> {
                   const SizedBox(height: 5),
                   Text(
                     context.l10n.setupExpiresTolocal(setup.expiresAt.toLocal()),
-                    style: const TextStyle(
-                      color: AppColors.muted,
+                    style: TextStyle(
+                      color: context.palette.muted,
                       fontSize: 12,
                     ),
                   ),
@@ -538,9 +538,9 @@ class _AccountMfaPanelState extends State<AccountMfaPanel> {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.verified_user_outlined,
-                    color: AppColors.lime,
+                    color: context.palette.lime,
                   ),
                   const SizedBox(width: 9),
                   Expanded(
@@ -563,8 +563,8 @@ class _AccountMfaPanelState extends State<AccountMfaPanel> {
               const SizedBox(height: 7),
               Text(
                 context.l10n.useAnAuthenticatorAppOrA,
-                style: const TextStyle(
-                  color: AppColors.muted,
+                style: TextStyle(
+                  color: context.palette.muted,
                   height: 1.45,
                   fontSize: 12,
                 ),
@@ -573,23 +573,23 @@ class _AccountMfaPanelState extends State<AccountMfaPanel> {
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.valuevalueRecoveryCodesRemaining(remaining ?? 0),
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.palette.muted, fontSize: 12),
                 ),
               ],
               if (_unconfirmedCodes) ...[
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.theLastRecoveryCodesWereNot,
-                  style: const TextStyle(color: AppColors.orange, fontSize: 12),
+                  style: TextStyle(color: context.palette.orange, fontSize: 12),
                 ),
               ],
               if (_error != null) ...[
                 const SizedBox(height: 8),
-                Text(_error!, style: const TextStyle(color: AppColors.red)),
+                Text(_error!, style: TextStyle(color: context.palette.red)),
               ],
               if (_notice != null) ...[
                 const SizedBox(height: 8),
-                Text(_notice!, style: const TextStyle(color: AppColors.teal)),
+                Text(_notice!, style: TextStyle(color: context.palette.teal)),
               ],
               const SizedBox(height: 10),
               Wrap(

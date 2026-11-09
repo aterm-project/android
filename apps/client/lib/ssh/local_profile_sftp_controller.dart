@@ -7,6 +7,7 @@ import '../attachments/attachment_file_saver.dart';
 import '../domain/sftp_entries.dart';
 import '../domain/sftp_transfer.dart';
 import '../sftp/dart_sftp_text_file_system.dart';
+import '../sftp/remote_file_operations.dart';
 import '../sftp/sftp_text_editor_service.dart';
 import 'ssh_service.dart';
 import '../l10n/l10n.dart';
@@ -212,6 +213,29 @@ final class LocalProfileSftpController {
     return result;
   }
 
+  /// Byte-level filesystem of this controller's own SFTP channel for
+  /// external editing: the same bounded regular-file reads, exclusive 0600
+  /// staging and posix-rename atomic replace as the text editor.
+  Future<SftpTextFileSystem> externalEditFileSystem() async {
+    final transport = await _requireTransport();
+    final editor = await transport.textEditor(sessionId: sessionId);
+    _ensureOpen();
+    return editor.filesystem;
+  }
+
+  /// File-manager rename/move/copy/delete bound to this controller's own
+  /// SFTP channel. Every remote step re-checks that the controller is open.
+  Future<RemoteFileOperations> fileOperations() async {
+    final transport = await _requireTransport();
+    if (transport is! RemoteFileSystemOperations) {
+      throw UnsupportedError(currentL10n.fileManagerOperationUnsupported);
+    }
+    return RemoteFileOperations(
+      transport as RemoteFileSystemOperations,
+      ensureOpen: _ensureOpen,
+    );
+  }
+
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
@@ -271,7 +295,7 @@ final class LocalProfileSftpController {
 }
 
 final class _DartLocalProfileSftpTransport
-    implements LocalProfileSftpTransport {
+    implements LocalProfileSftpTransport, RemoteFileSystemOperations {
   _DartLocalProfileSftpTransport(this._client, this._handshake);
 
   final SftpClient _client;
@@ -384,6 +408,123 @@ final class _DartLocalProfileSftpTransport
 
   @override
   Future<void> removeDirectory(String path) => _client.rmdir(path);
+
+  @override
+  Stream<List<SftpName>> readDirectory(String path) =>
+      // Fork: readdir closes its handle when the subscription is cancelled.
+      _client.readdir(path);
+
+  @override
+  Future<SftpFileAttrs?> lstat(String path) async {
+    try {
+      return await _client.stat(path, followLink: false);
+    } on SftpStatusError catch (error) {
+      if (error.code == SftpStatusCode.noSuchFile) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> renameNoReplace(String from, String to) =>
+      // Never the posix-rename extension: it would replace [to].
+      _client.renameNoReplace(from, to);
+
+  @override
+  Future<int> copyRegularFileExclusive(
+    String from,
+    String to, {
+    required int maxBytes,
+    required RemoteFileCancellation cancellation,
+    void Function(int bytes)? onBytes,
+  }) async {
+    if (!supportsSftpExclusiveCreate(_handshake.version)) {
+      throw UnsupportedError(currentL10n.theSftpServerVersionDoesntSupport);
+    }
+    void requireRegular(SftpFileAttrs attributes) {
+      if (attributes.mode?.type != SftpFileType.regularFile) {
+        throw const RemoteFileOperationException(
+          RemoteFileOperationError.sourceChanged,
+        );
+      }
+      if ((attributes.size ?? 0) > maxBytes) {
+        throw const RemoteFileOperationException(
+          RemoteFileOperationError.fileTooLarge,
+        );
+      }
+    }
+
+    requireRegular(await _client.stat(from, followLink: false));
+    final source = await _client.open(from);
+    try {
+      final handle = await source.stat();
+      requireRegular(handle);
+      requireRegular(await _client.stat(from, followLink: false));
+      final SftpFile destination;
+      try {
+        destination = await _client.open(to, mode: sftpExclusiveCreateMode);
+      } on SftpStatusError {
+        if (await lstat(to) != null) {
+          throw const RemoteFileOperationException(
+            RemoteFileOperationError.destinationExists,
+          );
+        }
+        rethrow;
+      }
+      var complete = false;
+      var closed = false;
+      try {
+        // Owner-only until every byte is written.
+        await destination.setStat(
+          SftpFileAttrs(mode: const SftpFileMode.value(0x8000 | 0x180)),
+        );
+        var offset = 0;
+        await for (final chunk in source.read()) {
+          try {
+            cancellation.check();
+            if (offset + chunk.length > maxBytes) {
+              throw const RemoteFileOperationException(
+                RemoteFileOperationError.fileTooLarge,
+              );
+            }
+            await destination.writeBytes(chunk, offset: offset);
+            offset += chunk.length;
+            onBytes?.call(chunk.length);
+          } finally {
+            chunk.fillRange(0, chunk.length, 0);
+          }
+        }
+        cancellation.check();
+        final permissions = (handle.mode?.value ?? 0x180) & 0x1ff;
+        if (permissions != 0x180) {
+          try {
+            await destination.setStat(
+              SftpFileAttrs(mode: SftpFileMode.value(0x8000 | permissions)),
+            );
+          } catch (_) {
+            // Keep the safe owner-only mode if the server refuses the change.
+          }
+        }
+        await destination.close();
+        closed = true;
+        complete = true;
+        return offset;
+      } finally {
+        if (!closed) {
+          try {
+            await destination.close();
+          } catch (_) {}
+        }
+        if (!complete) {
+          try {
+            // Only this call's exclusive-created file is removed.
+            await _client.remove(to);
+          } catch (_) {}
+        }
+      }
+    } finally {
+      await source.close();
+    }
+  }
 
   @override
   Future<SftpTextEditorService> textEditor({required String sessionId}) async {

@@ -144,8 +144,8 @@ class _BrowserStorageStatusCardState extends State<BrowserStorageStatusCard> {
                 key: const ValueKey('browser_storage_persisted_state'),
                 style: TextStyle(
                   color: status?.persisted == true
-                      ? AppColors.teal
-                      : AppColors.orange,
+                      ? context.palette.teal
+                      : context.palette.orange,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -154,13 +154,13 @@ class _BrowserStorageStatusCardState extends State<BrowserStorageStatusCard> {
             Text(
               usageText,
               key: const ValueKey('browser_storage_estimate'),
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.palette.muted, fontSize: 12),
             ),
             const SizedBox(height: 6),
             Text(
               context.l10n.persistentStorageCanReduceAutomaticEviction,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.palette.muted,
                 fontSize: 12,
                 height: 1.4,
               ),
@@ -170,8 +170,8 @@ class _BrowserStorageStatusCardState extends State<BrowserStorageStatusCard> {
               Text(
                 context.l10n.pendingcountEncryptedChangeSAreWaiting(widget.pendingCount),
                 key: const ValueKey('browser_storage_pending_outbox_warning'),
-                style: const TextStyle(
-                  color: AppColors.orange,
+                style: TextStyle(
+                  color: context.palette.orange,
                   fontSize: 12,
                   height: 1.4,
                 ),
@@ -184,7 +184,7 @@ class _BrowserStorageStatusCardState extends State<BrowserStorageStatusCard> {
                 child: Text(
                   message,
                   key: const ValueKey('browser_storage_request_result'),
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.palette.muted, fontSize: 12),
                 ),
               ),
             ],

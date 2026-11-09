@@ -14,6 +14,9 @@ import 'package:aterm_client/storage/secure_store.dart';
 import 'package:aterm_client/ui/app_shell.dart';
 import 'package:aterm_client/ui/app_theme.dart';
 import 'package:aterm_client/ui/terminal_palette_picker.dart';
+import 'package:aterm_client/ui/terminal_palette.dart';
+import 'package:aterm_client/ui/terminal_color_theme.dart';
+import 'package:aterm_client/ui/settings_scaffold.dart';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -249,7 +252,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1280, 960));
     final (app, database) = await _makeController();
     try {
-      await _mountSettings(tester, app);
+      await _mountSettings(tester, app, category: 'shortcuts');
       final search = find.byKey(const ValueKey('terminal-shortcut-search'));
       await tester.ensureVisible(search);
       expect(
@@ -315,7 +318,7 @@ void main() {
     });
 
     try {
-      await _mountSettings(tester, app);
+      await _mountSettings(tester, app, category: 'shortcuts');
       final search = find.byKey(const ValueKey('terminal-shortcut-search'));
       expect(
         tester.widget<TextField>(search).controller!.text,
@@ -356,7 +359,7 @@ void main() {
     });
 
     try {
-      await _mountSettings(tester, app);
+      await _mountSettings(tester, app, category: 'shortcuts');
       final search = find.byKey(const ValueKey('terminal-shortcut-search'));
       await tester.ensureVisible(search);
       await tester.enterText(search, 'mod+alt+e');
@@ -392,7 +395,7 @@ void main() {
       });
 
       try {
-        await _mountSettings(tester, app);
+        await _mountSettings(tester, app, category: 'shortcuts');
         final search = find.byKey(const ValueKey('terminal-shortcut-search'));
         await tester.ensureVisible(search);
 
@@ -442,7 +445,7 @@ void main() {
     });
 
     try {
-      await _mountSettings(tester, app);
+      await _mountSettings(tester, app, category: 'shortcuts');
       final search = find.byKey(const ValueKey('terminal-shortcut-search'));
       await tester.ensureVisible(search);
       await tester.enterText(search, 'mod+alt+e');
@@ -477,7 +480,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1280, 960));
     final (app, database) = await _makeController();
     try {
-      await _mountSettings(tester, app);
+      await _mountSettings(tester, app, category: 'shortcuts');
       final search = find.byKey(const ValueKey('terminal-shortcut-search'));
       final next = find.byKey(const ValueKey('terminal-shortcut-searchNext'));
       await tester.ensureVisible(next);
@@ -512,7 +515,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1280, 960));
     final (app, database) = await _makeController();
     try {
-      await _mountSettings(tester, app);
+      await _mountSettings(tester, app, category: 'shortcuts');
       final search = find.byKey(const ValueKey('terminal-shortcut-search'));
       await tester.ensureVisible(search);
       await tester.enterText(search, 'mod+w');
@@ -552,7 +555,7 @@ void main() {
       ],
     );
     try {
-      await _mountSettings(tester, app);
+      await _mountSettings(tester, app, category: 'shortcuts');
       expect(
         find.byKey(const ValueKey('terminal_shortcuts_conflict')),
         findsOneWidget,
@@ -848,7 +851,7 @@ void main() {
       );
       await tester.pump();
       if (find.byKey(const ValueKey('cloud_settings')).evaluate().isNotEmpty) {
-        await openSettingsCategory(tester, 'terminal', ifAvailable: true);
+        await openSettingsCategory(tester, 'appearance', ifAvailable: true);
       }
       await tester.pump();
 
@@ -874,6 +877,164 @@ void main() {
       await database.close();
       await tester.binding.setSurfaceSize(null);
     }
+  });
+
+  group('Theme settings category (terminal palette apply)', () {
+    late TerminalPaletteController palettes;
+    final presetId = terminalPalettePresets.keys.first;
+
+    setUp(() {
+      palettes = TerminalPaletteController();
+      TerminalPaletteController.debugInstance = palettes;
+    });
+    tearDown(() {
+      TerminalPaletteController.debugInstance = null;
+      palettes.dispose();
+    });
+
+    testWidgets('Theme and Shortcuts are separate settings pages', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 960));
+      final (app, database) = await _makeController();
+      try {
+        await _mountSettings(tester, app);
+        final ids = tester
+            .widget<SettingsScaffold>(find.byType(SettingsScaffold))
+            .sections
+            .map((section) => section.id)
+            .toList();
+        expect(ids, containsAllInOrder(['appearance', 'shortcuts']));
+        expect(ids, isNot(contains('terminal')));
+        Finder onPage(String page, String key) => find.descendant(
+          of: find.byKey(ValueKey('settings_page_$page')),
+          matching: find.byKey(ValueKey(key)),
+        );
+        for (final key in [
+          'app_theme_settings',
+          'vault_terminal_font_size',
+          'vault_terminal_theme',
+          'terminal_palette_gallery',
+        ]) {
+          expect(onPage('appearance', key), findsOneWidget, reason: key);
+        }
+        expect(
+          onPage('appearance', 'terminal-shortcut-search'),
+          findsNothing,
+        );
+        await openSettingsCategory(tester, 'shortcuts');
+        await tester.pumpAndSettle();
+        expect(onPage('shortcuts', 'terminal-shortcut-search'), findsOneWidget);
+        expect(onPage('shortcuts', 'vault_terminal_theme'), findsNothing);
+        expect(onPage('shortcuts', 'app_theme_settings'), findsNothing);
+        await openSettingsCategory(tester, 'workspace');
+        await tester.pumpAndSettle();
+        expect(onPage('workspace', 'app_theme_settings'), findsNothing);
+      } finally {
+        await _dispose(tester, app, database);
+      }
+    });
+
+    testWidgets('saving a synced theme clears a masking device palette', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 960));
+      final (app, database) = await _makeController();
+      try {
+        await palettes.select(presetId);
+        await _mountSettings(tester, app);
+        final notice = find.byKey(
+          const ValueKey('terminal_theme_overlay_notice'),
+        );
+        expect(notice, findsOneWidget);
+        final light = find.byKey(const ValueKey('terminal-theme-option-light'));
+        await tester.ensureVisible(light);
+        await tester.tap(light);
+        await tester.pumpAndSettle();
+        // An unsaved draft does not touch the device palette.
+        expect(palettes.presetId, presetId);
+        final save = find.byKey(const ValueKey('save_vault_terminal_theme'));
+        await tester.ensureVisible(save);
+        await tester.tap(save);
+        await tester.pumpAndSettle();
+
+        expect(app.terminalTheme, VaultTerminalThemeChoice.light);
+        expect(palettes.presetId, isNull);
+        expect(notice, findsNothing);
+        final preview = tester.widget<TerminalPalettePreview>(
+          find.byKey(const ValueKey('terminal_palette_active_preview')),
+        );
+        expect(
+          preview.theme,
+          same(buildTerminalColorTheme(VaultTerminalThemeChoice.light)),
+        );
+      } finally {
+        await _dispose(tester, app, database);
+      }
+    });
+
+    testWidgets('selecting the already saved theme applies it at once', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 960));
+      final (app, database) = await _makeController();
+      try {
+        await palettes.select(presetId);
+        await _mountSettings(tester, app);
+        final dark = find.byKey(
+          const ValueKey('terminal-theme-option-atermius-dark'),
+        );
+        await tester.ensureVisible(dark);
+        await tester.tap(dark);
+        await tester.pumpAndSettle();
+        expect(palettes.presetId, isNull);
+        expect(app.themeSaveCalls, 0);
+        expect(
+          tester
+              .widget<FilledButton>(
+                find.byKey(const ValueKey('save_vault_terminal_theme')),
+              )
+              .onPressed,
+          isNull,
+        );
+      } finally {
+        await _dispose(tester, app, database);
+      }
+    });
+
+    testWidgets('a device palette re-selected during the save is kept', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 960));
+      final (app, database) = await _makeController();
+      try {
+        await palettes.select(presetId);
+        final gate = app.themeSaveGate = Completer<void>();
+        await _mountSettings(tester, app);
+        final light = find.byKey(const ValueKey('terminal-theme-option-light'));
+        await tester.ensureVisible(light);
+        await tester.tap(light);
+        await tester.pumpAndSettle();
+        final save = find.byKey(const ValueKey('save_vault_terminal_theme'));
+        await tester.ensureVisible(save);
+        await tester.tap(save);
+        await tester.pump();
+        expect(app.themeSaveCalls, 1);
+        // ABA: the same preset is explicitly chosen again while saving.
+        await palettes.select(presetId);
+        gate.complete();
+        await tester.pumpAndSettle();
+
+        expect(app.terminalTheme, VaultTerminalThemeChoice.light);
+        expect(palettes.presetId, presetId);
+        expect(
+          find.byKey(const ValueKey('terminal_theme_overlay_notice')),
+          findsOneWidget,
+        );
+      } finally {
+        await _dispose(tester, app, database);
+      }
+    });
   });
 }
 
@@ -922,8 +1083,9 @@ Future<(_FontSizePreferenceController, ClientDatabase)> _makeController({
 
 Future<void> _mountSettings(
   WidgetTester tester,
-  _FontSizePreferenceController app,
-) async {
+  _FontSizePreferenceController app, {
+  String category = 'appearance',
+}) async {
   await tester.pumpWidget(
     MaterialApp(
       theme: buildAppTheme(),
@@ -932,7 +1094,7 @@ Future<void> _mountSettings(
   );
   await tester.pump();
   if (find.byKey(const ValueKey('cloud_settings')).evaluate().isNotEmpty) {
-    await openSettingsCategory(tester, 'terminal', ifAvailable: true);
+    await openSettingsCategory(tester, category, ifAvailable: true);
   }
   await tester.pumpAndSettle();
 }
@@ -1000,6 +1162,7 @@ class _FontSizePreferenceController extends AppController {
   bool _hasThemeConflict = false;
   String? _retainedThemeRecordId;
   int themeSaveCalls = 0;
+  Completer<void>? themeSaveGate;
   VaultTerminalThemeChoice? savedTheme;
   int themeRepairCalls = 0;
   String? repairedThemeRecordId;
@@ -1165,6 +1328,8 @@ class _FontSizePreferenceController extends AppController {
     VaultTerminalThemeChoice theme,
   ) async {
     themeSaveCalls++;
+    final gate = themeSaveGate;
+    if (gate != null) await gate.future;
     savedTheme = theme;
     _theme = theme;
     notifyListeners();

@@ -38,8 +38,15 @@ class TerminalPaletteController extends ChangeNotifier {
   static set debugInstance(TerminalPaletteController? controller) =>
       _instance = controller;
 
+  /// The controller of the enclosing [TerminalPaletteScope], else [instance].
+  /// Does not register a rebuild dependency (for callbacks).
+  static TerminalPaletteController of(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<TerminalPaletteScope>()?.notifier ??
+      instance;
+
   TerminalPaletteStore? _store;
   String? _presetId;
+  int _selectionGeneration = 0;
   bool _writeFailed = false;
   int _writeRevision = 0;
   Future<void> _writeChain = Future<void>.value();
@@ -54,6 +61,12 @@ class TerminalPaletteController extends ChangeNotifier {
   /// Whether persisting the latest selection failed; it still applies now.
   bool get writeFailed => _writeFailed;
 
+  /// Increases with every explicit [select] (including re-selecting the same
+  /// preset) and every [load]. Capture it before an awaited synced-theme save
+  /// and pass it to [followSyncedIf], so a device choice made meanwhile is
+  /// never cleared, even if it equals the earlier one.
+  int get selectionGeneration => _selectionGeneration;
+
   /// Reads the stored overlay. Unknown ids (e.g. written by a newer version)
   /// and read failures fall back to the synced theme without rewriting the
   /// stored value.
@@ -66,6 +79,7 @@ class TerminalPaletteController extends ChangeNotifier {
       id = null;
     }
     final next = terminalPalettePresets.containsKey(id) ? id : null;
+    _selectionGeneration++;
     if (next != _presetId) {
       _presetId = next;
       notifyListeners();
@@ -79,6 +93,7 @@ class TerminalPaletteController extends ChangeNotifier {
     if (id != null && !terminalPalettePresets.containsKey(id)) {
       throw ArgumentError.value(id, 'id', 'Unknown terminal palette');
     }
+    _selectionGeneration++;
     if (id != _presetId) {
       _presetId = id;
       notifyListeners();
@@ -102,6 +117,24 @@ class TerminalPaletteController extends ChangeNotifier {
     });
     _writeChain = next;
     return next;
+  }
+
+  /// Makes the synced (Vault/profile) terminal theme visible on this device
+  /// by clearing an active device preset. For an explicit synced-theme choice
+  /// that needs no save. Returns whether an overlay was cleared.
+  bool followSynced() {
+    if (_disposed || _presetId == null) return false;
+    unawaited(select(null));
+    return true;
+  }
+
+  /// Like [followSynced], but only while no device palette selection happened
+  /// since [generation] was read from [selectionGeneration]. Used after a
+  /// successful awaited synced-theme save, so a newer user choice (including
+  /// re-selecting the same preset) is never cleared.
+  bool followSyncedIf(int generation) {
+    if (generation != _selectionGeneration) return false;
+    return followSynced();
   }
 
   /// Theme of a preset (cached so terminal views keep a stable instance).
