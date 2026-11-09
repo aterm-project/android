@@ -58,7 +58,7 @@ class SessionRecoveryOverlay extends StatelessWidget {
                                 : context.l10n.restoreConnection,
                           ),
                         ),
-                        if (model.automatic)
+                        if (model.automaticEnabled)
                           Text(
                             context.l10n.reconnectEveryFiveSeconds,
                             textAlign: TextAlign.center,

@@ -1173,8 +1173,25 @@ void main() {
         utf8.encode('second'),
       );
       expect(firstSession.writes, isEmpty);
-      // Closing one SSH tab reveals the first terminal with its scrollback intact.
+      // Disconnect retains this tab; closing it remains a separate action.
       await terminalAction(tester, 'local_ssh_disconnect');
+      await drainClose(tester);
+      final disconnected = tester.widget<TerminalView>(
+        find.byKey(const ValueKey('local_ssh_terminal_view')),
+      );
+      expect(disconnected.terminal, same(secondView.terminal));
+      expect(disconnected.readOnly, isTrue);
+      final stoppedClient = sshHarness.clients.singleWhere((c) => identical(c.session, secondSession));
+      for (var i = 0; i < 150 && !stoppedClient.closed; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      expect(sshHarness.clients.singleWhere((c) => identical(c.session, secondSession)).closed, isTrue);
+      expect(sshHarness.clients.singleWhere((c) => identical(c.session, firstSession)).closed, isFalse);
+      expect(find.byKey(const ValueKey('session_restore_connection')), findsOneWidget);
+      final retainedTabs = tester.widget<WorkspaceTabBar>(find.byType(WorkspaceTabBar));
+      expect(retainedTabs.tabs.where((tab) => !tab.isHome), hasLength(2));
+      retainedTabs.onClose(retainedTabs.selectedId);
       await drainClose(tester);
       final restored = tester.widget<TerminalView>(
         find.byKey(const ValueKey('local_ssh_terminal_view')),
@@ -1205,8 +1222,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.byKey(const ValueKey('local_ssh_terminal_view')),
-        findsNothing,
+        findsOneWidget,
       );
+      expect(tester.widget<TerminalView>(find.byKey(const ValueKey('local_ssh_terminal_view'))).readOnly, isTrue);
+      expect(find.byKey(const ValueKey('session_restore_connection')), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     },
@@ -1705,6 +1724,7 @@ class _FakeClient implements SSHClient {
   final SSHSession session;
   final _FakeSftpClient sftpClient;
   final Future<void> _authenticated;
+  bool closed = false;
 
   @override
   Future<void> get authenticated => _authenticated;
@@ -1720,7 +1740,7 @@ class _FakeClient implements SSHClient {
   Future<SftpClient> sftp() async => sftpClient;
 
   @override
-  Future<void> close() async {}
+  Future<void> close() async { closed = true; }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

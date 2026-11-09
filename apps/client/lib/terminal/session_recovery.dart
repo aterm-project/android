@@ -16,6 +16,8 @@ class SessionRecovery extends ChangeNotifier {
   bool _disposed = false, _everConnected = false, _automaticBlocked = false;
   bool interrupted = false, busy = false;
   bool get available => !_disposed && isCurrent();
+  bool get automaticEnabled =>
+      automatic && _everConnected && !_automaticBlocked;
 
   void update({required bool connected, bool connecting = false}) {
     if (_disposed) return;
@@ -36,6 +38,7 @@ class SessionRecovery extends ChangeNotifier {
     _automaticBlocked = true;
     _timer?.cancel();
     _timer = null;
+    if (!_disposed) notifyListeners();
   }
 
   void _schedule() {
