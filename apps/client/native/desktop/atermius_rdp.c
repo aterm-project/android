@@ -771,6 +771,8 @@ API void* aterm_rdp_create_ex(const char* host, int port, const char* user,
   BOOLVAL(DynamicResolutionUpdate, cfg.monitor_count == 0);
   BOOLVAL(NetworkAutoDetect, FALSE);
   BOOLVAL(SupportHeartbeatPdu, FALSE); BOOLVAL(SupportMultitransport, FALSE);
+  // No message channel is negotiated; never advertise UDP multitransport.
+  NUM(MultitransportFlags, 0);
   BOOLVAL(RedirectClipboard, cfg.clipboard);
   BOOLVAL(AutoReconnectionEnabled, FALSE);
   // Redirection: each resource is explicit. No "all drives" and no hotplug of
