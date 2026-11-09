@@ -1,0 +1,28 @@
+# Temporary links / trusted share gateway (requires compose.desktop.yaml for guacd):
+#   docker compose -f deploy/compose.yaml -f deploy/compose.desktop.yaml \
+#     -f deploy/compose.share.yaml up -d --build
+# Required in the environment first: ATERMIUS_PUBLIC_ORIGIN (exact https origin)
+# and ATERMIUS_SHARE_ALLOW_CIDRS (networks guests may reach). Sharing stays
+# disabled (and unadvertised) unless every prerequisite is present and valid.
+# See docs/CLOUD-SHARING.md for the trust model and all settings.
+services:
+  server:
+    environment:
+      ATERMIUS_SHARE_LINKS_ENABLED: "${ATERMIUS_SHARE_LINKS_ENABLED:-true}"
+      # The gateway private key lives in its own volume, outside /data, so
+      # instance backups never contain it. Losing it only makes existing
+      # capsules stale; owners reseal when they next share.
+      ATERMIUS_SHARE_GATEWAY_KEY_FILE: /share-gateway/share-gateway.key
+      ATERMIUS_SHARE_ALLOW_CIDRS: "${ATERMIUS_SHARE_ALLOW_CIDRS:?set the networks guests may reach}"
+      ATERMIUS_SHARE_ALLOW_PORTS: "${ATERMIUS_SHARE_ALLOW_PORTS:-22,3389}"
+      # Keep the compose network (guacd, database, object store) unreachable.
+      ATERMIUS_SHARE_DENY_CIDRS: "${ATERMIUS_SHARE_DENY_CIDRS:-172.16.0.0/12}"
+      ATERMIUS_SHARE_VNC_ENABLED: "${ATERMIUS_SHARE_VNC_ENABLED:-false}"
+      ATERMIUS_ORGANIZATIONS_ENABLED: "${ATERMIUS_ORGANIZATIONS_ENABLED:-true}"
+      ATERMIUS_ORG_CREATION: "${ATERMIUS_ORG_CREATION:-admin}"
+    volumes:
+      - share-gateway-key:/share-gateway
+
+volumes:
+  share-gateway-key:
+    name: "${ATERMIUS_SHARE_GATEWAY_KEY_VOLUME_NAME:-atermius-share-gateway-key}"

@@ -1717,7 +1717,7 @@ pub(crate) async fn create_session(
             ));
         }
         let active: Option<i64> = sqlx::query_scalar(
-            "SELECT 1 FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id JOIN devices d ON d.user_id=u.user_id WHERE v.vault_id=? AND v.state='active' AND vm.user_id=? AND vm.state='active' AND u.status='active' AND d.device_id=? AND d.status='active'",
+            "SELECT 1 FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id JOIN devices d ON d.user_id=u.user_id WHERE v.vault_id=? AND v.state='active' AND vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND u.status='active' AND d.device_id=? AND d.status='active'",
         )
         .bind(&vault_id)
         .bind(&target.user_id)
@@ -1919,7 +1919,7 @@ pub(crate) async fn grant_controller_lease(
         device_id: request.controller_device_id.clone(),
     };
     let controller_signing_public_key: Option<String> = sqlx::query_scalar(
-        "SELECT d.signing_public_key FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id JOIN devices d ON d.user_id=u.user_id WHERE v.vault_id=? AND v.state='active' AND vm.user_id=? AND vm.state='active' AND u.status='active' AND d.device_id=? AND d.status='active'",
+        "SELECT d.signing_public_key FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id JOIN devices d ON d.user_id=u.user_id WHERE v.vault_id=? AND v.state='active' AND vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND u.status='active' AND d.device_id=? AND d.status='active'",
     )
     .bind(&vault_id)
     .bind(&target.user_id)

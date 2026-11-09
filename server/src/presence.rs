@@ -93,7 +93,7 @@ pub async fn heartbeat(
              JOIN sessions s ON s.session_id=p.session_id \
                  AND s.user_id=p.user_id AND s.device_id=p.device_id \
              WHERE p.vault_id=? AND p.user_id=? AND p.expires_at>? \
-               AND vm.state='active' AND u.status='active' AND d.status='active' \
+               AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND u.status='active' AND d.status='active' \
                AND s.revoked_at IS NULL AND s.access_expires_at>?",
         )
         .bind(&vault_id)
@@ -111,7 +111,7 @@ pub async fn heartbeat(
              JOIN devices d ON d.device_id=p.device_id AND d.user_id=p.user_id \
              JOIN sessions s ON s.session_id=p.session_id \
                  AND s.user_id=p.user_id AND s.device_id=p.device_id \
-             WHERE p.expires_at>? AND vm.state='active' \
+             WHERE p.expires_at>? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') \
                AND u.status='active' AND d.status='active' \
                AND s.revoked_at IS NULL AND s.access_expires_at>?",
         )
@@ -184,7 +184,7 @@ pub(crate) async fn cleanup(state: &AppState, now_epoch: i64) -> Result<(), ApiE
             OR NOT EXISTS ( \
                SELECT 1 FROM vault_members vm \
                WHERE vm.vault_id=p.vault_id AND vm.user_id=p.user_id \
-                 AND vm.state='active' \
+                 AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') \
             )",
     )
     .bind(now_epoch)
@@ -239,7 +239,7 @@ pub async fn list(
          JOIN sessions s ON s.session_id=p.session_id \
              AND s.user_id=p.user_id AND s.device_id=p.device_id \
          WHERE p.vault_id=? AND p.expires_at>? \
-           AND vm.state='active' AND u.status='active' AND d.status='active' \
+           AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND u.status='active' AND d.status='active' \
            AND s.revoked_at IS NULL",
     )
     .bind(&vault_id)
@@ -312,7 +312,7 @@ async fn require_active_membership(
          JOIN vault_members vm ON vm.vault_id=v.vault_id \
          JOIN users u ON u.user_id=vm.user_id \
          WHERE v.vault_id=? AND vm.user_id=? \
-           AND vm.state='active' AND u.status='active'",
+           AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND u.status='active'",
     )
     .bind(vault_id)
     .bind(&user.user_id)

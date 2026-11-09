@@ -798,7 +798,7 @@ impl SqliteSyncRepository {
         let mut tx = self.pool.begin().await.map_err(ApiError::internal)?;
         crate::require_active_session_device_read_tx(&mut tx, &user).await?;
         let member: Option<i64> = sqlx::query_scalar(
-            "SELECT 1 FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active' AND u.status='active'",
+            "SELECT 1 FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND u.status='active'",
         )
         .bind(&vault_id)
         .bind(&user.user_id)

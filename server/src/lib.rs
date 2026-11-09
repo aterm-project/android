@@ -9,6 +9,10 @@ mod auth;
 mod backup;
 mod backup_replication;
 mod backup_status;
+mod cloud;
+mod cloud_orgs;
+#[cfg(test)]
+mod cloud_tests;
 mod collaboration;
 mod control;
 mod database;
@@ -132,6 +136,9 @@ mod recovery;
 mod relay;
 mod relay_groups;
 mod secure_file;
+mod share_gateway;
+mod share_guest;
+mod share_links;
 mod sync;
 mod sync_repository;
 
@@ -225,6 +232,8 @@ pub struct AppState {
     pub notification_query_slots: Arc<Semaphore>,
     pub(crate) pg_notification_hub: pg_notifications::PgNotificationHub,
     pub(crate) collaboration: collaboration::CollaborationState,
+    /// Organizations, temporary links and the trusted share gateway.
+    pub(crate) cloud: Arc<cloud::CloudState>,
     pub maintenance_lock: Arc<tokio::sync::Mutex<()>>,
     pub(crate) vault_limits: VaultLimits,
     pub config: Arc<Config>,
@@ -878,6 +887,14 @@ pub(crate) async fn open_state_with_restore_policy(
     let pg_redaction_capabilities = pg_sync_pool
         .as_ref()
         .map(|pool| pg_redaction_capabilities::PgRedactionCapabilityRepository::new(pool.clone()));
+    let cloud = cloud::CloudState::open(
+        &db,
+        &config,
+        &signing_key,
+        &instance.instance_id,
+        pg_sync_pool.is_some(),
+    )
+    .await?;
     Ok(AppState {
         sync_repository,
         pg_sync_only: pg_sync_pool.is_some(),
@@ -916,6 +933,7 @@ pub(crate) async fn open_state_with_restore_policy(
         notification_query_slots: Arc::new(Semaphore::new(notifications::MAX_GLOBAL_POLL_QUERIES)),
         pg_notification_hub: pg_notifications::PgNotificationHub::default(),
         collaboration: collaboration::CollaborationState::default(),
+        cloud: Arc::new(cloud),
         maintenance_lock: Arc::new(tokio::sync::Mutex::new(())),
         vault_limits,
         config: Arc::new(config),
@@ -1489,6 +1507,7 @@ pub async fn router(state: AppState) -> Router {
             )
             .route("/api/v1/relay/tickets", post(relay::create_ticket));
     } else {
+        app = cloud_routes(app);
         app = app
             .route(
                 "/api/v1/admin/relay-policy",
@@ -1550,6 +1569,70 @@ pub async fn router(state: AppState) -> Router {
     )
     .layer(middleware::from_fn(apply_response_security_headers))
     .layer(middleware::from_fn(request_id_context))
+}
+
+/// Cloud collaboration routes. Registered only for the SQLite runtime; in the
+/// PostgreSQL sync-core runtime they do not exist (and the scope guard keeps
+/// returning PG_SYNC_SCOPE_LIMITED), so no partial sharing path is exposed.
+fn cloud_routes(app: Router<AppState>) -> Router<AppState> {
+    let guest_body_limit = RequestBodyLimitLayer::new(16 * 1024);
+    app.route("/api/v1/share-gateway/keys", get(share_gateway::keys))
+        .route(
+            "/api/v1/vaults/{vault_id}/share-capsules",
+            get(share_gateway::list_capsules),
+        )
+        .route(
+            "/api/v1/vaults/{vault_id}/hosts/{host_id}/gateway-capsule",
+            put(share_gateway::put_capsule).delete(share_gateway::delete_capsule),
+        )
+        .route("/api/v1/share-links", get(share_links::list_my_links))
+        .route(
+            "/api/v1/share-slugs/{slug}/availability",
+            get(share_links::slug_availability),
+        )
+        .route(
+            "/api/v1/vaults/{vault_id}/share-links",
+            get(share_links::list_links).post(share_links::create_link),
+        )
+        .route(
+            "/api/v1/vaults/{vault_id}/share-links/{link_id}",
+            get(share_links::get_link).put(share_links::update_link),
+        )
+        .route(
+            "/api/v1/vaults/{vault_id}/share-links/{link_id}/revoke",
+            post(share_links::revoke_link),
+        )
+        .route(
+            "/api/v1/vaults/{vault_id}/share-links/{link_id}/rotate-secret",
+            post(share_links::rotate_secret),
+        )
+        .route(
+            "/api/v1/vaults/{vault_id}/share-links/{link_id}/activity",
+            get(share_links::activity),
+        )
+        .route(
+            "/api/v1/vaults/{vault_id}/share-links/{link_id}/guest-sessions/{guest_session_id}/terminate",
+            post(share_links::terminate_guest_session),
+        )
+        .route(
+            "/api/v1/vaults/{vault_id}/cloud-audit",
+            get(share_links::vault_audit),
+        )
+        .route(
+            "/api/v1/guest/redeem",
+            post(share_guest::redeem).route_layer(guest_body_limit.clone()),
+        )
+        .route("/api/v1/guest/session", get(share_guest::session))
+        .route(
+            "/api/v1/guest/logout",
+            post(share_guest::logout).route_layer(guest_body_limit.clone()),
+        )
+        .route(
+            "/api/v1/guest/connections",
+            post(share_guest::create_connection).route_layer(guest_body_limit),
+        )
+        .route("/gateway/v1/connect", get(share_guest::connect))
+        .merge(cloud_orgs::routes())
 }
 
 async fn guard_pg_sync_scope(
@@ -1807,7 +1890,7 @@ fn pg_web_fallback_request_is_supported(method: &Method, path: &str) -> bool {
     // Keep API, health, Relay, and collaboration namespaces out of the
     // fallback path so unsupported operations remain fail-closed and a
     // WebSocket endpoint can never be interpreted as a page request.
-    !["/api", "/health", "/relay", "/collaboration"]
+    !["/api", "/health", "/relay", "/collaboration", "/gateway", "/desktop"]
         .iter()
         .any(|prefix| {
             path == *prefix
@@ -2370,7 +2453,19 @@ async fn apply_response_security_headers(request: Request, next: Next) -> Respon
         "Permissions-Policy",
         HeaderValue::from_static("camera=(), geolocation=(), microphone=(), payment=()"),
     );
-    if path.starts_with("/api/") || path.starts_with("/health/") {
+    if path == "/s" || path.starts_with("/s/") || path == "/join" || path.starts_with("/api/v1/guest/") {
+        // Guest landing/join pages: never cached, isolated browsing context.
+        headers.insert(
+            "Cross-Origin-Opener-Policy",
+            HeaderValue::from_static("same-origin"),
+        );
+    }
+    if path.starts_with("/api/")
+        || path.starts_with("/health/")
+        || path == "/s"
+        || path.starts_with("/s/")
+        || path == "/join"
+    {
         headers.insert("Cache-Control", HeaderValue::from_static("no-store"));
     } else {
         // Flutter asset names are stable across releases; revalidate them so a
@@ -2390,6 +2485,8 @@ async fn spa_fallback(
         || uri.path().starts_with("/health/")
         || uri.path() == "/relay"
         || uri.path().starts_with("/relay/")
+        || uri.path() == "/gateway"
+        || uri.path().starts_with("/gateway/")
     {
         return ApiError::not_found().into_response();
     }
@@ -2841,6 +2938,17 @@ async fn instance_info(
             {
                 c.push("terminal_collaboration");
             }
+            if cloud::organizations_ready(&state) {
+                c.push("organizations");
+            }
+            if cloud::share_links_ready(&state) {
+                c.push("share_links");
+                c.push("share_gateway_ssh");
+                c.push("share_gateway_rdp");
+                if state.cloud.config.vnc_enabled {
+                    c.push("share_gateway_vnc");
+                }
+            }
             if !state.pg_sync_only
                 && state
                     .config
@@ -2951,7 +3059,7 @@ pub(crate) async fn require_vault(
         return Ok((role, active_epoch, membership_version));
     }
     let row = sqlx::query_as::<_, (String, i64, i64, String)>(
-        "SELECT vm.role,v.active_epoch,v.membership_version,v.state FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active' AND u.status='active'",
+        "SELECT CASE WHEN vm.role='editor' AND EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='viewer') THEN 'viewer' ELSE vm.role END AS role,v.active_epoch,v.membership_version,v.state FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND u.status='active'",
     ).bind(vault_id).bind(user_id).fetch_optional(&state.db).await.map_err(ApiError::internal)?;
     let Some((role, epoch, membership_version, status)) = row else {
         // Keep foreign vault IDs indistinguishable from absent IDs.
@@ -3189,7 +3297,7 @@ pub(crate) async fn require_vault_write_tx(
     }
     require_active_account_tx(tx, user_id).await?;
     let row = sqlx::query_as::<_, (String, i64, i64, String)>(
-        "SELECT vm.role,v.active_epoch,v.membership_version,v.state FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active'",
+        "SELECT CASE WHEN vm.role='editor' AND EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='viewer') THEN 'viewer' ELSE vm.role END AS role,v.active_epoch,v.membership_version,v.state FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none')",
     )
     .bind(vault_id)
     .bind(user_id)
@@ -3226,7 +3334,7 @@ pub(crate) async fn require_vault_read_tx(
     }
     require_active_account_tx(tx, user_id).await?;
     let row = sqlx::query_as::<_, (String, i64, i64, String)>(
-        "SELECT vm.role,v.active_epoch,v.membership_version,v.state FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active'",
+        "SELECT CASE WHEN vm.role='editor' AND EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='viewer') THEN 'viewer' ELSE vm.role END AS role,v.active_epoch,v.membership_version,v.state FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none')",
     )
     .bind(vault_id)
     .bind(user_id)
@@ -3245,7 +3353,7 @@ pub(crate) async fn require_vault_read_snapshot_tx(
     vault_id: &str,
 ) -> Result<(), ApiError> {
     let member: Option<i64> = sqlx::query_scalar(
-        "SELECT 1 FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active' AND u.status='active'",
+        "SELECT 1 FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id JOIN users u ON u.user_id=vm.user_id WHERE v.vault_id=? AND vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND u.status='active'",
     )
     .bind(vault_id)
     .bind(user_id)

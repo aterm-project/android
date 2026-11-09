@@ -875,7 +875,7 @@ async fn required_contexts(
     conn: &mut SqliteConnection,
     user_id: &str,
 ) -> Result<Vec<Context>, ApiError> {
-    let vault_rows = sqlx::query("SELECT v.vault_id,v.active_epoch,v.membership_version FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE vm.user_id=? AND vm.state='active' AND v.state IN ('active','deleting') ORDER BY v.vault_id")
+    let vault_rows = sqlx::query("SELECT v.vault_id,v.active_epoch,v.membership_version FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND v.state IN ('active','deleting') ORDER BY v.vault_id")
         .bind(user_id)
         .fetch_all(&mut *conn)
         .await
@@ -898,7 +898,7 @@ async fn required_contexts(
         active_epochs.insert(vault_id.clone(), active_epoch);
         membership_by_vault.insert(vault_id, versions);
     }
-    let epochs = sqlx::query("SELECT DISTINCT e.vault_id,e.epoch FROM vault_key_envelopes e JOIN vaults v ON v.vault_id=e.vault_id JOIN vault_members vm ON vm.vault_id=e.vault_id AND vm.user_id=e.recipient_user_id WHERE e.recipient_user_id=? AND vm.state='active' AND v.state IN ('active','deleting') ORDER BY e.vault_id,e.epoch")
+    let epochs = sqlx::query("SELECT DISTINCT e.vault_id,e.epoch FROM vault_key_envelopes e JOIN vaults v ON v.vault_id=e.vault_id JOIN vault_members vm ON vm.vault_id=e.vault_id AND vm.user_id=e.recipient_user_id WHERE e.recipient_user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND v.state IN ('active','deleting') ORDER BY e.vault_id,e.epoch")
         .bind(user_id)
         .fetch_all(&mut *conn)
         .await

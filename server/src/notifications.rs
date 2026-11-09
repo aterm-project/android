@@ -509,7 +509,7 @@ async fn query_notification_snapshot(
     binding: &SessionBinding,
 ) -> Result<Option<HashMap<String, WatchedVault>>, ApiError> {
     let now = Utc::now();
-    let rows = sqlx::query("SELECT s.access_expires_at,s.revoked_at,u.status AS account_status,d.status AS device_status,v.vault_id,COALESCE(vc.last_committed_seq,0) AS commit_seq,COALESCE(vc.last_conflict_seq,0) AS conflict_seq,vm.role,v.state AS vault_state FROM sessions s JOIN users u ON u.user_id=s.user_id JOIN devices d ON d.device_id=s.device_id LEFT JOIN vault_members vm ON vm.user_id=u.user_id AND vm.state='active' LEFT JOIN vaults v ON v.vault_id=vm.vault_id AND v.state IN ('active','deleting') LEFT JOIN vault_counters vc ON vc.vault_id=v.vault_id WHERE s.session_id=? AND s.user_id=? AND s.device_id=? ORDER BY v.vault_id LIMIT ?")
+    let rows = sqlx::query("SELECT s.access_expires_at,s.revoked_at,u.status AS account_status,d.status AS device_status,v.vault_id,COALESCE(vc.last_committed_seq,0) AS commit_seq,COALESCE(vc.last_conflict_seq,0) AS conflict_seq,vm.role,v.state AS vault_state FROM sessions s JOIN users u ON u.user_id=s.user_id JOIN devices d ON d.device_id=s.device_id LEFT JOIN vault_members vm ON vm.user_id=u.user_id AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') LEFT JOIN vaults v ON v.vault_id=vm.vault_id AND v.state IN ('active','deleting') LEFT JOIN vault_counters vc ON vc.vault_id=v.vault_id WHERE s.session_id=? AND s.user_id=? AND s.device_id=? ORDER BY v.vault_id LIMIT ?")
         .bind(&binding.session_id)
         .bind(&binding.user_id)
         .bind(&binding.device_id)

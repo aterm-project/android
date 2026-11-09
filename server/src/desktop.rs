@@ -45,51 +45,67 @@ pub(crate) fn encode(values: &[&str]) -> String {
 }
 
 /// Returns one complete instruction and consumed UTF-8 byte count. Fragmented
-/// code points and arbitrary TCP packet boundaries are supported.
+/// code points and arbitrary TCP packet boundaries are supported. Runs in
+/// time linear in the consumed instruction (only the bytes of this
+/// instruction are inspected and UTF-8 validated), so parsing a message of
+/// many instructions stays linear overall.
 pub(crate) fn parse(bytes: &[u8]) -> Result<Option<(Vec<String>, usize)>, ()> {
     if bytes.len() > 1024 * 1024 {
         return Err(());
     }
-    let text = match std::str::from_utf8(bytes) {
-        Ok(s) => s,
-        Err(e) if e.error_len().is_none() => {
-            std::str::from_utf8(&bytes[..e.valid_up_to()]).map_err(|_| ())?
-        }
-        Err(_) => return Err(()),
-    };
     let mut pos = 0;
     let mut values = Vec::new();
     loop {
-        let Some(dot) = text[pos..].find('.') else {
-            if text.len() - pos > 7 || !text[pos..].bytes().all(|b| b.is_ascii_digit()) {
+        let rest = &bytes[pos..];
+        let Some(dot) = rest.iter().take(8).position(|b| *b == b'.') else {
+            if rest.len() > 7 || !rest.iter().all(u8::is_ascii_digit) {
                 return Err(());
             }
             return Ok(None);
         };
-        if dot == 0 || dot > 7 || !text[pos..pos + dot].bytes().all(|b| b.is_ascii_digit()) {
+        if dot == 0 || dot > 7 || !rest[..dot].iter().all(u8::is_ascii_digit) {
             return Err(());
         }
-        let length: usize = text[pos..pos + dot].parse().map_err(|_| ())?;
+        let length: usize = std::str::from_utf8(&rest[..dot])
+            .map_err(|_| ())?
+            .parse()
+            .map_err(|_| ())?;
         if length > 1024 * 1024 {
             return Err(());
         }
         let start = pos + dot + 1;
         let mut end = start;
-        let mut chars = text[start..].chars();
         for _ in 0..length {
-            let Some(c) = chars.next() else {
+            let Some(&lead) = bytes.get(end) else {
                 return Ok(None);
             };
-            end += c.len_utf8();
+            let width = match lead {
+                0x00..=0x7F => 1,
+                0xC2..=0xDF => 2,
+                0xE0..=0xEF => 3,
+                0xF0..=0xF4 => 4,
+                _ => return Err(()),
+            };
+            let available = bytes.len().min(end + width);
+            if !bytes[end + 1..available].iter().all(|b| (0x80..=0xBF).contains(b)) {
+                return Err(());
+            }
+            if end + width > bytes.len() {
+                // A code point split across packets.
+                return Ok(None);
+            }
+            end += width;
         }
-        if end == text.len() {
+        // Full validation (overlongs, surrogates) of exactly this value.
+        let value = std::str::from_utf8(&bytes[start..end]).map_err(|_| ())?;
+        if end == bytes.len() {
             return Ok(None);
         }
-        values.push(text[start..end].to_owned());
+        values.push(value.to_owned());
         if values.len() > 256 {
             return Err(());
         }
-        match text.as_bytes()[end] {
+        match bytes[end] {
             b';' => return Ok(Some((values, end + 1))),
             b',' => pos = end + 1,
             _ => return Err(()),
@@ -266,5 +282,16 @@ mod tests {
         }
         assert!(!valid_input(b"3.key,1.1,1.1"));
         assert!(!valid_input(encode(&["size", "9000", "500"]).as_bytes()));
+    }
+    #[test]
+    fn parsing_many_instructions_is_linear_and_rejects_bad_utf8() {
+        let many = encode(&["key", "65", "1"]).repeat(6000);
+        let started = std::time::Instant::now();
+        assert!(valid_input(many.as_bytes()));
+        assert!(started.elapsed() < std::time::Duration::from_millis(500));
+        assert!(parse(b"2.\xC3\x28;").is_err(), "invalid continuation");
+        assert!(parse(b"1.\xED\xA0\x80;").is_err(), "surrogate");
+        assert!(parse(b"1.\xC0\x80;").is_err(), "overlong");
+        assert_eq!(parse(b"1.\xE4\xB8"), Ok(None), "split code point");
     }
 }

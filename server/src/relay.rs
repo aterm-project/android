@@ -151,7 +151,7 @@ pub(crate) struct RelayTarget {
     pub(crate) connection_id: Option<uuid::Uuid>,
 }
 
-fn is_forbidden_ip(ip: IpAddr) -> bool {
+pub(crate) fn is_forbidden_ip(ip: IpAddr) -> bool {
     match ip {
         IpAddr::V4(v) => {
             v.is_loopback()
@@ -1066,7 +1066,7 @@ fn parse_ip_literal(target_host: &str, target_port: u16) -> Result<IpAddr, ApiEr
     target_host.parse::<IpAddr>().map_err(|_| invalid_target())
 }
 
-fn normalize_dns_hostname(target_host: &str) -> Result<String, ApiError> {
+pub(crate) fn normalize_dns_hostname(target_host: &str) -> Result<String, ApiError> {
     if target_host.is_empty() || !target_host.is_ascii() || target_host.len() > 254 {
         return Err(invalid_target());
     }
@@ -1138,6 +1138,24 @@ impl RelayResolver for SystemRelayResolver {
             .map_err(|_| io::Error::other("resolver worker failed"))?
         })
     }
+}
+
+/// Bounded system lookup shared with the share gateway. Uses the same global
+/// DNS concurrency gate and root-dot absolute name as Relay ticket issuance.
+pub(crate) async fn lookup_host_all(
+    hostname: &str,
+    port: u16,
+    max_answers: usize,
+) -> io::Result<Vec<IpAddr>> {
+    let permit = RELAY_DNS_LOOKUP_SLOTS
+        .clone()
+        .try_acquire_owned()
+        .map_err(|_| io::Error::other("resolver busy"))?;
+    let mut answers = SystemRelayResolver.resolve(hostname, port, permit).await?;
+    if answers.len() > max_answers {
+        answers.truncate(max_answers + 1);
+    }
+    Ok(answers)
 }
 
 fn target_resolution_failed() -> ApiError {

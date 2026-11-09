@@ -1,0 +1,36 @@
+{
+  "description": "Test-only keys. Cross-implementation vectors for crypto_box_seal (libsodium ↔ RustCrypto crypto_box) and link-secret derivations.",
+  "device_signing_seed": "yMnKy8zNzs_Q0dLT1NXW19jZ2tvc3d7f4OHi4-Tl5uc",
+  "display_envelope": "v1.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.Oaubj-F4pzK0iVKBdoU6s_x-VPoSbygUNvlxjzKYejnwxAtuCoouXFRxwiS2ywAYQ0qTYIJ4stqQQmqf2J2c0JJRj-ELrSK7scbwcxP3pA",
+  "display_key": "WwixeEjLos8tR43eijLFvKXyWZUY59VTrN8ekMR28Kw",
+  "display_plaintext": "{\"targets\":[{\"label\":\"db\",\"target_id\":\"t1\"}],\"title\":\"Fixture\"}",
+  "gateway_public_key": "B6N8vBQgk8i3VdwbEOhstCY3StFqqFPtC9_AsrhtHHw",
+  "gateway_secret_key": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA",
+  "libsodium_sealed": "KWttRJum6maFZxQIJhX6h4PHz9hRFGPruDXOgNv_rlzoAXqS1sVbFuOdxN90q9wW2Q16Nz0VoPc-9Io9KaOd8DWcx3QufzpIFd_wQq1Q4rhuNbdPTXk",
+  "link_fragment": "s1.ZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1-f4CBgoM",
+  "link_id": "3f2b8c1e-7d4a-4c9e-9b1f-0a5d6e7f8091",
+  "link_secret": "ZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1-f4CBgoM",
+  "message": "YXRlcm1pdXMgZ2F0ZXdheSBzZWFsZWQtYm94IGludGVyb3AgdjE",
+  "redeem_token": "YqO0IT2iIQCqvcSV9GrOc6QwKqbKR95_Z7wuitvtrgE",
+  "rust_sealed": "z5Xv3ok4cH-m7biE4xdzy9dnvo84EAPbVo7nGjuh3Q3MBdzjOfK7-EGXvjPEf6J_yO_gXw0e7nfy9mLk-noPO5HX2yb0Z2rHPAanmPdEkF7kIjZ3etE",
+  "dart_sealed": "ojHIIG-apH_o6wyqGwpvZ5TU69OxIiX0hIZ1ZCNv_HuVJ6OG9Y8xBBsbx9HXRuqsXXnum3HbtgTtMVSz_63EeDWpUQWfdWh5JZ1fPmgEsVU4Rll8lis",
+  "dart_capsule": {
+    "header": {
+      "format": "atermius-gateway-capsule-v1",
+      "vault_id": "55555555-5555-4555-8555-555555555555",
+      "host_record_id": "66666666-6666-4666-8666-666666666666",
+      "host_revision_id": "77777777-7777-4777-8777-777777777777",
+      "gateway_key_id": "33333333-3333-4333-8333-333333333333",
+      "protocol": "ssh",
+      "target_host": "db.internal.example",
+      "target_port": 22,
+      "host_identity": "SHA256:BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc",
+      "sealed_sha256": "n07DV07-6NuIuB7AouMpfCrlvCoFsyXHwxbdizVRCO0",
+      "sealer_user_id": "44444444-4444-4444-8444-444444444444",
+      "sealer_device_id": "22222222-2222-4222-8222-222222222222",
+      "created_at": "2026-11-08T00:00:00Z",
+      "signature": "Gj8FvjKMxR7nx3Uo7bhaE_ijuu3TvG3W5cE2l_9oCNyQ4saqaOPh9ri7BBDak4ZyKHdAFwb6uBYtiF4pBk-6CA"
+    },
+    "sealed": "-z-4LGIN8kIdczrcrBo8zQyyykTU6umJ256ypS2TcFciAVELCzsJJj30Qi0tK1vbfbpjEyRloTugfAZYTS6yiH5Jt0P3qlAYE1fB0KTtNpquNKrJpTrQH-C33I-IZ6qa9JJdk5FFSbPpcpQD3UC9PrCRiopw_pOEPSi46kxbvmVqJsEfk1884eSwUgtta-MJzziZu9FuB9_9ixzPXnVmPdbMGHZPaczVTIfvIY48NxTx_BrFnts6zSlzO--TaBofsP8bkW4QE4fYp4de1DATZdjGinFjRFA9Z98LIQVF-syc4DzstLmGOoEtel1KYnCaw2yY-DHMQMDDakyOVMT5Cu34Mk4NJM-7854NOIDGhFKiD9E7sJ7jsVCc8zoDfnyAL9eptEbTVzlGizxcUjJx4NOggB2zJjjd4Zo0NBJ4lC9TxKId5jMcDYTSiGtlAoIwav-9ekVr-Z0rs_D_epaJlx7Y_t2M_1bRTGg5CSnBsAH8N6S6m2iszj4-uxqKHmLadTuAo3kE2x6P-roqY9lwm8ntF8RhAr14lZbO2BK2-85DodndhvtEkO_NWhZrdnRxBETj79mj1G7eNa55hXSY9GWLlY3j6wfQ5x4AyuixACH78J7aevT5QaS9xUTDWVe2N4cKn_C8-QCXniXkuDV4ny_FUcqx9WbJmS5UBkSowYv2Db6tpeBIs-FXVRNWhTCtdOBV7Rvxh5ejEgNFrEmEqv1_VSpVCl8E9sMA6gx3lij5hohnNg"
+  }
+}

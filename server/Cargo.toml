@@ -23,6 +23,7 @@ axum = { version = "0.8", features = ["ws", "macros"] }
 base64 = "0.22"
 chacha20poly1305 = "0.10"
 chrono = { version = "0.4", features = ["serde"] }
+crypto_box = { version = "0.9", features = ["seal", "std"] }
 ed25519-dalek = { version = "2.1", features = ["rand_core"] }
 futures-util = "0.3"
 hex = "0.4"

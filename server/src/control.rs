@@ -757,7 +757,7 @@ pub async fn list_vaults(
         return Ok(Json(repository.list_vaults(&user).await?));
     }
     let rows = sqlx::query(
-        "SELECT v.vault_id,vm.role,v.active_epoch,v.membership_version,v.required_record_schema,v.name_envelope,v.state,dr.requested_at,dr.purge_after FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id LEFT JOIN vault_deletion_requests dr ON dr.vault_id=v.vault_id AND dr.cancelled_at IS NULL AND dr.purged_at IS NULL WHERE vm.user_id=? AND vm.state='active' AND v.state IN ('active','deleting') ORDER BY v.created_at",
+        "SELECT v.vault_id,CASE WHEN vm.role='editor' AND EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='viewer') THEN 'viewer' ELSE vm.role END AS role,v.active_epoch,v.membership_version,v.required_record_schema,v.name_envelope,v.state,dr.requested_at,dr.purge_after FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id LEFT JOIN vault_deletion_requests dr ON dr.vault_id=v.vault_id AND dr.cancelled_at IS NULL AND dr.purged_at IS NULL WHERE vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND v.state IN ('active','deleting') ORDER BY v.created_at",
     )
     .bind(&user.user_id)
     .fetch_all(&state.db)

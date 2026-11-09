@@ -1636,7 +1636,7 @@ pub(crate) async fn session_response(
     device_id: String,
     tokens: Tokens,
 ) -> Result<SessionResponse, ApiError> {
-    let vault_rows = sqlx::query("SELECT v.vault_id,vm.role,v.active_epoch,v.membership_version,v.name_envelope FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE vm.user_id=? AND vm.state='active' AND v.state='active'")
+    let vault_rows = sqlx::query("SELECT v.vault_id,CASE WHEN vm.role='editor' AND EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='viewer') THEN 'viewer' ELSE vm.role END AS role,v.active_epoch,v.membership_version,v.name_envelope FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND v.state='active'")
         .bind(&user_id).fetch_all(&state.db).await.map_err(ApiError::internal)?;
     let vaults = vault_rows
         .into_iter()
@@ -2167,7 +2167,7 @@ pub async fn register_device(
     if deleting_vault.is_some() {
         return Err(ApiError::vault_deletion_pending());
     }
-    let active_vault_rows=sqlx::query("SELECT v.vault_id,v.active_epoch,v.membership_version FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE vm.user_id=? AND vm.state='active' AND v.state='active' ORDER BY v.vault_id")
+    let active_vault_rows=sqlx::query("SELECT v.vault_id,v.active_epoch,v.membership_version FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id WHERE vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND v.state='active' ORDER BY v.vault_id")
         .bind(&user.user_id)
         .fetch_all(&mut *tx)
         .await
@@ -2208,7 +2208,7 @@ pub async fn register_device(
     if let Some(report) = request.capability_report.as_ref() {
         crate::device_capabilities::insert_report_tx(&mut tx, report, &now).await?;
     }
-    let source_rows=sqlx::query("SELECT e.vault_id,e.epoch,e.membership_version FROM vault_key_envelopes e JOIN vault_members vm ON vm.vault_id=e.vault_id AND vm.user_id=e.recipient_user_id JOIN vaults v ON v.vault_id=e.vault_id WHERE e.recipient_user_id=? AND e.recipient_device_id=? AND vm.state='active' AND v.state='active' ORDER BY e.vault_id,e.epoch,e.membership_version LIMIT 1001")
+    let source_rows=sqlx::query("SELECT e.vault_id,e.epoch,e.membership_version FROM vault_key_envelopes e JOIN vault_members vm ON vm.vault_id=e.vault_id AND vm.user_id=e.recipient_user_id JOIN vaults v ON v.vault_id=e.vault_id WHERE e.recipient_user_id=? AND e.recipient_device_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND v.state='active' ORDER BY e.vault_id,e.epoch,e.membership_version LIMIT 1001")
         .bind(&user.user_id).bind(&request.approver_device_id).fetch_all(&mut *tx).await.map_err(ApiError::internal)?;
     if source_rows.len() > MAX_DEVICE_VAULT_ENVELOPES {
         return Err(ApiError::bad_request(

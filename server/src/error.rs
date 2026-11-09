@@ -150,7 +150,7 @@ impl ApiError {
         )
         .with_retry_after(5)
     }
-    fn with_retry_after(mut self, seconds: u64) -> Self {
+    pub(crate) fn with_retry_after(mut self, seconds: u64) -> Self {
         self.retry_after_secs = Some(seconds.max(1));
         self
     }

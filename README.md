@@ -30,7 +30,15 @@ continues to route directly to the API. The current server uses the direct peer 
 behind a proxy, clients share that proxy address. Account/pair rate limits still
 apply. This import does not add trusted-proxy support or change authentication.
 
-`docs/cloud-collaboration-design` contains design proposals for temporary external
-sharing, not a claim those proposed features have been implemented or deployed.
+Cloud collaboration is implemented for SQLite: organizations, teams, invitations,
+owner-confirmed encrypted Host sharing, and scheduled temporary browser links
+with custom addresses, quotas, revocation and activity. Guest SSH/RDP sessions
+use an explicitly trusted gateway; its private key stays outside instance backups.
+This gateway mode is not zero-knowledge. PostgreSQL cloud routes remain closed.
+Follow [the sharing deployment guide](docs/CLOUD-SHARING.md) and add
+`deploy/compose.share.yaml` to the existing desktop/Web overlays. Sharing is
+opt-in and requires the exact public origin, gateway key and target policy.
+Source publication does not deploy or enable a production service.
+
 Existing baseline test failures are not hidden by this source split. Server code
 retains its declared AGPL-3.0-or-later license; third-party notices remain intact.

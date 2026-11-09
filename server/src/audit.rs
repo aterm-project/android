@@ -539,7 +539,7 @@ pub async fn list_audit(
                     .await
                     .map_err(ApiError::internal)?;
         }
-        let rows = sqlx::query("SELECT e.event_id,e.scope_type,e.scope_id,e.actor_user_id,e.actor_device_id,e.action,e.resource_type,e.resource_id,e.result,e.occurred_at,e.source FROM audit_events e WHERE e.event_id>? AND e.event_id<=? AND ((e.scope_type='account' AND e.scope_id=?) OR (e.scope_type='vault' AND EXISTS(SELECT 1 FROM vault_members vm JOIN vaults v ON v.vault_id=vm.vault_id WHERE vm.vault_id=e.scope_id AND vm.user_id=? AND vm.state='active' AND vm.role IN ('owner','editor') AND v.state IN ('active','deleting')))) ORDER BY e.event_id LIMIT ?")
+        let rows = sqlx::query("SELECT e.event_id,e.scope_type,e.scope_id,e.actor_user_id,e.actor_device_id,e.action,e.resource_type,e.resource_id,e.result,e.occurred_at,e.source FROM audit_events e WHERE e.event_id>? AND e.event_id<=? AND ((e.scope_type='account' AND e.scope_id=?) OR (e.scope_type='vault' AND EXISTS(SELECT 1 FROM vault_members vm JOIN vaults v ON v.vault_id=vm.vault_id WHERE vm.vault_id=e.scope_id AND vm.user_id=? AND vm.state='active' AND vm.role IN ('owner','editor') AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id) AND v.state IN ('active','deleting')))) ORDER BY e.event_id LIMIT ?")
             .bind(cursor.after_event_id)
             .bind(cursor.high_watermark)
             .bind(&requester_scope)
