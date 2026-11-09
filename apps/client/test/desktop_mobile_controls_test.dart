@@ -2,6 +2,7 @@ import 'package:aterm_client/desktop/desktop_mobile_controls.dart';
 import 'package:aterm_client/desktop/desktop_session.dart';
 import 'package:aterm_client/desktop/desktop_touch_input.dart';
 import 'package:aterm_client/desktop/desktop_view.dart';
+import 'package:aterm_client/domain/models.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,10 +10,12 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Session extends DesktopSession {
-  _Session() {
+  _Session({this.protocol = HostProtocol.rdp}) {
     state = 'connected';
     display.layer(0).resize(1000, 800);
   }
+  @override
+  final HostProtocol protocol;
   final sent = <List<Object>>[];
   @override
   void send(List<Object> command) => sent.add(command);
@@ -22,8 +25,9 @@ class _Session extends DesktopSession {
 Future<_Session> _mount(
   WidgetTester tester, {
   TargetPlatform platform = TargetPlatform.android,
+  HostProtocol protocol = HostProtocol.rdp,
 }) async {
-  final session = _Session();
+  final session = _Session(protocol: protocol);
   await tester.pumpWidget(
     MaterialApp(
       theme: ThemeData(platform: platform),
@@ -103,6 +107,21 @@ void main() {
     },
   );
 
+  testWidgets(
+    'VNC preserves standard Latin-1 keysyms and extends only CJK/emoji',
+    (tester) async {
+      final session = await _mount(tester, protocol: HostProtocol.vnc);
+      await _open(tester);
+      tester.testTextInput.enterText('aAé中😀');
+      await tester.pump();
+      expect(session.keys, [
+        for (final code in [97, 65, 233, 0x01004e2d, 0x0101f600]) ...[
+          ['key', code, 1],
+          ['key', code, 0],
+        ],
+      ]);
+    },
+  );
   testWidgets('IME Backspace and newline generate real desktop key strokes', (
     tester,
   ) async {
