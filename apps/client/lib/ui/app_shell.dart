@@ -1661,6 +1661,7 @@ _snack(context, context.l10n.theNewWindowWasntReadyThe, error: true);
           child: Column(
             children: [
               WorkspaceTabBar(
+                onDisconnect: (id) => unawaited(app.disconnectTerminalTab(id)),
                 groups: _sessionWorkspace.groupedSessionIds,
                 groupSelections: _sessionWorkspace.retainedGroupSelections,
                 onUnsplit: _unsplitWorkspaceTab,
@@ -1823,6 +1824,8 @@ _snack(context, context.l10n.theNewWindowWasntReadyThe, error: true);
                         id: tab.id,
                         title: tab.host?.name ?? context.l10n.terminal,
                         isConnected: tab.state == 'connected',
+                        canDisconnect: tab.host?.protocol.isTerminal == true && tab.console == null &&
+                            (tab.state == 'connected' || tab.state == 'connecting' || tab.recovery?.automaticEnabled == true),
                         canOpenFiles:
                             tab.host?.protocol == HostProtocol.ssh &&
                             (kIsWeb || tab.connection != null),
@@ -8687,7 +8690,7 @@ class _TerminalPageState extends State<_TerminalPage> {
                         const SizedBox(width: 7),
                         IconButton(
                           tooltip: context.l10n.disconnect2,
-                          onPressed: () => app.closeTerminalTab(activeTab.id),
+                          onPressed: () => app.disconnectTerminalTab(activeTab.id),
                           icon: Icon(
                             Icons.link_off_rounded,
                             color: context.palette.red,
@@ -8885,7 +8888,9 @@ class _TerminalPageState extends State<_TerminalPage> {
                                         'terminal-disconnect',
                                         context.l10n.disconnect,
                                         Icons.link_off,
-                                        () => app.closeTerminalTab(activeTab.id),
+                                        () => app.disconnectTerminalTab(activeTab.id),
+                                        enabled: activeTab.console != null || activeTab.state == 'connected' ||
+                                            activeTab.state == 'connecting' || activeTab.recovery?.automaticEnabled == true,
                                         destructive: true,
                                       ),
                                   ],
@@ -9135,6 +9140,11 @@ return DesktopView(
     return GestureDetector(
       onSecondaryTapDown: (event) => unawaited(
         showWorkspaceContextMenu(context, event.globalPosition, [
+          if (tab.host?.protocol.isTerminal == true && tab.console == null)
+            WorkspaceAction('terminal-disconnect-$id', context.l10n.disconnect,
+              Icons.link_off, () => app.disconnectTerminalTab(id),
+              enabled: tab.state == 'connected' || tab.state == 'connecting' ||
+                  tab.recovery?.automaticEnabled == true),
           WorkspaceAction(
             'terminal-properties-$id',
             context.l10n.properties,
@@ -9721,7 +9731,7 @@ return DesktopView(
               search!.previousMatch();
             }
           case TerminalShortcutAction.disconnect:
-            unawaited(app.closeTerminalTab(tabId));
+            unawaited(app.disconnectTerminalTab(tabId));
         }
       },
     );

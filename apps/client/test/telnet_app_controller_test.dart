@@ -152,6 +152,25 @@ void main() {
   useAppLocaleFixture('en');
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('manual Telnet disconnect retains the tab and restore creates a fresh transport', () async {
+    final (app, database, _) = await _controller();
+    final channels = <_PendingChannel>[];
+    app.telnetConnectorForTesting = (_, _) async { final c = _PendingChannel(); channels.add(c); return c; };
+    try {
+      await app.openTerminalTab(_telnetHost(2323));
+      final tab = app.activeTerminalTab!;
+      await app.disconnectTerminalTab(tab.id);
+      expect(channels.single.closed, isTrue);
+      expect(app.activeTerminalTab, same(tab));
+      expect(tab.state, 'disconnected');
+      expect(tab.recovery!.automaticEnabled, isFalse);
+      await tab.recovery!.retry();
+      expect(channels, hasLength(2));
+      expect(tab.state, 'connected');
+      expect(app.activeTerminalTab, same(tab));
+    } finally { await app.closeWorkspace(); await database.close(); }
+  });
+
   test('Telnet manual restore keeps tab identity and old screen', () async {
     final (app, database, _) = await _controller();
     final channels = <_PendingChannel>[];
