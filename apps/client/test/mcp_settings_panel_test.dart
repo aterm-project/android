@@ -23,6 +23,7 @@ class _FakeMcpService extends ChangeNotifier implements McpService {
   bool loading = false;
   bool ready = true;
   bool failWrites = false;
+  bool localDevice = true;
   Completer<void>? writeGate;
   McpAccessMode mode = McpAccessMode.readOnly;
   final overrides = <String, McpAccessMode>{};
@@ -49,6 +50,8 @@ class _FakeMcpService extends ChangeNotifier implements McpService {
   bool get permissionsLoading => loading;
   @override
   bool get permissionsReady => ready;
+  @override
+  bool get localDeviceAccessApplicable => localDevice;
   @override
   McpAccessMode get defaultAccess => mode;
   @override
@@ -221,6 +224,7 @@ void main() {
           find.byKey(const ValueKey('mcp_android_forward_command')),
         );
         expect(find.text('adb forward tcp:8765 tcp:8765'), findsOneWidget);
+        expect(find.text(l10n.mcpAndroidBackgroundHint), findsOneWidget);
         expect(
           find.text(l10n.mcpRunningDefaultAccess(l10n.mcpAccessModeReadOnly)),
           findsOneWidget,
@@ -258,6 +262,10 @@ void main() {
         expect(field.center.dy, closeTo(row.center.dy, 4));
         expect(
           find.byKey(const ValueKey('mcp_android_forward_command')),
+          platform == TargetPlatform.android ? findsOneWidget : findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('mcp_android_background_hint')),
           platform == TargetPlatform.android ? findsOneWidget : findsNothing,
         );
       },
@@ -412,6 +420,26 @@ void main() {
     service.writeGate!.complete();
     await tester.pumpAndSettle();
     expect(service.overrides['host-1'], McpAccessMode.denied);
+  });
+
+  testWidgets('the local device row appears only where it applies', (
+    tester,
+  ) async {
+    final service = _FakeMcpService()
+      ..localDevice = false
+      ..overrides[mcpLocalDeviceHostId] = McpAccessMode.readWrite;
+    await _pump(tester, service, size: phone);
+    final l10n = lookupAppLocalizations(const Locale('en'));
+    expect(_hostField(mcpLocalDeviceHostId), findsNothing);
+    expect(find.text(l10n.mcpLocalDeviceName), findsNothing);
+    // A stale stored override for a non-applicable identity isn't counted.
+    expect(find.text(l10n.mcpCustomizedCount(0)), findsOneWidget);
+    service
+      ..localDevice = true
+      ..changed();
+    await tester.pumpAndSettle();
+    expect(_hostField(mcpLocalDeviceHostId), findsOneWidget);
+    expect(find.text(l10n.mcpCustomizedCount(1)), findsOneWidget);
   });
 
   testWidgets('large inventories are searchable and paged', (tester) async {
@@ -589,7 +617,7 @@ void main() {
     final keys = en.keys
         .where((k) => k.startsWith('mcp') && !k.startsWith('@'))
         .toList();
-    expect(keys.length, greaterThanOrEqualTo(29));
+    expect(keys.length, greaterThanOrEqualTo(33));
     final placeholder = RegExp(r'\{(\w+)\}');
     Set<String> names(String s) =>
         placeholder.allMatches(s).map((m) => m.group(1)!).toSet();

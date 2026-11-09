@@ -15062,5 +15062,27 @@
   "mcpAndroidForwardingHint": "MCP listens only on this device's loopback address. To use it from AI on a computer connected with USB debugging, run this on the computer, then use the copied configuration there:",
   "@mcpAndroidForwardingHint": {
     "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpAndroidBackgroundHint": "While MCP runs, Atermius shows a notification so external AI can keep using it after you switch apps. Stopping it from the notification, locking or signing out revokes the token. If the notification can't be shown, MCP stops when you leave the app.",
+  "@mcpAndroidBackgroundHint": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpForegroundNotificationTitle": "External AI access is on",
+  "@mcpForegroundNotificationTitle": {
+    "description": "Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder)."
+  },
+  "mcpForegroundNotificationText": "MCP is listening on 127.0.0.1:{port}. Stop it to revoke the access token.",
+  "@mcpForegroundNotificationText": {
+    "description": "Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder).",
+    "placeholders": {
+      "port": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "mcpForegroundNotificationStop": "Stop MCP",
+  "@mcpForegroundNotificationStop": {
+    "description": "Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder)."
   }
 }

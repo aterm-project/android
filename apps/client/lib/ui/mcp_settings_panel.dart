@@ -313,6 +313,18 @@ class _McpSettingsPanelState extends State<McpSettingsPanel> {
                 height: 1.5,
               ),
             ),
+            if (Theme.of(context).platform == TargetPlatform.android) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.mcpAndroidBackgroundHint,
+                key: const ValueKey('mcp_android_background_hint'),
+                style: TextStyle(
+                  color: context.palette.muted,
+                  fontSize: 12,
+                  height: 1.5,
+                ),
+              ),
+            ],
           ],
           if (_error != null)
             Padding(
@@ -334,8 +346,11 @@ class _McpSettingsPanelState extends State<McpSettingsPanel> {
     final ready = service.permissionsReady && !loading;
     final defaultMode = service.defaultAccess;
     final hosts = ready ? service.permissionHosts : const <HostRecord>[];
+    // Only offered where hostless local console sessions can exist.
+    final localDevice = ready && service.localDeviceAccessApplicable;
     final customized =
-        (ready && service.accessOverrideForHost(mcpLocalDeviceHostId) != null
+        (localDevice &&
+                service.accessOverrideForHost(mcpLocalDeviceHostId) != null
             ? 1
             : 0) +
         hosts.where((h) => service.accessOverrideForHost(h.id) != null).length;
@@ -454,15 +469,16 @@ class _McpSettingsPanelState extends State<McpSettingsPanel> {
               style: muted,
             ),
             const SizedBox(height: 12),
-            _machineRow(
-              context,
-              id: mcpLocalDeviceHostId,
-              name: l10n.mcpLocalDeviceName,
-              detail: l10n.mcpLocalDeviceDetail,
-              icon: Theme.of(context).platform == TargetPlatform.android
-                  ? Icons.phone_android_outlined
-                  : Icons.computer_outlined,
-            ),
+            if (localDevice)
+              _machineRow(
+                context,
+                id: mcpLocalDeviceHostId,
+                name: l10n.mcpLocalDeviceName,
+                detail: l10n.mcpLocalDeviceDetail,
+                icon: Theme.of(context).platform == TargetPlatform.android
+                    ? Icons.phone_android_outlined
+                    : Icons.computer_outlined,
+              ),
             if (hosts.length > 6) ...[
               const SizedBox(height: 12),
               TextField(
