@@ -12902,6 +12902,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Данные для входа хранятся в зашифрованном виде. При подключении доверенный шлюз удалённого рабочего стола обрабатывает учётные данные и изображение.';
 
   @override
+  String get directDesktopSignInHint =>
+      'Данные для входа хранятся в зашифрованном виде. Это устройство подключается к хосту напрямую и использует их только для этого подключения, без шлюза.';
+
+  @override
   String labelPressEnterToConnect(String label) {
     return '$label  ·  Enter — подключиться';
   }
@@ -15601,6 +15605,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get keybarReset => 'Сброс';
+
+  @override
+  String get keybarCtrlGuidance =>
+      'Ctrl: нажмите для следующей клавиши, дважды — чтобы зафиксировать';
+
+  @override
+  String get keybarAltGuidance =>
+      'Alt: нажмите для следующей клавиши, дважды — чтобы зафиксировать';
+
+  @override
+  String get keybarModifierOff => 'Выкл.';
+
+  @override
+  String get keybarModifierArmed => 'Только следующая клавиша';
+
+  @override
+  String get keybarModifierLocked => 'Зафиксирован';
+
+  @override
+  String get keybarPinExpanded => 'Не скрывать дополнительные клавиши';
 
   @override
   String get terminalSearchQueryTooLong => 'Слишком длинный запрос';

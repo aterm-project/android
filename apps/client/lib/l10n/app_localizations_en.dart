@@ -12881,6 +12881,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign-in details are stored encrypted. When connecting, the trusted remote desktop gateway handles the sign-in credentials and the display.';
 
   @override
+  String get directDesktopSignInHint =>
+      'Sign-in details are stored encrypted. This device connects directly to the Host and uses them only for that connection; no gateway is involved.';
+
+  @override
   String labelPressEnterToConnect(String label) {
     return '$label  ·  Press Enter to connect';
   }
@@ -15565,6 +15569,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keybarReset => 'Reset';
+
+  @override
+  String get keybarCtrlGuidance =>
+      'Ctrl: tap for the next key only, double-tap to lock';
+
+  @override
+  String get keybarAltGuidance =>
+      'Alt: tap for the next key only, double-tap to lock';
+
+  @override
+  String get keybarModifierOff => 'Off';
+
+  @override
+  String get keybarModifierArmed => 'Next key only';
+
+  @override
+  String get keybarModifierLocked => 'Locked';
+
+  @override
+  String get keybarPinExpanded => 'Keep extra keys open';
 
   @override
   String get terminalSearchQueryTooLong => 'Query too long';

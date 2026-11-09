@@ -20161,6 +20161,12 @@ abstract class AppLocalizations {
   /// **'Sign-in details are stored encrypted. When connecting, the trusted remote desktop gateway handles the sign-in credentials and the display.'**
   String get signInDetailsAreStoredEncrypted;
 
+  /// No description provided for @directDesktopSignInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in details are stored encrypted. This device connects directly to the Host and uses them only for that connection; no gateway is involved.'**
+  String get directDesktopSignInHint;
+
   /// No description provided for @labelPressEnterToConnect.
   ///
   /// In en, this message translates to:
@@ -24492,6 +24498,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset'**
   String get keybarReset;
+
+  /// Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl: tap for the next key only, double-tap to lock'**
+  String get keybarCtrlGuidance;
+
+  /// Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock.
+  ///
+  /// In en, this message translates to:
+  /// **'Alt: tap for the next key only, double-tap to lock'**
+  String get keybarAltGuidance;
+
+  /// Accessibility value of a released terminal keybar modifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get keybarModifierOff;
+
+  /// Accessibility value of a terminal keybar modifier armed for one key.
+  ///
+  /// In en, this message translates to:
+  /// **'Next key only'**
+  String get keybarModifierArmed;
+
+  /// Accessibility value of a locked terminal keybar modifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get keybarModifierLocked;
+
+  /// Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep extra keys open'**
+  String get keybarPinExpanded;
 
   /// Terminal search status when the bounded query-length limit rejects the query.
   ///

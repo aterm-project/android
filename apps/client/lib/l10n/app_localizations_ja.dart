@@ -12085,6 +12085,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'サインイン情報は暗号化して保存されます。接続時は、信頼済みのリモートデスクトップゲートウェイがサインイン資格情報と画面を処理します。';
 
   @override
+  String get directDesktopSignInHint =>
+      'サインイン情報は暗号化して保存されます。このデバイスはホストに直接接続し、その接続にのみ使用します。ゲートウェイは経由しません。';
+
+  @override
   String labelPressEnterToConnect(String label) {
     return '$label  ·  Enter で接続';
   }
@@ -14614,6 +14618,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get keybarReset => '解除';
+
+  @override
+  String get keybarCtrlGuidance => 'Ctrl: タップで次のキーのみ、ダブルタップでロック';
+
+  @override
+  String get keybarAltGuidance => 'Alt: タップで次のキーのみ、ダブルタップでロック';
+
+  @override
+  String get keybarModifierOff => 'オフ';
+
+  @override
+  String get keybarModifierArmed => '次のキーのみ';
+
+  @override
+  String get keybarModifierLocked => 'ロック中';
+
+  @override
+  String get keybarPinExpanded => '追加キーを常に表示';
 
   @override
   String get terminalSearchQueryTooLong => '検索語が長すぎます';

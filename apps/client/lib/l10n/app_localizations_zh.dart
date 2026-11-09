@@ -11411,6 +11411,9 @@ class AppLocalizationsZh extends AppLocalizations {
       '登录信息加密保存；连接时，受信任的远程桌面网关会处理登录凭据与画面。';
 
   @override
+  String get directDesktopSignInHint => '登录信息加密保存；本设备直接连接主机，凭据仅用于该连接，不经过任何网关。';
+
+  @override
   String labelPressEnterToConnect(String label) {
     return '$label  ·  回车连接';
   }
@@ -13796,6 +13799,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get keybarReset => '重置';
+
+  @override
+  String get keybarCtrlGuidance => 'Ctrl：轻点仅作用于下一个按键，双击锁定';
+
+  @override
+  String get keybarAltGuidance => 'Alt：轻点仅作用于下一个按键，双击锁定';
+
+  @override
+  String get keybarModifierOff => '关闭';
+
+  @override
+  String get keybarModifierArmed => '仅下一个按键';
+
+  @override
+  String get keybarModifierLocked => '已锁定';
+
+  @override
+  String get keybarPinExpanded => '保持展开更多按键';
 
   @override
   String get terminalSearchQueryTooLong => '查询过长';
