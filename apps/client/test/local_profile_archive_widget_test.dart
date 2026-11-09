@@ -308,11 +308,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Default workspace'), findsOneWidget);
       expect(find.text('Snippet'), findsAtLeastNWidgets(1));
-      await openSettingsCategory(tester, 'terminal');
+      await openSettingsCategory(tester, 'shortcuts');
       final searchShortcutField = find.byKey(
         const ValueKey('local_terminal_shortcut_search'),
       );
-      await openSettingsCategory(tester, 'terminal');
+      await openSettingsCategory(tester, 'shortcuts');
       await tester.ensureVisible(searchShortcutField);
       await tester.pumpAndSettle();
       expect(
@@ -324,7 +324,7 @@ void main() {
       await tester.pumpAndSettle();
       await _tapWorkspaceAction(tester, 'local_profile_preferences_toggle');
       await tester.pumpAndSettle();
-      await openSettingsCategory(tester, 'terminal');
+      await openSettingsCategory(tester, 'shortcuts');
       await tester.ensureVisible(searchShortcutField);
       await tester.pumpAndSettle();
       expect(
@@ -349,7 +349,7 @@ void main() {
       await pumpUntilIdle(tester);
       await _tapWorkspaceAction(tester, 'local_profile_preferences_toggle');
       await tester.pumpAndSettle();
-      await openSettingsCategory(tester, 'terminal');
+      await openSettingsCategory(tester, 'shortcuts');
       await tester.ensureVisible(searchShortcutField);
       await tester.pumpAndSettle();
       expect(

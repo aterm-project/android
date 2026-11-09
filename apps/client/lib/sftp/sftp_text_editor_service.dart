@@ -171,6 +171,10 @@ class SftpTextEditorService {
   final Random _random;
   final String? sessionId;
 
+  /// The bounded byte-level filesystem (regular-file reads, exclusive
+  /// staging, atomic replace) for byte-exact external editing.
+  SftpTextFileSystem get filesystem => _filesystem;
+
   Future<SftpTextDocument> open(String path) async {
     final safePath = _validateFilePath(path);
     final snapshot = await _readSnapshot(safePath);

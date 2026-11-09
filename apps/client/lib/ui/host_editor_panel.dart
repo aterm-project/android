@@ -516,7 +516,7 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 _formError!,
-                                style: const TextStyle(color: AppColors.red),
+                                style: TextStyle(color: context.palette.red),
                               ),
                             ),
                           ),

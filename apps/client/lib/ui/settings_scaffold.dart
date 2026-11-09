@@ -28,6 +28,18 @@ class SettingsScaffold extends StatefulWidget {
 
   final List<SettingsSection> sections;
 
+  /// Selects another category of the enclosing settings page, for example a
+  /// cross-link from Account to Account security. Returns false when
+  /// [context] is not inside a settings page or the category is not offered.
+  static bool selectSection(BuildContext context, String id) {
+    final state = context.findAncestorStateOfType<_SettingsScaffoldState>();
+    if (state == null || !state.widget.sections.any((s) => s.id == id)) {
+      return false;
+    }
+    state._select(id);
+    return true;
+  }
+
   @override
   State<SettingsScaffold> createState() => _SettingsScaffoldState();
 }
@@ -92,8 +104,8 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
                               SizedBox(height: density.space3),
                               Text(
                                 section.description,
-                                style: const TextStyle(
-                                  color: AppColors.muted,
+                                style: TextStyle(
+                                  color: context.palette.muted,
                                   height: 1.5,
                                 ),
                               ),
@@ -145,7 +157,7 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
             SizedBox(
               width: density.isCompact ? 200 : 220,
               child: Material(
-                color: AppColors.surface,
+                color: context.palette.surface,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -179,10 +191,9 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
                                   'settings_category_${section.id}',
                                 ),
                                 selected: section.id == _selectedId,
-                                selectedColor: AppColors.lime,
-                                selectedTileColor: AppColors.lime.withValues(
-                                  alpha: .09,
-                                ),
+                                selectedColor: context.palette.lime,
+                                selectedTileColor: context.palette.lime
+                                    .withValues(alpha: .09),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(
                                     density.radiusMd,
@@ -210,7 +221,7 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
                 ),
               ),
             ),
-            const VerticalDivider(width: 1, color: AppColors.line),
+            VerticalDivider(width: 1, color: context.palette.line),
             Expanded(child: content),
           ],
         );

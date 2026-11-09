@@ -285,6 +285,72 @@ class DesktopSession extends ChangeNotifier {
     }
   }
 
+  /// Close code/reason of a gateway connection (e.g. 4403 revoked).
+  int? gatewayCloseCode;
+  String? gatewayCloseReason;
+
+  /// Guest connection through the server's trusted share gateway. The
+  /// gateway (not this client) chooses the target and holds the login; this
+  /// session only renders the Guacamole stream and sends input, which the
+  /// gateway filters by the link's permissions.
+  Future<void> connectGateway({
+    required Uri socketUri,
+    required String ticket,
+    int width = 1280,
+    int height = 800,
+    void Function(Map<String, dynamic> frame)? onControl,
+  }) async {
+    try {
+      final channel = WebSocketChannel.connect(socketUri);
+      _channel = channel;
+      await channel.ready.timeout(const Duration(seconds: 15));
+      if (_closed) {
+        await channel.sink.close();
+        return;
+      }
+      channel.sink.add(jsonEncode({'type': 'authenticate', 'ticket': ticket}));
+      var opened = false;
+      _write = channel.sink.add;
+      _closeTransport = () => channel.sink.close();
+      final stream = channel.stream.transform(
+        StreamTransformer<dynamic, dynamic>.fromHandlers(
+          handleDone: (sink) {
+            gatewayCloseCode = channel.closeCode;
+            gatewayCloseReason = channel.closeReason;
+            sink.close();
+          },
+        ),
+      );
+      _listen(
+        stream
+            .where((event) {
+              if (event is String) {
+                final frame = jsonDecode(event);
+                if (frame is Map<String, dynamic>) {
+                  if (frame['type'] == 'authenticated' && !opened) {
+                    opened = true;
+                    channel.sink.add(
+                      jsonEncode({'type': 'open', 'width': width, 'height': height}),
+                    );
+                  }
+                  onControl?.call(frame);
+                }
+                return false;
+              }
+              return true;
+            })
+            .map((event) {
+              if (event is! List<int>) {
+                throw const FormatException('Invalid gateway frame');
+              }
+              return event;
+            }),
+      );
+    } catch (_) {
+      _fail(currentL10n.unableToConnectCheckTheDesktop);
+    }
+  }
+
   Future<void> connectLocal(HostRecord host, {int? guacdPort}) async {
     // An explicit port remains available to the gateway integration tests and
     // existing Linux installations. Native UI sessions use direct transports.

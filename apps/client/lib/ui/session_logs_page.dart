@@ -145,7 +145,7 @@ class _SessionLogsPageState extends State<SessionLogsPage> {
               book.persistent
                   ? l10n.r7NavLogStorageLocal
                   : l10n.r7NavLogStorageMemory,
-              style: const TextStyle(fontSize: 12, color: AppColors.muted),
+              style: TextStyle(fontSize: 12, color: context.palette.muted),
             ),
             const SizedBox(height: 8),
             Card(
@@ -171,7 +171,7 @@ class _SessionLogsPageState extends State<SessionLogsPage> {
                 child: Text(
                   l10n.r7NavLogStorageFailed,
                   key: const ValueKey('session_logs_storage_failed'),
-                  style: const TextStyle(color: AppColors.red, fontSize: 12),
+                  style: TextStyle(color: context.palette.red, fontSize: 12),
                 ),
               ),
             const SizedBox(height: 12),
@@ -220,7 +220,7 @@ class _SessionLogsPageState extends State<SessionLogsPage> {
                         : l10n.r7NavLogNoMatches,
                     key: const ValueKey('session_logs_empty'),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: context.palette.muted),
                   ),
                 ),
               )
@@ -259,10 +259,10 @@ class _SessionLogRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final (icon, color) = switch (entry.status) {
-      SessionLogStatus.connecting => (Icons.sync, AppColors.orange),
-      SessionLogStatus.connected => (Icons.link, AppColors.accentText),
-      SessionLogStatus.failed => (Icons.error_outline, AppColors.red),
-      SessionLogStatus.closed => (Icons.link_off, AppColors.muted),
+      SessionLogStatus.connecting => (Icons.sync, context.palette.orange),
+      SessionLogStatus.connected => (Icons.link, context.palette.accentText),
+      SessionLogStatus.failed => (Icons.error_outline, context.palette.red),
+      SessionLogStatus.closed => (Icons.link_off, context.palette.muted),
     };
     final duration = entry.duration;
     final details = [
@@ -356,9 +356,9 @@ class _SessionLogDetailDialogState extends State<_SessionLogDetailDialog> {
                         width: 120,
                         child: Text(
                           label,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.muted,
+                            color: context.palette.muted,
                           ),
                         ),
                       ),
@@ -390,9 +390,9 @@ class _SessionLogDetailDialogState extends State<_SessionLogDetailDialog> {
                           ? l10n.r7NavLogTranscriptLiveNotRecorded
                           : l10n.r7NavLogTranscriptNone,
                       key: const ValueKey('session_log_no_transcript'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.muted,
+                        color: context.palette.muted,
                       ),
                     );
                   }
@@ -404,9 +404,9 @@ class _SessionLogDetailDialogState extends State<_SessionLogDetailDialog> {
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
                             l10n.r7NavLogTranscriptTruncated,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.orange,
+                              color: context.palette.orange,
                             ),
                           ),
                         ),
@@ -415,9 +415,9 @@ class _SessionLogDetailDialogState extends State<_SessionLogDetailDialog> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.background,
+                          color: context.palette.background,
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: AppColors.line),
+                          border: Border.all(color: context.palette.line),
                         ),
                         child: SingleChildScrollView(
                           child: SelectableText(

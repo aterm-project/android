@@ -11,10 +11,12 @@ import 'terminal_tools_sidebar.dart';
 import '../mcp/mcp_service.dart';
 import '../mcp/mcp_workspace.dart';
 import 'mcp_settings_panel.dart';
+import 'account_settings.dart';
 import 'settings_scaffold.dart';
 import '../console/local_console.dart';
 import '../console/local_shell_l10n.dart';
 import 'local_shell_menu.dart';
+import 'home_add_sharing_row.dart';
 import '../telnet/telnet_errors.dart';
 import '../telnet/telnet_session.dart';
 import '../telnet/telnet_transport.dart';
@@ -89,6 +91,9 @@ import 'workspace_tab_bar.dart';
 import 'new_window.dart';
 import '../l10n/l10n.dart';
 import 'app_language_settings.dart';
+import 'app_theme_mode.dart';
+import 'wallpaper.dart';
+import 'wallpaper_settings.dart';
 
 typedef LocalVaultDatabaseFactory = Future<LocalVaultDatabase> Function(
   UnlockedLocalProfile profile, {
@@ -1206,11 +1211,18 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
   }
 
   Future<void> _addHost([HostProtocol protocol = HostProtocol.ssh]) async {
+    final openedRepository = _repository, openedProfile = _activeProfile;
     final draft = await _showHostEditor(
       groups: _groups,
       initialProtocol: protocol,
     );
-    if (draft == null || !mounted) return;
+    // Never save into a Profile other than the one the editor opened for.
+    if (draft == null ||
+        !mounted ||
+        !identical(openedRepository, _repository) ||
+        !identical(openedProfile, _activeProfile)) {
+      return;
+    }
     final generation = _beginOperation();
     if (generation < 0) return;
     try {
@@ -1977,7 +1989,7 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         dialogError,
-                        style: const TextStyle(color: AppColors.red),
+                        style: TextStyle(color: context.palette.red),
                       ),
                     ),
                   Expanded(
@@ -2945,11 +2957,15 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
           : _strictPreference(_terminalFontSizePreference!)
                 .terminalFontSizeValue);
 
+  /// Saved terminal theme of this profile. Live terminals use it, so an
+  /// unsaved settings draft is never applied (or left applied) as if saved.
+  VaultTerminalThemeChoice get _savedTerminalThemeChoice =>
+      _terminalThemePreference == null
+      ? VaultPreferenceRecord.defaultTerminalTheme
+      : _strictPreference(_terminalThemePreference!).terminalThemeValue;
+
   bool get _terminalThemeDirty =>
-      _terminalThemeChoice !=
-      (_terminalThemePreference == null
-          ? VaultPreferenceRecord.defaultTerminalTheme
-          : _strictPreference(_terminalThemePreference!).terminalThemeValue);
+      _terminalThemeChoice != _savedTerminalThemeChoice;
 
   bool get _terminalShortcutsDirty =>
       _terminalShortcutDraft !=
@@ -3028,15 +3044,24 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     },
   );
 
-  Future<void> _saveTerminalThemePreference() => _saveLocalPreference(
-    key: VaultPreferenceRecord.terminalThemeKey,
-    value: _terminalThemeChoice.value,
-    current: _terminalThemePreference,
-    onSaved: (saved) {
-      _terminalThemePreference = saved;
-      _terminalThemeChoice = _strictPreference(saved).terminalThemeValue;
-    },
-  );
+  Future<void> _saveTerminalThemePreference() {
+    // Read before the awaited save: a device palette picked meanwhile (even
+    // the same one again) must not be cleared by this save.
+    final palettes = TerminalPaletteController.of(context);
+    final paletteGeneration = palettes.selectionGeneration;
+    return _saveLocalPreference(
+      key: VaultPreferenceRecord.terminalThemeKey,
+      value: _terminalThemeChoice.value,
+      current: _terminalThemePreference,
+      onSaved: (saved) {
+        _terminalThemePreference = saved;
+        _terminalThemeChoice = _strictPreference(saved).terminalThemeValue;
+        // Only reached for the current operation: show the saved theme on
+        // this device instead of a masking device palette overlay.
+        palettes.followSyncedIf(paletteGeneration);
+      },
+    );
+  }
 
   Future<void> _saveTerminalShortcutsPreference() {
     final bindings = _terminalShortcutDraft;
@@ -4388,8 +4413,8 @@ _showMessage(
                                           key: const ValueKey(
                                             'local_profile_error',
                                           ),
-                                          style: const TextStyle(
-                                            color: AppColors.red,
+                                          style: TextStyle(
+                                            color: context.palette.red,
                                           ),
                                         ),
                                       ),
@@ -4405,6 +4430,10 @@ _showMessage(
                                                   children: [
                                                     ScopedWorkspaceModeSettings(
                                                       onSwitch: _exit,
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    LocalAccountSettingsPanel(
+                                                      onSignIn: _exit,
                                                     ),
                                                   ],
                                                 )
@@ -4502,12 +4531,14 @@ _showMessage(
                               autofocus: _selectedTabId == id,
                               readOnly: !session.connected.value,
                               hardwareKeyboardOnly: false,
+                              backgroundOpacity:
+                                  wallpaperTerminalBackgroundOpacity(context),
                               textStyle: TerminalStyle(
                                 fontSize: _terminalFontSizeChoice.toDouble(),
                               ),
                               theme: terminalColorThemeOf(
                                 context,
-                                _terminalThemeChoice,
+                                _savedTerminalThemeChoice,
                               ),
                             ),
                           );
@@ -4519,12 +4550,14 @@ _showMessage(
                               session.terminal,
                               autofocus: _selectedTabId == id,
                               readOnly: !session.connected.value,
+                              backgroundOpacity:
+                                  wallpaperTerminalBackgroundOpacity(context),
                               textStyle: TerminalStyle(
                                 fontSize: _terminalFontSizeChoice.toDouble(),
                               ),
                               theme: terminalColorThemeOf(
                                 context,
-                                _terminalThemeChoice,
+                                _savedTerminalThemeChoice,
                               ),
                             ),
                           );
@@ -4536,7 +4569,7 @@ _showMessage(
                           connection: session.connection!,
                           repository: _repository!,
                           fontSize: _terminalFontSizeChoice,
-                          theme: _terminalThemeChoice,
+                          theme: _savedTerminalThemeChoice,
                           shortcuts: _terminalShortcutBindings,
                           active: _selectedTabId == session.id,
                           onDisconnect: () => _closeTerminalTab(session.id),
@@ -4745,7 +4778,7 @@ _showMessage(
       Text(
         context.l10n.profileHostAndCredentialRecordsAre,
         style: Theme.of(context).textTheme.bodyMedium
-            ?.copyWith(color: AppColors.muted),
+            ?.copyWith(color: context.palette.muted),
       ),
       const SizedBox(height: 18),
       if (_catalogLoading)
@@ -4838,7 +4871,7 @@ _showMessage(
         selected: selected,
         leading: Icon(
           selected ? Icons.radio_button_checked : Icons.lock_outline,
-          color: selected ? AppColors.lime : AppColors.muted,
+          color: selected ? context.palette.lime : context.palette.muted,
         ),
         title: Text(context.l10n.localProfileSubstring2(profile.profileId.substring(0, 8))),
         subtitle: Text(context.l10n.createdFormatdate(_formatDate(profile.createdAt))),
@@ -4886,6 +4919,24 @@ _showMessage(
             onSearchSubmitted: hosts.isEmpty
                 ? null
                 : () => unawaited(_connectLocalHost(hosts.first)),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+          child: HomeAddSharingRow(
+            idPrefix: 'local',
+            enabled: !_busy,
+            onAddHost: _addHost,
+            onLaunchShell: (launch) => _openConsole(shell: launch),
+            onSerialConsole: _quickConnect,
+            // A local Profile has no Vault members or presence: show the
+            // truthful local-only indicator, never other users.
+            sharing: HomeSharingCluster(
+              idPrefix: 'local',
+              snapshot: const HomeSharingSnapshot.local(),
+              onOpenDetails: () =>
+                  unawaited(showHomeLocalSharingDetails(context)),
+            ),
           ),
         ),
         WindowCombinationsStrip(
@@ -4950,7 +5001,7 @@ _showMessage(
                     child: Text(
                       _hostListError!,
                       key: const ValueKey('local_host_list_error'),
-                      style: const TextStyle(color: AppColors.orange),
+                      style: TextStyle(color: context.palette.orange),
                     ),
                   ),
                   TextButton.icon(
@@ -5082,7 +5133,7 @@ _showMessage(
               children: [
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: .16),
+                    color: context.palette.accent.withValues(alpha: .16),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Padding(
@@ -5116,7 +5167,7 @@ _showMessage(
                         overflow: TextOverflow.ellipsis,
                         strutStyle: metrics.subtitleTextStrut,
                         style: TextStyle(
-                          color: AppColors.muted,
+                          color: context.palette.muted,
                           fontSize: metrics.subtitleTextSize,
                         ),
                       ),
@@ -5143,7 +5194,7 @@ _showMessage(
                   overflow: TextOverflow.ellipsis,
                   strutStyle: metrics.metaTextStrut,
                   style: TextStyle(
-                    color: AppColors.muted,
+                    color: context.palette.muted,
                     fontSize: metrics.metaTextSize,
                   ),
                 ),
@@ -5265,7 +5316,7 @@ _showMessage(
                   Text(
                     context.l10n.profileSubstring(profile.record.profileId.substring(0, 8)),
                     style: Theme.of(context).textTheme.bodySmall
-                        ?.copyWith(color: AppColors.muted),
+                        ?.copyWith(color: context.palette.muted),
                   ),
                 ],
               ),
@@ -5301,7 +5352,7 @@ _showMessage(
                   child: Text(
                     _snippetListError!,
                     key: const ValueKey('local_snippet_list_error'),
-                    style: const TextStyle(color: AppColors.orange),
+                    style: TextStyle(color: context.palette.orange),
                   ),
                 ),
                 TextButton.icon(
@@ -5432,7 +5483,7 @@ _showMessage(
                       child: Text(
                         _preferenceLoadError!,
                         key: const ValueKey('local_preference_load_error'),
-                        style: const TextStyle(color: AppColors.orange),
+                        style: TextStyle(color: context.palette.orange),
                       ),
                     ),
                     Align(
@@ -5479,6 +5530,14 @@ _showMessage(
           ],
         ),
       ),
+      // ACCOUNT worker: local mode explains sync and routes to sign-in.
+      SettingsSection(
+        id: accountSettingsSectionId,
+        title: context.l10n.accountSettingsTitle,
+        icon: Icons.account_circle_outlined,
+        description: context.l10n.accountSettingsDescription,
+        builder: (_) => LocalAccountSettingsPanel(onSignIn: _exit),
+      ),
       SettingsSection(
         id: 'mcp',
         title: 'AI / MCP',
@@ -5486,43 +5545,18 @@ _showMessage(
         description: context.l10n.letExternalAiAccessTheCurrent,
         builder: (_) => const McpSettingsPanel(),
       ),
+      // SETTINGS worker: Theme (UI mode + terminal font/colors) and
+      // Shortcuts are separate categories.
       SettingsSection(
-        id: 'terminal',
-        title: context.l10n.terminalAndShortcuts,
-        icon: Icons.terminal,
-        description: context.l10n.setTheTerminalFontSizeColors,
+        id: settingsThemeSectionId,
+        title: context.l10n.settingsThemeTitle,
+        icon: Icons.palette_outlined,
+        description: context.l10n.settingsThemeDescription,
         builder: (_) => SettingsCards(
           children: [
-            if (_preferenceLoadError != null)
-              SettingsCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_preferenceLoadError != null) ...[
-                      const SizedBox(height: 12),
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          _preferenceLoadError!,
-                          key: const ValueKey('local_preference_load_error'),
-                          style: const TextStyle(color: AppColors.orange),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          key: const ValueKey('local_preference_retry'),
-                          onPressed: _busy
-                              ? null
-                              : _retryDefaultSectionPreference,
-                          icon: const Icon(Icons.refresh),
-                          label: Text(context.l10n.retryReading),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+            const SettingsCard(child: AppThemeSettings()),
+            const SettingsCard(child: WallpaperSettings()),
+            if (_preferenceLoadError != null) _preferenceLoadErrorCard(),
             SettingsCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -5578,6 +5612,7 @@ _showMessage(
                   TerminalSyncedThemeSelector(
                     key: const ValueKey('local_terminal_theme_dropdown'),
                     selected: _terminalThemeChoice,
+                    persisted: _savedTerminalThemeChoice,
                     onSelected: _busy || _preferenceLoadError != null
                         ? null
                         : (value) =>
@@ -5603,14 +5638,19 @@ _showMessage(
               ),
             ),
             SettingsCard(
-              child: TerminalPaletteGallery(
-                synced: _terminalThemePreference == null
-                    ? VaultPreferenceRecord.defaultTerminalTheme
-                    : _strictPreference(
-                        _terminalThemePreference!,
-                      ).terminalThemeValue,
-              ),
+              child: TerminalPaletteGallery(synced: _savedTerminalThemeChoice),
             ),
+          ],
+        ),
+      ),
+      SettingsSection(
+        id: settingsShortcutsSectionId,
+        title: context.l10n.settingsThemeShortcutsTitle,
+        icon: Icons.keyboard_outlined,
+        description: context.l10n.settingsThemeShortcutsDescription,
+        builder: (_) => SettingsCards(
+          children: [
+            if (_preferenceLoadError != null) _preferenceLoadErrorCard(),
             SettingsCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -5635,7 +5675,7 @@ _showMessage(
                       key: const ValueKey(
                         'local_terminal_shortcuts_validation_error',
                       ),
-                      style: const TextStyle(color: AppColors.red),
+                      style: TextStyle(color: context.palette.red),
                     ),
                   Wrap(
                     spacing: 8,
@@ -5685,6 +5725,35 @@ _showMessage(
     ],
   );
 
+  /// Preference read error with retry, shown on each preference category.
+  Widget _preferenceLoadErrorCard() => SettingsCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_preferenceLoadError != null) ...[
+          const SizedBox(height: 12),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              _preferenceLoadError!,
+              key: const ValueKey('local_preference_load_error'),
+              style: TextStyle(color: context.palette.orange),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const ValueKey('local_preference_retry'),
+              onPressed: _busy ? null : _retryDefaultSectionPreference,
+              icon: const Icon(Icons.refresh),
+              label: Text(context.l10n.retryReading),
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
+
   Widget _buildGroups(UnlockedLocalProfile profile) => Column(
     children: [
       Padding(
@@ -5699,7 +5768,7 @@ _showMessage(
                   Text(
                     context.l10n.profileSubstring(profile.record.profileId.substring(0, 8)),
                     style: Theme.of(context).textTheme.bodySmall
-                        ?.copyWith(color: AppColors.muted),
+                        ?.copyWith(color: context.palette.muted),
                   ),
                 ],
               ),
@@ -5725,7 +5794,7 @@ _showMessage(
                   child: Text(
                     _groupListError!,
                     key: const ValueKey('local_group_list_error'),
-                    style: const TextStyle(color: AppColors.orange),
+                    style: TextStyle(color: context.palette.orange),
                   ),
                 ),
                 TextButton.icon(
@@ -5770,7 +5839,7 @@ _showMessage(
                       leading: CircleAvatar(
                         radius: AppDensity.of(context).isCompact ? 16 : 18,
                         backgroundColor: group.color == 0
-                            ? AppColors.surfaceRaised
+                            ? context.palette.surfaceRaised
                             : Color(0xFF000000 | group.color),
                         child: Icon(
                           Icons.folder_outlined,
@@ -5812,7 +5881,7 @@ class _WebLocalVaultSshNotice extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     key: const ValueKey('local_web_ssh_unavailable_notice'),
     margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-    color: AppColors.surfaceRaised,
+    color: context.palette.surfaceRaised,
     child: Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -5820,7 +5889,7 @@ class _WebLocalVaultSshNotice extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.info_outline, color: AppColors.teal),
+              Icon(Icons.info_outline, color: context.palette.teal),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -5865,7 +5934,7 @@ class _ProfileListError extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline, color: AppColors.orange),
+          Icon(Icons.error_outline, color: context.palette.orange),
           const SizedBox(height: 10),
           Text(message),
           const SizedBox(height: 12),
@@ -5903,7 +5972,7 @@ class _EmptyState extends StatelessWidget {
             Icon(
               icon,
               size: AppDensity.of(context).isCompact ? 32 : 36,
-              color: AppColors.muted,
+              color: context.palette.muted,
             ),
             const SizedBox(height: 12),
             Text(title, style: Theme.of(context).textTheme.titleMedium),
@@ -5912,7 +5981,7 @@ class _EmptyState extends StatelessWidget {
               description,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: AppColors.muted),
+                  ?.copyWith(color: context.palette.muted),
             ),
           ],
         ),
@@ -6005,7 +6074,7 @@ class _LocalArchivePasswordDialogState
                 alignment: Alignment.centerLeft,
                 child: Text(
                   _error!,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ),
             ],
@@ -6209,7 +6278,7 @@ class _LocalGroupEditorDialogState extends State<_LocalGroupEditorDialog> {
                           CircleAvatar(
                             radius: 10,
                             backgroundColor: color == 0
-                                ? AppColors.surfaceRaised
+                                ? context.palette.surfaceRaised
                                 : Color(0xFF000000 | color),
                           ),
                           const SizedBox(width: 10),
@@ -6232,7 +6301,7 @@ class _LocalGroupEditorDialogState extends State<_LocalGroupEditorDialog> {
                     child: Text(
                       _error!,
                       key: const ValueKey('local_group_editor_error'),
-                      style: const TextStyle(color: AppColors.red),
+                      style: TextStyle(color: context.palette.red),
                     ),
                   ),
                 ),
@@ -6503,7 +6572,7 @@ class _LocalSnippetEditorDialogState extends State<_LocalSnippetEditorDialog> {
                   child: Text(
                     _error!,
                     key: const ValueKey('local_snippet_editor_error'),
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
               ),
@@ -6713,7 +6782,7 @@ class _LocalCredentialEditorDialogState
                   child: Text(
                     _error!,
                     key: const ValueKey('local_credential_editor_error'),
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
               ),
@@ -7396,6 +7465,7 @@ throw StateError(context.l10n.snippetChanged);
                 autofocus: widget.active && !_searchOpen,
                 onKeyEvent: _handleTerminalKeyEvent,
                 padding: const EdgeInsets.all(12),
+                backgroundOpacity: wallpaperTerminalBackgroundOpacity(context),
                 textStyle: TerminalStyle(
                   fontSize: widget.fontSize.toDouble(),
                   fontFamily: 'monospace',

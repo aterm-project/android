@@ -38,6 +38,9 @@ dependencies:
   dartssh2: ^4.1.0
   web_socket_channel: ^3.0.3
   file_picker: ^10.3.10
+  # Native OS/browser file drops into the file manager. Pinned: 0.9.x needs a
+  # newer Flutter/Dart than this toolchain. Uses the onDragDone API.
+  desktop_drop: 0.8.4
   intl: ^0.20.2
   web: ^1.1.1
   yaml: ^3.1.4
@@ -58,6 +61,14 @@ dependency_overrides:
     path: ../../packages/sqlite3
   xterm:
     path: ../../packages/xterm
+  # Local fork adds SftpClient.renameNoReplace; see packages/dartssh2/UPSTREAM.md.
+  dartssh2:
+    path: ../../packages/dartssh2
+  # Local fork of desktop_drop 0.8.4 adding bounded browser drops (no folder
+  # traversal, item limit before any object URL); see
+  # packages/desktop_drop/UPSTREAM.md. Native platforms are unchanged.
+  desktop_drop:
+    path: ../../packages/desktop_drop
 
 flutter:
   generate: true

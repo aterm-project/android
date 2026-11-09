@@ -15818,4 +15818,1375 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get telnetInputTooLarge =>
       '貼り付けた内容が大きすぎるため Telnet で送信できません（上限 1 MiB）。何も送信していません。';
+
+  @override
+  String get accountSettingsTitle => 'アカウントとサインイン';
+
+  @override
+  String get accountSettingsDescription =>
+      'このデバイスが使用しているアカウントとサーバーの確認、セッションの管理、アカウントへのサインインを行います。';
+
+  @override
+  String get accountSettingsCurrentMode => '現在のモード';
+
+  @override
+  String get accountSettingsModeAccount => 'アカウントと同期';
+
+  @override
+  String get accountSettingsModeLocal => 'ローカルのみ（このデバイス）';
+
+  @override
+  String get accountSettingsSignedInAs => 'サインイン中のユーザー';
+
+  @override
+  String get accountSettingsServer => 'サーバー';
+
+  @override
+  String get accountSettingsSessionUnlocked => 'このデバイスでサインイン済み・ロック解除中';
+
+  @override
+  String get accountSettingsActiveVault => '現在の保管庫';
+
+  @override
+  String get accountSettingsNoVault => '保管庫が選択されていません';
+
+  @override
+  String get accountSettingsInstanceAdmin => 'インスタンス管理者';
+
+  @override
+  String get accountSettingsSessionActions => 'セッション';
+
+  @override
+  String get accountSettingsSecurityAction => 'パスワード・2 段階認証・復旧';
+
+  @override
+  String get accountSettingsSignOutTitle => 'このアカウントからサインアウトしますか？';
+
+  @override
+  String get accountSettingsSignOutBody =>
+      'このデバイスで開いているこのアカウントのセッションは閉じられます。暗号化された保管庫のデータはサーバーに残り、再度サインインするにはアカウントのパスワードが必要です。';
+
+  @override
+  String get accountSettingsSwitchToLocalTitle => 'ローカルモードに切り替えますか？';
+
+  @override
+  String get accountSettingsSwitchToLocalBody =>
+      'このデバイスのアカウントワークスペースと開いているセッションは閉じられます。アカウントの内容がローカルプロファイルにコピーされることはありません。';
+
+  @override
+  String get accountSettingsLocalNotSignedIn => 'アカウントにサインインしていません';
+
+  @override
+  String get accountSettingsLocalSyncRequiresAccount =>
+      'ローカルプロファイルはこのデバイスにのみ保存され、同期されません。デバイス間でホストを同期するには、Atermius サーバーのアカウントにサインインしてください。';
+
+  @override
+  String get accountSettingsSignIn => 'サインインまたはサーバーに接続';
+
+  @override
+  String get accountSettingsSignInTitle => 'アカウントのサインインを開きますか？';
+
+  @override
+  String get accountSettingsSignInBody =>
+      'ローカルプロファイルはロックされ、開いているセッションは閉じられます。ローカルのホストはこのデバイスに残り、アップロードされません。サインイン後、「データと移行」で移行を確認できます。';
+
+  @override
+  String get themeSettingTitle => 'テーマ';
+
+  @override
+  String themeSettingSystemResolved(Object theme) {
+    return 'システムに合わせる · 現在は$theme';
+  }
+
+  @override
+  String get themeOptionSystem => 'システムに合わせる';
+
+  @override
+  String get themeSettingDescription =>
+      'アプリのウィンドウ、メニュー、パネルの表示を変更します。ターミナルの色とリモートデスクトップの画面は、それぞれ独自の配色のままです。';
+
+  @override
+  String get themeOptionLight => 'ライト';
+
+  @override
+  String get themeOptionDark => 'ダーク';
+
+  @override
+  String get themeSettingSaveFailed =>
+      'テーマはこのセッションで切り替わりましたが、このデバイスに保存できませんでした。';
+
+  @override
+  String get syncSettingsPreferenceSaveFailed =>
+      'この設定をこのデバイスに保存できませんでした。アプリを再起動するまで有効です。';
+
+  @override
+  String get syncSettingsSyncingNow => '同期しています…';
+
+  @override
+  String get syncSettingsDeviceOnly => 'これらの同期設定はこのデバイスにのみ適用されます。';
+
+  @override
+  String get syncSettingsPreferenceSaving => '保存しています…';
+
+  @override
+  String get syncSettingsAutomaticOffDescription =>
+      'このデバイスではオフです。編集は「今すぐ同期」を選ぶか自動同期をオンに戻すまで、暗号化されたままこのデバイスのキューに保持されます。';
+
+  @override
+  String get syncSettingsNever => 'なし';
+
+  @override
+  String get syncSettingsSignInRequired =>
+      '同期するには、このデバイスでアカウントにサインインする必要があります。';
+
+  @override
+  String syncSettingsResultNotCompleted(String status) {
+    return '同期は完了しませんでした。現在の状態：$status。';
+  }
+
+  @override
+  String get syncSettingsWaitingToUpload => 'アップロード待ち';
+
+  @override
+  String syncSettingsResultFailed(String error) {
+    return '同期は完了しませんでした：$error';
+  }
+
+  @override
+  String syncSettingsQueuedWhileOff(int count) {
+    return 'このデバイスのキューにある暗号化された変更：$count。「今すぐ同期」を選ぶか自動同期をオンにするとアップロードされます。';
+  }
+
+  @override
+  String get syncSettingsTitle => '同期';
+
+  @override
+  String syncSettingsResultPending(int count) {
+    return '同期は実行されましたが、アップロード待ちの暗号化された変更が残っています：$count。';
+  }
+
+  @override
+  String get syncSettingsAutomaticTitle => '自動同期';
+
+  @override
+  String get syncSettingsPreferenceLoading =>
+      'このデバイスの同期設定を読み込んでいます…読み込み後に自動同期が始まります。';
+
+  @override
+  String get syncSettingsPreferenceReadFailedShort =>
+      '保存された設定を読み取れるまで自動同期は一時停止したままです。再試行するか、設定を選び直してください。';
+
+  @override
+  String get syncSettingsResultCompleted => '同期が完了しました。アップロード待ちはありません。';
+
+  @override
+  String get syncSettingsAutomaticOnDescription =>
+      '編集はバックグラウンドでアップロードされ、他のデバイスの変更もバックグラウンドでダウンロードされます。';
+
+  @override
+  String get syncSettingsPreferenceReadFailed =>
+      '一時停止中：このデバイスに保存された設定を読み取れませんでした。';
+
+  @override
+  String get syncSettingsSyncNow => '今すぐ同期';
+
+  @override
+  String get syncSettingsStatus => '状態';
+
+  @override
+  String get settingsThemeShortcutsTitle => 'ショートカット';
+
+  @override
+  String get settingsThemeShortcutsDescription => 'ターミナルで使うキーボードショートカットを選択します。';
+
+  @override
+  String get settingsThemeTitle => 'テーマ';
+
+  @override
+  String settingsThemeOverlayActive(String name) {
+    return 'このデバイスのターミナルは現在、代わりにデバイス配色 $name を表示しています。保存済みのテーマを選択するか、別のテーマを保存すると元に戻ります。';
+  }
+
+  @override
+  String get settingsThemeDescription =>
+      'アプリのライト／ダークモード、ターミナルのフォントサイズと配色を選択します。';
+
+  @override
+  String get wallpaperSettingTitle => '壁紙';
+
+  @override
+  String get wallpaperSettingDescription =>
+      'アプリとターミナルペインの背後に画像を表示します。ぼかすのは画像だけで、文字、操作部品、ターミナルの文字、リモートデスクトップの画面は鮮明なままです。';
+
+  @override
+  String get wallpaperChooseImage => '画像を選択…';
+
+  @override
+  String get wallpaperReplaceImage => '画像を変更…';
+
+  @override
+  String get wallpaperReset => '壁紙を削除';
+
+  @override
+  String get wallpaperNoImage => '壁紙なし';
+
+  @override
+  String get wallpaperPreviewLabel => '壁紙のプレビュー';
+
+  @override
+  String get wallpaperLoading => '壁紙を読み込んでいます…';
+
+  @override
+  String get wallpaperMissing =>
+      '保存された壁紙の画像が見つからないか、読み込めません。新しい画像を選択するか、壁紙を削除してください。';
+
+  @override
+  String get wallpaperModeTitle => 'レイアウト';
+
+  @override
+  String get wallpaperModeWindow => 'ウィンドウ全体';
+
+  @override
+  String get wallpaperModeWindowHint => '1 枚の画像をウィンドウ全体に表示します。';
+
+  @override
+  String get wallpaperModePanes => '分割に合わせる';
+
+  @override
+  String get wallpaperModePanesHint => '各ターミナルペインがそれぞれ画像を表示し、サイズ変更や並べ替えに追従します。';
+
+  @override
+  String wallpaperBlurValue(String value) {
+    return 'ぼかし: $value';
+  }
+
+  @override
+  String wallpaperErrorTooLarge(int limit) {
+    return 'この画像は $limit MB を超えています。';
+  }
+
+  @override
+  String get wallpaperErrorUnsupported => 'PNG、JPEG、または静止画の WebP 画像を選択してください。';
+
+  @override
+  String get wallpaperErrorCorrupt => 'この画像を読み込めません。破損している可能性があります。';
+
+  @override
+  String wallpaperErrorDimensions(int side) {
+    return 'この画像は大きすぎて使用できません（1 辺 $side px まで）。';
+  }
+
+  @override
+  String get wallpaperErrorStorage => 'このデバイスに壁紙を保存できませんでした。';
+
+  @override
+  String get wallpaperSaveFailed => '壁紙はこのセッションで変更されましたが、このデバイスに保存できませんでした。';
+
+  @override
+  String get wallpaperDeviceNote =>
+      '画像のコピーはこのデバイスのアプリ専用ストレージに保存されます。別ウィンドウも開いたときに同じ壁紙を使います。';
+
+  @override
+  String get fileManagerPasteInto => 'フォルダーに貼り付け';
+
+  @override
+  String get fileManagerPathCopied => 'パスをコピーしました';
+
+  @override
+  String fileManagerCopying(String name) {
+    return '「$name」をコピー中…';
+  }
+
+  @override
+  String get fileManagerDropFailed => 'ドロップした項目を読み取れませんでした。何もアップロードされていません。';
+
+  @override
+  String get fileManagerOperationUnsupported => 'この接続ではファイル管理操作を利用できません。';
+
+  @override
+  String fileManagerDeleteConfirm(String name) {
+    return '「$name」を削除しますか？この操作は元に戻せません。';
+  }
+
+  @override
+  String get fileManagerOpen => '開く';
+
+  @override
+  String get fileManagerPasteHere => 'ここに貼り付け';
+
+  @override
+  String fileManagerUploading(String name, int index, int count) {
+    return '「$name」をアップロード中（$index/$count）…';
+  }
+
+  @override
+  String fileManagerMoveConfirm(String name, String folder) {
+    return '「$name」を「$folder」に移動しますか？';
+  }
+
+  @override
+  String get fileManagerNameConflictTitle => '名前は既に使われています';
+
+  @override
+  String get fileManagerSkip => 'スキップ';
+
+  @override
+  String fileManagerClipboardCut(String name) {
+    return '「$name」を切り取りました — このタブで貼り付けると移動します';
+  }
+
+  @override
+  String fileManagerRenameTitle(String name) {
+    return '「$name」の名前を変更';
+  }
+
+  @override
+  String fileManagerDeleteFolderConfirm(String name, int count) {
+    return 'フォルダー「$name」と中の $count 個の項目を削除しますか？シンボリックリンクはリンク自体のみ削除され、リンク先はたどりません。この操作は元に戻せません。';
+  }
+
+  @override
+  String get fileManagerClearClipboard => 'ファイルのクリップボードをクリア';
+
+  @override
+  String get fileManagerRename => '名前を変更';
+
+  @override
+  String fileManagerErrorUnsupportedEntry(String name) {
+    return '「$name」はシンボリックリンク、特殊ファイル、または未対応の名前です。フォルダーのコピーではこれらを追跡・再作成しないため、何もコピーされていません。';
+  }
+
+  @override
+  String get fileManagerKeepBoth => '両方を残す';
+
+  @override
+  String fileManagerErrorFileTooLarge(String name) {
+    return '「$name」はファイルあたり 1 GiB のコピー上限を超えています。';
+  }
+
+  @override
+  String get fileManagerCut => '切り取り';
+
+  @override
+  String get fileManagerDropNothingAccepted =>
+      'ここにドロップできるのはファイルのみです。フォルダーや他の場所へのリンクはアップロードされません。';
+
+  @override
+  String get fileManagerPaste => '貼り付け';
+
+  @override
+  String get fileManagerErrorSourceChanged =>
+      '項目がサーバー上で変更または削除されました。更新してもう一度お試しください。';
+
+  @override
+  String fileManagerErrorExists(String name) {
+    return 'ここには既に「$name」があります。何も置き換えられていません。';
+  }
+
+  @override
+  String get fileManagerMoveTitle => '項目を移動';
+
+  @override
+  String get fileManagerErrorIntoItself => 'フォルダーをそれ自身の中に移動またはコピーすることはできません。';
+
+  @override
+  String get fileManagerCancelled => 'キャンセルしました。他には何も変更されていません。';
+
+  @override
+  String fileManagerDropTooManyFiles(int count) {
+    return '一度にドロップできるファイルは $count 個までです。';
+  }
+
+  @override
+  String get fileManagerBusy => '別のファイル操作がまだ実行中です。';
+
+  @override
+  String get fileManagerCopyPath => 'パスをコピー';
+
+  @override
+  String fileManagerNameConflictKeepBoth(String name) {
+    return 'このフォルダーには既に「$name」があります。新しい名前に「(copy)」を付けて両方を残しますか？既存の項目は置き換えられません。';
+  }
+
+  @override
+  String fileManagerMoving(String name) {
+    return '「$name」を移動中…';
+  }
+
+  @override
+  String fileManagerClipboardCopied(String name) {
+    return '「$name」をコピーしました — このタブで貼り付けできます';
+  }
+
+  @override
+  String get fileManagerDropNeedsSftp =>
+      'ドロップしたファイルは SFTP でアップロードされます。このフォルダーを SFTP で開いてください。';
+
+  @override
+  String fileManagerDeleting(String name) {
+    return '「$name」を削除中…';
+  }
+
+  @override
+  String fileManagerUploadSummary(int uploaded, int skipped, int failed) {
+    return 'アップロード $uploaded · スキップ $skipped · 失敗 $failed';
+  }
+
+  @override
+  String get fileManagerInvalidName => 'スラッシュ、バックスラッシュ、制御文字を含まない名前を入力してください。';
+
+  @override
+  String fileManagerErrorLimitExceeded(int entries, int depth) {
+    return 'このフォルダーはファイル管理操作には大きすぎます（上限 $entries 項目、深さ $depth 階層、または 2 GiB）。何も変更されていません。';
+  }
+
+  @override
+  String get fileManagerCopy => 'コピー';
+
+  @override
+  String get fileManagerDropTargetChanged =>
+      'ドロップを確認している間に、このファイルタブのフォルダーまたは接続が変わりました。何もアップロードされていません。もう一度ドロップしてください。';
+
+  @override
+  String fileManagerUploadConflict(String name) {
+    return 'このフォルダーには既に「$name」があります。「(copy)」を付けた新しい名前でアップロードするか、スキップしますか？既存のファイルは置き換えられません。';
+  }
+
+  @override
+  String get fileManagerMove => '移動';
+
+  @override
+  String get homeAddSerialConsoleDetail =>
+      'このコンピューターの COM ポートを 8N1 で開きます。サーバー上では何も実行されません。';
+
+  @override
+  String get homeSharingThisDevice => 'このデバイスでオンライン';
+
+  @override
+  String get homeAddShell => 'Shell（システム既定）';
+
+  @override
+  String homeSharingSharedPresenceUnknown(int members) {
+    return '共有中 · メンバー $members 人 · 状態不明';
+  }
+
+  @override
+  String get homeSharingLoading => 'メンバーを読み込み中…';
+
+  @override
+  String get homeAddTooltip => 'ホストを追加、またはローカル Shell / シリアル Console を開く';
+
+  @override
+  String get homeAddButton => '追加';
+
+  @override
+  String get homeSharingLocalOnly => 'ローカルのみ';
+
+  @override
+  String get homeAddSerialConsolePort => 'シリアルポート';
+
+  @override
+  String homeSharingMore(int count, String names) {
+    return '他 $count 人:\n$names';
+  }
+
+  @override
+  String get homeAddSerialConsoleOpen => 'Console を開く';
+
+  @override
+  String homeSharingSharedOnline(int members, int online) {
+    return '共有中 · メンバー $members 人 · $online 人オンライン';
+  }
+
+  @override
+  String get homeAddSerialConsoleBaud => 'ボーレート';
+
+  @override
+  String homeSharingYou(String name) {
+    return '$name（自分）';
+  }
+
+  @override
+  String get homeAddSerialConsoleTitle => 'シリアル Console を開く';
+
+  @override
+  String get homeAddSerialConsole => 'シリアル Console（COM）…';
+
+  @override
+  String get homeSharingLocalDetail =>
+      'このローカルプロファイルはこのデバイスにのみ暗号化して保存されます。Vault メンバーはおらず、他の人からは見えず、オンライン状態も送信されません。ホストを共有するにはアカウントの Vault にサインインしてください。';
+
+  @override
+  String get homeAddSerialConsoleUnavailable => 'シリアル Console（Windows アプリのみ）';
+
+  @override
+  String get homeSharingPresenceUnknown => '状態不明';
+
+  @override
+  String get homeSharingOffline => 'オフライン';
+
+  @override
+  String get homeSharingMembersUnavailable => 'メンバー未読み込み';
+
+  @override
+  String get homeSharingLocalTooltip => 'このデバイスのローカルプロファイル — 誰とも共有されていません';
+
+  @override
+  String get homeSharingDetailsTooltip => 'Vault メンバーとオンライン状態を表示';
+
+  @override
+  String get homeSharingIndividual => '自分のみ';
+
+  @override
+  String get homeSharingOnline => 'オンライン';
+
+  @override
+  String sidebarResizeWidthValue(int width) {
+    return '幅 $width px';
+  }
+
+  @override
+  String get sidebarResizeHint => 'ドラッグするか、左右の矢印キーで幅を変更します';
+
+  @override
+  String get sidebarResizeHandle => 'サイドバーの幅を変更';
+
+  @override
+  String get fileEditLaunchFailed => 'このファイルを開けるアプリがありません。';
+
+  @override
+  String get fileEditAtomicUnsupported =>
+      'このサーバーはファイルをアトミックに置き換えられないため、何もアップロードされていません。';
+
+  @override
+  String get fileEditUpload => 'アップロード';
+
+  @override
+  String get fileEditLocalRejected =>
+      'ローカルコピーがプライベートフォルダー内の通常ファイルではなくなりました。何もアップロードされていません。';
+
+  @override
+  String get fileEditConflictTitle => 'サーバー上のコピーが変更されました';
+
+  @override
+  String fileEditUploadedChangedAgain(String name) {
+    return '「$name」をアップロードしましたが、送信中にローカルで再度変更されました。準備ができたら再度アップロードしてください。';
+  }
+
+  @override
+  String get fileEditBlockedType =>
+      'この種類のファイルは開くと実行される可能性があるため、外部では開きません。「テキストを編集」または「ダウンロード」を使用してください。';
+
+  @override
+  String get fileEditStatusRejected => 'ローカルコピーは拒否されました';
+
+  @override
+  String fileEditFooterTitle(int count) {
+    return '外部で編集中（$count）';
+  }
+
+  @override
+  String get fileEditOpenExternal => '外部アプリで開く';
+
+  @override
+  String get fileEditSessionChanged =>
+      'このファイルタブの接続が閉じられたか変更されました。何もアップロードされていません。';
+
+  @override
+  String get fileEditStatusChanged => 'ローカルで変更済み — 未アップロード';
+
+  @override
+  String fileEditTooMany(int count) {
+    return '外部で同時に編集できるファイルは最大 $count 個です。';
+  }
+
+  @override
+  String get fileEditLocalMissing => 'ローカルコピーが見つかりません。何もアップロードされていません。';
+
+  @override
+  String get fileEditNotRegular => '外部で編集できるのは通常のリモートファイルのみです。';
+
+  @override
+  String get fileEditStatusWatching => '保存を監視中';
+
+  @override
+  String get fileEditIgnore => '無視';
+
+  @override
+  String fileEditOpened(String name) {
+    return '「$name」を外部で開きました。保存したら下の「アップロード」を選択してください。';
+  }
+
+  @override
+  String get fileEditTooLarge => '外部で編集できるのは 10 MiB までのファイルです。';
+
+  @override
+  String get fileEditLocalTooLarge =>
+      'ローカルコピーが 10 MiB を超えています。何もアップロードされていません。';
+
+  @override
+  String get fileEditStatusUploading => 'アップロード中…';
+
+  @override
+  String get fileEditUnavailable =>
+      '外部編集にはデスクトップアプリが必要です。ここで変更するには「テキストを編集」を使用してください。';
+
+  @override
+  String fileEditConflictMessage(String name) {
+    return '開いた後にサーバー上の「$name」が変更されました。サーバー上のコピーをローカル版で置き換えますか？';
+  }
+
+  @override
+  String get fileEditStatusConflict => 'サーバー上でも変更されています';
+
+  @override
+  String fileEditUploaded(String name) {
+    return '「$name」をアップロードしました。';
+  }
+
+  @override
+  String get fileEditStop => '監視を停止';
+
+  @override
+  String get fileEditStatusFailed => 'アップロード失敗 — ローカルの変更は保持されています';
+
+  @override
+  String get fileEditKeepLocal => 'ローカルに保持';
+
+  @override
+  String get fileEditReplace => 'サーバー上のコピーを置き換える';
+
+  @override
+  String get cloudAccessShareMenu => '共有…';
+
+  @override
+  String cloudAccessShareTitle(String name) {
+    return '$name を共有';
+  }
+
+  @override
+  String get cloudAccessClose => '閉じる';
+
+  @override
+  String get cloudAccessTabMembers => 'メンバーとチーム';
+
+  @override
+  String get cloudAccessTabLinks => '一時リンク';
+
+  @override
+  String get cloudAccessGatewayTrustNotice =>
+      'ゲストはこのサーバーのゲートウェイ経由で接続します。そのため、この Host のログイン情報はリンクが取り消されるか期限切れになるまでサーバーのゲートウェイ鍵で封印されます。サーバー運営者（またはサーバーを侵害した者）はそれを開き、セッションを見ることができます。ゲストはこの機能でパスワードや鍵を受け取りませんが、セッション内ではそのアカウントで許される操作を何でも行えます。専用の低権限アカウントを使用してください。';
+
+  @override
+  String get cloudAccessLinksHeading => 'この Host のリンク';
+
+  @override
+  String get cloudAccessNewLink => '新しいリンク';
+
+  @override
+  String get cloudAccessNoLinks => '一時リンクはまだありません。';
+
+  @override
+  String get cloudAccessStatusActive => '有効';
+
+  @override
+  String get cloudAccessStatusScheduled => '予定';
+
+  @override
+  String get cloudAccessStatusExpired => '期限切れ';
+
+  @override
+  String get cloudAccessStatusPaused => '一時停止';
+
+  @override
+  String get cloudAccessStatusSuspended => '停止中';
+
+  @override
+  String get cloudAccessStatusRevoked => '取り消し済み';
+
+  @override
+  String cloudAccessValidUntil(String time) {
+    return '$time まで';
+  }
+
+  @override
+  String cloudAccessRedemptionCount(String used, String max) {
+    return '$used/$max 回使用';
+  }
+
+  @override
+  String cloudAccessActiveSessions(String count) {
+    return '$count 件アクティブ';
+  }
+
+  @override
+  String get cloudAccessMore => 'その他';
+
+  @override
+  String get cloudAccessActivity => 'アクティビティ';
+
+  @override
+  String get cloudAccessPause => '一時停止';
+
+  @override
+  String get cloudAccessResume => '再開';
+
+  @override
+  String get cloudAccessRotate => 'シークレットを更新';
+
+  @override
+  String get cloudAccessRevoke => '取り消す';
+
+  @override
+  String get cloudAccessRevokeLinkTitle => 'このリンクを取り消しますか？';
+
+  @override
+  String get cloudAccessRevokeLinkMessage =>
+      'リンクはすぐに無効になり、アクティブなゲストセッションは数秒以内に閉じられます。ゲストがすでに Host 上で行った操作は取り消せません。';
+
+  @override
+  String get cloudAccessRotateTitle => '新しいシークレットを発行しますか？';
+
+  @override
+  String get cloudAccessRotateMessage =>
+      '現在の URL は無効になり、そのゲストは切断されます。送信用の新しい URL が発行されます。';
+
+  @override
+  String get cloudAccessScheduleStart => '後で開始';
+
+  @override
+  String get cloudAccessStartsNow => '今すぐ開始';
+
+  @override
+  String get cloudAccessPickStart => '開始時刻を選択してください';
+
+  @override
+  String get cloudAccessLifetime => '有効期間';
+
+  @override
+  String get cloudAccessOneHour => '1 時間';
+
+  @override
+  String get cloudAccessOneDay => '24 時間';
+
+  @override
+  String get cloudAccessOneWeek => '7 日';
+
+  @override
+  String get cloudAccessCustom => 'カスタム…';
+
+  @override
+  String cloudAccessWindowSummary(String start, String end, String utc) {
+    return '$start から $end まで（ローカル時刻、UTC $utc）。サーバーの時計が基準です。';
+  }
+
+  @override
+  String get cloudAccessEndBeforeStart => '終了は開始より後で、未来の時刻にしてください。';
+
+  @override
+  String get cloudAccessMaxRedemptions => 'リンクを開ける回数';
+
+  @override
+  String get cloudAccessMaxRedemptionsHelp =>
+      '既定は 1。「続行」をクリックしたブラウザーごとに 1 回使います。';
+
+  @override
+  String get cloudAccessUnlimited => '無制限';
+
+  @override
+  String get cloudAccessRedemptionsRange => '1〜1000 を入力するか、「無制限」を選んでください。';
+
+  @override
+  String get cloudAccessMaxConnections => '接続試行回数（任意）';
+
+  @override
+  String get cloudAccessMaxConnectionsHelp => '空欄で無制限。拒否された試行は数えません。';
+
+  @override
+  String get cloudAccessConnectionsRange => '正の数を入力するか空欄にしてください。';
+
+  @override
+  String get cloudAccessConcurrent => '同時接続数';
+
+  @override
+  String get cloudAccessViewOnly => '閲覧のみ';
+
+  @override
+  String get cloudAccessViewOnlyHelp => 'キーボード、マウス、貼り付けはサーバーがブロックします。';
+
+  @override
+  String get cloudAccessClipboardToRemote => 'Host への貼り付けを許可';
+
+  @override
+  String get cloudAccessClipboardFromRemote => 'Host からのコピーを許可';
+
+  @override
+  String get cloudAccessFilesLocked => 'ゲストのファイル転送、ドライブ、印刷、録画はオフです。';
+
+  @override
+  String get cloudAccessCustomSlug => 'カスタムアドレス（任意）';
+
+  @override
+  String get cloudAccessCustomSlugHelp =>
+      '3〜48 文字の英小文字・数字・ハイフン。アドレスはパスワードではなく推測され得るため、機密語は避けてください。';
+
+  @override
+  String get cloudAccessGuestTitle => 'ゲストに表示するタイトル（任意）';
+
+  @override
+  String get cloudAccessGuestTitleHelp => 'リンクのシークレットで暗号化され、サーバーは読めません。';
+
+  @override
+  String get cloudAccessCancel => 'キャンセル';
+
+  @override
+  String get cloudAccessCreateLink => 'リンクを作成';
+
+  @override
+  String get cloudAccessLinkReady => 'リンクを作成しました';
+
+  @override
+  String get cloudAccessCopyLink => 'リンクをコピー';
+
+  @override
+  String get cloudAccessCopied => 'コピーしました';
+
+  @override
+  String get cloudAccessShownOnce =>
+      '完全なリンクが表示されるのはこの一度だけです。失った場合は新しいシークレットを発行してください。';
+
+  @override
+  String get cloudAccessSendSafely =>
+      'このリンクを持つ人は誰でも開けます。信頼できる経路でのみ送信してください。一部のメールスキャナーはリンクを開いて使い切ることがあります。';
+
+  @override
+  String get cloudAccessDone => '完了';
+
+  @override
+  String get cloudAccessBack => '戻る';
+
+  @override
+  String cloudAccessActivityFor(String link) {
+    return 'アクティビティ · $link';
+  }
+
+  @override
+  String get cloudAccessGuestSessions => 'ゲストセッション';
+
+  @override
+  String get cloudAccessNoSessions => 'まだ誰もこのリンクを開いていません。';
+
+  @override
+  String cloudAccessSessionSince(String time) {
+    return '$time からアクティブ';
+  }
+
+  @override
+  String cloudAccessSessionEnded(String reason) {
+    return '終了（$reason）';
+  }
+
+  @override
+  String get cloudAccessTerminate => 'セッションを終了';
+
+  @override
+  String get cloudAccessAuditEvents => '監査（メタデータのみ）';
+
+  @override
+  String get cloudAccessMembersExplainer =>
+      'メンバーは暗号化された Vault を通じてこの Host を受け取ります。受信者が Vault 鍵を受け取るのは、あなたが各デバイスを確認した後だけです。組織管理者が単独で入手することはできません。';
+
+  @override
+  String get cloudAccessDedicatedVault => 'この Host だけを共有';
+
+  @override
+  String get cloudAccessDedicatedVaultHelp =>
+      'この Host のコピーと下記の項目だけを含む新しい共有 Vault を作成します。現在の Vault の他の Host や認証情報は非公開のままです。';
+
+  @override
+  String get cloudAccessSharingVaultName => '共有 Vault の名前';
+
+  @override
+  String cloudAccessSharingVaultDefaultName(String name) {
+    return '共有 · $name';
+  }
+
+  @override
+  String get cloudAccessWillCopy => 'コピーされる項目:';
+
+  @override
+  String cloudAccessDependencyJumpHost(String name) {
+    return '踏み台ホスト $name';
+  }
+
+  @override
+  String cloudAccessDependencyCredential(String name) {
+    return '認証情報 $name';
+  }
+
+  @override
+  String cloudAccessDependencyKnownHost(String key) {
+    return '信頼済みホスト鍵 $key';
+  }
+
+  @override
+  String cloudAccessDependencyGroup(String name) {
+    return 'グループ $name はコピーしません';
+  }
+
+  @override
+  String cloudAccessBlockerMissingJump(String name) {
+    return '$name はこの Vault にない踏み台ホストを使います。';
+  }
+
+  @override
+  String cloudAccessBlockerMissingCredential(String name) {
+    return '$name はこの Vault にない認証情報を参照しています。';
+  }
+
+  @override
+  String cloudAccessBlockerJumpLoop(String name) {
+    return '$name の踏み台チェーンがループしています。';
+  }
+
+  @override
+  String get cloudAccessConsentCopy => '上記の項目だけを新しい Vault にコピーすることを承認します。';
+
+  @override
+  String get cloudAccessCreateSharingVault => '共有 Vault を作成';
+
+  @override
+  String get cloudAccessWholeVaultHeading => 'または Vault 全体を共有';
+
+  @override
+  String get cloudAccessWholeVaultHelp =>
+      '受信者は現在の Vault のすべての Host、認証情報、スニペットを見られます。';
+
+  @override
+  String get cloudAccessManageWholeVault => 'Vault 全体のアクセスを管理';
+
+  @override
+  String get cloudAccessAttachOrg => '組織を選択';
+
+  @override
+  String get cloudAccessAttachOrgHelp => '付与は、あなたが管理する組織のメンバーとチームに対して行います。';
+
+  @override
+  String get cloudAccessAttach => '使用';
+
+  @override
+  String get cloudAccessManageOrganizations => '組織を管理';
+
+  @override
+  String cloudAccessGrantsIn(String org) {
+    return '$org のアクセス';
+  }
+
+  @override
+  String get cloudAccessAddGrant => 'メンバーまたはチームを追加';
+
+  @override
+  String cloudAccessTeamLabel(String name) {
+    return 'チーム $name';
+  }
+
+  @override
+  String get cloudAccessRoleViewer => '閲覧者';
+
+  @override
+  String get cloudAccessRoleEditor => '編集者';
+
+  @override
+  String get cloudAccessRemove => '削除';
+
+  @override
+  String get cloudAccessKeyDistribution => '鍵の配布待ち';
+
+  @override
+  String get cloudAccessKeyDistributionHelp =>
+      'Vault 鍵を配布する前に、別の経路で受信者と各フィンガープリントを照合してください。';
+
+  @override
+  String get cloudAccessWaitingForDevice => '受信者がデバイスで「組織」を開くのを待っています';
+
+  @override
+  String get cloudAccessWaitingForOwner => '確認待ち';
+
+  @override
+  String get cloudAccessWaitingForRecipient => '鍵を送信済み。受信者の承認待ち';
+
+  @override
+  String get cloudAccessRoleDiffers =>
+      '署名済みの役割が付与と異なります。変更するにはローテーションか再招待が必要です';
+
+  @override
+  String cloudAccessDeviceFingerprint(String fingerprint) {
+    return 'デバイス $fingerprint';
+  }
+
+  @override
+  String get cloudAccessConfirmFingerprintTitle => 'このデバイスを確認';
+
+  @override
+  String cloudAccessConfirmFingerprintMessage(String user, String fingerprint) {
+    return '$user のデバイス $fingerprint に Vault 鍵を配布しますか？ $user がこのフィンガープリントを確認した場合のみ続行してください。';
+  }
+
+  @override
+  String get cloudAccessDeliverKey => '鍵を配布';
+
+  @override
+  String get cloudAccessRemovalPending =>
+      'サーバーアクセスはすでにブロックされています。暗号的に削除するには Vault 鍵をローテーションし、相手が見た認証情報を変更してください。';
+
+  @override
+  String get cloudAccessKeepDirect => '直接メンバーとして残す';
+
+  @override
+  String get cloudAccessRotateToRemove => '鍵をローテーション';
+
+  @override
+  String get cloudAccessRestrictedToViewer => '署名済みの役割が更新されるまで閲覧のみ';
+
+  @override
+  String get cloudAccessOrganizations => '組織';
+
+  @override
+  String get cloudAccessOrganizationsSubtitle => 'メンバー、チーム、招待';
+
+  @override
+  String get cloudAccessOrganizationsExplainer =>
+      '組織名、メンバー、役割、チームはこのサーバーから見えます。組織に参加するだけで Vault 鍵が得られることはありません。';
+
+  @override
+  String get cloudAccessPendingJoin => '組織の招待を開きました — 確認してください';
+
+  @override
+  String get cloudAccessJoinOrganization => '組織に参加';
+
+  @override
+  String get cloudAccessJoinLinkField => '招待リンク';
+
+  @override
+  String get cloudAccessJoinInvalid => '有効な招待リンクではありません。';
+
+  @override
+  String get cloudAccessReview => '確認';
+
+  @override
+  String cloudAccessJoinSummary(String inviter, String role) {
+    return '$inviter から $role として招待されました';
+  }
+
+  @override
+  String get cloudAccessJoin => '参加';
+
+  @override
+  String get cloudAccessJoined =>
+      '参加しました。共有 Vault を受け取るには、Vault 所有者があなたのデバイスを確認する必要があります。';
+
+  @override
+  String get cloudAccessSharedVaultKeys => '共有 Vault の鍵';
+
+  @override
+  String get cloudAccessSharedVaultKeysHelp =>
+      'このデバイスの公開鍵を公開し、所有者がこのデバイスを確認した Vault を受け入れます。';
+
+  @override
+  String get cloudAccessCheckDeliveries => '共有 Vault を確認';
+
+  @override
+  String cloudAccessDeliveriesAccepted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '共有 Vault を $count 件追加しました。',
+      zero: '新しい共有 Vault はありません。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cloudAccessYourOrganizations => 'あなたの組織';
+
+  @override
+  String get cloudAccessNewOrganization => '新しい組織';
+
+  @override
+  String get cloudAccessOrganizationName => '組織名';
+
+  @override
+  String get cloudAccessNoOrganizations => 'まだどの組織にも属していません。';
+
+  @override
+  String cloudAccessMemberCount(String count) {
+    return 'メンバー $count 人';
+  }
+
+  @override
+  String get cloudAccessOrgRoleOwner => 'オーナー';
+
+  @override
+  String get cloudAccessOrgRoleAdmin => '管理者';
+
+  @override
+  String get cloudAccessOrgRoleMember => 'メンバー';
+
+  @override
+  String get cloudAccessSave => '保存';
+
+  @override
+  String get cloudAccessMembers => 'メンバー';
+
+  @override
+  String get cloudAccessInviteMember => '招待';
+
+  @override
+  String get cloudAccessInviteUsername => 'ユーザー名（任意）';
+
+  @override
+  String get cloudAccessInviteUsernameHelp =>
+      '招待を既存の 1 アカウントに限定します。新しい人は先にインスタンス管理者からアカウント招待を受ける必要があります。';
+
+  @override
+  String get cloudAccessRole => '役割';
+
+  @override
+  String get cloudAccessInitialTeam => 'チーム';
+
+  @override
+  String get cloudAccessNoTeam => 'チームなし';
+
+  @override
+  String get cloudAccessCreateInvitation => '招待を作成';
+
+  @override
+  String get cloudAccessInvitationReady => '招待リンクを作成しました';
+
+  @override
+  String get cloudAccessCopyInvitation => '招待リンクをコピー';
+
+  @override
+  String get cloudAccessLeave => '退出';
+
+  @override
+  String get cloudAccessRemoveMemberTitle => '組織から削除しますか？';
+
+  @override
+  String get cloudAccessRemoveMemberMessage =>
+      '組織の付与によるアクセスは直ちにブロックされます。その後、Vault 所有者は影響を受ける Vault の鍵をローテーションしてください。';
+
+  @override
+  String get cloudAccessTeams => 'チーム';
+
+  @override
+  String get cloudAccessNewTeam => '新しいチーム';
+
+  @override
+  String get cloudAccessTeamName => 'チーム名';
+
+  @override
+  String cloudAccessTeamMembers(String team) {
+    return '$team のメンバー';
+  }
+
+  @override
+  String get cloudAccessInvitations => '招待';
+
+  @override
+  String get cloudAccessAnyAccount => '任意のアカウント';
+
+  @override
+  String get cloudAccessErrorGeneric => 'リクエストを完了できませんでした。';
+
+  @override
+  String get cloudAccessErrorLinksUnavailable => 'このサーバーでは一時リンクが設定されていません。';
+
+  @override
+  String get cloudAccessErrorOrganizationsUnavailable =>
+      'このサーバーでは組織が有効になっていません。';
+
+  @override
+  String get cloudAccessErrorProtocolUnavailable =>
+      'この Host のプロトコルはこのサーバーでは共有できません。';
+
+  @override
+  String get cloudAccessErrorOwnerRequired => 'リンクで共有できるのは Vault の所有者だけです。';
+
+  @override
+  String get cloudAccessErrorJumpHost => '踏み台ホストを使う Host はゲートウェイで共有できません。';
+
+  @override
+  String get cloudAccessErrorPortForward =>
+      'ポート転送プロファイルを持つ Host はゲートウェイで共有できません。';
+
+  @override
+  String get cloudAccessErrorHostKeyRequired =>
+      '共有する前に一度接続し、この Host の SSH 鍵を信頼してください。';
+
+  @override
+  String get cloudAccessErrorCertificateRequired =>
+      '共有する前に一度接続し、この Host の RDP 証明書を信頼してください。';
+
+  @override
+  String get cloudAccessErrorLoginRequired => '共有する前にこの Host にログイン情報を保存してください。';
+
+  @override
+  String get cloudAccessErrorHostChanged =>
+      'Host が変更されたか、まだ同期されていません。同期してから再試行してください。';
+
+  @override
+  String get cloudAccessErrorPlanBlocked => '先に一覧の問題を解決してください。';
+
+  @override
+  String get cloudAccessErrorTargetDenied =>
+      'この Host のアドレスはサーバーの共有ポリシーで許可されていません。';
+
+  @override
+  String get cloudAccessErrorSlugTaken => 'このアドレスは使用できません。';
+
+  @override
+  String get cloudAccessErrorSlugInvalid => '3〜48 文字の英小文字・数字・途中のハイフンを使ってください。';
+
+  @override
+  String get cloudAccessErrorTooManyLinks => 'アクティブなリンクが多すぎます。先にいくつか取り消してください。';
+
+  @override
+  String get cloudAccessErrorInvalidOptions => 'これらのリンク設定はサーバーで許可されていません。';
+
+  @override
+  String get cloudAccessErrorOrgRoleRequired => '組織のオーナーまたは管理者の役割が必要です。';
+
+  @override
+  String get cloudAccessErrorOrgCreationRestricted =>
+      'ここで組織を作成できるのはインスタンス管理者だけです。';
+
+  @override
+  String get cloudAccessErrorLastOwner => '組織には少なくとも 1 人のオーナーが必要です。';
+
+  @override
+  String get cloudAccessErrorInvitationUnavailable => 'この招待は利用できません。';
+
+  @override
+  String get cloudAccessErrorAccountNotFound => 'このユーザー名のアクティブなアカウントはありません。';
+
+  @override
+  String get cloudAccessErrorRateLimited => '試行回数が多すぎます。しばらくしてから再試行してください。';
+
+  @override
+  String get cloudAccessGuestWindowTitle => 'Atermius 共有アクセス';
+
+  @override
+  String get cloudAccessGuestLanding => 'Atermius の一時アクセスリンクを受け取りました';
+
+  @override
+  String get cloudAccessGuestLandingHelp =>
+      '続行するまで何も起こりません。続行するとリンクの使用回数を 1 回消費する場合があります。';
+
+  @override
+  String get cloudAccessGuestContinue => '続行';
+
+  @override
+  String get cloudAccessGuestHeading => '共有アクセス';
+
+  @override
+  String cloudAccessGuestValidUntil(String time) {
+    return 'このセッションは $time に終了します';
+  }
+
+  @override
+  String get cloudAccessGuestViewOnly => '閲覧のみ';
+
+  @override
+  String get cloudAccessGuestInteractive => '操作可能';
+
+  @override
+  String get cloudAccessGuestClipboardOn => 'クリップボード可';
+
+  @override
+  String get cloudAccessGuestClipboardOff => 'クリップボード不可';
+
+  @override
+  String get cloudAccessGuestConnect => '接続';
+
+  @override
+  String get cloudAccessGuestDisconnect => '切断';
+
+  @override
+  String get cloudAccessGuestLeave => 'アクセスを終了';
+
+  @override
+  String get cloudAccessGuestLeft => 'アクセスは終了しました。このタブを閉じてかまいません。';
+
+  @override
+  String get cloudAccessGuestTrustNote =>
+      'このセッションは共有者の Atermius サーバーを経由し、サーバーはその内容を見られます。';
+
+  @override
+  String get cloudAccessGuestUnavailable => 'このリンクは利用できません。';
+
+  @override
+  String get cloudAccessGuestAskOwner => '共有した人に新しいリンクを送ってもらってください。';
+
+  @override
+  String get cloudAccessGuestNotYetValid => 'このリンクはまだ有効ではありません。';
+
+  @override
+  String get cloudAccessGuestExpired => 'このリンクは期限切れです。';
+
+  @override
+  String get cloudAccessGuestExhausted => 'このリンクはすでに使用されています。';
+
+  @override
+  String get cloudAccessGuestSuspended => 'このリンクは所有者によって一時停止または取り消されました。';
+
+  @override
+  String get cloudAccessGuestSessionEnded => 'セッションは終了しました。';
+
+  @override
+  String get cloudAccessGuestBusy => '現在接続が多すぎます。しばらくしてから再試行してください。';
+
+  @override
+  String get cloudAccessGuestExpiringSoon => '5 分後に終了';
+
+  @override
+  String get cloudAccessGuestClosed => '接続が閉じられました。';
+
+  @override
+  String get cloudAccessGuestClosedRevoked => 'アクセスは所有者により取り消されたか変更されました。';
+
+  @override
+  String get cloudAccessGuestClosedExpired => 'アクセス時間が終了しました。';
+
+  @override
+  String get cloudAccessGuestClosedTarget =>
+      'Host に接続できないか、信頼済みの識別情報と一致しませんでした。';
+
+  @override
+  String get cloudAccessGuestClosedProtocol => '予期しないメッセージのため接続が閉じられました。';
+
+  @override
+  String cloudAccessApplyRole(String role) {
+    return '$roleにする';
+  }
+
+  @override
+  String get cloudAccessApplyRoleTitle => 'このメンバーの役割を変更しますか？';
+
+  @override
+  String cloudAccessApplyRoleMessage(String user, String role) {
+    return '$user は$roleになります。このデバイスから新しいメンバー一覧に署名し、Vault 鍵をローテーションします。';
+  }
+
+  @override
+  String get cloudAccessErrorScopeChanged =>
+      'この操作中にアカウント、サーバー、または選択中の Vault が変わりました。何も送信していません。もう一度お試しください。';
+
+  @override
+  String get cloudAccessErrorNotSynced =>
+      '共有 Vault は作成されましたがまだ同期されていません。メンバーを追加する前に同期してください。';
+
+  @override
+  String get cloudAccessErrorScopeEndedCommitted =>
+      'サーバーがこの操作の一部（Vault や招待の作成など）を完了した後に、アカウント、サーバー、または選択中の Vault が変わりました。その部分は取り消されていません。確認してから再試行してください。';
 }

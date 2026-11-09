@@ -228,10 +228,9 @@ packages:
   dartssh2:
     dependency: "direct main"
     description:
-      name: dartssh2
-      sha256: "39359aceafcf5940b868249e3c9c6d86e4e0f989eec7417d033c943157c84c51"
-      url: "https://pub.dev"
-    source: hosted
+      path: "../../packages/dartssh2"
+      relative: true
+    source: path
     version: "4.1.0"
   dbus:
     dependency: transitive
@@ -241,6 +240,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.15"
+  desktop_drop:
+    dependency: "direct main"
+    description:
+      path: "../../packages/desktop_drop"
+      relative: true
+    source: path
+    version: "0.8.4"
   drift:
     dependency: "direct main"
     description:
@@ -1000,6 +1006,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  universal_platform:
+    dependency: transitive
+    description:
+      name: universal_platform
+      sha256: "64e16458a0ea9b99260ceb5467a214c1f298d647c659af1bff6d3bf82536b1ec"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   uuid:
     dependency: "direct main"
     description:

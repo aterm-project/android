@@ -319,14 +319,14 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
             children: [
               Text(
                 widget.storageDescription,
-                style: const TextStyle(color: AppColors.muted, height: 1.45),
+                style: TextStyle(color: context.palette.muted, height: 1.45),
               ),
               const SizedBox(height: 4),
               Text(
                 runtimeNote,
                 key: const ValueKey('ssh-forward-runtime-note'),
                 style: TextStyle(
-                  color: supported ? AppColors.muted : AppColors.orange,
+                  color: supported ? context.palette.muted : context.palette.orange,
                   height: 1.45,
                 ),
               ),
@@ -335,7 +335,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                 Text(
                   context.l10n.thisHostIsNotSavedIn,
                   key: const ValueKey('ssh-forward-host-missing'),
-                  style: const TextStyle(color: AppColors.orange, height: 1.45),
+                  style: TextStyle(color: context.palette.orange, height: 1.45),
                 ),
               ],
               if (!hostMissing &&
@@ -344,7 +344,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                 const SizedBox(height: 4),
                 Text(
                   widget.readOnlyReason!,
-                  style: const TextStyle(color: AppColors.orange),
+                  style: TextStyle(color: context.palette.orange),
                 ),
               ],
               if (saved.any(
@@ -353,7 +353,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.dynamicForwardingIsASocks44a,
-                  style: const TextStyle(color: AppColors.orange, height: 1.4),
+                  style: TextStyle(color: context.palette.orange, height: 1.4),
                 ),
               ],
               const SizedBox(height: 12),
@@ -363,7 +363,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                   child: Text(
                     context.l10n.noForwardingProfilesSavedForThis,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: context.palette.muted),
                   ),
                 ),
               for (final profile in saved)
@@ -381,7 +381,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                 Text(
                   _error!,
                   key: const ValueKey('ssh-forward-error'),
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.palette.red),
                 ),
               ],
             ],
@@ -419,7 +419,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
         stopping;
     return Card(
       key: ValueKey('ssh-forward-profile-${profile.id}'),
-      color: AppColors.surface,
+      color: context.palette.surface,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 10, 6, 10),
         child: Row(
@@ -441,10 +441,10 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                         const SizedBox(width: 8),
                         Tooltip(
                           message: context.l10n.reachableBeyondLoopback,
-                          child: const Icon(
+                          child: Icon(
                             Icons.public,
                             size: 16,
-                            color: AppColors.orange,
+                            color: context.palette.orange,
                           ),
                         ),
                       ],
@@ -456,7 +456,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                       profile,
                       activePort: status.listeningPort,
                     ),
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: context.palette.muted),
                   ),
                   const SizedBox(height: 4),
                   _statusLine(profile.id, status),
@@ -499,7 +499,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
   Widget _orphanCard(SshPortForwardProfile profile, SshPortForwardStatus s) =>
       Card(
         key: ValueKey('ssh-forward-orphan-${profile.id}'),
-        color: AppColors.surface,
+        color: context.palette.surface,
         child: ListTile(
           title: Text(profile.name),
           subtitle: Text(
@@ -530,20 +530,20 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
         ),
         primary,
       ),
-      SshPortForwardState.starting => (context.l10n.starting, AppColors.muted),
+      SshPortForwardState.starting => (context.l10n.starting, context.palette.muted),
       SshPortForwardState.stopping => (
         context.l10n.forwardStatusStopping,
-        AppColors.muted,
+        context.palette.muted,
       ),
       SshPortForwardState.failed => (
         context.l10n.forwardStatusFailed(
           status.error ?? context.l10n.forwardStatusUnknownError,
         ),
-        AppColors.red,
+        context.palette.red,
       ),
       SshPortForwardState.stopped => (
         context.l10n.forwardStatusStopped,
-        AppColors.muted,
+        context.palette.muted,
       ),
     };
     return Column(
@@ -560,7 +560,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
               '${status.lastConnectionError}',
             ),
             key: ValueKey('ssh-forward-connection-error-$id'),
-            style: const TextStyle(color: AppColors.orange, fontSize: 12),
+            style: TextStyle(color: context.palette.orange, fontSize: 12),
           ),
       ],
     );
@@ -824,8 +824,8 @@ class _SshPortForwardProfileEditorState
                   alignment: Alignment.centerLeft,
                   child: Text(
                     context.l10n.socks44a5ConnectWithoutSocks,
-                    style: const TextStyle(
-                      color: AppColors.orange,
+                    style: TextStyle(
+                      color: context.palette.orange,
                       height: 1.4,
                     ),
                   ),
@@ -837,8 +837,8 @@ class _SshPortForwardProfileEditorState
                   alignment: Alignment.centerLeft,
                   child: Text(
                     context.l10n.theSshServerGatewayportsSettingMay2,
-                    style: const TextStyle(
-                      color: AppColors.orange,
+                    style: TextStyle(
+                      color: context.palette.orange,
                       height: 1.4,
                     ),
                   ),
@@ -874,7 +874,7 @@ class _SshPortForwardProfileEditorState
                   child: Text(
                     _error!,
                     key: const ValueKey('ssh-forward-profile-error'),
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
               ],

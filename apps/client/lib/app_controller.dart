@@ -63,6 +63,7 @@ import 'terminal/shell_history_completion.dart';
 import 'storage/client_database.dart';
 import 'storage/database_quarantine.dart';
 import 'storage/secure_store.dart';
+import 'storage/sync_preference_store.dart';
 import 'sync/auto_sync.dart';
 import 'mobile_push/mobile_push_registration.dart';
 import 'sync/sync_hint_client.dart';
@@ -190,6 +191,21 @@ class _KnownHostTrustDecision {
   final SyncRepository? repository;
   final int generation;
   final bool offlineTransportUnavailable;
+}
+
+/// A controller operation whose captured account/server session or Vault
+/// selection ended while it was awaiting. Nothing from it was applied to the
+/// newer scope; key material it generated was wiped. [serverCommitted]
+/// honestly reports that the server had already accepted the request (no
+/// rollback is attempted or claimed).
+class OperationScopeEndedException implements Exception {
+  const OperationScopeEndedException({required this.serverCommitted});
+  final bool serverCommitted;
+
+  @override
+  String toString() => serverCommitted
+      ? currentL10n.cloudAccessErrorScopeEndedCommitted
+      : currentL10n.theWorkspaceWasSwitchedTryAgain;
 }
 
 class KnownHostApprovalQueuedException implements Exception {
@@ -946,6 +962,46 @@ class _VaultLoadSuperseded implements Exception {
   const _VaultLoadSuperseded();
 }
 
+/// Load state of the device-local "Automatic sync" choice.
+enum AutomaticSyncPreferenceState {
+  /// Not read yet; automatic transfer stays inactive.
+  loading,
+
+  /// Stored choice (or the default when none exists) is in effect.
+  ready,
+
+  /// A stored choice exists but could not be read. Automatic transfer stays
+  /// inactive so an earlier "off" is never overridden by the default.
+  readFailed,
+}
+
+enum SyncNowOutcome {
+  /// A pass reached the server and nothing is waiting to upload.
+  completed,
+
+  /// A pass reached the server but encrypted changes are still queued.
+  completedWithPending,
+
+  /// The pass failed or could not run; see [SyncNowResult.error] and the
+  /// controller's sync status. Nothing is reported as synced.
+  notCompleted,
+
+  /// No signed-in account session; sync needs an account login.
+  signInRequired,
+
+  /// The account, device or Vault changed while the action ran; its result
+  /// belongs to the previous scope and is not shown.
+  superseded,
+}
+
+@immutable
+class SyncNowResult {
+  const SyncNowResult(this.outcome, {this.error});
+
+  final SyncNowOutcome outcome;
+  final Object? error;
+}
+
 class AppController extends ChangeNotifier {
   /// Cloud session logs: sanitized lifecycle rows (and opt-in output
   /// transcripts) kept in memory only, bound to server/account/device/Vault.
@@ -996,6 +1052,7 @@ class AppController extends ChangeNotifier {
     @visibleForTesting this.apiClientFactoryForTesting,
     @visibleForTesting MobilePushRegistration? mobilePushRegistrationForTesting,
     @visibleForTesting this.mobilePushAutoSyncForTesting,
+    SyncPreferenceStore? syncPreferenceStore,
   }) : crypto = VaultCrypto(sodium),
        recoveryCrypto = AccountRecoveryCrypto(sodium),
        _knownHostDecisionLock =
@@ -1005,7 +1062,15 @@ class AppController extends ChangeNotifier {
        _mobilePushRegistration =
            mobilePushRegistrationForTesting ??
            createPlatformMobilePushRegistration(),
-       _repository = repositoryForTesting {
+       _repository = repositoryForTesting,
+       _syncPreferenceStore =
+           syncPreferenceStore ?? MemorySyncPreferenceStore(),
+       // Without a persistent store there is no earlier device choice to
+       // honour, so the default applies immediately. A persistent store keeps
+       // automatic transfer inactive until its stored choice has loaded.
+       automaticSyncPreference = syncPreferenceStore == null
+           ? AutomaticSyncPreferenceState.ready
+           : AutomaticSyncPreferenceState.loading {
     if (repositoryForTesting != null &&
         shellHistoryVaultKeyForTesting != null) {
       _vaultKeys[repositoryForTesting.vaultId] = shellHistoryVaultKeyForTesting;
@@ -1017,7 +1082,8 @@ class AppController extends ChangeNotifier {
           !databaseRecoveryRequired &&
           syncStatus != 'snapshot_too_large',
       synchronize: () =>
-          mobilePushAutoSyncForTesting?.call() ?? synchronize(background: true),
+          mobilePushAutoSyncForTesting?.call() ?? _synchronizeAutomatically(),
+      initialUserEnabled: automaticSyncActive,
     );
     _syncHints = SyncHintClient(
       fetchTicket: () async =>
@@ -1028,6 +1094,9 @@ class AppController extends ChangeNotifier {
     databaseQuarantineRegistry.addListener(_onDatabaseQuarantineChanged);
     _onDatabaseQuarantineChanged();
     _sessionCredentialsObserver;
+    if (syncPreferenceStore != null) {
+      unawaited(_loadAutomaticSyncPreference());
+    }
   }
 
   final SodiumSumo sodium;
@@ -1586,6 +1655,17 @@ class AppController extends ChangeNotifier {
   SyncRepository? _activeSyncRepository;
   int? _activeSyncSelectionGeneration;
   bool _syncAgainRequested = false;
+  // True while every request coalesced into [_syncAgainRequested] came from
+  // an automatic trigger; such a follow-up is dropped once automatic sync is
+  // turned off. Only meaningful while [_syncAgainRequested] is set.
+  bool _syncAgainAutomaticOnly = false;
+  // Set synchronously around an automatic synchronize() call so the pass can
+  // tell automatic triggers from explicit callers without changing the public
+  // synchronize() signature (subclasses override it).
+  bool _nextSyncIsAutomatic = false;
+  // Incremented whenever a pass actually produced a server result, so a
+  // manual "Sync now" never reports success for a pass that never ran.
+  int _syncPassCompletions = 0;
   bool _membershipRefreshActive = false;
   SyncHint? _deferredSyncHintDuringMembershipChange;
   Future<void>? _deferredSyncHintReplayFuture;
@@ -7641,6 +7721,53 @@ class AppController extends ChangeNotifier {
     return _saveHost(host, expectedRevisionId: expectedRevisionId);
   });
 
+  /// Equal values mean the same signed-in context: no sign-in, sign-out,
+  /// account change or server activation happened in between.
+  Object get authScopeToken => (_authContextGeneration, _apiGeneration);
+
+  /// Equal values mean no Vault selection was requested or applied in
+  /// between (select-away-and-back included). Same-Vault membership refreshes
+  /// keep it.
+  Object get vaultSelectionToken =>
+      (_vaultSelectionRequestGeneration, _vaultSelectionGeneration);
+
+  /// Selects [vaultId] for an operation scoped to it. Returns the resulting
+  /// [vaultSelectionToken] only if the Vault is selected by this request (or
+  /// already was) and no newer selection request superseded it; else null.
+  Future<Object?> selectVaultForOperation(String vaultId) async {
+    final auth = authScopeToken;
+    if (activeVault?.id == vaultId && _repository?.vaultId == vaultId) {
+      return vaultSelectionToken;
+    }
+    final selecting = selectVault(vaultId);
+    // selectVault claims its request generation synchronously.
+    final request = _vaultSelectionRequestGeneration;
+    await selecting;
+    if (authScopeToken != auth ||
+        request != _vaultSelectionRequestGeneration ||
+        activeVault?.id != vaultId ||
+        _repository?.vaultId != vaultId) {
+      return null;
+    }
+    return vaultSelectionToken;
+  }
+
+  /// Completes once no Vault membership refresh is running (a realtime
+  /// membership hint may start one at any time, during which local edits are
+  /// refused). Refresh failures propagate. Callers must re-verify their own
+  /// scope afterwards.
+  Future<void> waitForMembershipRefresh() async {
+    while (_membershipRefreshActive || _membershipRefreshFuture != null) {
+      final refresh = _membershipRefreshFuture;
+      if (refresh != null) {
+        await refresh;
+      } else {
+        // The active flag is set immediately before its Future is published.
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+    }
+  }
+
   /// Opaque identity of the open Vault repository. Equal (identical) values
   /// mean the same account, Vault and repository lifetime; a Vault switch,
   /// lock, sign-out or repository rebuild produces a different value.
@@ -10191,6 +10318,7 @@ class AppController extends ChangeNotifier {
       lockedInboxReceivedCount = await activeReceiver.receive();
       if (workspaceLocked && identical(_lockedSyncReceiver, activeReceiver)) {
         syncStatus = 'locked_ready';
+        _syncPassCompletions++;
       }
     } on LockedSyncGenerationChangedException {
       if (workspaceLocked && identical(_lockedSyncReceiver, activeReceiver)) {
@@ -10240,6 +10368,8 @@ class AppController extends ChangeNotifier {
     bool background = false,
     bool suppressSuccessNotice = false,
   }) async {
+    final automatic = _nextSyncIsAutomatic;
+    _nextSyncIsAutomatic = false;
     final initialSelectionGeneration = _vaultSelectionGeneration;
     if (databaseRecoveryRequired) {
       _syncAgainRequested = false;
@@ -10291,7 +10421,9 @@ class AppController extends ChangeNotifier {
           _vaultMembershipChangeActive) {
         return;
       }
-      await synchronize(background: background);
+      // Automatic sync may have been turned off while this trigger waited.
+      if (automatic && !automaticSyncActive) return;
+      await _synchronizeMarked(automatic: automatic, background: background);
       return;
     }
     if (_vaultMembershipChangeActive) return;
@@ -10312,6 +10444,8 @@ class AppController extends ChangeNotifier {
       }
     }
     if (syncing) {
+      _syncAgainAutomaticOnly =
+          automatic && (!_syncAgainRequested || _syncAgainAutomaticOnly);
       _syncAgainRequested = true;
       // The active pass will start one serialized follow-up. Await both so an
       // explicit caller does not report completion while its queued request
@@ -10331,6 +10465,7 @@ class AppController extends ChangeNotifier {
       // The signed account refresh is part of this explicit sync request.
       // Publish a non-idle state before its first await so observers cannot
       // mistake the still-visible Idle status for completed synchronization.
+      final statusBeforeControlPlaneRefresh = syncStatus;
       syncStatus = 'syncing';
       errorMessage = null;
       notifyListeners();
@@ -10355,6 +10490,16 @@ class AppController extends ChangeNotifier {
       if (!authenticated ||
           stage != ClientStage.workspace ||
           snapshotRecoveryActive) {
+        return;
+      }
+      // The signed refresh is control plane only. Do not start the content
+      // pass for an automatic trigger that was turned off meanwhile, and do
+      // not leave the provisional Syncing label behind.
+      if (automatic && !automaticSyncActive) {
+        if (!syncing && syncStatus == 'syncing') {
+          syncStatus = statusBeforeControlPlaneRefresh;
+          notifyListeners();
+        }
         return;
       }
     }
@@ -10394,6 +10539,7 @@ class AppController extends ChangeNotifier {
       final result = await repository.synchronize();
       if (!syncIsCurrent()) return;
       syncStatus = result.status;
+      _syncPassCompletions++;
       pendingCount = result.pendingCount;
       receivedCount = result.receivedCount;
       conflictCount = result.conflictCount;
@@ -10494,7 +10640,12 @@ class AppController extends ChangeNotifier {
             releaseOwnedSyncGate();
             if (!syncCompletion.isCompleted) syncCompletion.complete();
           } else {
-            final runAgain = _syncAgainRequested;
+            // A follow-up requested only by automatic triggers is dropped when
+            // automatic sync was turned off meanwhile; explicit requests run.
+            final automaticFollowUp = _syncAgainAutomaticOnly;
+            final runAgain =
+                _syncAgainRequested &&
+                (!automaticFollowUp || automaticSyncActive);
             releaseOwnedSyncGate();
             if (runAgain &&
                 syncSelectionRequestIsCurrent() &&
@@ -10505,7 +10656,10 @@ class AppController extends ChangeNotifier {
               // refresh. Keep this pass's completion pending until that
               // follow-up finishes.
               try {
-                await synchronize(background: true);
+                await _synchronizeMarked(
+                  automatic: automaticFollowUp,
+                  background: true,
+                );
               } catch (_) {
                 // Background synchronization reports retry state through the
                 // controller and must not strand callers on this pass.
@@ -10544,7 +10698,12 @@ class AppController extends ChangeNotifier {
           notifyListeners();
           return;
         }
-        await synchronize(
+        // The retry is a new pass. An automatic pass whose trigger was turned
+        // off while the membership refresh ran stops here (its outbox stays
+        // queued); explicit callers keep their retry.
+        if (automatic && !automaticSyncActive) return;
+        await _synchronizeMarked(
+          automatic: automatic,
           background: background,
           suppressSuccessNotice: suppressSuccessNotice,
         );
@@ -16202,9 +16361,12 @@ class AppController extends ChangeNotifier {
     // the shared Vault database, so run sync against the current repository
     // whenever the user is still on that Vault. synchronize() coalesces with
     // any in-flight controller pass and retries after its post-sync refresh.
+    // With automatic sync off the staged ciphertext stays in the outbox until
+    // the user runs Sync now or turns automatic sync back on.
     if (activeVault?.id == targetVaultId &&
-        outcome.status == HostSecurityMergeStatus.staged) {
-      unawaited(synchronize(background: true));
+        outcome.status == HostSecurityMergeStatus.staged &&
+        automaticSyncActive) {
+      unawaited(_synchronizeAutomatically());
     }
     return outcome;
   }
@@ -16608,6 +16770,22 @@ class AppController extends ChangeNotifier {
     if (recipient.instanceId != instance?.instanceId) {
       throw FormatException(currentL10n.theShareRequestComesFromA);
     }
+    // The session and the selection of [vault] this invitation is created
+    // for. Checked before the invitation is dispatched and again before its
+    // result touches controller state.
+    final client = _requireApi();
+    final auth = authScopeToken;
+    final selection = vaultSelectionToken;
+    bool sessionIsCurrent() =>
+        !_controllerDisposed &&
+        identical(api, client) &&
+        authScopeToken == auth &&
+        account?.accountId == currentAccount.accountId &&
+        identity?.deviceId == currentIdentity.deviceId;
+    bool selectionIsCurrent() =>
+        sessionIsCurrent() &&
+        vaultSelectionToken == selection &&
+        activeVault?.id == vault.id;
 
     // The server requires the active membership version on every new record.
     // Drain local changes before advancing the signed membership chain.
@@ -16616,11 +16794,13 @@ class AppController extends ChangeNotifier {
     try {
       await synchronize();
       await refreshSyncStatus();
+      if (!selectionIsCurrent()) {
+        throw const OperationScopeEndedException(serverCommitted: false);
+      }
       if (pendingCount != 0) {
         throw StateError(currentL10n.thereAreUncommittedLocalChangesCreate);
       }
 
-      final client = _requireApi();
       final directory = <String, Map<String, dynamic>>{};
       final signingKeys = <String, Uint8List>{};
       for (final device in [
@@ -16722,6 +16902,9 @@ class AppController extends ChangeNotifier {
         signer: currentIdentity,
       )..remove('vault_id');
 
+      if (!selectionIsCurrent()) {
+        throw const OperationScopeEndedException(serverCommitted: false);
+      }
       final result = await client.invite(vault.id, {
         'role': role,
         'recipient_device_id': recipient.deviceId,
@@ -16732,6 +16915,14 @@ class AppController extends ChangeNotifier {
         'membership': signedMembership,
         'expires_in_seconds': expiresInSeconds,
       });
+      if (!selectionIsCurrent()) {
+        // The invitation exists on the server, but this session or Vault
+        // selection is no longer the one it was created for: do not install
+        // its membership state into, or re-select it over, the newer scope.
+        // A still-current session reconciles through the regular refresh.
+        if (sessionIsCurrent()) unawaited(_reloadVaultsForMembershipHint());
+        throw const OperationScopeEndedException(serverCommitted: true);
+      }
       final committedVersion =
           (result['membership_version'] as num?)?.toInt() ?? nextVersion;
       if (committedVersion != nextVersion) {
@@ -17839,14 +18030,55 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> createVault(String name) async {
+    await createVaultInScope(name);
+  }
+
+  /// Creates a Vault for the signed-in session that started the call and
+  /// selects it unless the user requested another selection meanwhile.
+  ///
+  /// The client, account and device are captured before any await. If the
+  /// session ends or the server/account changes before dispatch, nothing is
+  /// sent; if it changes while the request is in flight, the generated key
+  /// is wiped and nothing is installed into the newer session
+  /// ([OperationScopeEndedException.serverCommitted] reports the created
+  /// Vault honestly). `selection` is the token of this call's own selection
+  /// ([vaultSelectionToken]) or null when it did not select the Vault.
+  Future<({String vaultId, Object? selection})> createVaultInScope(
+    String name,
+  ) async {
     _assertEditsAllowed();
     if (name.trim().isEmpty) throw FormatException(currentL10n.enterAVaultName);
+    final client = _requireApi();
+    final currentAccount = account!;
+    final currentIdentity = identity!;
+    final auth = authScopeToken;
+    final selectionAtStart = vaultSelectionToken;
+    bool sessionIsCurrent() =>
+        !_controllerDisposed &&
+        identical(api, client) &&
+        authScopeToken == auth &&
+        account?.accountId == currentAccount.accountId &&
+        identity?.deviceId == currentIdentity.deviceId;
     final material = await crypto.createInitialVault(
-      accountId: account!.accountId,
+      accountId: currentAccount.accountId,
       name: name.trim(),
-      identity: identity!,
+      identity: currentIdentity,
     );
-    await _requireApi().createVault(material.payload);
+    void wipe() => material.vaultKey.fillRange(0, material.vaultKey.length, 0);
+    if (!sessionIsCurrent()) {
+      wipe();
+      throw const OperationScopeEndedException(serverCommitted: false);
+    }
+    try {
+      await client.createVault(material.payload);
+    } catch (_) {
+      wipe();
+      rethrow;
+    }
+    if (!sessionIsCurrent()) {
+      wipe();
+      throw const OperationScopeEndedException(serverCommitted: true);
+    }
     final payload = material.payload;
     final descriptor = VaultDescriptor(
       id: material.vaultId,
@@ -17864,9 +18096,17 @@ class AppController extends ChangeNotifier {
     };
     _knownNames[material.vaultId] = name.trim();
     _vaultDescriptors = [..._vaultDescriptors, descriptor];
-    await selectVault(material.vaultId);
     unawaited(_refreshRecoveryContextsAndUpload());
     _setNotice(currentL10n.vaultCreatedItsKeyWasGenerated);
+    // Never select the new Vault over a selection the user requested while
+    // the Vault was being created.
+    if (vaultSelectionToken != selectionAtStart) {
+      return (vaultId: material.vaultId, selection: null);
+    }
+    return (
+      vaultId: material.vaultId,
+      selection: await selectVaultForOperation(material.vaultId),
+    );
   }
 
   Future<VaultDescriptor> scheduleVaultDeletion({
@@ -22932,6 +23172,204 @@ class AppController extends ChangeNotifier {
   void _setNotice(String value) {
     noticeMessage = value;
     notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Device-local automatic sync choice and manual "Sync now".
+  // ---------------------------------------------------------------------------
+
+  final SyncPreferenceStore _syncPreferenceStore;
+  AutomaticSyncPreferenceState automaticSyncPreference;
+
+  /// The device's automatic-sync choice. Only in effect while
+  /// [automaticSyncPreference] is ready; defaults to on.
+  bool automaticSyncEnabled = true;
+
+  /// A write of the current choice is in flight.
+  bool automaticSyncSaving = false;
+
+  /// The latest choice applies to this session but could not be stored; it
+  /// will not survive a restart until a retry succeeds.
+  bool automaticSyncSaveFailed = false;
+
+  /// Whether automatic triggers (edit debounce, periodic, realtime/push
+  /// hints, foreground resume, locked receive) may transfer Vault content.
+  bool get automaticSyncActive =>
+      automaticSyncPreference == AutomaticSyncPreferenceState.ready &&
+      automaticSyncEnabled;
+
+  /// A manual Sync now action is running.
+  bool syncNowRunning = false;
+
+  int _automaticSyncPreferenceRevision = 0;
+  Future<void> _automaticSyncWrites = Future<void>.value();
+  Future<SyncNowResult>? _syncNowInFlight;
+
+  Future<void> _synchronizeAutomatically() =>
+      _synchronizeMarked(automatic: true, background: true);
+
+  Future<void> _synchronizeMarked({
+    required bool automatic,
+    required bool background,
+    bool suppressSuccessNotice = false,
+  }) {
+    // synchronize() reads the marker before its first await; always clear it
+    // so it can never leak into a later explicit call.
+    _nextSyncIsAutomatic = automatic;
+    try {
+      return synchronize(
+        background: background,
+        suppressSuccessNotice: suppressSuccessNotice,
+      );
+    } finally {
+      _nextSyncIsAutomatic = false;
+    }
+  }
+
+  void _applyAutomaticSyncGate() =>
+      _automaticSync.setUserEnabled(automaticSyncActive);
+
+  Future<void> _loadAutomaticSyncPreference() async {
+    final revision = ++_automaticSyncPreferenceRevision;
+    if (automaticSyncPreference != AutomaticSyncPreferenceState.loading) {
+      automaticSyncPreference = AutomaticSyncPreferenceState.loading;
+      _applyAutomaticSyncGate();
+      notifyListeners();
+    }
+    bool? stored;
+    var failed = false;
+    try {
+      stored = await _syncPreferenceStore.readAutomaticSync();
+    } on Object {
+      failed = true;
+    }
+    // An explicit user choice made while the read was in flight wins.
+    if (_controllerDisposed || revision != _automaticSyncPreferenceRevision) {
+      return;
+    }
+    if (failed) {
+      automaticSyncPreference = AutomaticSyncPreferenceState.readFailed;
+    } else {
+      automaticSyncEnabled = stored ?? true;
+      automaticSyncPreference = AutomaticSyncPreferenceState.ready;
+    }
+    _applyAutomaticSyncGate();
+    notifyListeners();
+  }
+
+  /// Stores and applies this device's automatic sync choice. The choice takes
+  /// effect immediately for this session (turning it off stops automatic
+  /// transfer even if storing fails); queued encrypted edits stay in the
+  /// outbox either way. Writes are serialized so the stored value always
+  /// matches the latest choice. Returns whether the latest choice was stored.
+  Future<bool> setAutomaticSyncEnabled(bool enabled) async {
+    if (_controllerDisposed) return false;
+    final revision = ++_automaticSyncPreferenceRevision;
+    automaticSyncEnabled = enabled;
+    automaticSyncPreference = AutomaticSyncPreferenceState.ready;
+    automaticSyncSaving = true;
+    automaticSyncSaveFailed = false;
+    _applyAutomaticSyncGate();
+    notifyListeners();
+    final write = _automaticSyncWrites.then(
+      (_) => _syncPreferenceStore.writeAutomaticSync(enabled),
+    );
+    _automaticSyncWrites = write.then<void>((_) {}, onError: (Object _) {});
+    var stored = true;
+    try {
+      await write;
+    } on Object {
+      stored = false;
+    }
+    if (_controllerDisposed || revision != _automaticSyncPreferenceRevision) {
+      return stored;
+    }
+    automaticSyncSaving = false;
+    automaticSyncSaveFailed = !stored;
+    notifyListeners();
+    return stored;
+  }
+
+  /// Retries whatever failed last: re-reads an unreadable stored choice, or
+  /// re-stores the current choice after a failed save.
+  Future<void> retryAutomaticSyncPreference() async {
+    if (_controllerDisposed) return;
+    if (automaticSyncPreference == AutomaticSyncPreferenceState.readFailed) {
+      await _loadAutomaticSyncPreference();
+    } else if (automaticSyncSaveFailed && !automaticSyncSaving) {
+      await setAutomaticSyncEnabled(automaticSyncEnabled);
+    }
+  }
+
+  Object? _syncNowScope() => (
+    api,
+    session?.accountId,
+    identity?.deviceId,
+    activeVault?.id,
+    _vaultSelectionGeneration,
+  );
+
+  /// Manual "Sync now". Works whether or not automatic sync is on. The result
+  /// is bound to the account/device/Vault scope captured at the start; if that
+  /// changes while the pass runs, the result is [SyncNowOutcome.superseded]
+  /// and nothing is reported for the new scope.
+  Future<SyncNowResult> syncNow() {
+    final inFlight = _syncNowInFlight;
+    if (inFlight != null) return inFlight;
+    final run = _runSyncNow();
+    _syncNowInFlight = run;
+    return run.whenComplete(() {
+      if (identical(_syncNowInFlight, run)) _syncNowInFlight = null;
+    });
+  }
+
+  Future<SyncNowResult> _runSyncNow() async {
+    if (_controllerDisposed || !authenticated) {
+      return const SyncNowResult(SyncNowOutcome.signInRequired);
+    }
+    final scope = _syncNowScope();
+    final passesBefore = _syncPassCompletions;
+    syncNowRunning = true;
+    notifyListeners();
+    Object? failure;
+    try {
+      await synchronize(suppressSuccessNotice: true);
+    } on Object catch (error) {
+      failure = error;
+    } finally {
+      syncNowRunning = false;
+      if (!_controllerDisposed) notifyListeners();
+    }
+    if (_controllerDisposed || _syncNowScope() != scope) {
+      return const SyncNowResult(SyncNowOutcome.superseded);
+    }
+    if (!authenticated) {
+      return const SyncNowResult(SyncNowOutcome.signInRequired);
+    }
+    if (failure != null) {
+      return SyncNowResult(SyncNowOutcome.notCompleted, error: failure);
+    }
+    // synchronize() returns quietly when it cannot start (no repository yet,
+    // recovery or membership change in progress, size limit). Never present
+    // that as a completed sync.
+    if (_syncPassCompletions == passesBefore) {
+      return const SyncNowResult(SyncNowOutcome.notCompleted);
+    }
+    if (workspaceLocked) {
+      return SyncNowResult(
+        syncStatus == 'locked_ready'
+            ? SyncNowOutcome.completed
+            : SyncNowOutcome.notCompleted,
+      );
+    }
+    if (syncStatus == 'idle' || syncStatus == 'pending') {
+      return SyncNowResult(
+        pendingCount > 0
+            ? SyncNowOutcome.completedWithPending
+            : SyncNowOutcome.completed,
+      );
+    }
+    return const SyncNowResult(SyncNowOutcome.notCompleted);
   }
 
   void _setError(String value) {

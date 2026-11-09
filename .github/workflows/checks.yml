@@ -3,10 +3,10 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 env:
-  CMAKE_BUILD_PARALLEL_LEVEL: "4"
-  CMAKE_BUILD_PARALLEL: "4"
-  MAKEFLAGS: "-j4"
-  CARGO_BUILD_JOBS: "4"
+  CMAKE_BUILD_PARALLEL_LEVEL: "2"
+  CMAKE_BUILD_PARALLEL: "2"
+  MAKEFLAGS: "-j2"
+  CARGO_BUILD_JOBS: "2"
   FLUTTER_SUPPRESS_ANALYTICS: "true"
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,5 +20,5 @@ jobs:
       - run: bash tools/install_flutter_linux.sh
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/client
-      - run: flutter test --concurrency=4 test/session_workspace_actions_test.dart test/workspace_tab_drag_test.dart test/terminal_tools_sidebar_test.dart
+      - run: flutter test --concurrency=2 test/session_workspace_actions_test.dart test/workspace_tab_drag_test.dart test/terminal_tools_sidebar_test.dart test/cloud_access_client_test.dart test/cloud_access_interop_test.dart
         working-directory: apps/client

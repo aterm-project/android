@@ -101,7 +101,7 @@ class _HostAttachmentsDialogState extends State<_HostAttachmentsDialog> {
             children: [
               Text(
                 context.l10n.filesAreEncryptedOnThisDevice,
-                style: const TextStyle(color: AppColors.muted, height: 1.45),
+                style: TextStyle(color: context.palette.muted, height: 1.45),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 10),
@@ -127,9 +127,9 @@ class _HostAttachmentsDialogState extends State<_HostAttachmentsDialog> {
                       final saveLimit = maxAttachmentBytesForPlatform;
                       return ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(
+                        leading: Icon(
                           Icons.attach_file_rounded,
-                          color: AppColors.teal,
+                          color: context.palette.teal,
                         ),
                         title: Text(
                           attachment.fileName,
@@ -138,7 +138,7 @@ class _HostAttachmentsDialogState extends State<_HostAttachmentsDialog> {
                         ),
                         subtitle: Text(
                           '${attachment.mediaType} · ${_formatSize(attachment.totalSize)}${canDownload ? '' : ' · download unavailable above ${_formatSize(saveLimit)}'}',
-                          style: const TextStyle(color: AppColors.muted),
+                          style: TextStyle(color: context.palette.muted),
                         ),
                         trailing: Wrap(
                           spacing: 2,
@@ -158,7 +158,7 @@ class _HostAttachmentsDialogState extends State<_HostAttachmentsDialog> {
                                 onPressed: _working
                                     ? null
                                     : () => _remove(attachment),
-                                color: AppColors.orange,
+                                color: context.palette.orange,
                                 icon: const Icon(Icons.delete_outline),
                               ),
                           ],
@@ -199,7 +199,7 @@ class _HostAttachmentsDialogState extends State<_HostAttachmentsDialog> {
                 const SizedBox(height: 6),
                 Text(
                   _statusText,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.palette.muted, fontSize: 12),
                 ),
               ],
             ],
@@ -450,13 +450,13 @@ class _HostAttachmentsDialogState extends State<_HostAttachmentsDialog> {
         transfer.direction == 'upload'
             ? Icons.upload_file_outlined
             : Icons.download_outlined,
-        color: AppColors.muted,
+        color: context.palette.muted,
       ),
       title: Text(title),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(details, style: const TextStyle(color: AppColors.muted)),
+          Text(details, style: TextStyle(color: context.palette.muted)),
           if (progress != null)
             Padding(
               padding: const EdgeInsets.only(top: 5),
@@ -589,17 +589,17 @@ class _AttachmentMessage extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(11),
     decoration: BoxDecoration(
-      color: (isError ? AppColors.red : AppColors.teal).withValues(alpha: .08),
+      color: (isError ? context.palette.red : context.palette.teal).withValues(alpha: .08),
       borderRadius: BorderRadius.circular(9),
       border: Border.all(
-        color: (isError ? AppColors.red : AppColors.teal).withValues(
+        color: (isError ? context.palette.red : context.palette.teal).withValues(
           alpha: .24,
         ),
       ),
     ),
     child: Text(
       text,
-      style: TextStyle(color: isError ? AppColors.red : AppColors.teal),
+      style: TextStyle(color: isError ? context.palette.red : context.palette.teal),
     ),
   );
 }
