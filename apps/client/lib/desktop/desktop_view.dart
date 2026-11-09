@@ -158,7 +158,9 @@ class DesktopViewState extends State<DesktopView> {
         barrierDismissible: false,
         builder: (dialogContext) => AnimatedBuilder(
           animation: reviewedSession,
-          builder: (_, _) => PopScope(
+          // The live dialog context shadows State.context: the owner can be
+          // deactivated (pane closed) while this route is still animating out.
+          builder: (context, _) => PopScope(
             canPop: !reviewedSession.savingCertificate,
             child: AlertDialog(
               key: const ValueKey('rdp_certificate_dialog'),

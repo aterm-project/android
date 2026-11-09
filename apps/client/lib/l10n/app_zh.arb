@@ -3308,6 +3308,7 @@
   "thisSavedJumpHostIsUnavailable": "此已保存的跳板主机不可用、形成循环或超过 8 跳。请选择“直接连接”或有效的主机进行修复。",
   "unavailableJumpHost": "不可用的跳板主机",
   "signInDetailsAreStoredEncrypted": "登录信息加密保存；连接时，受信任的远程桌面网关会处理登录凭据与画面。",
+  "directDesktopSignInHint": "登录信息加密保存；本设备直接连接主机，凭据仅用于该连接，不经过任何网关。",
   "labelPressEnterToConnect": "{label}  ·  回车连接",
   "searchHostsOrTypeAnSsh": "搜索主机，或输入 ssh / rdp / vnc / console 命令",
   "clearSearch": "清空搜索",

@@ -3308,6 +3308,7 @@
   "thisSavedJumpHostIsUnavailable": "保存された踏み台ホストが利用できないか、循環しているか、8 ホップを超えています。「直接接続」または有効なホストを選択して修復してください。",
   "unavailableJumpHost": "利用できない踏み台ホスト",
   "signInDetailsAreStoredEncrypted": "サインイン情報は暗号化して保存されます。接続時は、信頼済みのリモートデスクトップゲートウェイがサインイン資格情報と画面を処理します。",
+  "directDesktopSignInHint": "サインイン情報は暗号化して保存されます。このデバイスはホストに直接接続し、その接続にのみ使用します。ゲートウェイは経由しません。",
   "labelPressEnterToConnect": "{label}  ·  Enter で接続",
   "searchHostsOrTypeAnSsh": "ホストを検索、または ssh / rdp / vnc / console コマンドを入力",
   "clearSearch": "検索をクリア",

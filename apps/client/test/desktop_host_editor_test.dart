@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:aterm_client/domain/models.dart';
+import 'package:aterm_client/l10n/l10n.dart';
 import 'package:aterm_client/ui/host_editor_panel.dart';
 import 'package:aterm_client/ui/new_session_menu.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -134,4 +138,47 @@ void main() {
       '3390',
     );
   });
+
+  // Direct desktops never hand credentials to a gateway, so the editor must
+  // not say they do; gateway-routed desktops keep the gateway notice.
+  final engineOverride = Platform.environment.containsKey(
+    'ATERMIUS_RDP_LIBRARY',
+  );
+  for (final (platform, protocol, direct) in [
+    (TargetPlatform.android, HostProtocol.vnc, true),
+    (TargetPlatform.android, HostProtocol.rdp, true),
+    (TargetPlatform.linux, HostProtocol.vnc, true),
+    (TargetPlatform.linux, HostProtocol.rdp, false),
+  ]) {
+    testWidgets('${platform.name} ${protocol.name} shows the '
+        '${direct ? 'direct' : 'gateway'} sign-in hint', (tester) async {
+      debugDefaultTargetPlatformOverride = platform;
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: HostEditorPanel(
+              groups: const [],
+              hosts: const [],
+              existing: HostRecord(
+                id: 'h',
+                name: 'H',
+                address: 'server',
+                port: protocol.defaultPort,
+                protocol: protocol,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final directHint = find.text(currentL10n.directDesktopSignInHint);
+        final gatewayHint = find.text(
+          currentL10n.signInDetailsAreStoredEncrypted,
+        );
+        expect(directHint, direct ? findsOneWidget : findsNothing);
+        expect(gatewayHint, direct ? findsNothing : findsOneWidget);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    }, skip: engineOverride && protocol == HostProtocol.rdp);
+  }
 }
