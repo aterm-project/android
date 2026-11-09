@@ -11388,6 +11388,30 @@
   "@keybarReset": {
     "description": "Release terminal Control and Alt modifier locks."
   },
+  "keybarCtrlGuidance": "Ctrl: tap for the next key only, double-tap to lock",
+  "@keybarCtrlGuidance": {
+    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarAltGuidance": "Alt: tap for the next key only, double-tap to lock",
+  "@keybarAltGuidance": {
+    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarModifierOff": "Off",
+  "@keybarModifierOff": {
+    "description": "Accessibility value of a released terminal keybar modifier."
+  },
+  "keybarModifierArmed": "Next key only",
+  "@keybarModifierArmed": {
+    "description": "Accessibility value of a terminal keybar modifier armed for one key."
+  },
+  "keybarModifierLocked": "Locked",
+  "@keybarModifierLocked": {
+    "description": "Accessibility value of a locked terminal keybar modifier."
+  },
+  "keybarPinExpanded": "Keep extra keys open",
+  "@keybarPinExpanded": {
+    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
+  },
   "terminalSearchQueryTooLong": "Query too long",
   "@terminalSearchQueryTooLong": {
     "description": "Terminal search status when the bounded query-length limit rejects the query."

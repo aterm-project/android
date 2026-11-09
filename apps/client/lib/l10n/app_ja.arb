@@ -4029,6 +4029,30 @@
   "@keybarReset": {
     "description": "Release terminal Control and Alt modifier locks."
   },
+  "keybarCtrlGuidance": "Ctrl: タップで次のキーのみ、ダブルタップでロック",
+  "@keybarCtrlGuidance": {
+    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarAltGuidance": "Alt: タップで次のキーのみ、ダブルタップでロック",
+  "@keybarAltGuidance": {
+    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarModifierOff": "オフ",
+  "@keybarModifierOff": {
+    "description": "Accessibility value of a released terminal keybar modifier."
+  },
+  "keybarModifierArmed": "次のキーのみ",
+  "@keybarModifierArmed": {
+    "description": "Accessibility value of a terminal keybar modifier armed for one key."
+  },
+  "keybarModifierLocked": "ロック中",
+  "@keybarModifierLocked": {
+    "description": "Accessibility value of a locked terminal keybar modifier."
+  },
+  "keybarPinExpanded": "追加キーを常に表示",
+  "@keybarPinExpanded": {
+    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
+  },
   "terminalSearchQueryTooLong": "検索語が長すぎます",
   "@terminalSearchQueryTooLong": {
     "description": "Terminal search status when the bounded query-length limit rejects the query."
