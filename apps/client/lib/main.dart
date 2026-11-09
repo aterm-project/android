@@ -10,6 +10,7 @@ import 'app_controller.dart';
 import 'desktop/window/desktop_window.dart';
 import 'desktop/window/desktop_window_page.dart';
 import 'platform/application_windows.dart';
+import 'platform/file_drop_region.dart' show initializeFileDrop;
 import 'platform/files_window_launch.dart';
 import 'terminal/live_terminal_window.dart';
 import 'ui/app_motion.dart';
@@ -23,6 +24,7 @@ import 'storage/database_quarantine.dart';
 import 'storage/local_profile_catalog.dart';
 import 'storage/local_profile_service.dart';
 import 'storage/secure_store.dart';
+import 'storage/sync_preference_store.dart';
 import 'storage/web_storage_policy.dart';
 import 'storage/workspace_mode_store.dart';
 import 'ui/workspace_mode_settings.dart';
@@ -39,12 +41,42 @@ import 'ui/local_to_sync_migration_screen.dart';
 import 'ui/locked_workspace_screen.dart';
 import 'l10n/l10n.dart';
 import 'storage/app_language_store.dart';
+import 'storage/app_theme_store.dart';
+import 'ui/app_theme_mode.dart';
+import 'storage/wallpaper_store.dart';
+import 'ui/wallpaper.dart';
 import 'storage/terminal_palette_store.dart';
 import 'ui/terminal_palette.dart';
 import 'ui/app_language_settings.dart';
+import 'cloud/cloud_access_api.dart';
+import 'cloud/cloud_access_crypto.dart';
+import 'cloud/pending_cloud_link.dart';
+import 'ui/cloud_access/guest_app.dart';
 
 Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Bounded browser-drop policy + central drop cleanup before any root runs.
+  initializeFileDrop();
+  if (kIsWeb) {
+    // Temporary-link visitors get a separate account-free app. The link
+    // secret was already removed from the address bar by share-bootstrap.js.
+    PendingCloudLink.capture();
+    final slug = guestSlugFromPath(Uri.base.path);
+    if (slug != null) {
+      await AppLanguageController.instance.load(createAppLanguageStore());
+      await AppThemeController.instance.load(createAppThemeStore());
+      Future<SodiumSumo>? sodium;
+      runApp(
+        GuestApp(
+          slug: slug,
+          secret: ShareLinkSecret.fromFragment(PendingCloudLink.takeLinkFragment()),
+          api: GuestApi(origin: Uri.base),
+          sodium: () => sodium ??= Future.value(SodiumSumoInit.init()),
+        ),
+      );
+      return;
+    }
+  }
   LiveTerminalWindowLaunch? terminalLaunch;
   FilesWindowLaunch? filesLaunch;
   DesktopWindowLaunch? desktopLaunch;
@@ -59,18 +91,24 @@ Future<void> main(List<String> arguments) async {
   } catch (_) {
     await ApplicationWindows.instance.start(terminalChild: true);
     await AppLanguageController.instance.load(createAppLanguageStore());
+    // Device-local, non-secret UI theme (dark default), shared by every window.
+    await AppThemeController.instance.load(createAppThemeStore());
     runApp(
-      AppLanguageHost(
-        builder: (context, locale) => MaterialApp(
-          locale: locale,
-          localizationsDelegates: AppLocalizationSetup.delegates,
-          supportedLocales: AppLocalizationSetup.locales,
-          theme: buildAppTheme(locale: locale),
-          builder: (context, child) => WindowsWindowChrome(child: child!),
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: Center(
-                child: Text(context.l10n.couldntVerifyTheSeparateWindowTry),
+      AppThemeModeBuilder(
+        builder: (context, themeMode) => AppLanguageHost(
+          builder: (context, locale) => MaterialApp(
+            locale: locale,
+            localizationsDelegates: AppLocalizationSetup.delegates,
+            supportedLocales: AppLocalizationSetup.locales,
+            theme: buildAppTheme(locale: locale, brightness: Brightness.light),
+            darkTheme: buildAppTheme(locale: locale),
+            themeMode: themeMode,
+            builder: (context, child) => WindowsWindowChrome(child: child!),
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: Text(context.l10n.couldntVerifyTheSeparateWindowTry),
+                ),
               ),
             ),
           ),
@@ -88,6 +126,16 @@ Future<void> main(List<String> arguments) async {
   // Device-local display language (plain preference file / localStorage, not
   // secure storage): safe for renderer children before any profile startup.
   await AppLanguageController.instance.load(createAppLanguageStore());
+  // Device-local, non-secret UI theme (dark default), shared by every window.
+  await AppThemeController.instance.load(createAppThemeStore());
+  // Device-local wallpaper (separate from the theme): every window reads the
+  // same preference and decodes its own bounded copy in the background. Only
+  // the main window cleans up orphaned owned images.
+  await WallpaperController.instance.load(
+    createWallpaperStore(),
+    cleanupStale:
+        desktopLaunch == null && terminalLaunch == null && filesLaunch == null,
+  );
   // Device-local, non-secret terminal palette overlay; terminal child windows
   // read it too so every terminal on this device uses the same palette.
   await TerminalPaletteController.instance.load(createTerminalPaletteStore());
@@ -97,19 +145,23 @@ Future<void> main(List<String> arguments) async {
     // connection; credentials and Host records stay in the parent.
     final launch = desktopLaunch;
     runApp(
-      AppLanguageHost(
-        builder: (context, locale) => MaterialApp(
-          onGenerateTitle: (context) => context.l10n.atermiusRemoteDesktop,
-          debugShowCheckedModeBanner: false,
-          locale: locale,
-          localizationsDelegates: AppLocalizationSetup.delegates,
-          supportedLocales: AppLocalizationSetup.locales,
-          theme: buildAppTheme(locale: locale),
-          builder: (context, child) => WindowsWindowChrome(
-            navigationEmbedded: () => true,
-            child: child!,
+      AppThemeModeBuilder(
+        builder: (context, themeMode) => AppLanguageHost(
+          builder: (context, locale) => MaterialApp(
+            onGenerateTitle: (context) => context.l10n.atermiusRemoteDesktop,
+            debugShowCheckedModeBanner: false,
+            locale: locale,
+            localizationsDelegates: AppLocalizationSetup.delegates,
+            supportedLocales: AppLocalizationSetup.locales,
+            theme: buildAppTheme(locale: locale, brightness: Brightness.light),
+            darkTheme: buildAppTheme(locale: locale),
+            themeMode: themeMode,
+            builder: (context, child) => WindowsWindowChrome(
+              navigationEmbedded: () => true,
+              child: WallpaperWindowHost(child: child!),
+            ),
+            home: DesktopWindowPage(launch: launch),
           ),
-          home: DesktopWindowPage(launch: launch),
         ),
       ),
     );
@@ -120,19 +172,23 @@ Future<void> main(List<String> arguments) async {
     // storage, profile catalogs, Sodium, Firebase or a second SSH connection.
     final launch = terminalLaunch;
     runApp(
-      AppLanguageHost(
-        builder: (context, locale) => MaterialApp(
-          onGenerateTitle: (context) => context.l10n.atermiusTerminal,
-          debugShowCheckedModeBanner: false,
-          locale: locale,
-          localizationsDelegates: AppLocalizationSetup.delegates,
-          supportedLocales: AppLocalizationSetup.locales,
-          theme: buildAppTheme(locale: locale),
-          builder: (context, child) => WindowsWindowChrome(
-            navigationEmbedded: () => true,
-            child: child!,
+      AppThemeModeBuilder(
+        builder: (context, themeMode) => AppLanguageHost(
+          builder: (context, locale) => MaterialApp(
+            onGenerateTitle: (context) => context.l10n.atermiusTerminal,
+            debugShowCheckedModeBanner: false,
+            locale: locale,
+            localizationsDelegates: AppLocalizationSetup.delegates,
+            supportedLocales: AppLocalizationSetup.locales,
+            theme: buildAppTheme(locale: locale, brightness: Brightness.light),
+            darkTheme: buildAppTheme(locale: locale),
+            themeMode: themeMode,
+            builder: (context, child) => WindowsWindowChrome(
+              navigationEmbedded: () => true,
+              child: WallpaperWindowHost(child: child!),
+            ),
+            home: LiveTerminalWindowPage(launch: launch),
           ),
-          home: LiveTerminalWindowPage(launch: launch),
         ),
       ),
     );
@@ -163,6 +219,7 @@ Future<Widget> _initializeAtermius({FilesWindowLaunch? filesLaunch}) async {
         sodium: sodium,
         database: database,
         secureStore: ClientSecureStore(),
+        syncPreferenceStore: createSyncPreferenceStore(),
       );
     },
   );
@@ -223,19 +280,23 @@ class _AtermiusStartupState extends State<AtermiusStartup> {
     final app = _app;
     if (app != null) return app;
 
-    return AppLanguageHost(
-      builder: (context, locale) => MaterialApp(
-        title: 'Atermius',
-        debugShowCheckedModeBanner: false,
-        locale: locale,
-        localizationsDelegates: AppLocalizationSetup.delegates,
-        supportedLocales: AppLocalizationSetup.locales,
-        theme: buildAppTheme(locale: locale),
-        builder: (context, child) => WindowsWindowChrome(child: child!),
-        home: _StartupRecovery(
-          starting: _starting,
-          unsupportedStorage: _unsupportedStorage,
-          onRetry: _initialize,
+    return AppThemeModeBuilder(
+      builder: (context, themeMode) => AppLanguageHost(
+        builder: (context, locale) => MaterialApp(
+          title: 'Atermius',
+          debugShowCheckedModeBanner: false,
+          locale: locale,
+          localizationsDelegates: AppLocalizationSetup.delegates,
+          supportedLocales: AppLocalizationSetup.locales,
+          theme: buildAppTheme(locale: locale, brightness: Brightness.light),
+          darkTheme: buildAppTheme(locale: locale),
+          themeMode: themeMode,
+          builder: (context, child) => WindowsWindowChrome(child: child!),
+          home: _StartupRecovery(
+            starting: _starting,
+            unsupportedStorage: _unsupportedStorage,
+            onRetry: _initialize,
+          ),
         ),
       ),
     );
@@ -282,7 +343,7 @@ class _StartupRecovery extends StatelessWidget {
                   children: [
                     Icon(
                       starting ? Icons.lock_clock_outlined : Icons.lock_outline,
-                      color: AppColors.orange,
+                      color: context.palette.orange,
                       size: 34,
                     ),
                     const SizedBox(height: 18),
@@ -291,7 +352,7 @@ class _StartupRecovery extends StatelessWidget {
                     Text(
                       description,
                       style: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(color: AppColors.muted),
+                          ?.copyWith(color: context.palette.muted),
                     ),
                     if (starting) ...[
                       const SizedBox(height: 20),
@@ -617,16 +678,21 @@ class _AtermiusAppState extends State<AtermiusApp> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      AppLanguageHost(builder: (context, locale) => _buildApp(locale));
+  Widget build(BuildContext context) => AppThemeModeBuilder(
+    builder: (context, themeMode) => AppLanguageHost(
+      builder: (context, locale) => _buildApp(locale, themeMode),
+    ),
+  );
 
-  Widget _buildApp(Locale locale) => MaterialApp(
+  Widget _buildApp(Locale locale, ThemeMode themeMode) => MaterialApp(
     title: 'Atermius',
     debugShowCheckedModeBanner: false,
     locale: locale,
     localizationsDelegates: AppLocalizationSetup.delegates,
     supportedLocales: AppLocalizationSetup.locales,
-    theme: buildAppTheme(locale: locale),
+    theme: buildAppTheme(locale: locale, brightness: Brightness.light),
+    darkTheme: buildAppTheme(locale: locale),
+    themeMode: themeMode,
     builder: (context, child) => WindowsWindowChrome(
       navigationState: _controller,
       navigationEmbedded: () =>
@@ -641,7 +707,9 @@ class _AtermiusAppState extends State<AtermiusApp> with WidgetsBindingObserver {
         mode: _usingLocal ? WorkspaceMode.local : WorkspaceMode.server,
         onSwitch: _switchWorkspace,
         busy: _switchingMode,
-        child: WorkspaceWindowShortcuts(child: child!),
+        child: WorkspaceWindowShortcuts(
+          child: WallpaperWindowHost(child: child!),
+        ),
       ),
     ),
     home: _restoringMode || _modeReadFailed
@@ -813,12 +881,12 @@ class _ProfileModeChooser extends StatelessWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: AppColors.lime,
+                          color: context.palette.lime,
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.terminal_rounded,
-                          color: Color(0xFF121A10),
+                          color: context.palette.onAccentText,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -839,12 +907,12 @@ class _ProfileModeChooser extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     context.l10n.serverProfilesSyncEncryptedDataAcross,
-                    style: const TextStyle(color: AppColors.muted, height: 1.5),
+                    style: TextStyle(color: context.palette.muted, height: 1.5),
                   ),
                   const SizedBox(height: 24),
                   _WorkspaceModeCard(
                     icon: Icons.sync_rounded,
-                    iconColor: AppColors.teal,
+                    iconColor: context.palette.teal,
                     title: context.l10n.serverAccountAndSync,
                     description: context.l10n.useYourSelfHostedServerAccount,
                     buttonLabel: serverBusy
@@ -857,7 +925,7 @@ class _ProfileModeChooser extends StatelessWidget {
                   ),
                   _WorkspaceModeCard(
                     icon: Icons.lock_outline,
-                    iconColor: AppColors.lime,
+                    iconColor: context.palette.lime,
                     title: context.l10n.localOnlyProfile,
                     description: context.l10n.createOrUnlockAnEncryptedHost,
                     buttonLabel: localBusy
@@ -873,8 +941,8 @@ class _ProfileModeChooser extends StatelessWidget {
                     const SizedBox(height: 12),
                     Text(
                       context.l10n.localProfileStorageIsUnavailableServer,
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: context.palette.muted,
                         fontSize: 12,
                       ),
                     ),
@@ -886,7 +954,7 @@ class _ProfileModeChooser extends StatelessWidget {
                       child: Text(
                         localError!,
                         key: const ValueKey('local_catalog_open_error'),
-                        style: const TextStyle(color: AppColors.orange),
+                        style: TextStyle(color: context.palette.orange),
                       ),
                     ),
                   ],
@@ -904,7 +972,7 @@ class _ProfileModeChooser extends StatelessWidget {
                       liveRegion: true,
                       child: Text(
                         serverError!,
-                        style: const TextStyle(color: AppColors.orange),
+                        style: TextStyle(color: context.palette.orange),
                       ),
                     ),
                   ],
@@ -964,8 +1032,8 @@ class _WorkspaceModeCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   description,
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.palette.muted,
                     fontSize: 12,
                     height: 1.4,
                   ),

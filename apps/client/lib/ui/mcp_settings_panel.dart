@@ -72,7 +72,7 @@ setState(() => _error = context.l10n.couldntStartMcpMakeSureThe);
               const SizedBox(height: 8),
               Text(
                 context.l10n.letExternalAiUseTheHosts,
-                style: const TextStyle(color: AppColors.muted, height: 1.5),
+                style: TextStyle(color: context.palette.muted, height: 1.5),
               ),
               const SizedBox(height: 12),
               if (!service.supported)
@@ -87,7 +87,7 @@ setState(() => _error = context.l10n.couldntStartMcpMakeSureThe);
                       : context.l10n.off,
                   key: const ValueKey('mcp_status'),
                   style: TextStyle(
-                    color: service.running ? AppColors.lime : AppColors.muted,
+                    color: service.running ? context.palette.lime : context.palette.muted,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -116,8 +116,8 @@ setState(() => _error = context.l10n.couldntStartMcpMakeSureThe);
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.readOnlyModeCanStillRead,
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.palette.muted,
                     fontSize: 12,
                     height: 1.5,
                   ),
@@ -164,8 +164,8 @@ setState(() => _error = context.l10n.couldntStartMcpMakeSureThe);
                 const SizedBox(height: 10),
                 Text(
                   context.l10n.listensOn127001,
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.palette.muted,
                     fontSize: 12,
                     height: 1.5,
                   ),
@@ -176,7 +176,7 @@ setState(() => _error = context.l10n.couldntStartMcpMakeSureThe);
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
                     _error!,
-                    style: const TextStyle(color: AppColors.red),
+                    style: TextStyle(color: context.palette.red),
                   ),
                 ),
             ],
@@ -190,7 +190,7 @@ setState(() => _error = context.l10n.couldntStartMcpMakeSureThe);
               const SizedBox(height: 8),
               Text(
                 context.l10n.sshConsoleSupportReadingTextAnd,
-                style: const TextStyle(color: AppColors.muted, height: 1.5),
+                style: TextStyle(color: context.palette.muted, height: 1.5),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -219,7 +219,7 @@ setState(() => _error = context.l10n.couldntStartMcpMakeSureThe);
               const SizedBox(height: 8),
               Text(
                 context.l10n.onlyTheLast50ToolNames,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.palette.muted, fontSize: 12),
               ),
               if (service.audit.isEmpty)
                 Padding(
@@ -233,7 +233,7 @@ setState(() => _error = context.l10n.couldntStartMcpMakeSureThe);
                     entry.success
                         ? Icons.check_circle_outline
                         : Icons.error_outline,
-                    color: entry.success ? AppColors.lime : AppColors.orange,
+                    color: entry.success ? context.palette.lime : context.palette.orange,
                   ),
                   title: Text(entry.tool),
                   subtitle: Text(

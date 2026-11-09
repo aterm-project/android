@@ -266,8 +266,8 @@ class _KeychainCertificateFieldState extends State<KeychainCertificateField> {
                   style: TextStyle(
                     fontSize: 11.5,
                     color: _importError != null || bad
-                        ? AppColors.orange
-                        : AppColors.accentText,
+                        ? context.palette.orange
+                        : context.palette.accentText,
                   ),
                 ),
               ),
@@ -403,9 +403,9 @@ class _KeychainPageState extends State<KeychainPage> {
                     ),
                     Text(
                       widget.scopeLabel ?? l10n.r7NavKeychainSubtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.muted,
+                        color: context.palette.muted,
                       ),
                     ),
                   ],
@@ -432,7 +432,7 @@ class _KeychainPageState extends State<KeychainPage> {
                   child: Text(
                     widget.error!,
                     key: const ValueKey('keychain_error'),
-                    style: const TextStyle(color: AppColors.orange),
+                    style: TextStyle(color: context.palette.orange),
                   ),
                 ),
                 if (widget.onRetry != null)
@@ -493,7 +493,7 @@ class _KeychainPageState extends State<KeychainPage> {
                           : l10n.r7NavLogNoMatches,
                       key: const ValueKey('keychain_empty'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.muted),
+                      style: TextStyle(color: context.palette.muted),
                     ),
                   ),
                 )
@@ -542,7 +542,7 @@ class _KeychainRow extends StatelessWidget {
         : l10n.r7NavKindPrivateKey;
     final referenced = entry.usedBy.isNotEmpty;
     final certOk = cert != null && cert.isValidAt(DateTime.now());
-    const muted = TextStyle(fontSize: 12, color: AppColors.muted);
+    final muted = TextStyle(fontSize: 12, color: context.palette.muted);
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
       child: ListTile(
@@ -556,7 +556,7 @@ class _KeychainRow extends StatelessWidget {
               ? Icons.workspace_premium_outlined
               : Icons.key_rounded,
           size: 20,
-          color: AppColors.accentText,
+          color: context.palette.accentText,
         ),
         title: Text(
           entry.name,
@@ -586,7 +586,7 @@ class _KeychainRow extends StatelessWidget {
                 key: ValueKey('keychain_cert_${entry.id}'),
                 style: muted.copyWith(
                   fontSize: 11.5,
-                  color: certOk ? AppColors.muted : AppColors.orange,
+                  color: certOk ? context.palette.muted : context.palette.orange,
                 ),
               ),
             Text(
@@ -617,7 +617,7 @@ class _KeychainRow extends StatelessWidget {
               child: Text(
                 l10n.deleteCredential,
                 style: referenced
-                    ? const TextStyle(color: AppColors.muted)
+                    ? TextStyle(color: context.palette.muted)
                     : null,
               ),
             ),

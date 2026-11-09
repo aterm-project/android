@@ -26475,6 +26475,2352 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That paste is too large to send over Telnet (limit 1 MiB). Nothing was sent.'**
   String get telnetInputTooLarge;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & sign-in'**
+  String get accountSettingsTitle;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'See which account and server this device uses, manage the session, or sign in to an account.'**
+  String get accountSettingsDescription;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Current mode'**
+  String get accountSettingsCurrentMode;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Account and sync'**
+  String get accountSettingsModeAccount;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Local only (this device)'**
+  String get accountSettingsModeLocal;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as'**
+  String get accountSettingsSignedInAs;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get accountSettingsServer;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in and unlocked on this device'**
+  String get accountSettingsSessionUnlocked;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Vault'**
+  String get accountSettingsActiveVault;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'No Vault selected'**
+  String get accountSettingsNoVault;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance administrator'**
+  String get accountSettingsInstanceAdmin;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Session'**
+  String get accountSettingsSessionActions;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Password, two-factor and recovery'**
+  String get accountSettingsSecurityAction;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of this account?'**
+  String get accountSettingsSignOutTitle;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Open sessions for this account on this device will close. Your encrypted Vault data stays on the server, and you will need your account password to sign in again.'**
+  String get accountSettingsSignOutBody;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to local mode?'**
+  String get accountSettingsSwitchToLocalTitle;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The account workspace and its open sessions on this device will close. Nothing from the account is copied into local profiles.'**
+  String get accountSettingsSwitchToLocalBody;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in to an account'**
+  String get accountSettingsLocalNotSignedIn;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profiles are stored only on this device and never sync. To sync hosts between devices, sign in to an account on your Atermius server.'**
+  String get accountSettingsLocalSyncRequiresAccount;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in or connect to a server'**
+  String get accountSettingsSignIn;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Open account sign-in?'**
+  String get accountSettingsSignInTitle;
+
+  /// Account settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The local profile will be locked and its open sessions closed. Local hosts stay on this device and are not uploaded. After signing in you can review moving them in Data and migration.'**
+  String get accountSettingsSignInBody;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get themeSettingTitle;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Match system · currently {theme}'**
+  String themeSettingSystemResolved(Object theme);
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Match system'**
+  String get themeOptionSystem;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes the app\'s windows, menus and panels. Terminal colors and remote desktop images keep their own palette.'**
+  String get themeSettingDescription;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeOptionLight;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeOptionDark;
+
+  /// App-owned UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The theme changed for this session but couldn\'t be saved on this device.'**
+  String get themeSettingSaveFailed;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save this choice on this device. It applies until the app restarts.'**
+  String get syncSettingsPreferenceSaveFailed;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get syncSettingsSyncingNow;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'These sync choices apply only to this device.'**
+  String get syncSettingsDeviceOnly;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get syncSettingsPreferenceSaving;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Off on this device. Edits stay encrypted in this device\'s queue until you choose Sync now or turn automatic sync back on.'**
+  String get syncSettingsAutomaticOffDescription;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get syncSettingsNever;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync needs an account sign-in on this device.'**
+  String get syncSettingsSignInRequired;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync didn\'t complete. Current status: {status}.'**
+  String syncSettingsResultNotCompleted(String status);
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to upload'**
+  String get syncSettingsWaitingToUpload;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync didn\'t complete: {error}'**
+  String syncSettingsResultFailed(String error);
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted changes queued on this device: {count}. They upload when you choose Sync now or turn automatic sync on.'**
+  String syncSettingsQueuedWhileOff(int count);
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get syncSettingsTitle;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync ran, but encrypted changes are still waiting to upload: {count}.'**
+  String syncSettingsResultPending(int count);
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic sync'**
+  String get syncSettingsAutomaticTitle;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading this device\'s sync choice… Automatic sync starts after it loads.'**
+  String get syncSettingsPreferenceLoading;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic sync stays paused until the saved choice can be read. Retry, or choose a setting to replace it.'**
+  String get syncSettingsPreferenceReadFailedShort;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync complete. Nothing is waiting to upload.'**
+  String get syncSettingsResultCompleted;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Edits upload and changes from other devices download in the background.'**
+  String get syncSettingsAutomaticOnDescription;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused: this device\'s saved choice couldn\'t be read.'**
+  String get syncSettingsPreferenceReadFailed;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncSettingsSyncNow;
+
+  /// Sync settings UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get syncSettingsStatus;
+
+  /// Settings Theme/Shortcuts categories (settings worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcuts'**
+  String get settingsThemeShortcutsTitle;
+
+  /// Settings Theme/Shortcuts categories (settings worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the keyboard shortcuts used in terminals.'**
+  String get settingsThemeShortcutsDescription;
+
+  /// Settings Theme/Shortcuts categories (settings worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsThemeTitle;
+
+  /// Settings Theme/Shortcuts categories (settings worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Terminals on this device show the device palette {name} instead. Selecting the saved theme, or saving another one, switches them back.'**
+  String settingsThemeOverlayActive(String name);
+
+  /// Settings Theme/Shortcuts categories (settings worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the app\'s light or dark mode, the terminal font size and terminal colors.'**
+  String get settingsThemeDescription;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpaper'**
+  String get wallpaperSettingTitle;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Shows an image behind the app and terminal panes. Only the image is blurred; text, controls, terminal text and remote desktop images stay sharp.'**
+  String get wallpaperSettingDescription;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image…'**
+  String get wallpaperChooseImage;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Replace image…'**
+  String get wallpaperReplaceImage;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Remove wallpaper'**
+  String get wallpaperReset;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'No wallpaper'**
+  String get wallpaperNoImage;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpaper preview'**
+  String get wallpaperPreviewLabel;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Loading wallpaper…'**
+  String get wallpaperLoading;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'The saved wallpaper image is missing or can\'t be read. Choose a new image or remove the wallpaper.'**
+  String get wallpaperMissing;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Layout'**
+  String get wallpaperModeTitle;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Whole window'**
+  String get wallpaperModeWindow;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'One image spans the whole window.'**
+  String get wallpaperModeWindowHint;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Follow splits'**
+  String get wallpaperModePanes;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Each terminal pane shows its own copy of the image and follows resizing and reordering.'**
+  String get wallpaperModePanesHint;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Blur: {value}'**
+  String wallpaperBlurValue(String value);
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'This image is larger than {limit} MB.'**
+  String wallpaperErrorTooLarge(int limit);
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a PNG, JPEG or still WebP image.'**
+  String get wallpaperErrorUnsupported;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'This image can\'t be read. It may be damaged.'**
+  String get wallpaperErrorCorrupt;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'This image is too large to use (up to {side} px per side).'**
+  String wallpaperErrorDimensions(int side);
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'The wallpaper couldn\'t be saved on this device.'**
+  String get wallpaperErrorStorage;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'The wallpaper changed for this session but couldn\'t be saved on this device.'**
+  String get wallpaperSaveFailed;
+
+  /// Theme settings wallpaper card (wallpaper worker).
+  ///
+  /// In en, this message translates to:
+  /// **'A copy of the image is kept in this app\'s storage on this device. Separate windows use the same wallpaper when they open.'**
+  String get wallpaperDeviceNote;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste into folder'**
+  String get fileManagerPasteInto;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Path copied'**
+  String get fileManagerPathCopied;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying \"{name}\"…'**
+  String fileManagerCopying(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The dropped items couldn\'t be read. Nothing was uploaded.'**
+  String get fileManagerDropFailed;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'This connection doesn\'t support file-manager operations.'**
+  String get fileManagerOperationUnsupported;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? This can\'t be undone.'**
+  String fileManagerDeleteConfirm(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get fileManagerOpen;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste here'**
+  String get fileManagerPasteHere;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading \"{name}\" ({index}/{count})…'**
+  String fileManagerUploading(String name, int index, int count);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Move \"{name}\" into \"{folder}\"?'**
+  String fileManagerMoveConfirm(String name, String folder);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Name already in use'**
+  String get fileManagerNameConflictTitle;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get fileManagerSkip;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut \"{name}\" — paste in this tab to move it'**
+  String fileManagerClipboardCut(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename \"{name}\"'**
+  String fileManagerRenameTitle(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete folder \"{name}\" and {count, plural, =1{the 1 item} other{all {count} items}} inside it? Symbolic links are removed, not followed. This can\'t be undone.'**
+  String fileManagerDeleteFolderConfirm(String name, int count);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear file clipboard'**
+  String get fileManagerClearClipboard;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get fileManagerRename;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" is a symbolic link, special file or has an unsupported name. Folder copies don\'t follow or recreate these, so nothing was copied.'**
+  String fileManagerErrorUnsupportedEntry(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep both'**
+  String get fileManagerKeepBoth;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" is larger than the 1 GiB per-file copy limit.'**
+  String fileManagerErrorFileTooLarge(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut'**
+  String get fileManagerCut;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Only files can be dropped here. Folders and links to other locations aren\'t uploaded.'**
+  String get fileManagerDropNothingAccepted;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get fileManagerPaste;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The item changed or disappeared on the server. Refresh and try again.'**
+  String get fileManagerErrorSourceChanged;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" already exists here. Nothing was replaced.'**
+  String fileManagerErrorExists(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Move item'**
+  String get fileManagerMoveTitle;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'A folder can\'t be moved or copied into itself.'**
+  String get fileManagerErrorIntoItself;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled. Nothing else was changed.'**
+  String get fileManagerCancelled;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop at most {count} files at a time.'**
+  String fileManagerDropTooManyFiles(int count);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Another file action is still running.'**
+  String get fileManagerBusy;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy path'**
+  String get fileManagerCopyPath;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" already exists in this folder. Keep both by adding \"(copy)\" to the new name? The existing item won\'t be replaced.'**
+  String fileManagerNameConflictKeepBoth(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving \"{name}\"…'**
+  String fileManagerMoving(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied \"{name}\" — paste in this tab'**
+  String fileManagerClipboardCopied(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped files are uploaded with SFTP. Open this folder with SFTP to upload.'**
+  String get fileManagerDropNeedsSftp;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting \"{name}\"…'**
+  String fileManagerDeleting(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded {uploaded} · skipped {skipped} · failed {failed}'**
+  String fileManagerUploadSummary(int uploaded, int skipped, int failed);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a single name without slashes, backslashes or control characters.'**
+  String get fileManagerInvalidName;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is too large for a file-manager action (limit {entries} items, {depth} levels deep or 2 GiB). Nothing was changed.'**
+  String fileManagerErrorLimitExceeded(int entries, int depth);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get fileManagerCopy;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The file tab changed folder or connection while the drop was being checked. Nothing was uploaded; drop the files again.'**
+  String get fileManagerDropTargetChanged;
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" already exists in this folder. Upload it under a new \"(copy)\" name or skip it? The existing file won\'t be replaced.'**
+  String fileManagerUploadConflict(String name);
+
+  /// File manager UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get fileManagerMove;
+
+  /// No description provided for @homeAddSerialConsoleDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens a COM port on this computer at 8N1. Nothing runs on the server.'**
+  String get homeAddSerialConsoleDetail;
+
+  /// No description provided for @homeSharingThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Online on this device'**
+  String get homeSharingThisDevice;
+
+  /// No description provided for @homeAddShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Shell (system default)'**
+  String get homeAddShell;
+
+  /// No description provided for @homeSharingSharedPresenceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared · {members} members · status unknown'**
+  String homeSharingSharedPresenceUnknown(int members);
+
+  /// No description provided for @homeSharingLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading members…'**
+  String get homeSharingLoading;
+
+  /// No description provided for @homeAddTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a host or open a local Shell or serial Console'**
+  String get homeAddTooltip;
+
+  /// No description provided for @homeAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get homeAddButton;
+
+  /// No description provided for @homeSharingLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Local only'**
+  String get homeSharingLocalOnly;
+
+  /// No description provided for @homeAddSerialConsolePort.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial port'**
+  String get homeAddSerialConsolePort;
+
+  /// No description provided for @homeSharingMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more:\n{names}'**
+  String homeSharingMore(int count, String names);
+
+  /// No description provided for @homeAddSerialConsoleOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Console'**
+  String get homeAddSerialConsoleOpen;
+
+  /// No description provided for @homeSharingSharedOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared · {members} members · {online} online'**
+  String homeSharingSharedOnline(int members, int online);
+
+  /// No description provided for @homeAddSerialConsoleBaud.
+  ///
+  /// In en, this message translates to:
+  /// **'Baud rate'**
+  String get homeAddSerialConsoleBaud;
+
+  /// No description provided for @homeSharingYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (you)'**
+  String homeSharingYou(String name);
+
+  /// No description provided for @homeAddSerialConsoleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open serial Console'**
+  String get homeAddSerialConsoleTitle;
+
+  /// No description provided for @homeAddSerialConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial Console (COM)…'**
+  String get homeAddSerialConsole;
+
+  /// No description provided for @homeSharingLocalDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This local Profile is stored encrypted on this device only. It has no Vault members, nobody else can see it and no presence is sent. Sign in to an account Vault to share Hosts with other people.'**
+  String get homeSharingLocalDetail;
+
+  /// No description provided for @homeAddSerialConsoleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial Console (Windows app only)'**
+  String get homeAddSerialConsoleUnavailable;
+
+  /// No description provided for @homeSharingPresenceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Status unknown'**
+  String get homeSharingPresenceUnknown;
+
+  /// No description provided for @homeSharingOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get homeSharingOffline;
+
+  /// No description provided for @homeSharingMembersUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Members not loaded'**
+  String get homeSharingMembersUnavailable;
+
+  /// No description provided for @homeSharingLocalTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Profile on this device — not shared with anyone'**
+  String get homeSharingLocalTooltip;
+
+  /// No description provided for @homeSharingDetailsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Vault members and online status'**
+  String get homeSharingDetailsTooltip;
+
+  /// No description provided for @homeSharingIndividual.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you'**
+  String get homeSharingIndividual;
+
+  /// No description provided for @homeSharingOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get homeSharingOnline;
+
+  /// Terminal tools sidebar resize handle (sidebar worker).
+  ///
+  /// In en, this message translates to:
+  /// **'{width} px wide'**
+  String sidebarResizeWidthValue(int width);
+
+  /// Terminal tools sidebar resize handle (sidebar worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Drag, or use the Left and Right arrow keys, to change the width'**
+  String get sidebarResizeHint;
+
+  /// Terminal tools sidebar resize handle (sidebar worker).
+  ///
+  /// In en, this message translates to:
+  /// **'Resize sidebar'**
+  String get sidebarResizeHandle;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'No application could open this file.'**
+  String get fileEditLaunchFailed;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'This server can\'t replace files atomically, so nothing was uploaded.'**
+  String get fileEditAtomicUnsupported;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get fileEditUpload;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The local copy is no longer a regular file in its private folder. Nothing was uploaded.'**
+  String get fileEditLocalRejected;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Server copy changed'**
+  String get fileEditConflictTitle;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded \"{name}\", but it changed again locally while sending. Upload again when ready.'**
+  String fileEditUploadedChangedAgain(String name);
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'This file type could run when opened, so it isn\'t opened externally. Use Edit text or Download instead.'**
+  String get fileEditBlockedType;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Local copy rejected'**
+  String get fileEditStatusRejected;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing externally ({count})'**
+  String fileEditFooterTitle(int count);
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in external app'**
+  String get fileEditOpenExternal;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'This file tab\'s connection closed or changed. Nothing was uploaded.'**
+  String get fileEditSessionChanged;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed locally — not uploaded'**
+  String get fileEditStatusChanged;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {count} files can be edited externally at once.'**
+  String fileEditTooMany(int count);
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The local copy is missing. Nothing was uploaded.'**
+  String get fileEditLocalMissing;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Only regular remote files can be edited externally.'**
+  String get fileEditNotRegular;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching for saves'**
+  String get fileEditStatusWatching;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore'**
+  String get fileEditIgnore;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened \"{name}\" externally. After saving there, choose Upload below.'**
+  String fileEditOpened(String name);
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Only files up to 10 MiB can be edited externally.'**
+  String get fileEditTooLarge;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'The local copy is larger than 10 MiB. Nothing was uploaded.'**
+  String get fileEditLocalTooLarge;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get fileEditStatusUploading;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'External editing needs the desktop app. Use Edit text to change this file here.'**
+  String get fileEditUnavailable;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" changed on the server after you opened it. Replace the server copy with your local version?'**
+  String fileEditConflictMessage(String name);
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Also changed on the server'**
+  String get fileEditStatusConflict;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded \"{name}\".'**
+  String fileEditUploaded(String name);
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop watching'**
+  String get fileEditStop;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed — local change kept'**
+  String get fileEditStatusFailed;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep local'**
+  String get fileEditKeepLocal;
+
+  /// External editor (file tab) UI text.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace server copy'**
+  String get fileEditReplace;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Share…'**
+  String get cloudAccessShareMenu;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Share {name}'**
+  String cloudAccessShareTitle(String name);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get cloudAccessClose;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Members & teams'**
+  String get cloudAccessTabMembers;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary links'**
+  String get cloudAccessTabLinks;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Guests connect through this server\'s gateway. To make that possible, this Host\'s login is sealed to the server gateway key until the link is revoked or expires. The server operator (or anyone who compromises the server) can open it and see the session. Guests never receive the password or key through this feature, but can do anything the account allows inside the session. Use a dedicated low-privilege account.'**
+  String get cloudAccessGatewayTrustNotice;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Links for this Host'**
+  String get cloudAccessLinksHeading;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'New link'**
+  String get cloudAccessNewLink;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'No temporary links yet.'**
+  String get cloudAccessNoLinks;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get cloudAccessStatusActive;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled'**
+  String get cloudAccessStatusScheduled;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get cloudAccessStatusExpired;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get cloudAccessStatusPaused;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get cloudAccessStatusSuspended;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get cloudAccessStatusRevoked;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'until {time}'**
+  String cloudAccessValidUntil(String time);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'{used}/{max} opened'**
+  String cloudAccessRedemptionCount(String used, String max);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String cloudAccessActiveSessions(String count);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get cloudAccessMore;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get cloudAccessActivity;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get cloudAccessPause;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get cloudAccessResume;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'New secret'**
+  String get cloudAccessRotate;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get cloudAccessRevoke;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke this link?'**
+  String get cloudAccessRevokeLinkTitle;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The link stops working immediately and active guest sessions are closed within seconds. Revocation cannot undo what guests already did on the Host.'**
+  String get cloudAccessRevokeLinkMessage;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Issue a new secret?'**
+  String get cloudAccessRotateTitle;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The current URL stops working and its guests are disconnected. You get a new URL to send.'**
+  String get cloudAccessRotateMessage;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Start later'**
+  String get cloudAccessScheduleStart;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Starts now'**
+  String get cloudAccessStartsNow;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a start time'**
+  String get cloudAccessPickStart;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Valid for'**
+  String get cloudAccessLifetime;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get cloudAccessOneHour;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'24 hours'**
+  String get cloudAccessOneDay;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get cloudAccessOneWeek;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get cloudAccessCustom;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'From {start} until {end} (your local time; {utc} UTC). The server clock decides.'**
+  String cloudAccessWindowSummary(String start, String end, String utc);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The end must be after the start and in the future.'**
+  String get cloudAccessEndBeforeStart;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Times the link can be opened'**
+  String get cloudAccessMaxRedemptions;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Default 1. Each browser that clicks Continue uses one.'**
+  String get cloudAccessMaxRedemptionsHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get cloudAccessUnlimited;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 1–1000, or choose Unlimited.'**
+  String get cloudAccessRedemptionsRange;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Connection attempts (optional)'**
+  String get cloudAccessMaxConnections;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for no limit. Refused attempts do not count.'**
+  String get cloudAccessMaxConnectionsHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a positive number or leave it empty.'**
+  String get cloudAccessConnectionsRange;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Simultaneous connections'**
+  String get cloudAccessConcurrent;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'View only'**
+  String get cloudAccessViewOnly;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard, mouse and paste are blocked by the server.'**
+  String get cloudAccessViewOnlyHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Allow pasting into the Host'**
+  String get cloudAccessClipboardToRemote;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Allow copying from the Host'**
+  String get cloudAccessClipboardFromRemote;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'File transfer, drives, printing and recording are off for guests.'**
+  String get cloudAccessFilesLocked;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Custom address (optional)'**
+  String get cloudAccessCustomSlug;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'3–48 lowercase letters, digits or hyphens. An address is not a password: anyone may guess it, so avoid sensitive words.'**
+  String get cloudAccessCustomSlugHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Title shown to the guest (optional)'**
+  String get cloudAccessGuestTitle;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted with the link secret; the server cannot read it.'**
+  String get cloudAccessGuestTitleHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cloudAccessCancel;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Create link'**
+  String get cloudAccessCreateLink;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Link created'**
+  String get cloudAccessLinkReady;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get cloudAccessCopyLink;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get cloudAccessCopied;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This is the only time the full link is shown. If it is lost, issue a new secret.'**
+  String get cloudAccessShownOnce;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with this link can open it. Send it only through a channel you trust; some mail scanners may open links and use them up.'**
+  String get cloudAccessSendSafely;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get cloudAccessDone;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get cloudAccessBack;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Activity · {link}'**
+  String cloudAccessActivityFor(String link);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Guest sessions'**
+  String get cloudAccessGuestSessions;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has opened this link yet.'**
+  String get cloudAccessNoSessions;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Active since {time}'**
+  String cloudAccessSessionSince(String time);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Ended ({reason})'**
+  String cloudAccessSessionEnded(String reason);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'End session'**
+  String get cloudAccessTerminate;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Audit (metadata only)'**
+  String get cloudAccessAuditEvents;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Members get this Host through an encrypted Vault. Recipients receive the Vault key only after you confirm each of their devices; organization admins cannot obtain it on their own.'**
+  String get cloudAccessMembersExplainer;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Share only this Host'**
+  String get cloudAccessDedicatedVault;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'A new sharing Vault is created with a copy of this Host and only the items listed below. Other Hosts and credentials in your current Vault stay private.'**
+  String get cloudAccessDedicatedVaultHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing Vault name'**
+  String get cloudAccessSharingVaultName;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Shared · {name}'**
+  String cloudAccessSharingVaultDefaultName(String name);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Will be copied:'**
+  String get cloudAccessWillCopy;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Jump host {name}'**
+  String cloudAccessDependencyJumpHost(String name);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Credential {name}'**
+  String cloudAccessDependencyCredential(String name);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted host key {key}'**
+  String cloudAccessDependencyKnownHost(String key);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Group {name} is not copied'**
+  String cloudAccessDependencyGroup(String name);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uses a jump host that is not in this Vault.'**
+  String cloudAccessBlockerMissingJump(String name);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'{name} references a credential that is not in this Vault.'**
+  String cloudAccessBlockerMissingCredential(String name);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has a jump host loop.'**
+  String cloudAccessBlockerJumpLoop(String name);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'I approve copying exactly these items into the new Vault.'**
+  String get cloudAccessConsentCopy;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Create sharing Vault'**
+  String get cloudAccessCreateSharingVault;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Or share this whole Vault'**
+  String get cloudAccessWholeVaultHeading;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Recipients will see every Host, credential and snippet in the current Vault.'**
+  String get cloudAccessWholeVaultHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Manage whole-Vault access'**
+  String get cloudAccessManageWholeVault;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an organization'**
+  String get cloudAccessAttachOrg;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Grants refer to members and teams of one organization you manage.'**
+  String get cloudAccessAttachOrgHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get cloudAccessAttach;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Manage organizations'**
+  String get cloudAccessManageOrganizations;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Access in {org}'**
+  String cloudAccessGrantsIn(String org);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Add member or team'**
+  String get cloudAccessAddGrant;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Team {name}'**
+  String cloudAccessTeamLabel(String name);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Viewer'**
+  String get cloudAccessRoleViewer;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Editor'**
+  String get cloudAccessRoleEditor;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get cloudAccessRemove;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for keys'**
+  String get cloudAccessKeyDistribution;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Compare each fingerprint with the recipient through another channel before delivering the Vault key.'**
+  String get cloudAccessKeyDistributionHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the recipient to open Organizations on a device'**
+  String get cloudAccessWaitingForDevice;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for you to confirm'**
+  String get cloudAccessWaitingForOwner;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Key sent; waiting for the recipient to accept'**
+  String get cloudAccessWaitingForRecipient;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Signed role differs from the grant; rotate or re-invite to change it'**
+  String get cloudAccessRoleDiffers;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Device {fingerprint}'**
+  String cloudAccessDeviceFingerprint(String fingerprint);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm this device'**
+  String get cloudAccessConfirmFingerprintTitle;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver the Vault key to {user}\'s device {fingerprint}? Only continue if {user} confirmed this fingerprint to you.'**
+  String cloudAccessConfirmFingerprintMessage(String user, String fingerprint);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver key'**
+  String get cloudAccessDeliverKey;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Server access is already blocked. Rotate the Vault key to remove this member cryptographically, and change any credentials they have seen.'**
+  String get cloudAccessRemovalPending;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Keep as direct member'**
+  String get cloudAccessKeepDirect;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate key'**
+  String get cloudAccessRotateToRemove;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Limited to viewing until the signed role is updated'**
+  String get cloudAccessRestrictedToViewer;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Organizations'**
+  String get cloudAccessOrganizations;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Members, teams and invitations'**
+  String get cloudAccessOrganizationsSubtitle;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Organization names, members, roles and teams are visible to this server. Joining an organization never gives you a Vault key by itself.'**
+  String get cloudAccessOrganizationsExplainer;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'You opened an organization invitation — review it'**
+  String get cloudAccessPendingJoin;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Join an organization'**
+  String get cloudAccessJoinOrganization;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation link'**
+  String get cloudAccessJoinLinkField;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a valid invitation link.'**
+  String get cloudAccessJoinInvalid;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get cloudAccessReview;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Invited by {inviter} as {role}'**
+  String cloudAccessJoinSummary(String inviter, String role);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get cloudAccessJoin;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Joined. Vault owners still need to confirm your device before you receive any shared Vault.'**
+  String get cloudAccessJoined;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Shared Vault keys'**
+  String get cloudAccessSharedVaultKeys;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Publishes this device\'s public keys and accepts Vaults whose owners confirmed this device.'**
+  String get cloudAccessSharedVaultKeysHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Check for shared Vaults'**
+  String get cloudAccessCheckDeliveries;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No new shared Vaults.} =1{1 shared Vault added.} other{{count} shared Vaults added.}}'**
+  String cloudAccessDeliveriesAccepted(int count);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Your organizations'**
+  String get cloudAccessYourOrganizations;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'New organization'**
+  String get cloudAccessNewOrganization;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Organization name'**
+  String get cloudAccessOrganizationName;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'You are not in any organization yet.'**
+  String get cloudAccessNoOrganizations;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members'**
+  String cloudAccessMemberCount(String count);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get cloudAccessOrgRoleOwner;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get cloudAccessOrgRoleAdmin;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get cloudAccessOrgRoleMember;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get cloudAccessSave;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get cloudAccessMembers;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get cloudAccessInviteMember;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Username (optional)'**
+  String get cloudAccessInviteUsername;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Limit the invitation to one existing account. New people first need an account invitation from an instance administrator.'**
+  String get cloudAccessInviteUsernameHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get cloudAccessRole;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Team'**
+  String get cloudAccessInitialTeam;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'No team'**
+  String get cloudAccessNoTeam;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Create invitation'**
+  String get cloudAccessCreateInvitation;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation link created'**
+  String get cloudAccessInvitationReady;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Copy invitation link'**
+  String get cloudAccessCopyInvitation;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get cloudAccessLeave;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from organization?'**
+  String get cloudAccessRemoveMemberTitle;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Access through organization grants is blocked immediately. Vault owners should then rotate keys of affected Vaults.'**
+  String get cloudAccessRemoveMemberMessage;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Teams'**
+  String get cloudAccessTeams;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'New team'**
+  String get cloudAccessNewTeam;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Team name'**
+  String get cloudAccessTeamName;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Members of {team}'**
+  String cloudAccessTeamMembers(String team);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Invitations'**
+  String get cloudAccessInvitations;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Any account'**
+  String get cloudAccessAnyAccount;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The request could not be completed.'**
+  String get cloudAccessErrorGeneric;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary links are not configured on this server.'**
+  String get cloudAccessErrorLinksUnavailable;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Organizations are not enabled on this server.'**
+  String get cloudAccessErrorOrganizationsUnavailable;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This Host\'s protocol cannot be shared on this server.'**
+  String get cloudAccessErrorProtocolUnavailable;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Only the Vault owner can share through links.'**
+  String get cloudAccessErrorOwnerRequired;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Hosts that use a jump host cannot be shared through the gateway.'**
+  String get cloudAccessErrorJumpHost;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Hosts with port forwarding profiles cannot be shared through the gateway.'**
+  String get cloudAccessErrorPortForward;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Connect once and trust this Host\'s SSH key before sharing it.'**
+  String get cloudAccessErrorHostKeyRequired;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Connect once and trust this Host\'s RDP certificate before sharing it.'**
+  String get cloudAccessErrorCertificateRequired;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Save a login on this Host before sharing it.'**
+  String get cloudAccessErrorLoginRequired;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The Host changed or is not synchronized yet. Sync and try again.'**
+  String get cloudAccessErrorHostChanged;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve the listed problems first.'**
+  String get cloudAccessErrorPlanBlocked;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This Host\'s address is not allowed by the server\'s sharing policy.'**
+  String get cloudAccessErrorTargetDenied;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This address is not available.'**
+  String get cloudAccessErrorSlugTaken;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Use 3–48 lowercase letters, digits or inner hyphens.'**
+  String get cloudAccessErrorSlugInvalid;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many active links. Revoke some first.'**
+  String get cloudAccessErrorTooManyLinks;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'These link options are not allowed by the server.'**
+  String get cloudAccessErrorInvalidOptions;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Organization owner or admin role is required.'**
+  String get cloudAccessErrorOrgRoleRequired;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Only instance administrators can create organizations here.'**
+  String get cloudAccessErrorOrgCreationRestricted;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'An organization needs at least one owner.'**
+  String get cloudAccessErrorLastOwner;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation is not available.'**
+  String get cloudAccessErrorInvitationUnavailable;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'No active account has this username.'**
+  String get cloudAccessErrorAccountNotFound;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a moment and try again.'**
+  String get cloudAccessErrorRateLimited;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Atermius shared access'**
+  String get cloudAccessGuestWindowTitle;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'You received an Atermius temporary access link'**
+  String get cloudAccessGuestLanding;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing happens until you continue. Continuing may use one of the link\'s allowed openings.'**
+  String get cloudAccessGuestLandingHelp;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get cloudAccessGuestContinue;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Shared access'**
+  String get cloudAccessGuestHeading;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This session ends {time}'**
+  String cloudAccessGuestValidUntil(String time);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'View only'**
+  String get cloudAccessGuestViewOnly;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Interactive'**
+  String get cloudAccessGuestInteractive;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard allowed'**
+  String get cloudAccessGuestClipboardOn;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard off'**
+  String get cloudAccessGuestClipboardOff;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get cloudAccessGuestConnect;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get cloudAccessGuestDisconnect;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'End my access'**
+  String get cloudAccessGuestLeave;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Your access ended. You can close this tab.'**
+  String get cloudAccessGuestLeft;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This session runs through the sharer\'s Atermius server, which can see it.'**
+  String get cloudAccessGuestTrustNote;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This link is not available.'**
+  String get cloudAccessGuestUnavailable;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the person who shared it to send a new link.'**
+  String get cloudAccessGuestAskOwner;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This link is not valid yet.'**
+  String get cloudAccessGuestNotYetValid;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This link has expired.'**
+  String get cloudAccessGuestExpired;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This link has already been used.'**
+  String get cloudAccessGuestExhausted;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'This link was paused or revoked by its owner.'**
+  String get cloudAccessGuestSuspended;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has ended.'**
+  String get cloudAccessGuestSessionEnded;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many connections right now. Try again shortly.'**
+  String get cloudAccessGuestBusy;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Ends in 5 minutes'**
+  String get cloudAccessGuestExpiringSoon;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The connection closed.'**
+  String get cloudAccessGuestClosed;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Access was revoked or changed by the owner.'**
+  String get cloudAccessGuestClosedRevoked;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The access time ended.'**
+  String get cloudAccessGuestClosedExpired;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The Host could not be reached or did not match its trusted identity.'**
+  String get cloudAccessGuestClosedTarget;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The connection was closed because of an unexpected message.'**
+  String get cloudAccessGuestClosedProtocol;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Make {role}'**
+  String cloudAccessApplyRole(String role);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'Change this member\'s role?'**
+  String get cloudAccessApplyRoleTitle;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'{user} becomes {role}. This signs a new membership manifest and rotates the Vault key from this device.'**
+  String cloudAccessApplyRoleMessage(String user, String role);
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The account, server or selected Vault changed during this action. Nothing was sent; try again.'**
+  String get cloudAccessErrorScopeChanged;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The sharing Vault was created but is not synchronized yet. Sync it before adding members.'**
+  String get cloudAccessErrorNotSynced;
+
+  /// Cloud access (organizations, Host sharing, temporary links).
+  ///
+  /// In en, this message translates to:
+  /// **'The account, server or selected Vault changed after the server had already completed part of this action (for example, created the Vault or the invitation). That part was not undone; review it before trying again.'**
+  String get cloudAccessErrorScopeEndedCommitted;
 }
 
 class _AppLocalizationsDelegate

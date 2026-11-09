@@ -165,12 +165,12 @@ class TerminalPaletteTile extends StatelessWidget {
         child: SizedBox(
           width: width,
           child: Material(
-            color: AppColors.surfaceRaised,
+            color: context.palette.surfaceRaised,
             clipBehavior: Clip.antiAlias,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
               side: BorderSide(
-                color: selected ? colors.primary : AppColors.line,
+                color: selected ? colors.primary : context.palette.line,
                 width: selected ? 2 : 1,
               ),
             ),
@@ -203,9 +203,9 @@ class TerminalPaletteTile extends StatelessWidget {
                                   subtitle,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 10.5,
-                                    color: AppColors.muted,
+                                    color: context.palette.muted,
                                   ),
                                 ),
                             ],
@@ -230,12 +230,27 @@ class TerminalPaletteTile extends StatelessWidget {
   }
 }
 
+/// Settings category holding the UI theme mode, terminal font size, synced
+/// terminal theme and device palette gallery (account and local settings).
+const settingsThemeSectionId = 'appearance';
+
+/// Settings category holding only the terminal keyboard shortcuts.
+const settingsShortcutsSectionId = 'shortcuts';
+
 /// Selector for the Vault-synced theme (the strict two-value schema). Keeps
 /// the existing option keys `terminal-theme-option-<value>`.
+///
+/// A device palette overlay ([TerminalPaletteController]) masks the synced
+/// theme, so the selector says so, and explicitly selecting the already saved
+/// [persisted] theme clears the overlay at once (there is nothing to save).
+/// Saving a different draft clears it in the owning section after the save
+/// succeeds, guarded by [TerminalPaletteController.followSyncedIf].
 class TerminalSyncedThemeSelector extends StatelessWidget {
   const TerminalSyncedThemeSelector({
     required this.selected,
     required this.onSelected,
+    this.persisted,
+    this.palettes,
     super.key,
   });
   final VaultTerminalThemeChoice selected;
@@ -243,21 +258,61 @@ class TerminalSyncedThemeSelector extends StatelessWidget {
   /// Null disables selection (read-only vault, busy or conflicted).
   final ValueChanged<VaultTerminalThemeChoice>? onSelected;
 
+  /// The saved synced theme; null when unknown (no overlay handling).
+  final VaultTerminalThemeChoice? persisted;
+  final TerminalPaletteController? palettes;
+
   @override
-  Widget build(BuildContext context) => Wrap(
-    spacing: 10,
-    runSpacing: 10,
-    children: [
-      for (final choice in VaultTerminalThemeChoice.values)
-        TerminalPaletteTile(
-          key: ValueKey('terminal-theme-option-${choice.value}'),
-          theme: buildTerminalColorTheme(choice),
-          name: choice.label,
-          selected: choice == selected,
-          onSelected: onSelected == null ? null : () => onSelected!(choice),
-        ),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final controller = palettes ?? TerminalPaletteController.of(context);
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final overlay = persisted == null ? null : controller.preset;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final choice in VaultTerminalThemeChoice.values)
+                  TerminalPaletteTile(
+                    key: ValueKey('terminal-theme-option-${choice.value}'),
+                    theme: buildTerminalColorTheme(choice),
+                    name: choice.label,
+                    selected: choice == selected,
+                    onSelected: onSelected == null
+                        ? null
+                        : () {
+                            if (choice == persisted) controller.followSynced();
+                            onSelected!(choice);
+                          },
+                  ),
+              ],
+            ),
+            if (overlay != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    context.l10n.settingsThemeOverlayActive(overlay.name),
+                    key: const ValueKey('terminal_theme_overlay_notice'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.35,
+                      color: context.palette.orange,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 enum _PaletteFilter { all, dark, light }
@@ -326,8 +381,8 @@ class _TerminalPaletteGalleryState extends State<TerminalPaletteGallery> {
           const SizedBox(height: 4),
           Text(
             l10n.r7UiPaletteGalleryDescription,
-            style: const TextStyle(
-              color: AppColors.muted,
+            style: TextStyle(
+              color: context.palette.muted,
               fontSize: 12,
               height: 1.35,
             ),
@@ -350,7 +405,7 @@ class _TerminalPaletteGalleryState extends State<TerminalPaletteGallery> {
                   ? l10n.r7UiPaletteFollowingSynced
                   : l10n.r7UiPaletteActiveOverride(active.name),
               key: const ValueKey('terminal_palette_status'),
-              style: const TextStyle(fontSize: 12, color: AppColors.muted),
+              style: TextStyle(fontSize: 12, color: context.palette.muted),
             ),
           ),
           if (_palettes.writeFailed)
@@ -359,7 +414,7 @@ class _TerminalPaletteGalleryState extends State<TerminalPaletteGallery> {
               child: Text(
                 l10n.r7UiPaletteSaveFailed,
                 key: const ValueKey('terminal_palette_save_failed'),
-                style: const TextStyle(fontSize: 12, color: AppColors.orange),
+                style: TextStyle(fontSize: 12, color: context.palette.orange),
               ),
             ),
           const SizedBox(height: 10),
@@ -424,7 +479,7 @@ class _TerminalPaletteGalleryState extends State<TerminalPaletteGallery> {
               child: Text(
                 l10n.r7UiPaletteNoMatches,
                 key: const ValueKey('terminal_palette_no_matches'),
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: context.palette.muted),
               ),
             )
           else

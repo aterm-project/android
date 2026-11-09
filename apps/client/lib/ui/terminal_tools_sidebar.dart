@@ -1,7 +1,9 @@
 import 'app_menu.dart';
 
+import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
@@ -15,33 +17,274 @@ import 'app_density.dart';
 import '../l10n/l10n.dart';
 
 /// Keep the terminal child mounted across opening/closing and width changes.
-class TerminalToolsLayout extends StatelessWidget {
-  const TerminalToolsLayout({required this.child, this.sidebar, super.key});
+///
+/// The sidebar is docked beside the terminal from [dockBreakpoint] and overlays
+/// it below that. Its left edge is a drag handle (also arrow-key and
+/// screen-reader adjustable). The user's preferred width lives in [width]
+/// (default [sharedWidth]) and is only clamped for display, so a narrow
+/// viewport never overwrites it and widening the window restores it.
+class TerminalToolsLayout extends StatefulWidget {
+  const TerminalToolsLayout({
+    required this.child,
+    this.sidebar,
+    this.width,
+    super.key,
+  });
   final Widget child;
   final Widget? sidebar;
+
+  /// Preferred sidebar width; defaults to [sharedWidth].
+  final ValueNotifier<double>? width;
+
+  static const double defaultWidth = 340;
+  static const double minWidth = 260;
+
+  /// Docked sidebars never squeeze the terminal below this width.
+  static const double minTerminalWidth = 400;
+  static const double dockBreakpoint = 760;
+  static const double keyboardStep = 16;
+
+  /// In-memory preferred width shared by every terminal workspace (account and
+  /// local, every pane) for the app's lifetime. Not persisted.
+  static final ValueNotifier<double> sharedWidth = ValueNotifier(defaultWidth);
+
+  /// Displayable width range for a layout [viewport] wide.
+  static ({double min, double max}) widthBounds(double viewport) {
+    if (!viewport.isFinite || viewport <= 0) {
+      return (min: minWidth, max: defaultWidth);
+    }
+    final min = math.min(minWidth, viewport);
+    final max = viewport >= dockBreakpoint
+        ? math.min(viewport * .6, viewport - minTerminalWidth)
+        : viewport;
+    return (min: min, max: math.max(min, max));
+  }
+
+  @override
+  State<TerminalToolsLayout> createState() => _TerminalToolsLayoutState();
+}
+
+class _TerminalToolsLayoutState extends State<TerminalToolsLayout> {
+  final _sidebarKey = GlobalKey(debugLabel: 'terminal-tools-sidebar-slot');
+  ValueNotifier<double> get _preferred =>
+      widget.width ?? TerminalToolsLayout.sharedWidth;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final width = math.min(340.0, constraints.maxWidth);
-      final docked = constraints.maxWidth >= 760;
-      return Stack(
-        children: [
-          Positioned.fill(
-            right: sidebar != null && docked ? width : 0,
-            child: child,
-          ),
-          if (sidebar != null)
-            Positioned(
-              top: 0,
-              bottom: 0,
-              right: 0,
-              width: width,
-              child: sidebar!,
+    builder: (context, constraints) => ValueListenableBuilder<double>(
+      valueListenable: _preferred,
+      builder: (context, preferred, _) {
+        final viewport = constraints.maxWidth;
+        final bounds = TerminalToolsLayout.widthBounds(viewport);
+        final width = preferred.clamp(bounds.min, bounds.max).toDouble();
+        final docked = viewport >= TerminalToolsLayout.dockBreakpoint;
+        final sidebar = widget.sidebar;
+        final extent = _touch(context) ? 20.0 : 8.0;
+        final inset = _touch(context) ? 4.0 : 3.0;
+        final handleLeft = viewport.isFinite
+            ? (viewport - width - extent + inset)
+                  .clamp(0.0, math.max(0.0, viewport - extent))
+                  .toDouble()
+            : 0.0;
+        return Stack(
+          children: [
+            Positioned.fill(
+              right: sidebar != null && docked ? width : 0,
+              child: widget.child,
             ),
-        ],
-      );
-    },
+            if (sidebar != null)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: 0,
+                width: width,
+                child: KeyedSubtree(key: _sidebarKey, child: sidebar),
+              ),
+            if (sidebar != null)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: handleLeft,
+                width: extent,
+                child: _SidebarResizeHandle(
+                  key: const ValueKey('terminal-tools-resize-handle'),
+                  width: width,
+                  min: bounds.min,
+                  max: bounds.max,
+                  inset: inset,
+                  sidebarContext: () => _sidebarKey.currentContext,
+                  onResize: (value) => _preferred.value = value
+                      .clamp(bounds.min, bounds.max)
+                      .toDouble(),
+                ),
+              ),
+          ],
+        );
+      },
+    ),
   );
+}
+
+/// Left-edge sidebar splitter. Dragging left widens the sidebar.
+class _SidebarResizeHandle extends StatefulWidget {
+  const _SidebarResizeHandle({
+    required this.width,
+    required this.min,
+    required this.max,
+    required this.inset,
+    required this.sidebarContext,
+    required this.onResize,
+    super.key,
+  });
+
+  /// How far the hit area reaches into the sidebar past its left border.
+  final double width, min, max, inset;
+  final BuildContext? Function() sidebarContext;
+  final ValueChanged<double> onResize;
+  @override
+  State<_SidebarResizeHandle> createState() => _SidebarResizeHandleState();
+}
+
+class _SidebarResizeHandleState extends State<_SidebarResizeHandle> {
+  bool _hovered = false, _dragging = false, _focused = false;
+  double _dragWidth = 0;
+  FocusNode? _restoreFocus;
+
+  // Ancestors (e.g. a pane's pointer-down listener) may move focus to the
+  // terminal; give it back to this sidebar's field (search query, filter)
+  // once the pointer interaction with the handle ends. Focus outside the
+  // sidebar is left to the pane, as for any other click in it.
+  void _pointerDown(PointerDownEvent _) {
+    final node = FocusManager.instance.primaryFocus;
+    final sidebar = widget.sidebarContext();
+    var inside = false;
+    if (node?.context != null && sidebar != null) {
+      node!.context!.visitAncestorElements((element) {
+        inside = identical(element, sidebar);
+        return !inside;
+      });
+    }
+    _restoreFocus = inside ? node : null;
+  }
+
+  void _pointerEnd(PointerEvent _) {
+    final node = _restoreFocus;
+    _restoreFocus = null;
+    if (node == null) return;
+    scheduleMicrotask(() {
+      if (mounted && node.context != null && !node.hasFocus) {
+        node.requestFocus();
+      }
+    });
+  }
+
+  // Repeated keys/actions before the next rebuild compound from the last
+  // requested width rather than the stale displayed one.
+  double? _pendingWidth;
+  @override
+  void didUpdateWidget(covariant _SidebarResizeHandle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _pendingWidth = null;
+  }
+
+  void _nudge(double delta) {
+    final next = ((_pendingWidth ?? widget.width) + delta)
+        .clamp(widget.min, widget.max)
+        .toDouble();
+    _pendingWidth = next;
+    widget.onResize(next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    const step = TerminalToolsLayout.keyboardStep;
+    final active = _hovered || _dragging || _focused;
+    final colors = Theme.of(context).colorScheme;
+    final value = widget.width.round();
+    return Semantics(
+      container: true,
+      slider: true,
+      label: l10n.sidebarResizeHandle,
+      hint: l10n.sidebarResizeHint,
+      value: l10n.sidebarResizeWidthValue(value),
+      increasedValue: l10n.sidebarResizeWidthValue(
+        math.min(widget.max, widget.width + step).round(),
+      ),
+      decreasedValue: l10n.sidebarResizeWidthValue(
+        math.max(widget.min, widget.width - step).round(),
+      ),
+      onIncrease: widget.width < widget.max ? () => _nudge(step) : null,
+      onDecrease: widget.width > widget.min ? () => _nudge(-step) : null,
+      child: Focus(
+        onFocusChange: (value) => setState(() => _focused = value),
+        onKeyEvent: (node, event) {
+          if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+            return KeyEventResult.ignored;
+          }
+          final key = event.logicalKey;
+          if (key == LogicalKeyboardKey.arrowLeft) {
+            _nudge(step);
+          } else if (key == LogicalKeyboardKey.arrowRight) {
+            _nudge(-step);
+          } else {
+            return KeyEventResult.ignored;
+          }
+          return KeyEventResult.handled;
+        },
+        child: MouseRegion(
+          cursor: SystemMouseCursors.resizeColumn,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: Listener(
+            onPointerDown: _pointerDown,
+            onPointerUp: _pointerEnd,
+            onPointerCancel: _pointerEnd,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              dragStartBehavior: DragStartBehavior.down,
+              onHorizontalDragStart: (_) => setState(() {
+                _dragging = true;
+                _dragWidth = widget.width;
+              }),
+              onHorizontalDragUpdate: (details) {
+                _dragWidth -= details.delta.dx;
+                widget.onResize(
+                  _dragWidth.clamp(widget.min, widget.max).toDouble(),
+                );
+              },
+              onHorizontalDragEnd: (_) => setState(() => _dragging = false),
+              onHorizontalDragCancel: () => setState(() => _dragging = false),
+              child: Padding(
+                // The visible line sits on the sidebar's left border.
+                padding: EdgeInsets.only(right: widget.inset - 1),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: _touch(context) && !active
+                      ? Container(
+                          width: 4,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: context.palette.line,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        )
+                      : AnimatedContainer(
+                          duration: AppMotion.duration(
+                            context,
+                            MotionDurations.quick,
+                          ),
+                          width: 2,
+                          color: active ? colors.primary : Colors.transparent,
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class TerminalToolsLauncher extends StatelessWidget {
@@ -157,9 +400,9 @@ class TerminalToolsSectionTabs extends StatelessWidget {
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.surfaceRaised,
+            color: context.palette.surfaceRaised,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.line),
+            border: Border.all(color: context.palette.line),
           ),
           child: Padding(
             padding: const EdgeInsets.all(2),
@@ -189,7 +432,7 @@ class TerminalToolsSectionTabs extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: AppDensity.of(context).textSize(12),
-                color: AppColors.muted,
+                color: context.palette.muted,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -244,7 +487,9 @@ class _SectionIcon extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 18,
-                color: selected ? AppColors.onAccent : AppColors.muted,
+                color: selected
+                    ? context.palette.onAccent
+                    : context.palette.muted,
               ),
             ),
           ),
@@ -324,49 +569,50 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
   @override
   Widget build(BuildContext context) => Material(
     key: const ValueKey('terminal-tools-sidebar'),
-    color: AppColors.surface,
-    shape: const Border(left: BorderSide(color: AppColors.line)),
+    color: context.palette.surface,
+    shape: Border(left: BorderSide(color: context.palette.line)),
     child: CustomScrollView(
       key: const ValueKey('terminal-tools-scroll'),
       slivers: [
-        SliverToBoxAdapter(
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  context.l10n.terminalTools,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+        // Section tabs and close share one compact row that stays pinned so
+        // close never scrolls away in short (keyboard-open) viewports.
+        PinnedHeaderSliver(
+          child: ColoredBox(
+            color: context.palette.surface,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 4, 2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TerminalToolsSectionTabs(
+                      section: widget.section,
+                      onSection: (value) {
+                        if (value == widget.section) return;
+                        if (widget.section == TerminalToolsSection.search) {
+                          _remember();
+                        }
+                        setState(() {
+                          _filter = '';
+                          _error = null;
+                        });
+                        widget.onSection(value);
+                      },
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: context.l10n.closeSidebar,
+                    key: const ValueKey('terminal-tools-close'),
+                    visualDensity: _touch(context)
+                        ? null
+                        : VisualDensity.compact,
+                    onPressed: () {
+                      _remember();
+                      widget.onClose();
+                    },
+                    icon: const Icon(Icons.close, size: 18),
+                  ),
+                ],
               ),
-              IconButton(
-                tooltip: context.l10n.closeSidebar,
-                key: const ValueKey('terminal-tools-close'),
-                onPressed: () {
-                  _remember();
-                  widget.onClose();
-                },
-                icon: const Icon(Icons.close, size: 18),
-              ),
-            ],
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
-            child: TerminalToolsSectionTabs(
-              section: widget.section,
-              onSection: (value) {
-                if (value == widget.section) return;
-                if (widget.section == TerminalToolsSection.search) {
-                  _remember();
-                }
-                setState(() {
-                  _filter = '';
-                  _error = null;
-                });
-                widget.onSection(value);
-              },
             ),
           ),
         ),
@@ -377,7 +623,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
               padding: const EdgeInsets.all(8),
               child: Text(
                 _error!,
-                style: const TextStyle(color: AppColors.red),
+                style: TextStyle(color: context.palette.red),
               ),
             ),
           ),
@@ -427,7 +673,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
                 hintText: context.l10n.searchCurrentTerminalOutput,
                 hintStyle: TextStyle(
                   fontSize: AppDensity.of(context).textSize(12),
-                  color: AppColors.muted,
+                  color: context.palette.muted,
                 ),
                 hintMaxLines: 1,
                 prefixIcon: const Icon(Icons.search, size: 16),
@@ -493,7 +739,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
               context.l10n.searchHistory,
               style: TextStyle(
                 fontSize: AppDensity.of(context).textSize(12),
-                color: AppColors.muted,
+                color: context.palette.muted,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -514,7 +760,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
               child: Text(
                 context.l10n.searchTermsAreRecordedWhenYou,
                 style: TextStyle(
-                  color: AppColors.muted,
+                  color: context.palette.muted,
                   fontSize: AppDensity.of(context).textSize(12),
                 ),
               ),
@@ -567,7 +813,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
         hintText: hint,
         hintStyle: TextStyle(
           fontSize: AppDensity.of(context).textSize(12),
-          color: AppColors.muted,
+          color: context.palette.muted,
         ),
         hintMaxLines: 1,
         prefixIcon: const Icon(Icons.filter_list, size: 16),
@@ -601,7 +847,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
               context.l10n.saveEncryptedAsSnippets,
               style: TextStyle(
                 fontSize: AppDensity.of(context).textSize(11),
-                color: AppColors.muted,
+                color: context.palette.muted,
               ),
             ),
           ),
@@ -628,7 +874,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
           context.l10n.clickToInsertPressEnterTo,
           style: TextStyle(
             fontSize: AppDensity.of(context).textSize(11),
-            color: AppColors.muted,
+            color: context.palette.muted,
           ),
         ),
       ),
@@ -679,7 +925,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
               context.l10n.showsCommandsCompletedOnTheCurrent,
           style: TextStyle(
             fontSize: AppDensity.of(context).textSize(11),
-            color: AppColors.muted,
+            color: context.palette.muted,
           ),
         ),
       ),
@@ -695,7 +941,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
           child: Center(
             child: Text(
               context.l10n.noMatchingEntries,
-              style: const TextStyle(color: AppColors.muted),
+              style: TextStyle(color: context.palette.muted),
             ),
           ),
         )
@@ -714,7 +960,7 @@ class _TerminalToolsSidebarState extends State<TerminalToolsSidebar> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: AppDensity.of(context).textSize(11),
-                  color: AppColors.muted,
+                  color: context.palette.muted,
                 ),
               ),
               subtitle: Text(
@@ -799,7 +1045,7 @@ Future<SnippetRecord?> editTerminalQuickCommand(
                   ),
                 ),
                 if (error != null)
-                  Text(error!, style: const TextStyle(color: AppColors.red)),
+                  Text(error!, style: TextStyle(color: context.palette.red)),
               ],
             ),
           ),
