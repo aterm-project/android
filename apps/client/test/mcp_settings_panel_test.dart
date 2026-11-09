@@ -21,6 +21,8 @@ class _FakeMcpService extends ChangeNotifier implements McpService {
 
   List<HostRecord> hosts;
   bool isRunning = true;
+  bool available = true;
+  int starts = 0;
   int port = 8765;
   bool loading = false;
   bool ready = true;
@@ -36,7 +38,7 @@ class _FakeMcpService extends ChangeNotifier implements McpService {
   void changed() => notifyListeners();
 
   @override
-  bool get supported => true;
+  bool get supported => available;
   @override
   bool get running => isRunning;
   @override
@@ -83,6 +85,14 @@ class _FakeMcpService extends ChangeNotifier implements McpService {
     } else {
       overrides[hostId] = value;
     }
+    notifyListeners();
+  }
+
+  @override
+  Future<void> start({int port = 8765}) async {
+    starts++;
+    this.port = port;
+    isRunning = true;
     notifyListeners();
   }
 
@@ -177,6 +187,51 @@ Future<void> _tapRadio(
 }
 
 void main() {
+  testWidgets(
+    'legacy coverage: invalid port never starts and stop revokes endpoint',
+    (tester) async {
+      final service = _FakeMcpService()..isRunning = false;
+      await _pump(tester, service, size: const Size(1280, 800));
+      await tester.enterText(find.byKey(const ValueKey('mcp_port')), '80');
+      await tester.tap(find.byKey(const ValueKey('mcp_toggle')));
+      await tester.pump();
+      expect(service.starts, 0);
+      expect(find.byKey(const ValueKey('mcp_error')), findsOneWidget);
+      await tester.enterText(find.byKey(const ValueKey('mcp_port')), '9000');
+      await tester.tap(find.byKey(const ValueKey('mcp_toggle')));
+      await tester.pumpAndSettle();
+      expect(service.starts, 1);
+      expect(service.port, 9000);
+      expect(find.text('http://127.0.0.1:9000/mcp'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('mcp_copy_configuration')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('mcp_toggle')));
+      await tester.pumpAndSettle();
+      expect(service.running, isFalse);
+      expect(
+        find.byKey(const ValueKey('mcp_copy_configuration')),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'legacy coverage: unsupported platforms explain capability without enabling',
+    (tester) async {
+      final service = _FakeMcpService()
+        ..available = false
+        ..isRunning = false;
+      await _pump(tester, service, size: const Size(1280, 800));
+      expect(
+        find.byKey(const ValueKey('mcp_platform_unavailable')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('mcp_toggle')), findsNothing);
+    },
+  );
+
   testWidgets('port follows a running listener across updates and recreation', (
     tester,
   ) async {
