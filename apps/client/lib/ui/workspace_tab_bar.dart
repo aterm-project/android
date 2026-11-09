@@ -730,7 +730,8 @@ class WorkspaceTabBar extends StatelessWidget {
       listenable: Listenable.merge([chrome, FullscreenController.instance]),
       builder: (context, _) {
         if (Theme.of(context).platform == TargetPlatform.android &&
-            FullscreenController.instance.enabled)
+            FullscreenController.instance.enabled &&
+            !tabs.any((tab) => tab.isHome && tab.id == selectedId))
           return const SizedBox.shrink();
         final embedded = chrome.supported && chrome.state.enabled;
         final bar = WindowBarMetrics.of(context, chrome);
