@@ -3,6 +3,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- External-AI MCP: user-started loopback listener kept reachable by a
+         visible special-use foreground service with a Stop action. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Requested only when the user starts MCP, so its Stop notification shows. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="aterm_client"
         android:name="${applicationName}"
@@ -11,6 +16,14 @@
             android:name=".TransferForegroundService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+        <service
+            android:name=".McpForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-started local Model Context Protocol server on 127.0.0.1 for an external AI client; ongoing notification with Stop that revokes its access token." />
+        </service>
         <activity
             android:name=".MainActivity"
             android:exported="true"
