@@ -6,7 +6,7 @@
   "reviewed_source_manifest_sha256": "b1bc711d04b9aed4e15dabeb18510e4b6248daf016d102dacdd6db4db6919fd1",
   "file_sha256": {
     "apps/client/.gitignore": "441eaa1de5b3db9fae056e7503567e9f8dd94173e1389c60f76956abf729015a",
-    "apps/client/README.md": "33b611b340818a2b73a886e526dff4d4b489d2816a57146d5becdd8f0da6a361",
+    "apps/client/README.md": "89e9b9d69bcb47009f8413e5cf51316581e4aa27eba4b7b8f97c63bf83127512",
     "apps/client/analysis_options.yaml": "759fd8e77b2a3d5bd9eee71b4c0a05d1b34d5dba95f5ecd3824705901d9c96f6",
     "apps/client/integration/native/device_profile_probe.dart": "cd74b84ef8fe69cdda480aa0927737aa1021b550766e228c93eff5e04d90e6c3",
     "apps/client/integration/native/local_resume_probe.dart": "1cce0e1830780efc718a1b1af47ff39cb540f200795107eb97318752d9108486",
@@ -749,8 +749,8 @@
     "apps/client/windows/runner/window_geometry.cpp": "2b754dbb2aff5b8c9648ab137748e79fd80deefd2143c4fdf8bae8ccbbd2892e",
     "apps/client/windows/runner/window_geometry.h": "62130fac550ec7dc0caf66b8a78861d0ab3aa312dbf6e71635c8935c63ada778",
     "docs/LOCAL-SHELL.md": "c4189e01a68c791c05fab9e2394a9d378522d20339688cd86b9db89f0ca3cfb2",
-    "docs/REMOTE-DESKTOP.md": "36574e8f1554d1300bc9f8433532777726058b7ad9248cf724f46cd045ccd77e",
-    "docs/TELNET.md": "d558b7d6c97e1d7941bf02e8dc4160e8d1c4fd1edf77ed7feebc869fe5ee56f6",
+    "docs/REMOTE-DESKTOP.md": "bf1bd08ab94567c6c4365e54f4c067fc498987cd3bdb9929a3961171c5ec1919",
+    "docs/TELNET.md": "76a4c093ebbadc96ad8c9d38a53fafa60e91320f3787f094a0eeb0abb1edc29e",
     "integration/native/build_rdp_windows.ps1": "bc67478599bd84a15770fa04a5ad212f8a8939a9e51cdfaceb5f07c3fb9779c2",
     "integration/native/direct_desktop_probe.dart": "bd60352f58b80ad846fdcd01c70e77808aeceeb84fd770bd2705f8aef6ed2745",
     "integration/native/rdp_certificate_probe.dart": "8021425cb7e25775f443546dc95249bb4002c26678184bdfda29fbcf0d1fe19d",
@@ -1319,7 +1319,7 @@
     "packages/xterm/lib/xterm.dart": "570f9244568e75d1e6446e26b115a2ef5380f1cda5b49f99fd8f102f25f8bb3f",
     "packages/xterm/lib/zmodem.dart": "a7b40f11594647b345f5f134abe09d087c68ab39865c394721511f34b7af1b27",
     "packages/xterm/pubspec.yaml": "bfbff9492cd6c1d9ff42ab80020005d892f0b85342d79b718b09fbf87fc95ece",
-    "protocol/API-CONTRACT.md": "3fc1b5f94da7d4b770ec6d35f8896113a1f1e50d4916ab4f9236f3384c6b40bd",
+    "protocol/API-CONTRACT.md": "5ef81ef189fd3e6bf1949bbbf6a881156cfb06bc34854e18ec8ded87af231495",
     "protocol/RECORD-REDACTION-v1.md": "6bb636eca086c51d220b252c45e106222aa7bcaa948564f15f9f0e3ea9b08e9f",
     "protocol/TERMINAL-COLLABORATION.md": "8e175acf03bfda8a10191ff3fcebba7ca546a3b5abebcb53b6fad16162700516",
     "protocol/sync-fixtures/record-envelope-v1.json": "f6cdb32b88d5e69b94b223ec3bb90d45210539c6bfe31e3d45595d4d8adbba90",
@@ -1364,5 +1364,28 @@
     "apps/client/windows/flutter/generated_plugin_registrant.h",
     "apps/client/windows/flutter/generated_plugins.cmake"
   ],
-  "native_device_acceptance": "No new device acceptance from source publication"
+  "native_device_acceptance": "No new device acceptance from source publication",
+  "documentation_update": {
+    "date": "2026-11-09",
+    "purpose": "First-party README, install/onboarding/deployment and navigation cleanup",
+    "application_code_unchanged": true,
+    "hash_overrides": {
+      "apps/client/README.md": {
+        "cloud_source_sha256": "33b611b340818a2b73a886e526dff4d4b489d2816a57146d5becdd8f0da6a361",
+        "documentation_sha256": "89e9b9d69bcb47009f8413e5cf51316581e4aa27eba4b7b8f97c63bf83127512"
+      },
+      "docs/REMOTE-DESKTOP.md": {
+        "cloud_source_sha256": "36574e8f1554d1300bc9f8433532777726058b7ad9248cf724f46cd045ccd77e",
+        "documentation_sha256": "bf1bd08ab94567c6c4365e54f4c067fc498987cd3bdb9929a3961171c5ec1919"
+      },
+      "docs/TELNET.md": {
+        "cloud_source_sha256": "d558b7d6c97e1d7941bf02e8dc4160e8d1c4fd1edf77ed7feebc869fe5ee56f6",
+        "documentation_sha256": "76a4c093ebbadc96ad8c9d38a53fafa60e91320f3787f094a0eeb0abb1edc29e"
+      },
+      "protocol/API-CONTRACT.md": {
+        "cloud_source_sha256": "3fc1b5f94da7d4b770ec6d35f8896113a1f1e50d4916ab4f9236f3384c6b40bd",
+        "documentation_sha256": "5ef81ef189fd3e6bf1949bbbf6a881156cfb06bc34854e18ec8ded87af231495"
+      }
+    }
+  }
 }

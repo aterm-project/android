@@ -1,71 +1,57 @@
-# Desktop client: Windows, macOS, Linux
+<p align="center"><img src="docs/assets/atermius-mark.svg" width="72" alt="Atermius"></p>
 
-Windows and Linux runners are imported; the macOS runner is newly generated
-with Flutter 3.47.5 and has not been built or tested on a Mac.
+<h1 align="center">Atermius · Desktop</h1>
 
-Windows requires Visual Studio C++ tools, CMake 3.28+ and vcpkg. Install
-`openssl:x64-windows-static-md` and `zlib:x64-windows-static-md` with vcpkg.
-First build the bundled
-FreeRDP engine using `integration/native/build_rdp_windows.ps1 -VcpkgRoot <path>`.
-Then run `flutter pub get --enforce-lockfile` and `flutter build windows` from
-`apps/client`. Set `ATERMIUS_RDP_DIR` if using a separately built engine bundle.
-The native engine build is capped at 8 workers; no USB driver is installed.
+<p align="center">An SSH workspace for Windows, macOS and Linux, with terminals, files and saved layouts.</p>
+<p align="center"><a href="README.zh-CN.md">简体中文</a> · <a href="docs/INSTALLATION.en.md">Install</a> · <a href="docs/README.md">Documentation</a> · <a href="https://github.com/aterm-project/desktop/actions/workflows/checks.yml">CI</a></p>
 
-Linux requires CMake, Ninja, a C/C++ toolchain, GTK 3 development headers,
-`libsecret-1-dev`, and a running desktop keyring service;
-run `flutter build linux`. macOS requires Xcode; run `flutter build macos`.
-Signing, notarization, permissions, native RDP and full UI behavior on Mac/Linux
-require platform-specific validation; Windows RDP evidence does not cover them.
+## Start here
 
-## Source layout
+There is no published consumer installer matching the current main branch. Build from source using the guide. Desktop `ci-input-*` prereleases contain build inputs, not an installer. Do not treat a successful source CI run as a signed Windows/macOS/iOS/Android distribution.
 
-`apps/client` contains the Flutter application. `packages/{drift,sqlite3,xterm,dartssh2,desktop_drop}`
-contains the existing patched dependencies, with their upstream notices intact.
-The relative paths are intentional: each repository builds independently without
-cloning sibling repositories. `protocol` contains the shared API contract and test
-vectors. The application name and package identifiers remain Atermius; the GitHub
-organization name does not rename installed applications or their data stores.
+- [Installation and build](docs/INSTALLATION.en.md)
+- [First workspace and connection](docs/GETTING_STARTED.en.md)
+- [Features and platform boundaries](docs/FEATURES.md)
+- [Sharing Hosts](docs/SHARING.en.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.en.md)
+- [Developer checks](docs/DEVELOPMENT.md)
+- [All documentation](docs/README.md)
 
-Shared Dart code is vendored at the same reviewed snapshot in the four client
-repositories. When changing shared code, apply the same reviewed change to each
-client repository and verify the hashes recorded in `SOURCE_SNAPSHOT.json`.
-Platform runners stay in their owning repository. Do not copy build output or
-private runtime data between repositories. `SOURCE_PROVENANCE.json` records the
-initial import; `SOURCE_SNAPSHOT.json` records this reviewed integration.
+## What is included
 
-## Validation and limits
+- SSH terminals, compact Host lists, groups and reusable commands.
+- SFTP/SCP file workspaces, split panes and saved window sets where supported.
+- Local encrypted profiles or a self-hosted synchronized Vault.
+- Organizations, member sharing and temporary links when enabled by the server.
+- Chinese, Japanese, English and Russian UI; blue application accents and customizable terminal colors.
 
-Use Flutter 3.47.5 / Dart 3.13 and the committed `pubspec.lock`:
+## Quick start
 
-```sh
-cd apps/client
-flutter pub get --enforce-lockfile
-flutter test --concurrency=2 test/session_workspace_actions_test.dart test/workspace_tab_drag_test.dart test/terminal_tools_sidebar_test.dart test/cloud_access_client_test.dart test/cloud_access_interop_test.dart
+Flutter 3.47.5 / Dart 3.13; platform tools and the Windows RDP bundle are required.
+
+```powershell
+git clone https://github.com/aterm-project/desktop.git
+cd desktop
+flutter --version
+flutter doctor -v
+# Build the native RDP bundle first; follow docs/INSTALLATION.en.md.
+# Then run flutter pub get/build from apps/client.
 ```
 
-The imported Windows/Android application has prior build and device evidence.
-Splitting the repository does not establish new platform acceptance. Existing
-full-suite baseline failures/hangs are not represented as passing. CI runs the
-focused checks above; it does not claim the full suite is green. No user keys,
-signing secrets, test-machine passwords, local databases, build artifacts or agent
-logs belong in this repository. Mobile push-provider configuration is supplied
-separately. Keep upstream licenses when distributing bundled dependencies.
+These repositories are currently private; your GitHub account needs access to clone them or download private artifacts. Detailed host prerequisites, output paths and update steps are in the [installation guide](docs/INSTALLATION.en.md).
 
-The server lives in the sibling [`server`](https://github.com/aterm-project/server)
-repository. Organizations, teams, joining and owner-confirmed encrypted Host
-sharing are implemented. Temporary browser links support custom addresses,
-scheduled start/expiry, limits, rotation, revocation and session activity. These
-controls appear only when the server advertises the required capabilities.
+## Support boundaries
 
-Temporary SSH/RDP access requires explicitly enabling the trusted gateway on a
-SQLite server. Its key holder can decrypt access capsules and observe sessions;
-this gateway is not zero-knowledge. PostgreSQL cloud routes remain closed, and
-VNC requires explicit opt-in. See the server's
-[cloud deployment guide](https://github.com/aterm-project/server/blob/main/docs/CLOUD-SHARING.md).
-Source publication does not deploy a public service or install a new native app.
+Native Windows RDP requires the bundled engine; Android/iOS do not include that engine. Browser SSH requires an enabled, restricted Relay. Temporary browser SSH/RDP is a separate trusted-gateway flow. Native platform build/device acceptance is separate from the Linux Dart/widget checks in CI.
 
-## Latest imported transport support
+The full Flutter suite has disclosed historical failures. CI runs its documented focused checks; review the workflow and [validation documentation](docs/README.md) for their scope. Keep server state, account credentials and signing material outside Git.
 
-The validated Local Shell/Telnet integration is included. See [Local Shell](docs/LOCAL-SHELL.md)
-and [Telnet](docs/TELNET.md) for supported platforms and transport limits. Windows
-packaging is handled separately; this repository import does not claim new device acceptance.
+## Repository layout
+
+`apps/client/` contains the Flutter app; `packages/` contains five local dependency forks; `protocol/` contains shared contracts and test vectors. Only this repository’s platform runners are included.
+
+Third-party licenses and upstream notices remain alongside their dependencies. Current source hashes are recorded in `SOURCE_SNAPSHOT.json`; initial import history is in `SOURCE_PROVENANCE.json`.
+
+## Other repositories
+
+[Server](https://github.com/aterm-project/server) · [Android](https://github.com/aterm-project/android) · [iOS](https://github.com/aterm-project/ios) · [Web](https://github.com/aterm-project/web)
