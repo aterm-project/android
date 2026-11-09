@@ -21,6 +21,7 @@ class _FakeMcpService extends ChangeNotifier implements McpService {
 
   List<HostRecord> hosts;
   bool isRunning = true;
+  int port = 8765;
   bool loading = false;
   bool ready = true;
   bool failWrites = false;
@@ -44,7 +45,7 @@ class _FakeMcpService extends ChangeNotifier implements McpService {
   bool get workspaceReady => true;
   @override
   Uri? get endpoint =>
-      isRunning ? Uri.parse('http://127.0.0.1:8765/mcp') : null;
+      isRunning ? Uri.parse('http://127.0.0.1:$port/mcp') : null;
   @override
   List<McpAuditEntry> get audit => const [];
   @override
@@ -176,6 +177,23 @@ Future<void> _tapRadio(
 }
 
 void main() {
+  testWidgets('port follows a running listener across updates and recreation', (
+    tester,
+  ) async {
+    final service = _FakeMcpService()..port = 28765;
+    await _pump(tester, service, size: const Size(1280, 800));
+    TextField field() =>
+        tester.widget<TextField>(find.byKey(const ValueKey('mcp_port')));
+    expect(field().controller!.text, '28765');
+    service.port = 28767;
+    service.changed();
+    await tester.pump();
+    expect(field().controller!.text, '28767');
+    await tester.pumpWidget(const SizedBox());
+    await _pump(tester, service, size: const Size(1280, 800));
+    expect(field().controller!.text, '28767');
+  });
+
   const phone = Size(390, 844);
   const tablet = Size(1024, 768);
   const desktop = Size(1280, 900);

@@ -75,7 +75,33 @@ class _McpSettingsPanelState extends State<McpSettingsPanel> {
   int _visibleMachines = McpSettingsPanel.machinePageSize;
 
   @override
+  void initState() {
+    super.initState();
+    service.addListener(_syncListeningPort);
+    _syncListeningPort();
+  }
+
+  void _syncListeningPort() {
+    final endpoint = service.endpoint;
+    if (endpoint != null && _port.text != '${endpoint.port}') {
+      _port.text = '${endpoint.port}';
+    }
+  }
+
+  @override
+  void didUpdateWidget(McpSettingsPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final previous = oldWidget.service ?? McpService.instance;
+    if (!identical(previous, service)) {
+      previous.removeListener(_syncListeningPort);
+      service.addListener(_syncListeningPort);
+      _syncListeningPort();
+    }
+  }
+
+  @override
   void dispose() {
+    service.removeListener(_syncListeningPort);
     _port.dispose();
     _query.dispose();
     super.dispose();
