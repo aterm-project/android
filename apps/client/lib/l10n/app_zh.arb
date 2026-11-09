@@ -4801,5 +4801,73 @@
   "cloudAccessApplyRoleMessage": "{user} 将成为{role}。这会从本设备签署新的成员清单并轮换 Vault 密钥。",
   "cloudAccessErrorScopeChanged": "此操作期间账户、服务器或所选 Vault 已变更，未发送任何内容，请重试。",
   "cloudAccessErrorNotSynced": "共享 Vault 已创建但尚未同步。请先同步再添加成员。",
-  "cloudAccessErrorScopeEndedCommitted": "服务器已完成此操作的一部分（例如已创建 Vault 或邀请）后，账户、服务器或所选 Vault 发生了变更。该部分不会被撤销；请先检查后再重试。"
+  "cloudAccessErrorScopeEndedCommitted": "服务器已完成此操作的一部分（例如已创建 Vault 或邀请）后，账户、服务器或所选 Vault 发生了变更。该部分不会被撤销；请先检查后再重试。",
+  "directDesktopSignInHint": "登录信息加密保存；本设备直接连接主机，凭据仅用于该连接，不经过任何网关。",
+  "keybarCtrlGuidance": "Ctrl：轻点仅作用于下一个按键，双击锁定",
+  "@keybarCtrlGuidance": {
+    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarAltGuidance": "Alt：轻点仅作用于下一个按键，双击锁定",
+  "@keybarAltGuidance": {
+    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarModifierOff": "关闭",
+  "@keybarModifierOff": {
+    "description": "Accessibility value of a released terminal keybar modifier."
+  },
+  "keybarModifierArmed": "仅下一个按键",
+  "@keybarModifierArmed": {
+    "description": "Accessibility value of a terminal keybar modifier armed for one key."
+  },
+  "keybarModifierLocked": "已锁定",
+  "@keybarModifierLocked": {
+    "description": "Accessibility value of a locked terminal keybar modifier."
+  },
+  "keybarPinExpanded": "保持展开更多按键",
+  "@keybarPinExpanded": {
+    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
+  },
+  "mcpAccessModeDenied": "拒绝",
+  "mcpAccessModeReadOnly": "只读",
+  "mcpAccessModeReadWrite": "读写",
+  "mcpAccessModeDeniedDescription": "外部 AI 无法看到或使用该机器，主机和会话列表中也不会出现。",
+  "mcpAccessModeReadOnlyDescription": "外部 AI 可以列出该机器，并读取已打开会话的输出和文件，但不能连接、输入、执行命令或修改文件。",
+  "mcpAccessModeReadWriteDescription": "外部 AI 还可以连接、切换和关闭会话，发送终端输入，执行命令和写入文件。主机密钥和登录提示仍会照常出现。",
+  "mcpMachineAccessTitle": "机器访问权限",
+  "mcpMachineAccessDescription": "选择外部 AI 在每台机器上可以执行的操作。这些设置按当前工作区保存在本设备上，不会同步。停止 MCP 会撤销所有访问，与此处的选择无关。",
+  "mcpDefaultAccessTitle": "所有机器的默认权限",
+  "mcpDefaultAccessDescription": "适用于所有未单独设置的机器，包括之后添加的机器。",
+  "mcpPerMachineTitle": "单独设置",
+  "mcpCustomizedCount": "单独设置的机器：{count}",
+  "mcpLocalDeviceName": "本设备（本地控制台）",
+  "mcpLocalDeviceDetail": "未关联已保存主机的本地终端会话",
+  "mcpHostUseDefault": "默认（{mode}）",
+  "mcpHostCustom": "已单独设置",
+  "mcpHostAccessFor": "{name} 的访问权限",
+  "mcpSearchMachines": "搜索机器",
+  "mcpNoMachinesMatch": "没有与“{query}”匹配的机器。",
+  "mcpNoSavedMachines": "当前工作区还没有已保存的主机。",
+  "mcpShowMoreMachines": "再显示 {count} 台",
+  "mcpAccessLoading": "正在加载机器访问权限…",
+  "mcpAccessUnavailable": "机器访问权限暂时不可用。在加载完成前，外部 AI 在所有机器上均被拒绝。",
+  "mcpAccessSaveFailed": "无法保存访问权限设置，请重试。",
+  "mcpConfirmReadWriteDefaultTitle": "允许在所有机器上读写？",
+  "mcpConfirmReadWriteDefaultBody": "持有连接令牌的任何 AI 都可以在所有未单独设置的机器（包括之后添加的机器）上连接、输入、执行命令和修改文件。主机密钥和登录提示仍会照常出现。",
+  "mcpConfirmReadWriteDefaultConfirm": "允许读写",
+  "mcpRunningDefaultAccess": "运行中 · 默认：{mode}",
+  "mcpAndroidForwardingHint": "MCP 仅监听本设备的回环地址。要让通过 USB 调试连接的电脑上的 AI 使用它，请在电脑上运行以下命令，然后在电脑上使用复制的配置：",
+  "mcpAndroidBackgroundHint": "MCP 运行期间，Atermius 会显示一条通知，以便你切换到其他应用后外部 AI 仍可继续使用。从通知中停止、锁定或退出登录都会撤销令牌。如果无法显示通知，离开应用时 MCP 会停止。",
+  "mcpForegroundNotificationTitle": "外部 AI 接入已开启",
+  "mcpForegroundNotificationText": "MCP 正在监听 127.0.0.1:{port}。停止即可撤销访问令牌。",
+  "mcpForegroundNotificationStop": "停止 MCP",
+  "mcpAndroidProtected": "MCP 通知已启用，可在后台保持连接。",
+  "mcpAndroidForegroundOnly": "MCP 仅在本应用可见时运行。离开应用将撤销访问权限。",
+  "mcpAndroidStarting": "正在启动 Android 后台保护…",
+  "desktopKeyboardShow": "打开键盘与特殊键",
+  "desktopKeyboardHide": "收起键盘与特殊键",
+  "desktopTouchMode": "触摸模式",
+  "desktopTrackpadMode": "触控板（鼠标）模式",
+  "enterFullscreen": "进入全屏",
+  "exitFullscreen": "退出全屏",
+  "fullscreenUnavailable": "当前窗口无法切换全屏。"
 }

@@ -14916,5 +14916,215 @@
   "cloudAccessErrorScopeEndedCommitted": "The account, server or selected Vault changed after the server had already completed part of this action (for example, created the Vault or the invitation). That part was not undone; review it before trying again.",
   "@cloudAccessErrorScopeEndedCommitted": {
     "description": "Cloud access (organizations, Host sharing, temporary links)."
-  }
+  },
+  "directDesktopSignInHint": "Sign-in details are stored encrypted. This device connects directly to the Host and uses them only for that connection; no gateway is involved.",
+  "@directDesktopSignInHint": {},
+  "keybarCtrlGuidance": "Ctrl: tap for the next key only, double-tap to lock",
+  "@keybarCtrlGuidance": {
+    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarAltGuidance": "Alt: tap for the next key only, double-tap to lock",
+  "@keybarAltGuidance": {
+    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarModifierOff": "Off",
+  "@keybarModifierOff": {
+    "description": "Accessibility value of a released terminal keybar modifier."
+  },
+  "keybarModifierArmed": "Next key only",
+  "@keybarModifierArmed": {
+    "description": "Accessibility value of a terminal keybar modifier armed for one key."
+  },
+  "keybarModifierLocked": "Locked",
+  "@keybarModifierLocked": {
+    "description": "Accessibility value of a locked terminal keybar modifier."
+  },
+  "keybarPinExpanded": "Keep extra keys open",
+  "@keybarPinExpanded": {
+    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
+  },
+  "mcpAccessModeDenied": "Denied",
+  "@mcpAccessModeDenied": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpAccessModeReadOnly": "Read-only",
+  "@mcpAccessModeReadOnly": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpAccessModeReadWrite": "Read & write",
+  "@mcpAccessModeReadWrite": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpAccessModeDeniedDescription": "External AI can't see or use the machine. It's left out of host and session lists.",
+  "@mcpAccessModeDeniedDescription": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpAccessModeReadOnlyDescription": "External AI can list the machine and read output and files of sessions that are already open. It can't connect, type, run commands or change files.",
+  "@mcpAccessModeReadOnlyDescription": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpAccessModeReadWriteDescription": "External AI can also connect, focus and close sessions, send terminal input, run commands and write files. Host key and sign-in prompts still appear.",
+  "@mcpAccessModeReadWriteDescription": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpMachineAccessTitle": "Machine access",
+  "@mcpMachineAccessTitle": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpMachineAccessDescription": "Choose what external AI may do on each machine. These settings are kept on this device for the current workspace and aren't synced. Stopping MCP revokes all access, whatever is chosen here.",
+  "@mcpMachineAccessDescription": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpDefaultAccessTitle": "Default for all machines",
+  "@mcpDefaultAccessTitle": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpDefaultAccessDescription": "Applies to every machine without its own setting, including machines added later.",
+  "@mcpDefaultAccessDescription": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpPerMachineTitle": "Per-machine settings",
+  "@mcpPerMachineTitle": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpCustomizedCount": "Machines with their own setting: {count}",
+  "@mcpCustomizedCount": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mcpLocalDeviceName": "This device (local console)",
+  "@mcpLocalDeviceName": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpLocalDeviceDetail": "Local terminal sessions that aren't tied to a saved host",
+  "@mcpLocalDeviceDetail": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpHostUseDefault": "Default ({mode})",
+  "@mcpHostUseDefault": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI).",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpHostCustom": "Custom",
+  "@mcpHostCustom": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpHostAccessFor": "Access for {name}",
+  "@mcpHostAccessFor": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpSearchMachines": "Search machines",
+  "@mcpSearchMachines": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpNoMachinesMatch": "No machines match “{query}”.",
+  "@mcpNoMachinesMatch": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI).",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpNoSavedMachines": "No saved hosts in this workspace yet.",
+  "@mcpNoSavedMachines": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpShowMoreMachines": "Show {count} more",
+  "@mcpShowMoreMachines": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mcpAccessLoading": "Loading machine access settings…",
+  "@mcpAccessLoading": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpAccessUnavailable": "Machine access settings aren't available right now. Until they load, external AI is denied on every machine.",
+  "@mcpAccessUnavailable": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpAccessSaveFailed": "Couldn't save the access setting. Try again.",
+  "@mcpAccessSaveFailed": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpConfirmReadWriteDefaultTitle": "Allow read & write on all machines?",
+  "@mcpConfirmReadWriteDefaultTitle": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpConfirmReadWriteDefaultBody": "Any AI holding the connection token could connect to, type into, run commands on and change files on every machine without its own setting, including machines added later. Host key and sign-in prompts still appear.",
+  "@mcpConfirmReadWriteDefaultBody": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpConfirmReadWriteDefaultConfirm": "Allow read & write",
+  "@mcpConfirmReadWriteDefaultConfirm": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpRunningDefaultAccess": "Running · Default: {mode}",
+  "@mcpRunningDefaultAccess": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI).",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpAndroidForwardingHint": "MCP listens only on this device's loopback address. To use it from AI on a computer connected with USB debugging, run this on the computer, then use the copied configuration there:",
+  "@mcpAndroidForwardingHint": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpAndroidBackgroundHint": "While MCP runs, Atermius shows a notification so external AI can keep using it after you switch apps. Stopping it from the notification, locking or signing out revokes the token. If the notification can't be shown, MCP stops when you leave the app.",
+  "@mcpAndroidBackgroundHint": {
+    "description": "Settings › AI / MCP machine access (external AI permission UI)."
+  },
+  "mcpForegroundNotificationTitle": "External AI access is on",
+  "@mcpForegroundNotificationTitle": {
+    "description": "Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder)."
+  },
+  "mcpForegroundNotificationText": "MCP is listening on 127.0.0.1:{port}. Stop it to revoke the access token.",
+  "@mcpForegroundNotificationText": {
+    "description": "Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder).",
+    "placeholders": {
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "mcpForegroundNotificationStop": "Stop MCP",
+  "@mcpForegroundNotificationStop": {
+    "description": "Android MCP foreground-service notification (passed to the native service by the Dart lifecycle binder)."
+  },
+  "mcpAndroidProtected": "Background access is protected by the MCP notification.",
+  "mcpAndroidForegroundOnly": "MCP works while this app is visible. Leaving the app revokes access.",
+  "mcpAndroidStarting": "Starting Android background protection…",
+  "desktopKeyboardShow": "Open keyboard and special keys",
+  "@desktopKeyboardShow": {},
+  "desktopKeyboardHide": "Hide keyboard and special keys",
+  "@desktopKeyboardHide": {},
+  "desktopTouchMode": "Touch input",
+  "@desktopTouchMode": {},
+  "desktopTrackpadMode": "Trackpad (mouse)",
+  "@desktopTrackpadMode": {},
+  "enterFullscreen": "Enter fullscreen",
+  "@enterFullscreen": {},
+  "exitFullscreen": "Exit fullscreen",
+  "@exitFullscreen": {},
+  "fullscreenUnavailable": "Fullscreen is unavailable for this window.",
+  "@fullscreenUnavailable": {}
 }
