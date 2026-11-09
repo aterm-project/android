@@ -614,18 +614,19 @@ void main() {
       await tester.pump();
       final spreadHeight = tester.getSize(find.byType(TerminalKeybar)).height;
       expect(find.byKey(const ValueKey('terminal-keybar-pin')), findsOne);
+      // The icon-only pin is a named toggle button, not just a tooltip.
+      final unpinned = _pinSemantics(tester);
+      expect(unpinned.label, 'Keep extra keys open');
+      expect(unpinned.flagsCollection.isButton, isTrue);
+      expect(unpinned.flagsCollection.isToggled, Tristate.isFalse);
+      expect(unpinned.hasAction(SemanticsAction.tap), isTrue);
       await tester.tap(find.byKey(const ValueKey('terminal-keybar-pin')));
       await tester.pump();
       expect(TerminalKeybarPreferences.instance.pinned, isTrue);
       expect(_store.value, 'pinned');
-      expect(
-        tester
-            .getSemantics(find.byKey(const ValueKey('terminal-keybar-pin')))
-            .getSemanticsData()
-            .flagsCollection
-            .isToggled,
-        Tristate.isTrue,
-      );
+      final pinnedNode = _pinSemantics(tester);
+      expect(pinnedNode.label, 'Keep extra keys open');
+      expect(pinnedNode.flagsCollection.isToggled, Tristate.isTrue);
 
       // Typing keeps it open.
       for (final text in ['l', 's', '你']) {
@@ -846,6 +847,7 @@ void main() {
         expect(find.byTooltip(currentL10n.keybarCtrlGuidance), findsOneWidget);
         expect(find.byTooltip(currentL10n.keybarAltGuidance), findsOneWidget);
         expect(find.byTooltip(currentL10n.keybarPinExpanded), findsOneWidget);
+        expect(_pinSemantics(tester).label, currentL10n.keybarPinExpanded);
         expect(tester.getSize(find.byType(TerminalKeybar)).height, 48);
         expect(tester.state(find.byType(TerminalView)), same(state));
         expect(focus.hasFocus, isTrue);
@@ -1077,6 +1079,10 @@ Finder _keybarScrollables() => find.descendant(
   of: find.byType(TerminalKeybar),
   matching: find.byType(Scrollable),
 );
+
+SemanticsData _pinSemantics(WidgetTester tester) => tester
+    .getSemantics(find.byKey(const ValueKey('terminal-keybar-pin')))
+    .getSemanticsData();
 
 String _modifierValue(WidgetTester tester, String label) =>
     tester.getSemantics(find.text(label)).getSemanticsData().value;

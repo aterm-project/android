@@ -634,6 +634,8 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
               ),
               onPressed: _togglePinned,
               child: Semantics(
+                // Icon-only: the tooltip alone is not the accessible name.
+                label: l10n.keybarPinExpanded,
                 toggled: pinned,
                 child: Icon(
                   pinned ? Icons.push_pin : Icons.push_pin_outlined,
