@@ -1,6 +1,7 @@
 import '../ui/app_menu.dart';
 import '../ui/fullscreen_menu.dart';
 import '../platform/fullscreen.dart';
+import '../domain/models.dart';
 import 'desktop_mobile_controls.dart';
 import 'desktop_touch_input.dart';
 import '../ui/app_motion.dart';
@@ -805,6 +806,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
                 child: DesktopMobileControls(
                   key: _mobile,
                   focus: _focus,
+                  unicodeText: session.protocol != HostProtocol.vnc,
                   onActivate: _focusAfterActivation,
                   send: session.send,
                   connected: session.state == 'connected',
