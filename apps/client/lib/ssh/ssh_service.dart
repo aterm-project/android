@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import '../api/api_client.dart';
 import '../domain/models.dart';
+import '../platform/ssh_background_keepalive.dart';
 import '../sync/known_host_decision_lock.dart';
 import 'port_forward_runtime.dart';
 import 'openssh_certificate.dart';
@@ -446,7 +447,29 @@ class SshConnection {
   final List<SSHClient> _jumpClients;
   final SSHSocket? _initialJumpSocket;
   _SshConnectAttempt? _connectAttempt;
+  SshKeepaliveHold? _keepalive;
   bool _execOpenPending = false;
+
+  /// Moves the connect attempt's background keepalive hold to this open
+  /// transport. It is released by [close] or when the SSH client ends, so a
+  /// dropped transport never keeps Android's session service running.
+  void _adoptKeepalive(SshKeepaliveHold hold) {
+    _keepalive = hold;
+    // Notification "Disconnect all": end the target transport; the owning
+    // tab/session observes the ended shell and performs its normal cleanup.
+    hold.update(
+      SshKeepaliveKind.connected,
+      onUserDisconnect: () => unawaited(_closeQuietly(client.close)),
+    );
+    try {
+      client.done.then<void>(
+        (_) => hold.release(),
+        onError: (Object _, StackTrace _) => hold.release(),
+      );
+    } catch (_) {
+      // Test doubles may not implement `done`; close() still releases.
+    }
+  }
 
   /// True after an exec request timed out/cancelled before dartssh2 returned
   /// its channel. The request cannot be individually cancelled in dartssh2
@@ -767,6 +790,16 @@ class SshConnection {
   }
 
   Future<void> close() async {
+    final keepalive = _keepalive;
+    _keepalive = null;
+    try {
+      await _closeResources();
+    } finally {
+      keepalive?.release();
+    }
+  }
+
+  Future<void> _closeResources() async {
     // Resources are acquired as initial socket, then for each hop its client
     // and the channel to the next hop, then the target client/session. Close
     // in reverse and continue even if one resource refuses to close.
@@ -825,7 +858,9 @@ class SshService {
     SshDirectSocketConnector? directSocketConnector,
     SshClientFactory? sshClientFactory,
     KnownHostDecisionLock? knownHostDecisionLock,
+    SshBackgroundKeepalive? backgroundKeepalive,
   }) : _useRelay = useRelay ?? kIsWeb,
+       _backgroundKeepalive = backgroundKeepalive,
        _relaySocketConnector = relaySocketConnector ?? connectRelaySocket,
        _directSocketConnector = directSocketConnector ?? connectDirect,
        _sshClientFactory = sshClientFactory ?? _createSshClient,
@@ -840,6 +875,7 @@ class SshService {
   final SshDirectSocketConnector _directSocketConnector;
   final SshClientFactory _sshClientFactory;
   final KnownHostDecisionLock? _knownHostDecisionLock;
+  final SshBackgroundKeepalive? _backgroundKeepalive;
 
   Future<SshConnection> connect({
     required HostRecord host,
@@ -901,8 +937,21 @@ class SshService {
       }
     }
 
+    final keepaliveRegistry =
+        _backgroundKeepalive ?? SshBackgroundKeepalive.instance;
+    // A recovery attempt that began before the notification's Disconnect all
+    // must not open a new transport afterwards.
+    if (keepaliveRegistry.disconnectedSinceFlightStarted) {
+      throw const SshConnectCancelledException();
+    }
     final attempt = _SshConnectAttempt(
       cancellation ?? SshConnectCancellation(),
+    );
+    // Android: the user-started attempt claims the session keepalive while
+    // the app is still visible; failure/cancellation releases it below.
+    final keepalive = keepaliveRegistry.hold(
+      SshKeepaliveKind.connecting,
+      onUserDisconnect: () => unawaited(attempt.cancel()),
     );
     try {
       final firstSocket = await _connectSocket(
@@ -974,12 +1023,14 @@ class SshService {
         initialJumpSocket: route.isEmpty ? null : firstSocket,
       );
       connection._connectAttempt = attempt;
+      connection._adoptKeepalive(keepalive);
       _pendingConnectOwnership[connection] = attempt;
       // Standalone callers do not have a tab lifecycle to transfer ownership
       // to. AppController supplies a token and transfers after attachment.
       if (cancellation == null) transferSshConnectOwnership(connection);
       return connection;
     } catch (error) {
+      keepalive.release();
       attempt.finishFailedAttempt();
       await attempt.closeAll();
       rethrow;

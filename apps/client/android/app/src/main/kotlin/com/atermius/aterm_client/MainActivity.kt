@@ -17,6 +17,8 @@ class MainActivity : FlutterActivity() {
     private var savedSystemUiFlags: Int? = null
     private var transferChannel: MethodChannel? = null
     private var mcpChannel: MethodChannel? = null
+    private var sshKeepaliveChannel: MethodChannel? = null
+    private var frameworkRequestsBack = false
     private var leaseOwner: Any? = null
     private var resumed = false
     private var rdpStorage: RdpStorageAccess? = null
@@ -29,8 +31,47 @@ class MainActivity : FlutterActivity() {
         // Notification settings may have changed while the app was away
         // (e.g. in system settings); restore or downgrade MCP protection.
         McpForegroundLease.recheckNotifications(applicationContext)
+        SshSessionKeepalive.recheckNotifications(applicationContext)
     }
     override fun onPause() { resumed = false; super.onPause() }
+
+    // SSH session keepalive follows visibility (onStart/onStop), not focus:
+    // IME, permission and picker dialogs only pause the activity.
+    override fun onStart() {
+        super.onStart()
+        SshSessionKeepalive.visibility(applicationContext, true)
+    }
+
+    override fun onStop() {
+        SshSessionKeepalive.visibility(applicationContext, false)
+        super.onStop()
+    }
+
+    /**
+     * Back from the root route normally finishes the activity, which destroys
+     * the Flutter engine and with it every SSH transport. While SSH sessions
+     * exist, move the task to the background instead (as Home would).
+     */
+    override fun popSystemNavigator(): Boolean {
+        if (SshSessionKeepalive.hasSessions() && moveTaskToBack(true)) return true
+        return super.popSystemNavigator()
+    }
+
+    /**
+     * On API 33+ the framework unregisters Flutter's OnBackInvokedCallback at
+     * the root route, so system Back would bypass [popSystemNavigator] and
+     * finish the activity. While SSH sessions exist keep the callback
+     * registered; nested routes, dialogs and the IME still get Back first and
+     * the root route ends in SystemNavigator.pop -> moveTaskToBack.
+     */
+    override fun setFrameworkHandlesBack(frameworkHandlesBack: Boolean) {
+        frameworkRequestsBack = frameworkHandlesBack
+        super.setFrameworkHandlesBack(frameworkHandlesBack || SshSessionKeepalive.hasSessions())
+    }
+
+    private fun refreshBackHandling() {
+        super.setFrameworkHandlesBack(frameworkRequestsBack || SshSessionKeepalive.hasSessions())
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -103,6 +144,38 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+        sshKeepaliveChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
+            "atermius/ssh_keepalive").also { channel ->
+            SshSessionKeepalive.register(owner, SshSessionKeepalive.Listener(
+                state = { state ->
+                    refreshBackHandling()
+                    channel.invokeMethod("state", state)
+                    if (state["active"] == true && state["notifications"] != true) {
+                        requestSshNotificationPermission()
+                    }
+                },
+                disconnectAll = { channel.invokeMethod("disconnectAll", null) },
+            ))
+            channel.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "sync" -> {
+                        val sessions = call.argument<Int>("sessions")
+                        val texts = listOf("channelName", "title", "body", "disconnectLabel")
+                            .map { call.argument<String>(it) }
+                        if (sessions == null || sessions !in 0..MAX_SSH_SESSIONS ||
+                            texts.any { it == null || it.isBlank() || it.length > 160 }) {
+                            result.error("invalid_arguments", "Invalid SSH keepalive request", null)
+                        } else {
+                            val state = SshSessionKeepalive.sync(applicationContext, owner, sessions,
+                                SshSessionKeepalive.Texts(texts[0]!!, texts[1]!!, texts[2]!!, texts[3]!!))
+                            refreshBackHandling()
+                            result.success(state)
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        }
     }
 
     @Suppress("DEPRECATION")
@@ -150,6 +223,17 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    private fun requestSshNotificationPermission() {
+        // Asked at most once per process, only after the SSH service actually
+        // started while visible. Refusal is fine: the service still runs (it
+        // is listed in Android's active apps), only the notification and its
+        // Disconnect all action are hidden.
+        if (sshNotificationsAsked || Build.VERSION.SDK_INT < 33 || !resumed) return
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
+        sshNotificationsAsked = true
+        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_SSH_NOTIFICATIONS)
+    }
+
     private fun requestNotificationPermission() {
         // Only on the explicit MCP start; Android suppresses repeated prompts
         // after the user declines. Until notifications are visible Dart keeps
@@ -162,8 +246,9 @@ class MainActivity : FlutterActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         rdpStorage?.activityResult(requestCode)
-        if (requestCode != REQUEST_NOTIFICATIONS) return
+        if (requestCode != REQUEST_NOTIFICATIONS && requestCode != REQUEST_SSH_NOTIFICATIONS) return
         McpForegroundLease.recheckNotifications(applicationContext)
+        SshSessionKeepalive.recheckNotifications(applicationContext)
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
@@ -175,10 +260,14 @@ class MainActivity : FlutterActivity() {
         transferChannel = null
         mcpChannel?.setMethodCallHandler(null)
         mcpChannel = null
+        sshKeepaliveChannel?.setMethodCallHandler(null)
+        sshKeepaliveChannel = null
         leaseOwner?.let {
             TransferForegroundLeases.releaseOwner(it)
             // The Dart listener dies with the engine; never keep its service.
             McpForegroundLease.releaseOwner(it)
+            // So do its SSH transports: drop their holds and the service.
+            SshSessionKeepalive.releaseOwner(applicationContext, it)
         }
         leaseOwner = null
         fullscreenChannel?.setMethodCallHandler(null)
@@ -213,5 +302,8 @@ class MainActivity : FlutterActivity() {
 
         private val LEASE_ID = Regex("[A-Za-z0-9_-]{16,128}")
         private const val REQUEST_NOTIFICATIONS = 4108
+        private const val REQUEST_SSH_NOTIFICATIONS = 4109
+        private const val MAX_SSH_SESSIONS = 4096
+        @Volatile private var sshNotificationsAsked = false
     }
 }

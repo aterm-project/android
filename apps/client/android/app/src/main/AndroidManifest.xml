@@ -11,8 +11,17 @@
     <!-- External-AI MCP: user-started loopback listener kept reachable by a
          visible special-use foreground service with a Stop action. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <!-- Requested only when the user starts MCP, so its Stop notification shows. -->
+    <!-- Requested only when the user starts MCP, so its Stop notification shows,
+         or once after an SSH session service starts (Disconnect all action). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Open SSH sessions: a user-started, visible connectedDevice foreground
+         service (no dataSync time limit) while at least one SSH session is
+         connecting, open or awaiting its automatic retry. CHANGE_NETWORK_STATE
+         is its API 34+ prerequisite; WAKE_LOCK backs the bounded background
+         CPU (and pre-API 26 Wi-Fi) lock. No boot start, no battery exemption. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
         android:label="Atermius"
         android:name="${applicationName}"
@@ -32,6 +41,10 @@
             android:name=".TransferForegroundService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+        <service
+            android:name=".SshSessionService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
         <service
             android:name=".McpForegroundService"
             android:exported="false"

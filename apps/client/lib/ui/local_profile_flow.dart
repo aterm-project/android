@@ -1582,6 +1582,7 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
         (!saved || _hosts.any((h) => h.id == session.host.id));
     session.recovery = SessionRecovery(
       automatic: session.host.protocol.isTerminal,
+      keepSshAlive: session.host.protocol == HostProtocol.ssh,
       isCurrent: current,
       reconnect: () async {
         if (!current()) return;
