@@ -10,8 +10,10 @@ import 'session_workspace.dart';
 import 'window_caption.dart';
 import 'workspace_controls.dart';
 import 'fullscreen_menu.dart';
+import 'fullscreen_tabs_peek.dart';
 import '../l10n/l10n.dart';
 import '../platform/fullscreen.dart';
+import '../platform/window_chrome.dart';
 
 @immutable
 class WorkspaceTab {
@@ -729,140 +731,153 @@ class WorkspaceTabBar extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([chrome, FullscreenController.instance]),
       builder: (context, _) {
+        // Android fullscreen keeps the strip out of the layout (Home still
+        // shows it as the way out). The pane handle can drop it down as a
+        // temporary overlay without resizing any terminal or desktop.
         if (Theme.of(context).platform == TargetPlatform.android &&
             FullscreenController.instance.enabled &&
-            !tabs.any((tab) => tab.isHome && tab.id == selectedId))
-          return const SizedBox.shrink();
-        final embedded = chrome.supported && chrome.state.enabled;
-        final bar = WindowBarMetrics.of(context, chrome);
-        // Dense native-height bar: every trailing icon (including callers'
-        // actions) is exactly one bar tall so icons and caption buttons share
-        // one baseline; touch platforms keep the default button sizes.
-        Widget sized(Widget row) => !bar.dense
-            ? row
-            : IconButtonTheme(
-                data: IconButtonThemeData(
-                  style: IconButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    iconSize: 18,
-                    minimumSize: Size(bar.actionWidth, bar.height),
-                    maximumSize: Size(bar.actionWidth, bar.height),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.standard,
-                    shape: const RoundedRectangleBorder(),
-                  ),
-                ),
-                child: row,
-              );
-        return Material(
-          color: colors.surfaceContainerLow,
-          child: SizedBox(
-            key: const ValueKey('workspace_navigation_bar'),
-            height: bar.height,
-            child: sized(
-              Row(
-                children: [
-                  ?leading,
-                  for (final tab in visibleTabs.where((tab) => tab.isHome))
-                    _tab(context, tab, bar),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final usedWidth = visibleTabs
-                            .where((tab) => !tab.isHome)
-                            .fold<double>(
-                              0,
-                              (width, tab) => width + (tab.isHome ? 142 : 204),
-                            );
-                        final gapWidth = (constraints.maxWidth - usedWidth)
-                            .clamp(32.0, double.infinity);
-                        return SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              for (final tab in visibleTabs.where(
-                                (tab) => !tab.isHome,
-                              ))
-                                _TabEntrance(
-                                  key: ValueKey(
-                                    'workspace-tab-motion-${tab.id}',
-                                  ),
-                                  child: _tab(context, tab, bar),
-                                ),
-                              DragTarget<WorkspaceTabDragData>(
-                                onWillAcceptWithDetails: (details) =>
-                                    onReorder != null &&
-                                    details.data.scope == dragScope &&
-                                    _isLiveTab(details.data.tabId),
-                                onAcceptWithDetails: (details) {
-                                  if (_isLiveTab(details.data.tabId)) {
-                                    onReorder?.call(details.data.tabId, null);
-                                  }
-                                },
-                                builder: (context, candidates, _) {
-                                  final gap = SizedBox(
-                                    width: gapWidth,
-                                    height: bar.height,
-                                    child: candidates.isEmpty
-                                        ? null
-                                        : ColoredBox(
-                                            color: colors.primary.withValues(
-                                              alpha: .2,
-                                            ),
-                                          ),
-                                  );
-                                  return embedded
-                                      ? WindowDragArea(
-                                          controller: chrome,
-                                          child: gap,
-                                        )
-                                      : gap;
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  if (homeMenuActions.isEmpty &&
-                      supportsNewWindow &&
-                      onNewWindow != null)
-                    IconButton(
-                      tooltip: context.l10n.newWindowCtrlShiftN,
-                      onPressed: onNewWindow,
-                      icon: const Icon(Icons.add_to_queue_outlined),
-                    ),
-                  ...actions,
-                  const FullscreenToolsMenu(),
-                  if (onSearch != null)
-                    IconButton(
-                      key: const ValueKey('workspace_host_search_button'),
-                      tooltip: context.l10n.searchHostsOrQuickConnect,
-                      onPressed: onSearch,
-                      icon: Icon(
-                        Icons.search_rounded,
-                        size: bar.dense ? 18 : 21,
-                      ),
-                    ),
-                  if (onToggleTools != null)
-                    IconButton(
-                      key: const ValueKey('workspace_terminal_sidebar_button'),
-                      tooltip: context.l10n.terminalSidebar,
-                      onPressed: onToggleTools,
-                      icon: Icon(
-                        Icons.vertical_split_outlined,
-                        size: bar.dense ? 18 : 21,
-                      ),
-                    ),
-                  WindowCaptionControls(controller: chrome, height: bar.height),
-                  if (!embedded) const SizedBox(width: 4),
-                ],
+            !tabs.any((tab) => tab.isHome && tab.id == selectedId)) {
+          return FullscreenTabsOverlay(
+            builder: (overlayContext) =>
+                _bar(overlayContext, chrome, colors, visibleTabs),
+          );
+        }
+        return _bar(context, chrome, colors, visibleTabs);
+      },
+    );
+  }
+
+  Widget _bar(
+    BuildContext context,
+    WindowChromeController chrome,
+    ColorScheme colors,
+    List<WorkspaceTab> visibleTabs,
+  ) {
+    final embedded = chrome.supported && chrome.state.enabled;
+    final bar = WindowBarMetrics.of(context, chrome);
+    // Dense native-height bar: every trailing icon (including callers'
+    // actions) is exactly one bar tall so icons and caption buttons share
+    // one baseline; touch platforms keep the default button sizes.
+    Widget sized(Widget row) => !bar.dense
+        ? row
+        : IconButtonTheme(
+            data: IconButtonThemeData(
+              style: IconButton.styleFrom(
+                padding: EdgeInsets.zero,
+                iconSize: 18,
+                minimumSize: Size(bar.actionWidth, bar.height),
+                maximumSize: Size(bar.actionWidth, bar.height),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.standard,
+                shape: const RoundedRectangleBorder(),
               ),
             ),
+            child: row,
+          );
+    return Material(
+      color: colors.surfaceContainerLow,
+      child: SizedBox(
+        key: const ValueKey('workspace_navigation_bar'),
+        height: bar.height,
+        child: sized(
+          Row(
+            children: [
+              ?leading,
+              for (final tab in visibleTabs.where((tab) => tab.isHome))
+                _tab(context, tab, bar),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final usedWidth = visibleTabs
+                        .where((tab) => !tab.isHome)
+                        .fold<double>(
+                          0,
+                          (width, tab) => width + (tab.isHome ? 142 : 204),
+                        );
+                    final gapWidth = (constraints.maxWidth - usedWidth).clamp(
+                      32.0,
+                      double.infinity,
+                    );
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (final tab in visibleTabs.where(
+                            (tab) => !tab.isHome,
+                          ))
+                            _TabEntrance(
+                              key: ValueKey('workspace-tab-motion-${tab.id}'),
+                              child: _tab(context, tab, bar),
+                            ),
+                          DragTarget<WorkspaceTabDragData>(
+                            onWillAcceptWithDetails: (details) =>
+                                onReorder != null &&
+                                details.data.scope == dragScope &&
+                                _isLiveTab(details.data.tabId),
+                            onAcceptWithDetails: (details) {
+                              if (_isLiveTab(details.data.tabId)) {
+                                onReorder?.call(details.data.tabId, null);
+                              }
+                            },
+                            builder: (context, candidates, _) {
+                              final gap = SizedBox(
+                                width: gapWidth,
+                                height: bar.height,
+                                child: candidates.isEmpty
+                                    ? null
+                                    : ColoredBox(
+                                        color: colors.primary.withValues(
+                                          alpha: .2,
+                                        ),
+                                      ),
+                              );
+                              return embedded
+                                  ? WindowDragArea(
+                                      controller: chrome,
+                                      child: gap,
+                                    )
+                                  : gap;
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (homeMenuActions.isEmpty &&
+                  supportsNewWindow &&
+                  onNewWindow != null)
+                IconButton(
+                  tooltip: context.l10n.newWindowCtrlShiftN,
+                  onPressed: onNewWindow,
+                  icon: const Icon(Icons.add_to_queue_outlined),
+                ),
+              ...actions,
+              const FullscreenToolsMenu(),
+              if (onSearch != null)
+                IconButton(
+                  key: const ValueKey('workspace_host_search_button'),
+                  tooltip: context.l10n.searchHostsOrQuickConnect,
+                  onPressed: onSearch,
+                  icon: Icon(Icons.search_rounded, size: bar.dense ? 18 : 21),
+                ),
+              if (onToggleTools != null)
+                IconButton(
+                  key: const ValueKey('workspace_terminal_sidebar_button'),
+                  tooltip: context.l10n.terminalSidebar,
+                  onPressed: onToggleTools,
+                  icon: Icon(
+                    Icons.vertical_split_outlined,
+                    size: bar.dense ? 18 : 21,
+                  ),
+                ),
+              WindowCaptionControls(controller: chrome, height: bar.height),
+              if (!embedded) const SizedBox(width: 4),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

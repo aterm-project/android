@@ -1355,12 +1355,19 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
     }
   }
 
-  Future<void> _splitSession(String id, Axis axis) async {
+  /// [newSession]: the pane handle's direction choices always open a fresh
+  /// connection (or Console copy) beside [id] instead of pairing it with an
+  /// already-open tab; those are offered separately as explicit partners.
+  Future<void> _splitSession(
+    String id,
+    Axis axis, {
+    bool newSession = false,
+  }) async {
     final file = _fileTabs.find(id);
     final otherFile = _fileTabs.entries
         .where((entry) => entry.id != id)
         .firstOrNull;
-    if (file != null || otherFile != null) {
+    if (file != null || (!newSession && otherFile != null)) {
       final target =
           _sessionWorkspace.sessionIds
               .where((value) => value != id)
@@ -1388,16 +1395,18 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
     if (tab == null || tab.detached) return;
     Future<void>? opening;
     try {
-      var source = app.visibleTerminalTabs
-          .where(
-            (candidate) =>
-                candidate.id != id &&
-                (candidate.connection != null ||
-                    candidate.telnet != null ||
-                    candidate.desktop != null ||
-                    candidate.console != null),
-          )
-          .firstOrNull;
+      var source = newSession
+          ? null
+          : app.visibleTerminalTabs
+                .where(
+                  (candidate) =>
+                      candidate.id != id &&
+                      (candidate.connection != null ||
+                          candidate.telnet != null ||
+                          candidate.desktop != null ||
+                          candidate.console != null),
+                )
+                .firstOrNull;
       if (source == null && tab.console != null) {
         // A lone Console splits into a new independent PTY/serial session.
         final copyId = await app.duplicateConsoleTab(id);
@@ -1959,6 +1968,14 @@ _snack(context, context.l10n.couldntOpenANewWindow, error: true);
                                   unawaited(_closeWorkspaceTab(id)),
                               onWorkspaceUnsplit: _unsplitWorkspaceTab,
                               onWorkspaceDuplicate: (id) => unawaited(_duplicateWorkspaceTab(id)),
+                              onWorkspaceSplit: (id, axis) => unawaited(
+                                _splitSession(id, axis, newSession: true),
+                              ),
+                              workspaceSplitTargets: () => _tabOrder.arrange<String>([
+                                for (final tab in app.visibleTerminalTabs)
+                                  if (!tab.closed) tab.id,
+                                for (final file in _fileTabs.entries) file.id,
+                              ], (id) => id),
                               app: app,
                               onOpenFiles: _openHostFiles,
                               onOpenGroup: _openGroup,
@@ -2860,6 +2877,8 @@ class _WorkspacePage extends StatelessWidget {
     required this.onWorkspaceClose,
     required this.onWorkspaceUnsplit,
     required this.onWorkspaceDuplicate,
+    this.onWorkspaceSplit,
+    this.workspaceSplitTargets,
     this.enableWebCommandSuggestionsForTesting = false,
     this.onOpenLocalMigration,
     this.webAppUpdateMonitor,
@@ -2884,6 +2903,8 @@ class _WorkspacePage extends StatelessWidget {
   final bool openingCombination;
   final ValueChanged<String> onWorkspaceSelect;
   final ValueChanged<String> onWorkspaceClose, onWorkspaceUnsplit, onWorkspaceDuplicate;
+  final void Function(String id, Axis axis)? onWorkspaceSplit;
+  final Iterable<String> Function()? workspaceSplitTargets;
   final String dragScope;
   final bool enableWebCommandSuggestionsForTesting;
   final Future<void> Function(BuildContext context)? onOpenLocalMigration;
@@ -2947,6 +2968,8 @@ class _WorkspacePage extends StatelessWidget {
         onWorkspaceClose: onWorkspaceClose,
         onWorkspaceUnsplit: onWorkspaceUnsplit,
         onWorkspaceDuplicate: onWorkspaceDuplicate,
+        onWorkspaceSplit: onWorkspaceSplit,
+        workspaceSplitTargets: workspaceSplitTargets,
         enableWebCommandSuggestionsForTesting:
             enableWebCommandSuggestionsForTesting,
       ),
@@ -8328,6 +8351,8 @@ class _TerminalPage extends StatefulWidget {
     required this.onWorkspaceClose,
     required this.onWorkspaceUnsplit,
     required this.onWorkspaceDuplicate,
+    this.onWorkspaceSplit,
+    this.workspaceSplitTargets,
     this.enableWebCommandSuggestionsForTesting = false,
   });
   final AppController app;
@@ -8335,6 +8360,8 @@ class _TerminalPage extends StatefulWidget {
   final FileWorkspaceTabs fileTabs;
   final ValueChanged<String> onWorkspaceSelect;
   final ValueChanged<String> onWorkspaceClose, onWorkspaceUnsplit, onWorkspaceDuplicate;
+  final void Function(String id, Axis axis)? onWorkspaceSplit;
+  final Iterable<String> Function()? workspaceSplitTargets;
   final String dragScope;
   final bool enableWebCommandSuggestionsForTesting;
   @override
@@ -9075,6 +9102,8 @@ class _TerminalPageState extends State<_TerminalPage> {
     onClose: widget.onWorkspaceClose,
     onUnsplit: widget.onWorkspaceUnsplit,
     onDuplicate: widget.onWorkspaceDuplicate,
+    onSplit: widget.onWorkspaceSplit,
+    splitTargets: widget.workspaceSplitTargets,
     paneLabel: (id) =>
         widget.fileTabs.find(id)?.title ??
         app.terminalTabFor(id)?.host?.name ??

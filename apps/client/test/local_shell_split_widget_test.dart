@@ -247,6 +247,81 @@ void main() {
       }
     },
   );
+
+  testWidgets('pane handle Split opens a fresh session even beside other tabs; '
+      'open tabs are offered as partners; a lone SSH tab reconnects anew', (
+    tester,
+  ) async {
+    final fixture = await _fixture();
+    try {
+      await tester.binding.setSurfaceSize(const Size(1400, 900));
+      await tester.runAsync(() => fixture.app.openTerminalTab(_ssh));
+      final sshId = fixture.app.activeTerminalTabId!;
+      await tester.runAsync(
+        () => fixture.app.openLocalShellTab(
+          launch: const LocalShellLaunch(kind: LocalShellKind.zsh),
+        ),
+      );
+      final shellId = fixture.app.activeTerminalTabId!;
+      await tester.pumpWidget(_shell(fixture.app));
+      await tester.pumpAndSettle();
+      SessionWorkspaceView view() => tester.widget<SessionWorkspaceView>(
+        find.byType(SessionWorkspaceView),
+      );
+      expect(view().splitTargets!(), containsAll([sshId, shellId]));
+
+      // Real handle controls: white handle -> Split -> Top/bottom.
+      await tester.tap(find.byKey(ValueKey('pane-handle-$shellId')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('pane-split-$shellId')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(ValueKey('pane-split-with-$sshId')), findsOneWidget);
+      await tester.tap(find.byKey(ValueKey('pane-split-vertical-$shellId')));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 30)),
+      );
+      await tester.pumpAndSettle();
+      // A new independent Shell, not the already-open SSH tab.
+      expect(fixture.consoles.opened, hasLength(2));
+      expect(fixture.connections, hasLength(1));
+      final copyId = fixture.app.terminalTabs
+          .firstWhere((t) => t.id != shellId && t.id != sshId)
+          .id;
+      final layout = view().controller;
+      expect(layout.sessionIds.toSet(), {shellId, copyId});
+      expect((layout.root! as SessionWorkspaceSplit).axis, Axis.vertical);
+
+      // Explicit partner from the same menu: the open SSH tab joins.
+      await tester.tap(find.byKey(ValueKey('pane-handle-$shellId')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('pane-split-$shellId')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('pane-split-with-$sshId')));
+      await tester.pumpAndSettle();
+      expect(layout.sessionIds.toSet(), {shellId, copyId, sshId});
+      expect(fixture.connections, hasLength(1));
+
+      // A lone SSH tab: Split opens a fresh connection of the same host.
+      await tester.runAsync(() => fixture.app.closeTerminalTab(shellId));
+      await tester.runAsync(() => fixture.app.closeTerminalTab(copyId));
+      await tester.pumpAndSettle();
+      expect(fixture.app.visibleTerminalTabs.map((t) => t.id), [sshId]);
+      view().onSplit!(sshId, Axis.horizontal);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 30)),
+      );
+      await tester.pumpAndSettle();
+      expect(fixture.connections, hasLength(2));
+      final fresh = fixture.app.visibleTerminalTabs.firstWhere(
+        (t) => t.id != sshId,
+      );
+      expect(fresh.host?.id, _ssh.id);
+      expect(view().controller.sessionIds.toSet(), {sshId, fresh.id});
+      await tester.pump(const Duration(milliseconds: 350));
+    } finally {
+      await _cleanup(tester, fixture);
+    }
+  });
 }
 
 Future<void> _typeInto(WidgetTester tester, String paneId, String text) async {

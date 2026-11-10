@@ -2671,12 +2671,19 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     }
   }
 
-  Future<void> _splitTerminalTab(String id, Axis axis) async {
+  /// [newSession]: the pane handle's direction choices always open a fresh
+  /// connection (or Console copy) beside [id] instead of pairing it with an
+  /// already-open tab; those are offered separately as explicit partners.
+  Future<void> _splitTerminalTab(
+    String id,
+    Axis axis, {
+    bool newSession = false,
+  }) async {
     final file = _files.find(id);
     final otherFile = _files.entries
         .where((entry) => entry.id != id)
         .firstOrNull;
-    if (file != null || otherFile != null) {
+    if (file != null || (!newSession && otherFile != null)) {
       final target =
           _layout.sessionIds.where((value) => value != id).firstOrNull ??
           otherFile?.id ??
@@ -2700,11 +2707,12 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     }
     final source = _visibleSessions.where((s) => s.id == id).firstOrNull;
     if (source == null || _busy) return;
-    final target =
-        _visibleSessions
-            .where((s) => s.id != id && s.id == _selectedTabId)
-            .firstOrNull ??
-        _visibleSessions.where((s) => s.id != id).firstOrNull;
+    final target = newSession
+        ? null
+        : _visibleSessions
+                  .where((s) => s.id != id && s.id == _selectedTabId)
+                  .firstOrNull ??
+              _visibleSessions.where((s) => s.id != id).firstOrNull;
     var other = target;
     if (other == null && source.console != null) {
       // A lone Console splits into a new independent PTY/serial session.
@@ -4811,6 +4819,13 @@ _showMessage(
                       onClose: _closeTerminalTab,
                       onDuplicate: (id) => unawaited(_duplicateWorkspaceTab(id)),
                       onUnsplit: _unsplitTerminalTab,
+                      onSplit: (id, axis) => unawaited(
+                        _splitTerminalTab(id, axis, newSession: true),
+                      ),
+                      splitTargets: () => _tabOrder.arrange<String>([
+                        for (final session in _visibleSessions) session.id,
+                        for (final entry in _files.entries) entry.id,
+                      ], (id) => id),
                       paneLabel: (id) =>
                           _files.find(id)?.title ??
                           _visibleSessions
