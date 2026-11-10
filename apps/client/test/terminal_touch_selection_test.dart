@@ -411,6 +411,32 @@ void main() {
   );
 
   testWidgets(
+    'a platform-cancelled long-press drag drops the chrome without toolbar '
+    'or input',
+    variant: android,
+    (tester) async {
+      final h = await _Harness.pump(tester);
+      h.terminal.write('\x1b[?1000h${'\r\n' * 12}cancel me now');
+      await tester.pump();
+      final row = h.rowOf('cancel');
+      final gesture = await tester.startGesture(h.cellCenter(1, row));
+      await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+      await gesture.moveTo(h.cellCenter(8, row));
+      await tester.pump();
+      expect(find.byType(TextMagnifier), findsOneWidget);
+      expect(find.byKey(_previewKey), findsOneWidget);
+      await gesture.cancel();
+      await tester.pumpAndSettle();
+      expect(find.byType(TextMagnifier), findsNothing);
+      expect(find.byKey(_previewKey), findsNothing);
+      expect(find.byKey(_toolbarKey), findsNothing);
+      expect(h.chrome.isDragging, isFalse);
+      expect(h.selectedText, 'cancel me');
+      expect(h.output, isEmpty);
+    },
+  );
+
+  testWidgets(
     'X10 mouse reports encode 1-based screen rows',
     variant: android,
     (tester) async {
@@ -518,7 +544,10 @@ void main() {
     }
     final all = TerminalSelectionContext.describe(
       buffer,
-      BufferRangeLine(CellOffset(0, 0), CellOffset(0, buffer.lines.length - 1)),
+      BufferRangeLine(
+        const CellOffset(0, 0),
+        CellOffset(0, buffer.lines.length - 1),
+      ),
     )!;
     expect(all.selectedElided, isTrue);
     expect(all.selected.characters.length, lessThanOrEqualTo(25));
@@ -625,7 +654,7 @@ class _Harness {
         home: Scaffold(
           body: Column(
             children: [
-              if (extra != null) extra!,
+              ?extra,
               Expanded(
                 child: TerminalView(
                   terminal,
