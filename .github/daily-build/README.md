@@ -94,12 +94,18 @@ checkpoint rebuilds (the extra release can be deleted by hand).
 ```sh
 python3 -I .github/daily-build/tests/test_daily_gate.py -v     # real git remotes, races, re-runs, UTC days
 python3 -I .github/daily-build/tests/test_release_tool.py -v   # packaging/evidence + policy lint
+python3 -I .github/daily-build/tests/test_android_toolchain.py -v # shared SDK NDK install/reuse and stale-cache refusal
 python3 -I .github/daily-build/tests/lint_workflows.py         # pin/permission/guard policy (actionlint still primary)
 actionlint -shellcheck= .github/workflows/*.yml
 ```
 
 ## Android specifics
 
+* The native engine and Gradle use the same pinned NDK under `ANDROID_HOME/ndk/<revision>`;
+  the cache restores that exact SDK package directory. No second private SDK is installed.
+  Before restoring tools, the disposable GitHub-hosted Linux runner removes unused .NET,
+  Haskell and CodeQL installations. Before Gradle, the build reports disk usage and requires
+  8 GiB free for native-library transforms, AOT output and APK packaging.
 * `recipe/android_build.sh`: `build_engine.sh` (deps.lock official OpenSSL 3.5.9 / FreeRDP 3.33.0
   tarballs, SHA-256 checked, NDK pin read from the script, `--jobs 2`) → engine bundle →
   `flutter build apk --release --target lib/main.dart --target-platform android-arm64,android-x64

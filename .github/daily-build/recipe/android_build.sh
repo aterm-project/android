@@ -53,6 +53,17 @@ cp "$ENGINE_OUT/engine-manifest.json" "$META/engine-manifest.json"
 echo "::endgroup::"
 
 echo "::group::Flutter release APK"
+# Report pressure before Gradle expands native libraries and AOT intermediates,
+# rather than discovering a full runner only at mergeReleaseNativeLibs.
+df -h "$RUNNER_TEMP"
+du -sh "$ANDROID_NDK_ROOT" "$ATERMIUS_ENGINE_WORK" "$ENGINE_OUT"
+python3 -I - "$RUNNER_TEMP" <<'PY'
+import shutil
+import sys
+available = shutil.disk_usage(sys.argv[1]).free
+if available < 8 * 1024**3:
+    raise SystemExit(f"::error::Only {available / 1024**3:.1f} GiB free before Gradle; at least 8 GiB required")
+PY
 python3 -I "$TOOLS/recipe/flutter_sdk.py" verify --out "$META/flutter-version.json"
 cd "$ROOT/apps/client"
 flutter config --no-analytics >/dev/null

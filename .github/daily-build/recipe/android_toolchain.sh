@@ -3,8 +3,8 @@
 #
 # * JDK 17 from the runner image (AGP 9.1 / project targets Java 17).
 # * Android NDK: the exact revision pinned by build_engine.sh (NDK_PIN), installed
-#   by sdkmanager (package checksums verified by sdkmanager) into a private SDK
-#   root under RUNNER_TEMP that the workflow caches by revision.
+#   by sdkmanager (package checksums verified by sdkmanager) into ANDROID_HOME,
+#   cached by revision. The engine and Gradle share this single installation.
 # * build-tools (apksigner/zipalign for the signing job), ninja, CMake >= 3.28.
 # * Gradle limited to 2 workers and a 4 GB heap (private-repository runners
 #   have ~7-8 GB RAM; the project gradle.properties asks for 8 GB).
@@ -27,12 +27,9 @@ export JAVA_HOME="$java_home"
 yes | "$sdkmanager" --licenses >/dev/null || true
 "$sdkmanager" --install "build-tools;$BUILD_TOOLS" >/dev/null
 
-ndk_sdk="$RUNNER_TEMP/android-ndk"
-ndk_root="$ndk_sdk/ndk/$ndk"
+ndk_root="$ANDROID_HOME/ndk/$ndk"
 if [[ ! -f "$ndk_root/source.properties" ]]; then
-  mkdir -p "$ndk_sdk"
-  cp -R "$ANDROID_HOME/licenses" "$ndk_sdk/"
-  "$sdkmanager" --sdk_root="$ndk_sdk" --install "ndk;$ndk" >/dev/null
+  "$sdkmanager" --install "ndk;$ndk" >/dev/null
 fi
 revision="$(sed -n 's/^Pkg.Revision *= *//p' "$ndk_root/source.properties")"
 [[ "$revision" == "$ndk" ]] || { echo "::error::NDK revision $revision != pinned $ndk"; exit 1; }
@@ -43,8 +40,9 @@ fi
 cmake_version="$(cmake --version | sed -n 's/^cmake version //p')"
 printf '%s\n3.28\n' "$cmake_version" | sort -V -C -r || { echo "::error::CMake >= 3.28 required"; exit 1; }
 
-mkdir -p "$HOME/.gradle"
-cat > "$HOME/.gradle/gradle.properties" <<'EOF'
+gradle_home="${GRADLE_USER_HOME:-$HOME/.gradle}"
+mkdir -p "$gradle_home"
+cat > "$gradle_home/gradle.properties" <<'EOF'
 org.gradle.workers.max=2
 org.gradle.parallel=false
 org.gradle.daemon=false

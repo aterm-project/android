@@ -108,11 +108,21 @@ jobs:
             echo "PUB_CACHE=$RUNNER_TEMP/pub-cache"
             sed -n 's/^NDK_PIN=\([0-9][0-9.]*\).*/ATERMIUS_NDK_PIN=\1/p' apps/client/native/desktop/android/build_engine.sh
           } >> "$GITHUB_ENV"
+      - name: Reserve disk space for native and Gradle builds
+        run: |
+          # This cleanup is only for disposable GitHub-hosted Linux runners.
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          test "$RUNNER_OS" = Linux
+          df -h "$RUNNER_TEMP"
+          sudo rm -rf -- /usr/share/dotnet /opt/ghc /usr/local/.ghcup "${AGENT_TOOLSDIRECTORY:?}/CodeQL"
+          df -h "$RUNNER_TEMP"
+      - name: Shared NDK cache path
+        run: echo "ATERMIUS_NDK_PATH=$ANDROID_HOME/ndk/$ATERMIUS_NDK_PIN" >> "$GITHUB_ENV"
       - name: Cache Android NDK
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ${{ runner.temp }}/android-ndk
-          key: android-ndk-${{ env.ATERMIUS_NDK_PIN }}-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ env.ATERMIUS_NDK_PATH }}
+          key: android-ndk-sdk-v2-${{ env.ATERMIUS_NDK_PIN }}-${{ runner.os }}-${{ runner.arch }}
       - name: Toolchain (JDK 17, pinned NDK, build-tools, Gradle limits)
         run: bash .github/daily-build/recipe/android_toolchain.sh
       - name: Cache Flutter SDK
