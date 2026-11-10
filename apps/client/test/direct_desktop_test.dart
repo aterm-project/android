@@ -27,7 +27,7 @@ void main() {
       'secret',
     );
     final frames = StreamIterator(
-      connection.events.where((e) => e is DesktopFrame),
+      connection.events.where((e) => e is! DesktopReady),
     );
     final socket = await accepted;
     final client = _Reader(socket);
@@ -53,11 +53,13 @@ void main() {
     final format = await client.read(20);
     expect(format.sublist(4, 8), [32, 24, 0, 1]);
     final encodings = ByteData.sublistView(
-      Uint8List.fromList(await client.read(20)),
+      Uint8List.fromList(await client.read(28)),
     );
     expect(encodings.getUint8(0), 2);
-    expect(encodings.getUint16(2), 4);
+    expect(encodings.getUint16(2), 6);
     expect(encodings.getInt32(16), -308); // ExtendedDesktopSize advertised
+    expect(encodings.getInt32(20), -239); // RichCursor
+    expect(encodings.getInt32(24), -232); // PointerPos
     expect(await client.read(10), [3, 0, 0, 0, 0, 0, 0, 2, 0, 2]);
     final rect = ByteData(16)
       ..setUint16(2, 1)
@@ -86,6 +88,47 @@ void main() {
       255,
     ]);
     frame.onConsumed?.call();
+    expect((await client.read(10))[1], 1);
+    List<int> cursorRect(int x, int y, int w, int h, int encoding) =>
+        (ByteData(12)
+              ..setUint16(0, x)
+              ..setUint16(2, y)
+              ..setUint16(4, w)
+              ..setUint16(6, h)
+              ..setInt32(8, encoding))
+            .buffer
+            .asUint8List();
+    socket.add([
+      0,
+      0,
+      0,
+      3,
+      ...cursorRect(1, 0, 2, 1, -239),
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      0,
+      0,
+      0x80,
+      ...cursorRect(1, 1, 0, 0, -232),
+      ...cursorRect(0, 0, 0, 0, -239),
+    ]);
+    expect(await frames.moveNext().timeout(const Duration(seconds: 3)), isTrue);
+    final cursor = frames.current as DesktopCursor;
+    expect(
+      (cursor.width, cursor.height, cursor.hotX, cursor.hotY),
+      (2, 1, 1, 0),
+    );
+    expect(cursor.bgra, [0, 0, 255, 255, 255, 0, 0, 0]);
+    expect(await frames.moveNext().timeout(const Duration(seconds: 3)), isTrue);
+    final position = frames.current as DesktopPointerPosition;
+    expect((position.x, position.y), (1, 1));
+    expect(await frames.moveNext().timeout(const Duration(seconds: 3)), isTrue);
+    expect((frames.current as DesktopCursor).kind, DesktopCursorKind.hidden);
+    // Cursor-only updates request the next frame without allocating a new one.
     expect((await client.read(10))[1], 1);
     connection.send(['key', 0xff51, 1]);
     expect(await client.read(8), [4, 1, 0, 0, 0, 0, 255, 81]);

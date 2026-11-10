@@ -52,7 +52,7 @@ Future<(RfbConnection, Socket, _Reader, ServerSocket)> _vnc(int w, int h) async 
       .buffer
       .asUint8List());
   await reader.read(20); // pixel format
-  final encodings = ByteData.sublistView(Uint8List.fromList(await reader.read(20)));
+  final encodings = ByteData.sublistView(Uint8List.fromList(await reader.read(28)));
   expect(encodings.getInt32(16), -308);
   await reader.read(10); // first update request
   return (connection, socket, reader, server);

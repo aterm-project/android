@@ -1,5 +1,7 @@
 import 'app_menu.dart';
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
@@ -377,7 +379,10 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
                       selected: widget.controller.selectedId == pane.id,
                       compactActions:
                           pane.bounds.width <
-                          ((grouped && widget.onUnsplit != null ? 1 : 0) +
+                          ((FullscreenController.instance.supported ? 1 : 0) +
+                                      (grouped && widget.onUnsplit != null
+                                          ? 1
+                                          : 0) +
                                       (grouped && widget.onClose != null
                                           ? 1
                                           : 0) +
@@ -386,6 +391,14 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
                               16,
                       label: widget.paneLabel?.call(pane.id) ?? pane.id,
                       status: widget.paneStatus?.call(pane.id),
+                      fullscreen: FullscreenController.instance.enabled,
+                      onFullscreen: FullscreenController.instance.supported
+                          ? () {
+                              widget.controller.activate(pane.id);
+                              widget.onSelect?.call(pane.id);
+                              toggleAppFullscreen(context);
+                            }
+                          : null,
                       onUnsplit: grouped && widget.onUnsplit != null
                           ? () => widget.onUnsplit!(pane.id)
                           : null,
@@ -427,21 +440,6 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
                       },
                     ),
                   ),
-              if (immersive)
-                Positioned(
-                  top: 4,
-                  left: 4,
-                  child: Material(
-                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                    shape: const CircleBorder(),
-                    child: IconButton(
-                      key: const ValueKey('workspace_exit_fullscreen'),
-                      tooltip: context.l10n.exitFullscreen,
-                      onPressed: () => toggleAppFullscreen(context),
-                      icon: const Icon(Icons.fullscreen_exit),
-                    ),
-                  ),
-                ),
             ],
           ),
         );
@@ -523,11 +521,15 @@ class _SessionPaneDropTarget extends StatefulWidget {
     this.onUnsplit,
     this.onClose,
     this.onDuplicate,
+    this.onFullscreen,
+    this.fullscreen = false,
   });
   final String label;
   final bool compactActions;
   final String? status;
   final VoidCallback? onUnsplit, onClose, onDuplicate;
+  final VoidCallback? onFullscreen;
+  final bool fullscreen;
   final String sessionId, scope;
   final bool Function(String)? acceptsSession;
   final bool selected;
@@ -544,11 +546,20 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
   bool _controlsPinned = false;
   final _controlsFocus = FocusNode(debugLabel: 'Split pane actions');
   int get _actionCount =>
+      (widget.onFullscreen != null ? 1 : 0) +
       (widget.onUnsplit != null ? 1 : 0) +
       (widget.onClose != null ? 1 : 0) +
       (widget.onDuplicate != null ? 1 : 0);
   bool get _hasActions => _actionCount > 0;
   double get _actionExtent => AppDensity.of(context).isCompact ? 36 : 48;
+  @override
+  void didUpdateWidget(_SessionPaneDropTarget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.fullscreen && !oldWidget.fullscreen && widget.selected) {
+      _controlsVisible = _controlsPinned = true;
+    }
+  }
+
   @override
   void dispose() {
     _controlsFocus.dispose();
@@ -570,14 +581,21 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
 
   bool _nearActions(Offset local) {
     final box = context.findRenderObject() as RenderBox?;
+    final count = widget.compactActions
+        ? (widget.onFullscreen != null ? 1 : 0) +
+              (_actionCount > (widget.onFullscreen != null ? 1 : 0) ? 1 : 0)
+        : _actionCount;
+    final rows = box != null && box.hasSize
+        ? (count * _actionExtent / math.max(_actionExtent, box.size.width))
+              .ceil()
+        : 1;
     return box != null &&
         box.hasSize &&
         _controlsVisible &&
         (local.dx - box.size.width / 2).abs() <=
-            (widget.compactActions ? 1 : _actionCount) * _actionExtent / 2 +
-                8 &&
+            count * _actionExtent / 2 + 8 &&
         local.dy >= 24 &&
-        local.dy <= 24 + _actionExtent + 8;
+        local.dy <= 24 + rows * _actionExtent + 8;
   }
 
   void _hoverControls(PointerEvent event) {
@@ -783,102 +801,123 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
     elevation: 3,
     borderRadius: BorderRadius.circular(7),
     color: Theme.of(context).colorScheme.surfaceContainerHigh,
-    child: !widget.compactActions
-        ? Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.onDuplicate != null)
-                IconButton(
-                  key: ValueKey('pane-duplicate-${widget.sessionId}'),
-                  constraints: BoxConstraints.tightFor(
-                    width: _actionExtent,
-                    height: _actionExtent,
-                  ),
-                  padding: EdgeInsets.zero,
-                  tooltip: context.l10n.duplicateTab,
-                  icon: Icon(
-                    Icons.content_copy,
-                    size: appMenuIconSize(context),
-                  ),
-                  onPressed: widget.onDuplicate,
-                ),
-              if (widget.onUnsplit != null)
-                IconButton(
-                  key: ValueKey('pane-unsplit-${widget.sessionId}'),
-                  constraints: BoxConstraints.tightFor(
-                    width: _actionExtent,
-                    height: _actionExtent,
-                  ),
-                  padding: EdgeInsets.zero,
-                  tooltip: context.l10n.unsplit,
-                  icon: Icon(Icons.call_split, size: appMenuIconSize(context)),
-                  onPressed: widget.onUnsplit,
-                ),
-              if (widget.onClose != null)
-                IconButton(
-                  key: ValueKey('pane-close-${widget.sessionId}'),
-                  constraints: BoxConstraints.tightFor(
-                    width: _actionExtent,
-                    height: _actionExtent,
-                  ),
-                  padding: EdgeInsets.zero,
-                  tooltip: context.l10n.closePane,
-                  icon: Icon(Icons.close, size: appMenuIconSize(context)),
-                  onPressed: widget.onClose,
-                ),
-            ],
-          )
-        : PopupMenuButton<String>(
-            key: ValueKey('pane-actions-${widget.sessionId}'),
-            popUpAnimationStyle: AppMotion.menuStyle(context),
-            tooltip: context.l10n.paneActionsLabel(widget.label),
-            icon: Icon(Icons.more_horiz, size: appMenuIconSize(context)),
-            constraints: const BoxConstraints(minWidth: 160),
+    child: Wrap(
+      alignment: WrapAlignment.center,
+      children: [
+        if (widget.onFullscreen != null)
+          IconButton(
+            key: widget.fullscreen && widget.selected
+                ? const ValueKey('workspace_exit_fullscreen')
+                : ValueKey('pane-fullscreen-${widget.sessionId}'),
+            tooltip: widget.fullscreen
+                ? context.l10n.exitFullscreen
+                : context.l10n.enterFullscreen,
+            constraints: BoxConstraints.tightFor(
+              width: _actionExtent,
+              height: _actionExtent,
+            ),
             padding: EdgeInsets.zero,
-            onSelected: (action) {
-              _controlsPinned = false;
-              _showControls(false);
-              if (action == 'duplicate')
-                widget.onDuplicate?.call();
-              else if (action == 'unsplit')
-                widget.onUnsplit?.call();
-              else if (action == 'close')
-                widget.onClose?.call();
-            },
-            itemBuilder: (_) => [
-              if (widget.status != null)
-                appMenuItem<String>(
-                  context,
-                  enabled: false,
-                  child: Text(
-                    widget.status!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              if (widget.onDuplicate != null)
-                appMenuItem(
-                  context,
-                  value: 'duplicate',
-                  child: AppMenuLabel(
-                    Icons.content_copy,
-                    context.l10n.duplicateTab,
-                  ),
-                ),
-              if (widget.onUnsplit != null)
-                appMenuItem(
-                  context,
-                  value: 'unsplit',
-                  child: AppMenuLabel(Icons.call_split, context.l10n.unsplit),
-                ),
-              if (widget.onClose != null)
-                appMenuItem(
-                  context,
-                  value: 'close',
-                  child: AppMenuLabel(Icons.close, context.l10n.closePane),
-                ),
-            ],
+            icon: Icon(
+              widget.fullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
+              size: appMenuIconSize(context),
+            ),
+            onPressed: widget.onFullscreen,
           ),
+        if (!widget.compactActions) ...[
+          if (widget.onDuplicate != null)
+            IconButton(
+              key: ValueKey('pane-duplicate-${widget.sessionId}'),
+              constraints: BoxConstraints.tightFor(
+                width: _actionExtent,
+                height: _actionExtent,
+              ),
+              padding: EdgeInsets.zero,
+              tooltip: context.l10n.duplicateTab,
+              icon: Icon(Icons.content_copy, size: appMenuIconSize(context)),
+              onPressed: widget.onDuplicate,
+            ),
+          if (widget.onUnsplit != null)
+            IconButton(
+              key: ValueKey('pane-unsplit-${widget.sessionId}'),
+              constraints: BoxConstraints.tightFor(
+                width: _actionExtent,
+                height: _actionExtent,
+              ),
+              padding: EdgeInsets.zero,
+              tooltip: context.l10n.unsplit,
+              icon: Icon(Icons.call_split, size: appMenuIconSize(context)),
+              onPressed: widget.onUnsplit,
+            ),
+          if (widget.onClose != null)
+            IconButton(
+              key: ValueKey('pane-close-${widget.sessionId}'),
+              constraints: BoxConstraints.tightFor(
+                width: _actionExtent,
+                height: _actionExtent,
+              ),
+              padding: EdgeInsets.zero,
+              tooltip: context.l10n.closePane,
+              icon: Icon(Icons.close, size: appMenuIconSize(context)),
+              onPressed: widget.onClose,
+            ),
+        ] else if (_actionCount > (widget.onFullscreen != null ? 1 : 0))
+          SizedBox(
+            width: _actionExtent,
+            height: _actionExtent,
+            child: PopupMenuButton<String>(
+              key: ValueKey('pane-actions-${widget.sessionId}'),
+              popUpAnimationStyle: AppMotion.menuStyle(context),
+              tooltip: context.l10n.paneActionsLabel(widget.label),
+              icon: Icon(Icons.more_horiz, size: appMenuIconSize(context)),
+              constraints: const BoxConstraints(minWidth: 160),
+              padding: EdgeInsets.zero,
+              onSelected: (action) {
+                _controlsPinned = false;
+                _showControls(false);
+                if (action == 'duplicate')
+                  widget.onDuplicate?.call();
+                else if (action == 'unsplit')
+                  widget.onUnsplit?.call();
+                else if (action == 'close')
+                  widget.onClose?.call();
+              },
+              itemBuilder: (_) => [
+                if (widget.status != null)
+                  appMenuItem<String>(
+                    context,
+                    enabled: false,
+                    child: Text(
+                      widget.status!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                if (widget.onDuplicate != null)
+                  appMenuItem(
+                    context,
+                    value: 'duplicate',
+                    child: AppMenuLabel(
+                      Icons.content_copy,
+                      context.l10n.duplicateTab,
+                    ),
+                  ),
+                if (widget.onUnsplit != null)
+                  appMenuItem(
+                    context,
+                    value: 'unsplit',
+                    child: AppMenuLabel(Icons.call_split, context.l10n.unsplit),
+                  ),
+                if (widget.onClose != null)
+                  appMenuItem(
+                    context,
+                    value: 'close',
+                    child: AppMenuLabel(Icons.close, context.l10n.closePane),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    ),
   );
 }
 

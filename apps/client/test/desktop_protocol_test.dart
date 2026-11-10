@@ -6,6 +6,7 @@ import 'package:aterm_client/desktop/guacamole_protocol.dart';
 import 'package:aterm_client/desktop/desktop_display.dart';
 import 'package:aterm_client/desktop/desktop_view.dart';
 import 'package:aterm_client/desktop/desktop_session.dart';
+import 'package:aterm_client/desktop/direct/connection.dart';
 import 'package:flutter/material.dart';
 import 'package:aterm_client/domain/models.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,61 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('client pointer respects BGRA alpha, hotspot, hidden/default and late decode ownership', () async {
+    final display = DesktopDisplay();
+    addTearDown(display.dispose);
+    Future<ByteData> pixels() async {
+      final recorder = ui.PictureRecorder();
+      display.paintPointer(Canvas(recorder), const Offset(10, 10));
+      final picture = recorder.endRecording();
+      final image = picture.toImageSync(50, 50);
+      picture.dispose();
+      final data = (await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      ))!;
+      image.dispose();
+      return data;
+    }
+
+    final shape = DesktopCursor(
+      DesktopCursorKind.image,
+      width: 2,
+      height: 1,
+      hotX: 1,
+      bgra: Uint8List.fromList([0, 0, 255, 255, 255, 0, 0, 0]),
+    );
+    await display.updateCursor(shape, () => true);
+    final image = await pixels();
+    expect(image.getUint32((10 * 50 + 9) * 4), 0xff0000ff);
+    expect(image.getUint32((10 * 50 + 10) * 4), 0);
+    await display.updateCursor(
+      DesktopCursor(DesktopCursorKind.hidden),
+      () => true,
+    );
+    expect((await pixels()).buffer.asUint8List().any((b) => b != 0), isFalse);
+    await display.updateCursor(
+      DesktopCursor(DesktopCursorKind.defaultArrow),
+      () => true,
+    );
+    expect((await pixels()).buffer.asUint8List().any((b) => b != 0), isTrue);
+    final late = display.updateCursor(shape, () => true);
+    display.resetCursor();
+    await late;
+    expect(display.cursor, isNull);
+    expect(display.cursorKind, DesktopCursorKind.defaultArrow);
+    await expectLater(
+      display.updateCursor(
+        DesktopCursor(
+          DesktopCursorKind.image,
+          width: 513,
+          height: 1,
+          bgra: Uint8List(0),
+        ),
+        () => true,
+      ),
+      throwsFormatException,
+    );
+  });
   test(
     'native BGRA frames render correct colors and reject invalid buffers',
     () async {

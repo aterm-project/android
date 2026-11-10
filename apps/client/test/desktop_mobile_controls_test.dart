@@ -1,4 +1,6 @@
 import 'package:aterm_client/desktop/desktop_mobile_controls.dart';
+import 'package:aterm_client/desktop/desktop_keyboard_mode.dart';
+import 'package:aterm_client/platform/fullscreen.dart';
 import 'package:aterm_client/desktop/desktop_session.dart';
 import 'package:aterm_client/desktop/desktop_touch_input.dart';
 import 'package:aterm_client/desktop/desktop_view.dart';
@@ -26,12 +28,18 @@ Future<_Session> _mount(
   WidgetTester tester, {
   TargetPlatform platform = TargetPlatform.android,
   HostProtocol protocol = HostProtocol.rdp,
+  bool safeArea = false,
 }) async {
   final session = _Session(protocol: protocol);
   await tester.pumpWidget(
     MaterialApp(
       theme: ThemeData(platform: platform),
-      home: Scaffold(body: DesktopView(session: session)),
+      builder: (context, child) => DesktopKeyboardViewport(child: child!),
+      home: Scaffold(
+        body: safeArea
+            ? SafeArea(child: DesktopView(session: session))
+            : DesktopView(session: session),
+      ),
     ),
   );
   await tester.pump();
@@ -50,6 +58,14 @@ Future<void> _open(WidgetTester tester) async {
 }
 
 void main() {
+  setUp(() {
+    final controller = DesktopKeyboardController();
+    DesktopKeyboardController.debugInstance = controller;
+    addTearDown(() {
+      controller.dispose();
+      DesktopKeyboardController.debugInstance = null;
+    });
+  });
   testWidgets('Android three controls share the same draggable edge dock', (
     tester,
   ) async {
@@ -63,11 +79,18 @@ void main() {
     expect(find.descendant(of: dock, matching: menu), findsOneWidget);
     final keyboard = find.byKey(const ValueKey('desktop_keyboard_toggle'));
     final pointer = find.byKey(const ValueKey('desktop_pointer_mode_toggle'));
-    expect(tester.getCenter(menu).dy, tester.getCenter(keyboard).dy);
-    expect(tester.getCenter(pointer).dy, tester.getCenter(keyboard).dy);
-    await tester.drag(dock, const Offset(-280, 170));
+    expect(tester.getCenter(menu).dx, tester.getCenter(keyboard).dx);
+    expect(tester.getCenter(pointer).dx, tester.getCenter(keyboard).dx);
+    await tester.drag(dock, const Offset(-340, 170));
     await tester.pumpAndSettle();
     expect(tester.getRect(dock).left, 0);
+    expect(tester.getCenter(menu).dx, tester.getCenter(keyboard).dx);
+    // Top/bottom edges use a horizontal strip.
+    await tester.drag(dock, const Offset(190, -360));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(dock).top, 0);
+    expect(tester.getCenter(menu).dy, tester.getCenter(keyboard).dy);
+    expect(tester.getCenter(pointer).dy, tester.getCenter(keyboard).dy);
     await tester.tap(menu);
     await tester.pumpAndSettle();
     expect(find.text('Send Ctrl+Alt+Delete'), findsOneWidget);
@@ -95,6 +118,23 @@ void main() {
         findsNothing,
       );
       expect(tester.testTextInput.hasAnyClients, isFalse);
+    },
+  );
+
+  testWidgets(
+    'trackpad starts with the same visible local and remote pointer position',
+    (tester) async {
+      final session = await _mount(tester);
+      await tester.tap(
+        find.byKey(const ValueKey('desktop_pointer_mode_toggle')),
+      );
+      await tester.pump();
+      expect(session.display.pointer, const Offset(500, 400));
+      expect(session.sent.last, ['mouse', 500, 400, 0]);
+      expect(
+        session.sent.where((p) => p.first == 'mouse' && p.last == 1),
+        isEmpty,
+      );
     },
   );
 
@@ -224,6 +264,103 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  for (final mode in DesktopKeyboardMode.values) {
+    testWidgets('Android $mode keyboard viewport and remote size policy', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await DesktopKeyboardController.instance.select(mode);
+      final session = await _mount(tester);
+      await tester.pump(const Duration(milliseconds: 300));
+      final surface = find.byKey(const ValueKey('desktop_remote_surface'));
+      final original = tester.getSize(surface);
+      session.sent.clear();
+      await _open(tester);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      final requests = session.sent.where((e) => e.first == 'size').toList();
+      if (mode == DesktopKeyboardMode.overlay) {
+        expect(tester.getSize(surface), original);
+        expect(
+          requests,
+          isEmpty,
+          reason: 'IME and special keys must not resize the remote desktop',
+        );
+      } else {
+        expect(tester.getSize(surface).height, original.height - 320 - 96);
+        expect(requests.last, ['size', 390, 428]);
+      }
+      expect(
+        tester
+            .getRect(find.byKey(const ValueKey('desktop_special_keybar')))
+            .bottom,
+        524,
+      );
+      await tester.tap(find.byKey(const ValueKey('desktop_keyboard_toggle')));
+      tester.view.viewInsets = const FakeViewPadding();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(tester.getSize(surface), original);
+      expect(DesktopKeyboardController.instance.overlayActive, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final initialBottom in [0.0, 56.0]) {
+    testWidgets('overlay retains pre-IME safe area (bottom=$initialBottom)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1;
+      if (initialBottom == 0) {
+        final fullscreen = FullscreenController(
+          supported: true,
+          read: () async => true,
+          changes: const Stream.empty(),
+          apply: (v) async => v,
+        )..enabled = true;
+        FullscreenController.debugInstance = fullscreen;
+        addTearDown(() {
+          fullscreen.dispose();
+          FullscreenController.debugInstance = null;
+        });
+      }
+      tester.view.viewPadding = FakeViewPadding(bottom: initialBottom);
+      tester.view.padding = FakeViewPadding(bottom: initialBottom);
+      addTearDown(tester.view.reset);
+      final session = await _mount(tester, safeArea: true);
+      await tester.pump(const Duration(milliseconds: 300));
+      final surface = find.byKey(const ValueKey('desktop_remote_surface'));
+      final before = tester.getSize(surface);
+      session.sent.clear();
+      await _open(tester);
+      tester.view.viewPadding = const FakeViewPadding(bottom: 56);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 356);
+      tester.view.padding = const FakeViewPadding();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(tester.getSize(surface), before);
+      expect(session.sent.where((e) => e.first == 'size'), isEmpty);
+      await tester.tap(find.byKey(const ValueKey('desktop_keyboard_toggle')));
+      // Visibility notification precedes Android's closing IME animation.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(tester.getSize(surface), before);
+      expect(session.sent.where((e) => e.first == 'size'), isEmpty);
+      tester.view.viewInsets = const FakeViewPadding();
+      // IME dismissal can leave the fullscreen navigation bar transiently visible.
+      tester.view.padding = const FakeViewPadding(bottom: 56);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(tester.getSize(surface), before);
+      expect(session.sent.where((e) => e.first == 'size'), isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets(
     'phone keeps arrows visible and wide key labels scroll; each key has one actionable semantics node',
