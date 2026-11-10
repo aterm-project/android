@@ -20,6 +20,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       ATERMIUS_RECOVER_RUN_ID: "42875528747"
       ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build
+      ATERMIUS_RECOVERY_USE_EXISTING_TAG: "true"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:

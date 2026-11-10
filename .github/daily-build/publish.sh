@@ -46,14 +46,22 @@ if [[ "$artifact_run_id" != "$GITHUB_RUN_ID" ]]; then
 fi
 cp "$work/SHA256SUMS" "$dir/SHA256SUMS"
 
+release_target=(--target "$ATERMIUS_SOURCE_SHA")
 if git ls-remote --exit-code origin "refs/tags/$ATERMIUS_RELEASE_TAG" >/dev/null 2>&1; then
-  die "tag $ATERMIUS_RELEASE_TAG already exists; refusing to reuse it"
+  # GITHUB_TOKEN cannot create some tags at historical workflow commits.
+  # Recovery may use an administrator-created tag only at the exact original
+  # source; normal daily jobs still refuse all pre-existing tags.
+  [[ "${ATERMIUS_RECOVERY_USE_EXISTING_TAG:-false}" == true && "$artifact_run_id" != "$GITHUB_RUN_ID" ]] || \
+    die "tag $ATERMIUS_RELEASE_TAG already exists; refusing to reuse it"
+  git fetch --quiet --no-tags origin "refs/tags/$ATERMIUS_RELEASE_TAG"
+  [[ "$(git rev-parse 'FETCH_HEAD^{commit}')" == "$ATERMIUS_SOURCE_SHA" ]] || die "recovery tag points to another source"
+  release_target=(--verify-tag)
 fi
 if gh release view "$ATERMIUS_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
   die "release $ATERMIUS_RELEASE_TAG already exists; refusing to overwrite it"
 fi
 mapfile -t assets < <(find "$dir" -maxdepth 1 -type f -print | LC_ALL=C sort)
-gh release create "$ATERMIUS_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$ATERMIUS_SOURCE_SHA" \
+gh release create "$ATERMIUS_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" "${release_target[@]}" \
   --title "$ATERMIUS_RELEASE_TITLE" --notes-file "$work/notes.md" --prerelease --latest=false "${assets[@]}"
 
 gh release view "$ATERMIUS_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets,url,isDraft,tagName \

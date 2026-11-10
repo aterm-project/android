@@ -108,6 +108,9 @@ actionlint -shellcheck= .github/workflows/*.yml
   `.idsig` is quarantined with its hash recorded; the APK and original evidence stay byte-identical.
   Normal signing explicitly disables the unused v4 sidecar. Recovery has the same concurrency
   group as the daily build and cannot overwrite an existing release.
+  For GitHub's historical-commit tag permission restriction, an administrator may create the
+  original source tag first. Recovery checks its peeled commit against the full artifact source
+  SHA and uses `--verify-tag`; normal daily publication still refuses pre-existing tags.
 * The native engine and Gradle use the same pinned NDK under `ANDROID_HOME/ndk/<revision>`;
   the cache restores that exact SDK package directory. No second private SDK is installed.
   Before restoring tools, the disposable GitHub-hosted Linux runner removes unused .NET,
