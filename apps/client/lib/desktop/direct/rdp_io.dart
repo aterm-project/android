@@ -50,7 +50,10 @@ Future<String> _androidEngineHome() async {
 String get _libraryPath =>
     Platform.environment['ATERMIUS_RDP_LIBRARY'] ??
     (Platform.isWindows
-        ? path.join(path.dirname(Platform.resolvedExecutable), 'atermius_rdp.dll')
+        ? path.join(
+            path.dirname(Platform.resolvedExecutable),
+            'atermius_rdp.dll',
+          )
         : 'libatermius_rdp.so');
 
 RdpFeatures? _features;
@@ -66,8 +69,9 @@ RdpFeatures rdpEngineFeatures() {
         !library.providesSymbol('aterm_rdp_create_ex')) {
       return _features = RdpFeatures.none;
     }
-    final read = library
-        .lookupFunction<Uint32 Function(), int Function()>('aterm_rdp_features');
+    final read = library.lookupFunction<Uint32 Function(), int Function()>(
+      'aterm_rdp_features',
+    );
     return _features = RdpFeatures(read());
   } catch (_) {
     return _features = RdpFeatures.none;
@@ -122,7 +126,9 @@ class RdpConnection implements DirectDesktopConnection {
         );
       } catch (_) {
         if (!connection._closed) {
-          connection._events.addError(StateError(currentL10n.couldntStartTheRdpEngineCheck));
+          connection._events.addError(
+            StateError(currentL10n.couldntStartTheRdpEngineCheck),
+          );
         }
         connection._message(null);
       }
@@ -162,6 +168,23 @@ class RdpConnection implements DirectDesktopConnection {
         );
       case 'clipboard':
         _events.add(DesktopClipboard(message[1] as String));
+      case 'cursor':
+        _events.add(
+          DesktopCursor(
+            DesktopCursorKind.values[message[1] as int],
+            width: message[2] as int,
+            height: message[3] as int,
+            hotX: message[4] as int,
+            hotY: message[5] as int,
+            bgra: (message[6] as TransferableTypedData?)
+                ?.materialize()
+                .asUint8List(),
+          ),
+        );
+      case 'pointerPosition':
+        _events.add(
+          DesktopPointerPosition(message[1] as int, message[2] as int),
+        );
       case 'remoteFiles':
         _events.add(
           DesktopRemoteFiles(
@@ -235,8 +258,10 @@ void _rdpWorker(List<dynamic> args) {
   bool closed = false, framePending = false;
   int revision = -1, clipboardRevision = 0, filesRevision = 0;
   int lastWidth = -1, lastHeight = -1;
+  int cursorRevision = -1, pointerRevision = 0;
   bool canResize = false;
   Pointer<Uint32> info = nullptr, clipRevision = nullptr, eventHeader = nullptr;
+  Pointer<Uint32> pointerInfo = nullptr;
   Pointer<Uint8> clipBuffer = nullptr, eventBuffer = nullptr;
   LocalFileOffer? offer;
   List<ClipboardFileEntry> remoteFiles = const [];
@@ -249,7 +274,7 @@ void _rdpWorker(List<dynamic> args) {
     download?.cancel();
     offer?.close();
     if (handle != nullptr) api!.free(handle);
-    for (final pointer in [info, clipRevision, eventHeader]) {
+    for (final pointer in [info, clipRevision, eventHeader, pointerInfo]) {
       if (pointer != nullptr) calloc.free(pointer);
     }
     for (final pointer in [clipBuffer, eventBuffer]) {
@@ -295,7 +320,13 @@ void _rdpWorker(List<dynamic> args) {
     ].map((value) => (value as String).toNativeUtf8()).toList();
     try {
       handle = config.isEmpty
-          ? api.create(strings[0], args[3] as int, strings[1], strings[2], strings[3])
+          ? api.create(
+              strings[0],
+              args[3] as int,
+              strings[1],
+              strings[2],
+              strings[3],
+            )
           : api.createEx!(
               strings[0],
               args[3] as int,
@@ -314,7 +345,8 @@ void _rdpWorker(List<dynamic> args) {
       }
       args.fillRange(2, args.length, '');
     }
-    if (handle == nullptr) throw StateError(currentL10n.theRdpConfigurationIsInvalidOr);
+    if (handle == nullptr)
+      throw StateError(currentL10n.theRdpConfigurationIsInvalidOr);
     if (api.connect(handle) != 1) {
       final fingerprint = calloc<Uint8>(65);
       try {
@@ -330,18 +362,26 @@ void _rdpWorker(List<dynamic> args) {
       throw StateError(
         code == 0x20008
             ? currentL10n.rdpTlsHandshakeFailed20008No
-            : currentL10n.rdpConnectionFailedToradixstringCheckThe(code.toRadixString(16)),
+            : currentL10n.rdpConnectionFailedToradixstringCheckThe(
+                code.toRadixString(16),
+              ),
       );
     }
     info = calloc<Uint32>(8);
+    pointerInfo = calloc<Uint32>(9);
     clipRevision = calloc<Uint32>();
     clipBuffer = calloc<Uint8>(131074);
     eventHeader = calloc<Uint32>(6);
     eventBuffer = calloc<Uint8>(_eventBufferBytes);
     output.send(['ready']);
 
-    void transfer(int done, int total, int bytes, [List<String>? saved, String? error]) =>
-        output.send(['transfer', done, total, bytes, saved, error]);
+    void transfer(
+      int done,
+      int total,
+      int bytes, [
+      List<String>? saved,
+      String? error,
+    ]) => output.send(['transfer', done, total, bytes, saved, error]);
 
     commands.listen((dynamic value) {
       if (closed) return;
@@ -372,12 +412,16 @@ void _rdpWorker(List<dynamic> args) {
             command[3] as int,
           );
         case 'size':
-          final ok = api!.resize(handle, command[1] as int, command[2] as int) == 1;
+          final ok =
+              api!.resize(handle, command[1] as int, command[2] as int) == 1;
           if (command.length > 3 && command[3] == true) {
             output.send([
               'resizeStatus',
               canResize,
-              (ok ? DesktopResizeResult.applied : DesktopResizeResult.unsupported).name,
+              (ok
+                      ? DesktopResizeResult.applied
+                      : DesktopResizeResult.unsupported)
+                  .name,
             ]);
           }
         case 'paste':
@@ -386,7 +430,10 @@ void _rdpWorker(List<dynamic> args) {
           try {
             bytes.asTypedList(units.length).setAll(0, units);
             if (api!.paste(handle, bytes.cast(), units.length * 2) != 1) {
-              output.send(['notice', currentL10n.theTargetRdpSessionDoesntHave2]);
+              output.send([
+                'notice',
+                currentL10n.theTargetRdpSessionDoesntHave2,
+              ]);
             }
           } finally {
             bytes.asTypedList(units.length).fillRange(0, units.length, 0);
@@ -395,7 +442,10 @@ void _rdpWorker(List<dynamic> args) {
         case 'offerFiles':
           final offerFiles = api!.offerFiles;
           if (offerFiles == null) {
-            output.send(['notice', currentL10n.theCurrentRdpEngineDoesntSupport]);
+            output.send([
+              'notice',
+              currentL10n.theCurrentRdpEngineDoesntSupport,
+            ]);
             return;
           }
           try {
@@ -405,21 +455,34 @@ void _rdpWorker(List<dynamic> args) {
             var accepted = false;
             withBytes(next.encode(), (list) {
               accepted =
-                  offerFiles(handle, list, next.entries.length * fileDescriptorSize + 4) == 1;
+                  offerFiles(
+                    handle,
+                    list,
+                    next.entries.length * fileDescriptorSize + 4,
+                  ) ==
+                  1;
             });
             if (!accepted) {
               next.close();
-              output.send(['notice', currentL10n.theTargetRdpSessionDoesntHave]);
+              output.send([
+                'notice',
+                currentL10n.theTargetRdpSessionDoesntHave,
+              ]);
               return;
             }
             offer?.close();
             offer = next;
             output.send([
               'notice',
-              currentL10n.placedCountFilesOnTheRemote(next.entries.where((e) => !e.isDirectory).length),
+              currentL10n.placedCountFilesOnTheRemote(
+                next.entries.where((e) => !e.isDirectory).length,
+              ),
             ]);
           } on FormatException catch (e) {
-            output.send(['notice', currentL10n.couldntSendFilesMessage(e.message)]);
+            output.send([
+              'notice',
+              currentL10n.couldntSendFilesMessage(e.message),
+            ]);
           } on FileSystemException {
             output.send(['notice', currentL10n.couldntReadTheSelectedFiles]);
           }
@@ -471,7 +534,12 @@ void _rdpWorker(List<dynamic> args) {
       final next = api!.nextEvent;
       if (next == null) return;
       for (var i = 0; i < 256; i++) {
-        final length = next(handle, eventHeader, eventBuffer, _eventBufferBytes);
+        final length = next(
+          handle,
+          eventHeader,
+          eventBuffer,
+          _eventBufferBytes,
+        );
         if (length < 0) return;
         if (length > _eventBufferBytes) {
           throw StateError('RDP event too large');
@@ -513,7 +581,9 @@ void _rdpWorker(List<dynamic> args) {
         try {
           read(handle, buffer, length, clipRevision);
           if (clipRevision.value == filesRevision) {
-            entries = decodeFileList(Uint8List.fromList(buffer.asTypedList(length)));
+            entries = decodeFileList(
+              Uint8List.fromList(buffer.asTypedList(length)),
+            );
           }
         } on FormatException {
           output.send(['notice', currentL10n.anUnsafeFileNameOnThe]);
@@ -537,6 +607,42 @@ void _rdpWorker(List<dynamic> args) {
           return;
         }
         drainEvents();
+        final readPointer = api.pointer;
+        if (readPointer != null) {
+          final pixels = readPointer(handle, pointerInfo);
+          if (pointerInfo[0] != cursorRevision) {
+            cursorRevision = pointerInfo[0];
+            final kind = pointerInfo[1], w = pointerInfo[2], h = pointerInfo[3];
+            if (kind > 2 ||
+                (kind == 2 &&
+                    (pixels == nullptr ||
+                        w < 1 ||
+                        h < 1 ||
+                        w > 512 ||
+                        h > 512 ||
+                        pointerInfo[4] >= w ||
+                        pointerInfo[5] >= h))) {
+              throw const FormatException('Invalid RDP pointer shape');
+            }
+            output.send([
+              'cursor',
+              kind,
+              w,
+              h,
+              pointerInfo[4],
+              pointerInfo[5],
+              kind == 2
+                  ? TransferableTypedData.fromList([
+                      Uint8List.fromList(pixels.asTypedList(w * h * 4)),
+                    ])
+                  : null,
+            ]);
+          }
+          if (pointerInfo[6] != pointerRevision) {
+            pointerRevision = pointerInfo[6];
+            output.send(['pointerPosition', pointerInfo[7], pointerInfo[8]]);
+          }
+        }
         final resizable = api.canResize?.call(handle) == 1;
         if (resizable != canResize) {
           canResize = resizable;
@@ -678,52 +784,65 @@ int? rdpScancode(int keysym) {
   return null;
 }
 
-typedef _CreateNative =
-    Pointer<Void> Function(
-      Pointer<Utf8>,
-      Int32,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-    );
-typedef _Create =
-    Pointer<Void> Function(
-      Pointer<Utf8>,
-      int,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-    );
-typedef _CreateExNative =
-    Pointer<Void> Function(
-      Pointer<Utf8>,
-      Int32,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-    );
-typedef _CreateEx =
-    Pointer<Void> Function(
-      Pointer<Utf8>,
-      int,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-      Pointer<Utf8>,
-    );
+typedef _CreateNative = Pointer<Void> Function(
+  Pointer<Utf8>,
+  Int32,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+);
+typedef _Create = Pointer<Void> Function(
+  Pointer<Utf8>,
+  int,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+);
+typedef _CreateExNative = Pointer<Void> Function(
+  Pointer<Utf8>,
+  Int32,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+);
+typedef _CreateEx = Pointer<Void> Function(
+  Pointer<Utf8>,
+  int,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+);
 typedef _Buffer = int Function(Pointer<Void>, Pointer<Uint8>, int);
 typedef _BufferNative = Int32 Function(Pointer<Void>, Pointer<Uint8>, Uint32);
-typedef _Revisioned =
-    int Function(Pointer<Void>, Pointer<Uint8>, int, Pointer<Uint32>);
-typedef _RevisionedNative =
-    Uint32 Function(Pointer<Void>, Pointer<Uint8>, Uint32, Pointer<Uint32>);
+typedef _Revisioned = int Function(
+  Pointer<Void>,
+  Pointer<Uint8>,
+  int,
+  Pointer<Uint32>,
+);
+typedef _RevisionedNative = Uint32 Function(
+  Pointer<Void>,
+  Pointer<Uint8>,
+  Uint32,
+  Pointer<Uint32>,
+);
 typedef _Frame = Pointer<Uint8> Function(Pointer<Void>, Pointer<Uint32>);
-typedef _FileResponse =
-    int Function(Pointer<Void>, int, int, Pointer<Uint8>, int);
+typedef _FileResponse = int Function(
+  Pointer<Void>,
+  int,
+  int,
+  Pointer<Uint8>,
+  int,
+);
 typedef _RequestFile = int Function(Pointer<Void>, int, int, int, int, int);
-typedef _NextEvent =
-    int Function(Pointer<Void>, Pointer<Uint32>, Pointer<Uint8>, int);
+typedef _NextEvent = int Function(
+  Pointer<Void>,
+  Pointer<Uint32>,
+  Pointer<Uint8>,
+  int,
+);
 
 class _RdpNative {
   _RdpNative(DynamicLibrary library)
@@ -759,11 +878,16 @@ class _RdpNative {
             _Frame
           >('aterm_rdp_frame'),
       frameEx = library.providesSymbol('aterm_rdp_frame_ex')
-          ? library
-                .lookupFunction<
-                  Pointer<Uint8> Function(Pointer<Void>, Pointer<Uint32>),
-                  _Frame
-                >('aterm_rdp_frame_ex')
+          ? library.lookupFunction<
+              Pointer<Uint8> Function(Pointer<Void>, Pointer<Uint32>),
+              _Frame
+            >('aterm_rdp_frame_ex')
+          : null,
+      pointer = library.providesSymbol('aterm_rdp_pointer')
+          ? library.lookupFunction<
+              Pointer<Uint8> Function(Pointer<Void>, Pointer<Uint32>),
+              _Frame
+            >('aterm_rdp_pointer')
           : null,
       key = library
           .lookupFunction<
@@ -790,17 +914,16 @@ class _RdpNative {
             )
           : null,
       fileResponse = library.providesSymbol('aterm_rdp_file_response')
-          ? library
-                .lookupFunction<
-                  Int32 Function(
-                    Pointer<Void>,
-                    Uint32,
-                    Int32,
-                    Pointer<Uint8>,
-                    Uint32,
-                  ),
-                  _FileResponse
-                >('aterm_rdp_file_response')
+          ? library.lookupFunction<
+              Int32 Function(
+                Pointer<Void>,
+                Uint32,
+                Int32,
+                Pointer<Uint8>,
+                Uint32,
+              ),
+              _FileResponse
+            >('aterm_rdp_file_response')
           : null,
       remoteFiles = library.providesSymbol('aterm_rdp_remote_files')
           ? library.lookupFunction<_RevisionedNative, _Revisioned>(
@@ -808,44 +931,40 @@ class _RdpNative {
             )
           : null,
       requestFile = library.providesSymbol('aterm_rdp_request_file')
-          ? library
-                .lookupFunction<
-                  Int32 Function(
-                    Pointer<Void>,
-                    Uint32,
-                    Uint32,
-                    Uint32,
-                    Uint64,
-                    Uint32,
-                  ),
-                  _RequestFile
-                >('aterm_rdp_request_file')
+          ? library.lookupFunction<
+              Int32 Function(
+                Pointer<Void>,
+                Uint32,
+                Uint32,
+                Uint32,
+                Uint64,
+                Uint32,
+              ),
+              _RequestFile
+            >('aterm_rdp_request_file')
           : null,
       canResize = library.providesSymbol('aterm_rdp_can_resize')
-          ? library
-                .lookupFunction<
-                  Int32 Function(Pointer<Void>),
-                  int Function(Pointer<Void>)
-                >('aterm_rdp_can_resize')
+          ? library.lookupFunction<
+              Int32 Function(Pointer<Void>),
+              int Function(Pointer<Void>)
+            >('aterm_rdp_can_resize')
           : null,
       nextEvent = library.providesSymbol('aterm_rdp_next_event')
-          ? library
-                .lookupFunction<
-                  Int32 Function(
-                    Pointer<Void>,
-                    Pointer<Uint32>,
-                    Pointer<Uint8>,
-                    Uint32,
-                  ),
-                  _NextEvent
-                >('aterm_rdp_next_event')
+          ? library.lookupFunction<
+              Int32 Function(
+                Pointer<Void>,
+                Pointer<Uint32>,
+                Pointer<Uint8>,
+                Uint32,
+              ),
+              _NextEvent
+            >('aterm_rdp_next_event')
           : null,
       setHome = library.providesSymbol('aterm_rdp_set_home')
-          ? library
-                .lookupFunction<
-                  Int32 Function(Pointer<Utf8>),
-                  int Function(Pointer<Utf8>)
-                >('aterm_rdp_set_home')
+          ? library.lookupFunction<
+              Int32 Function(Pointer<Utf8>),
+              int Function(Pointer<Utf8>)
+            >('aterm_rdp_set_home')
           : null,
       free = library
           .lookupFunction<
@@ -858,6 +977,7 @@ class _RdpNative {
   final _Buffer rejectedCertificate, paste;
   final _Frame frame;
   final _Frame? frameEx;
+  final _Frame? pointer;
   final int Function(Pointer<Void>, int, int, int) key, mouse;
   final int Function(Pointer<Void>, int, int) resize;
   final _Revisioned clipboard;

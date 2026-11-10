@@ -72,6 +72,28 @@ class DesktopClipboard extends DesktopEvent {
 
 class DesktopReady extends DesktopEvent {}
 
+enum DesktopCursorKind { defaultArrow, hidden, image }
+
+/// Shape and hotspot are supplied by RDP/RFB; position follows local input.
+class DesktopCursor extends DesktopEvent {
+  DesktopCursor(
+    this.kind, {
+    this.width = 0,
+    this.height = 0,
+    this.hotX = 0,
+    this.hotY = 0,
+    this.bgra,
+  });
+  final DesktopCursorKind kind;
+  final int width, height, hotX, hotY;
+  final Uint8List? bgra;
+}
+
+class DesktopPointerPosition extends DesktopEvent {
+  DesktopPointerPosition(this.x, this.y);
+  final int x, y;
+}
+
 class DesktopNotice extends DesktopEvent {
   DesktopNotice(this.text);
   final String text;

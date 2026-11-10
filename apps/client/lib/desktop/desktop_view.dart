@@ -3,6 +3,7 @@ import '../ui/fullscreen_menu.dart';
 import '../platform/fullscreen.dart';
 import '../domain/models.dart';
 import 'desktop_mobile_controls.dart';
+import 'desktop_keyboard_mode.dart';
 import 'desktop_touch_input.dart';
 import '../ui/app_motion.dart';
 
@@ -51,6 +52,7 @@ class DesktopView extends StatefulWidget {
 class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
   final _mobile = GlobalKey<DesktopMobileControlsState>();
   bool _keyboardOpen = false;
+  bool _pointerInside = false;
   late final DesktopTouchInput _touch;
   bool get _mobilePlatform =>
       Theme.of(context).platform == TargetPlatform.android;
@@ -66,6 +68,11 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
       _touch.reset();
       _release();
     }
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (mounted && _mobilePlatform) setState(() {});
   }
 
   final _focus = FocusNode();
@@ -299,6 +306,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
     if (!identical(oldWidget.session, session)) {
       _mobile.currentState?.releaseInput(notify: false);
       _keyboardOpen = false;
+      DesktopKeyboardController.instance.keyboardVisible(this, false);
       _release(oldWidget.session);
       oldWidget.session.removeListener(_certificateChanged);
       _removeCertificateDialog();
@@ -325,6 +333,11 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
 
   void _focusChanged() {
     if (!_focus.hasFocus) {
+      DesktopKeyboardController.instance.keyboardVisible(
+        this,
+        false,
+        focus: _focus,
+      );
       _touch.reset();
       _release();
     }
@@ -347,6 +360,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    DesktopKeyboardController.instance.keyboardVisible(this, false);
     session.removeListener(_certificateChanged);
     _removeCertificateDialog();
     if (session.onNotice == _showNotice) session.onNotice = null;
@@ -591,293 +605,329 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, pane) {
-      final keybarHeight = _mobilePlatform && _keyboardOpen
-          ? (pane.maxHeight >= 280 ? 96.0 : 48.0)
-          : 0.0;
       return AnimatedBuilder(
         animation: Listenable.merge([
           session,
           session.display,
           FullscreenController.instance,
+          DesktopKeyboardController.instance,
         ]),
-        builder: (context, _) => Stack(
-          children: [
-            Positioned.fill(
-              bottom: keybarHeight,
-              child: LayoutBuilder(
-                key: const ValueKey('desktop_remote_surface'),
-                builder: (context, constraints) {
-                  final area = constraints.biggest;
-                  _resize(area);
-                  final viewport = widget.viewport;
-                  final origin = viewport?.topLeft ?? Offset.zero;
-                  final size = viewport?.size ?? session.display.size;
-                  final actual =
-                      viewport == null &&
-                      session.localScaling == DesktopLocalScaling.actualSize;
-                  final double scale = actual
-                      ? 1.0
-                      : math.min(
-                          area.width / math.max(1, size.width),
-                          area.height / math.max(1, size.height),
+        builder: (context, _) {
+          final overlay =
+              _mobilePlatform &&
+              DesktopKeyboardController.instance.mode ==
+                  DesktopKeyboardMode.overlay;
+          final view = View.of(context);
+          final box = context.findRenderObject() as RenderBox?;
+          final top = box != null && box.hasSize
+              ? box.localToGlobal(Offset.zero).dy
+              : 0.0;
+          final keyboardTop =
+              (view.physicalSize.height - view.viewInsets.bottom) /
+              view.devicePixelRatio;
+          final overlap = overlay && _keyboardOpen
+              ? (top + pane.maxHeight - keyboardTop).clamp(0.0, pane.maxHeight)
+              : 0.0;
+          final visibleHeight = math.max(0.0, pane.maxHeight - overlap);
+          final keybarHeight = _mobilePlatform && _keyboardOpen
+              ? (visibleHeight >= 280 ? 96.0 : 48.0)
+              : 0.0;
+          return Stack(
+            children: [
+              Positioned.fill(
+                bottom: overlay ? 0 : keybarHeight,
+                child: LayoutBuilder(
+                  key: const ValueKey('desktop_remote_surface'),
+                  builder: (context, constraints) {
+                    final area = constraints.biggest;
+                    _resize(area);
+                    final viewport = widget.viewport;
+                    final origin = viewport?.topLeft ?? Offset.zero;
+                    final size = viewport?.size ?? session.display.size;
+                    final actual =
+                        viewport == null &&
+                        session.localScaling == DesktopLocalScaling.actualSize;
+                    final double scale = actual
+                        ? 1.0
+                        : math.min(
+                            area.width / math.max(1, size.width),
+                            area.height / math.max(1, size.height),
+                          );
+                    final maxPan = Offset(
+                      math.max(0, size.width - area.width),
+                      math.max(0, size.height - area.height),
+                    );
+                    _pan = actual
+                        ? Offset(
+                            _pan.dx.clamp(0, maxPan.dx),
+                            _pan.dy.clamp(0, maxPan.dy),
+                          )
+                        : Offset.zero;
+                    final offset = actual
+                        ? Offset(
+                            maxPan.dx > 0
+                                ? -_pan.dx
+                                : (area.width - size.width) / 2,
+                            maxPan.dy > 0
+                                ? -_pan.dy
+                                : (area.height - size.height) / 2,
+                          )
+                        : Offset(
+                            (area.width - size.width * scale) / 2,
+                            (area.height - size.height * scale) / 2,
+                          );
+                    void mouse(PointerEvent event, {int? wheel}) {
+                      if (_mobilePlatform &&
+                          _touch.trackpad &&
+                          event.kind == PointerDeviceKind.touch) {
+                        if (event is PointerDownEvent) _focusAfterActivation();
+                        _touch.handle(
+                          event,
+                          bounds: origin & size,
+                          scale: scale,
                         );
-                  final maxPan = Offset(
-                    math.max(0, size.width - area.width),
-                    math.max(0, size.height - area.height),
-                  );
-                  _pan = actual
-                      ? Offset(
-                          _pan.dx.clamp(0, maxPan.dx),
-                          _pan.dy.clamp(0, maxPan.dy),
-                        )
-                      : Offset.zero;
-                  final offset = actual
-                      ? Offset(
-                          maxPan.dx > 0
-                              ? -_pan.dx
-                              : (area.width - size.width) / 2,
-                          maxPan.dy > 0
-                              ? -_pan.dy
-                              : (area.height - size.height) / 2,
-                        )
-                      : Offset(
-                          (area.width - size.width * scale) / 2,
-                          (area.height - size.height * scale) / 2,
-                        );
-                  void mouse(PointerEvent event, {int? wheel}) {
-                    if (_mobilePlatform &&
-                        _touch.trackpad &&
-                        event.kind == PointerDeviceKind.touch) {
+                        return;
+                      }
+                      final point =
+                          origin +
+                          Offset(
+                            ((event.localPosition.dx - offset.dx) / scale)
+                                .clamp(0, math.max(0, size.width - 1)),
+                            ((event.localPosition.dy - offset.dy) / scale)
+                                .clamp(0, math.max(0, size.height - 1)),
+                          );
                       if (event is PointerDownEvent) _focusAfterActivation();
-                      _touch.handle(event, bounds: origin & size, scale: scale);
-                      return;
-                    }
-                    final point =
-                        origin +
-                        Offset(
-                          ((event.localPosition.dx - offset.dx) / scale).clamp(
-                            0,
-                            math.max(0, size.width - 1),
-                          ),
-                          ((event.localPosition.dy - offset.dy) / scale).clamp(
-                            0,
-                            math.max(0, size.height - 1),
-                          ),
-                        );
-                    if (event is PointerDownEvent) _focusAfterActivation();
-                    _buttons =
-                        (event.buttons & kPrimaryButton != 0 ? 1 : 0) |
-                        (event.buttons & kSecondaryButton != 0 ? 4 : 0) |
-                        (event.buttons & kMiddleMouseButton != 0 ? 2 : 0);
-                    session.display.movePointer(point);
-                    session.send([
-                      'mouse',
-                      point.dx.round(),
-                      point.dy.round(),
-                      _buttons | (wheel ?? 0),
-                    ]);
-                    if (wheel != null)
+                      _buttons =
+                          (event.buttons & kPrimaryButton != 0 ? 1 : 0) |
+                          (event.buttons & kSecondaryButton != 0 ? 4 : 0) |
+                          (event.buttons & kMiddleMouseButton != 0 ? 2 : 0);
+                      session.display.movePointer(point);
                       session.send([
                         'mouse',
                         point.dx.round(),
                         point.dy.round(),
-                        _buttons,
+                        _buttons | (wheel ?? 0),
                       ]);
-                  }
+                      if (wheel != null)
+                        session.send([
+                          'mouse',
+                          point.dx.round(),
+                          point.dy.round(),
+                          _buttons,
+                        ]);
+                    }
 
-                  final limit = actual ? maxPan : Offset.zero;
-                  if (limit != _panLimit || area != _panArea) {
-                    // Pan bars live outside this LayoutBuilder; refresh them once
-                    // layout has produced the new bounds.
-                    _panLimit = limit;
-                    _panArea = area;
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) setState(() {});
-                    });
-                  }
-                  return Focus(
-                    focusNode: _focus,
-                    autofocus: true,
-                    onKeyEvent: _key,
-                    child: MouseRegion(
-                      cursor: session.isDirect
-                          ? SystemMouseCursors.basic
-                          : SystemMouseCursors.none,
-                      child: Listener(
-                        onPointerDown: mouse,
-                        onPointerUp: mouse,
-                        onPointerMove: mouse,
-                        onPointerHover: mouse,
-                        onPointerCancel: (_) {
-                          _touch.reset();
-                          _release();
-                        },
-                        onPointerSignal: (e) {
-                          if (e is PointerScrollEvent) {
-                            GestureBinding.instance.pointerSignalResolver
-                                .register(
-                                  e,
-                                  (_) => mouse(
+                    final limit = actual ? maxPan : Offset.zero;
+                    if (limit != _panLimit || area != _panArea) {
+                      // Pan bars live outside this LayoutBuilder; refresh them once
+                      // layout has produced the new bounds.
+                      _panLimit = limit;
+                      _panArea = area;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) setState(() {});
+                      });
+                    }
+                    return Focus(
+                      focusNode: _focus,
+                      autofocus: true,
+                      onKeyEvent: _key,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.none,
+                        onEnter: (_) => setState(() => _pointerInside = true),
+                        onExit: (_) => setState(() => _pointerInside = false),
+                        child: Listener(
+                          onPointerDown: mouse,
+                          onPointerUp: mouse,
+                          onPointerMove: mouse,
+                          onPointerHover: mouse,
+                          onPointerCancel: (_) {
+                            _touch.reset();
+                            _release();
+                          },
+                          onPointerSignal: (e) {
+                            if (e is PointerScrollEvent) {
+                              GestureBinding.instance.pointerSignalResolver
+                                  .register(
                                     e,
-                                    wheel: e.scrollDelta.dy < 0 ? 8 : 16,
-                                  ),
-                                );
-                          }
-                        },
-                        child: ClipRect(
-                          child: CustomPaint(
-                            size: area,
-                            painter: _DesktopPainter(
-                              session.display,
-                              scale,
-                              offset - origin * scale,
-                              clip: viewport == null
-                                  ? null
-                                  : offset & (size * scale),
+                                    (_) => mouse(
+                                      e,
+                                      wheel: e.scrollDelta.dy < 0 ? 8 : 16,
+                                    ),
+                                  );
+                            }
+                          },
+                          child: ClipRect(
+                            child: CustomPaint(
+                              size: area,
+                              painter: _DesktopPainter(
+                                session.display,
+                                scale,
+                                offset - origin * scale,
+                                showCursor: _touch.trackpad || _pointerInside,
+                                clip: viewport == null
+                                    ? null
+                                    : offset & (size * scale),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-            _panBar(Axis.horizontal, bottomInset: keybarHeight),
-            _panBar(Axis.vertical),
-            if (session.error != null && session.certificateRequest == null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          context.l10n.connectionLost,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          session.error!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+              _panBar(Axis.horizontal, bottomInset: keybarHeight),
+              _panBar(Axis.vertical),
+              if (session.error != null && session.certificateRequest == null)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            context.l10n.connectionLost,
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                        if (session.state == 'disconnected' &&
-                            session.canReconnect) ...[
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            key: const ValueKey('desktop_restore_connection'),
-                            onPressed: session.reconnect,
-                            icon: const Icon(Icons.refresh),
-                            label: Text(context.l10n.restoreConnection),
+                          const SizedBox(height: 8),
+                          Text(
+                            session.error!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                          if (session.state == 'disconnected' &&
+                              session.canReconnect) ...[
+                            const SizedBox(height: 12),
+                            FilledButton.icon(
+                              key: const ValueKey('desktop_restore_connection'),
+                              onPressed: session.reconnect,
+                              icon: const Icon(Icons.refresh),
+                              label: Text(context.l10n.restoreConnection),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              if (session.state == 'connecting')
+                const Center(child: CircularProgressIndicator()),
+              if (session.transfer != null)
+                Positioned(
+                  left: 12,
+                  right: 56,
+                  top: 8,
+                  child: Material(
+                    key: const ValueKey('rdp_file_transfer'),
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  context.l10n.savingRemoteFilesDoneTotal(
+                                    session.transfer!.done,
+                                    session.transfer!.total,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                LinearProgressIndicator(
+                                  value: session.transfer!.total == 0
+                                      ? null
+                                      : session.transfer!.done /
+                                            session.transfer!.total,
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: context.l10n.cancel,
+                            icon: const Icon(Icons.close),
+                            onPressed: session.cancelFileTransfer,
                           ),
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            if (session.state == 'connecting')
-              const Center(child: CircularProgressIndicator()),
-            if (session.transfer != null)
-              Positioned(
-                left: 12,
-                right: 56,
-                top: 8,
-                child: Material(
-                  key: const ValueKey('rdp_file_transfer'),
-                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(10),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                context.l10n.savingRemoteFilesDoneTotal(
-                                  session.transfer!.done,
-                                  session.transfer!.total,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              LinearProgressIndicator(
-                                value: session.transfer!.total == 0
-                                    ? null
-                                    : session.transfer!.done /
-                                          session.transfer!.total,
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: context.l10n.cancel,
-                          icon: const Icon(Icons.close),
-                          onPressed: session.cancelFileTransfer,
-                        ),
-                      ],
-                    ),
+              if (_mobilePlatform)
+                Positioned.fill(
+                  bottom: overlap,
+                  child: DesktopMobileControls(
+                    key: _mobile,
+                    focus: _focus,
+                    unicodeText: session.protocol != HostProtocol.vnc,
+                    onActivate: _focusAfterActivation,
+                    send: session.send,
+                    connected: session.state == 'connected',
+                    trackpad: _touch.trackpad,
+                    keybarHeight: keybarHeight,
+                    menu: widget.embeddedMenu ? menuButton() : null,
+                    onKeyboardChanged: (value) {
+                      DesktopKeyboardController.instance.keyboardVisible(
+                        this,
+                        value,
+                        focus: _focus,
+                      );
+                      if (mounted && _keyboardOpen != value)
+                        setState(() => _keyboardOpen = value);
+                    },
+                    onTogglePointer: () {
+                      _focusAfterActivation();
+                      _touch.reset();
+                      _release();
+                      setState(() => _touch.trackpad = !_touch.trackpad);
+                      if (_touch.trackpad &&
+                          session.display.pointer == Offset.zero) {
+                        _sendMouse(session.display.size.center(Offset.zero), 0);
+                      }
+                    },
                   ),
                 ),
-              ),
-            if (_mobilePlatform)
-              Positioned.fill(
-                child: DesktopMobileControls(
-                  key: _mobile,
-                  focus: _focus,
-                  unicodeText: session.protocol != HostProtocol.vnc,
-                  onActivate: _focusAfterActivation,
-                  send: session.send,
-                  connected: session.state == 'connected',
-                  trackpad: _touch.trackpad,
-                  keybarHeight: keybarHeight,
-                  menu: widget.embeddedMenu ? menuButton() : null,
-                  onKeyboardChanged: (value) {
-                    if (mounted && _keyboardOpen != value)
-                      setState(() => _keyboardOpen = value);
-                  },
-                  onTogglePointer: () {
-                    _focusAfterActivation();
-                    _touch.reset();
-                    _release();
-                    setState(() => _touch.trackpad = !_touch.trackpad);
-                  },
+              if (widget.embeddedMenu && !_mobilePlatform)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  // A translucent backing keeps the control visible over any remote
+                  // content (light or dark desktops).
+                  child: Material(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh
+                        .withValues(alpha: 0.78),
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: menuButton(),
+                  ),
                 ),
-              ),
-            if (widget.embeddedMenu && !_mobilePlatform)
-              Positioned(
-                top: 4,
-                right: 4,
-                // A translucent backing keeps the control visible over any remote
-                // content (light or dark desktops).
-                child: Material(
-                  color: Theme.of(context).colorScheme.surfaceContainerHigh
-                      .withValues(alpha: 0.78),
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: menuButton(),
-                ),
-              ),
-          ],
-        ),
+            ],
+          );
+        },
       );
     },
   );
 }
 
 class _DesktopPainter extends CustomPainter {
-  _DesktopPainter(this.display, this.scale, this.offset, {this.clip})
-    : super(repaint: display);
+  _DesktopPainter(
+    this.display,
+    this.scale,
+    this.offset, {
+    this.clip,
+    required this.showCursor,
+  }) : super(repaint: display);
   final DesktopDisplay display;
   final double scale;
   final Offset offset;
   final Rect? clip;
+  final bool showCursor;
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawColor(Colors.black, BlendMode.src);
@@ -885,8 +935,14 @@ class _DesktopPainter extends CustomPainter {
     if (clip != null) canvas.clipRect(clip!);
     canvas.translate(offset.dx, offset.dy);
     canvas.scale(scale);
-    display.paint(canvas);
+    display.paint(canvas, includeCursor: false);
     canvas.restore();
+    if (showCursor) {
+      canvas.save();
+      if (clip != null) canvas.clipRect(clip!);
+      display.paintPointer(canvas, offset + display.pointer * scale);
+      canvas.restore();
+    }
   }
 
   @override
@@ -894,6 +950,7 @@ class _DesktopPainter extends CustomPainter {
       old.scale != scale ||
       old.offset != offset ||
       old.clip != clip ||
+      old.showCursor != showCursor ||
       old.display != display;
 }
 

@@ -16485,4 +16485,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reconnectEveryFiveSeconds => '每 5 秒自动重连';
+
+  @override
+  String get desktopKeyboardModeTitle => '远程桌面键盘模式';
+
+  @override
+  String get desktopKeyboardOverlay => '悬浮叠加（保持分辨率）';
+
+  @override
+  String get desktopKeyboardResize => '跟随键盘调整';
+
+  @override
+  String get desktopKeyboardOverlayDescription =>
+      '键盘和特殊键栏叠加在桌面上，不改变远端分辨率或画面缩放。';
+
+  @override
+  String get desktopKeyboardResizeDescription =>
+      '桌面缩小至键盘上方的可见区域；跟随窗口大小的会话也会调整远端分辨率。';
+
+  @override
+  String get desktopKeyboardSaveFailed => '当前选择已生效，但未能保存，请重试。';
 }

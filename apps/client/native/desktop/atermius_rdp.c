@@ -11,6 +11,8 @@
 #include <freerdp/addin.h>
 #include <freerdp/client/channels.h>
 #include <freerdp/gdi/gdi.h>
+#include <freerdp/graphics.h>
+#include <freerdp/codec/color.h>
 #include <freerdp/input.h>
 #include <freerdp/client/cmdline.h>
 #include <freerdp/client/disp.h>
@@ -158,7 +160,75 @@ typedef struct {
   UINT32 event_bytes, event_count;
   INT32 dirty_x0, dirty_y0, dirty_x1, dirty_y1;
   UINT32 scale;
+  BYTE* cursor_pixels;
+  UINT32 cursor_revision, cursor_kind, cursor_width, cursor_height;
+  UINT32 cursor_hot_x, cursor_hot_y, pointer_revision, pointer_x, pointer_y;
 } AtermContext;
+
+// FreeRDP owns the pointer cache. Keep its decoded shape separate from the
+// framebuffer: the client renders it at the latest local mouse position.
+typedef struct { rdpPointer pointer; BYTE* pixels; } AtermPointer;
+static BOOL pointer_new(rdpContext* context, rdpPointer* pointer) {
+  AtermPointer* p = (AtermPointer*)pointer;
+  if (!pointer->width || !pointer->height || pointer->width > 512 ||
+      pointer->height > 512 || pointer->xPos >= pointer->width ||
+      pointer->yPos >= pointer->height) return FALSE;
+  p->pixels = calloc((size_t)pointer->width * pointer->height, 4);
+  if (!p->pixels) return FALSE;
+  if (!freerdp_image_copy_from_pointer_data(p->pixels, PIXEL_FORMAT_BGRA32, 0, 0, 0,
+      pointer->width, pointer->height, pointer->xorMaskData, pointer->lengthXorMask,
+      pointer->andMaskData, pointer->lengthAndMask, pointer->xorBpp,
+      context->gdi ? &context->gdi->palette : NULL)) {
+    free(p->pixels); p->pixels = NULL; return FALSE;
+  }
+  return TRUE;
+}
+static void pointer_free(rdpContext* context, rdpPointer* pointer) {
+  (void)context;
+  free(((AtermPointer*)pointer)->pixels);
+  ((AtermPointer*)pointer)->pixels = NULL;
+}
+static BOOL pointer_set(rdpContext* context, rdpPointer* pointer) {
+  AtermContext* c = (AtermContext*)context;
+  AtermPointer* p = (AtermPointer*)pointer;
+  if (!p->pixels) return FALSE;
+  size_t length = (size_t)pointer->width * pointer->height * 4;
+  BYTE* copy = malloc(length);
+  if (!copy) return FALSE;
+  memcpy(copy, p->pixels, length);
+  EnterCriticalSection(&c->lock);
+  free(c->cursor_pixels); c->cursor_pixels = copy;
+  c->cursor_width = pointer->width; c->cursor_height = pointer->height;
+  c->cursor_hot_x = pointer->xPos; c->cursor_hot_y = pointer->yPos;
+  c->cursor_kind = 2; c->cursor_revision++;
+  LeaveCriticalSection(&c->lock);
+  return TRUE;
+}
+static BOOL pointer_system(rdpContext* context, UINT32 kind) {
+  AtermContext* c = (AtermContext*)context;
+  EnterCriticalSection(&c->lock);
+  free(c->cursor_pixels); c->cursor_pixels = NULL;
+  c->cursor_kind = kind; c->cursor_revision++;
+  LeaveCriticalSection(&c->lock);
+  return TRUE;
+}
+static BOOL pointer_null(rdpContext* c) { return pointer_system(c, 1); }
+static BOOL pointer_default(rdpContext* c) { return pointer_system(c, 0); }
+static BOOL pointer_position(rdpContext* context, UINT32 x, UINT32 y) {
+  AtermContext* c = (AtermContext*)context;
+  EnterCriticalSection(&c->lock);
+  c->pointer_x = x; c->pointer_y = y; c->pointer_revision++;
+  LeaveCriticalSection(&c->lock);
+  return TRUE;
+}
+static void register_pointer(rdpContext* c) {
+  rdpPointer pointer = { 0 };
+  pointer.size = sizeof(AtermPointer);
+  pointer.New = pointer_new; pointer.Free = pointer_free;
+  pointer.Set = pointer_set; pointer.SetNull = pointer_null;
+  pointer.SetDefault = pointer_default; pointer.SetPosition = pointer_position;
+  graphics_register_pointer(c->graphics, &pointer);
+}
 
 static void mark_dirty(AtermContext* c, INT32 x, INT32 y, INT32 w, INT32 h) {
   if (w <= 0 || h <= 0) return;
@@ -481,6 +551,7 @@ static BOOL post_connect(freerdp* instance) {
   UINT32 height = freerdp_settings_get_uint32(c->settings, FreeRDP_DesktopHeight);
   if (!desktop_size_valid(width, height)) return FALSE;
   if (!gdi_init(instance, PIXEL_FORMAT_BGRA32) || !resize_desktop(c)) return FALSE;
+  register_pointer(c);
   c->update->BeginPaint = begin_paint;
   c->update->EndPaint = end_paint;
   c->update->DesktopResize = resize_desktop;
@@ -763,6 +834,9 @@ API void* aterm_rdp_create_ex(const char* host, int port, const char* user,
   BOOLVAL(TlsSecurity, TRUE); BOOLVAL(NlaSecurity, TRUE);
   BOOLVAL(NSCodec, TRUE); BOOLVAL(SurfaceCommandsEnabled, TRUE);
   BOOLVAL(SupportGraphicsPipeline, FALSE); BOOLVAL(SoftwareGdi, TRUE);
+  // Enables server Position Updates in FreeRDP's pointer cache. No OS grab:
+  // our SetPosition callback only updates this session's client-side cursor.
+  BOOLVAL(GrabMouse, TRUE);
   // Display control stays negotiated for single-monitor sessions even with a
   // fixed size, so an explicit in-session resolution change can be applied
   // live. Automatic window-following resizes are a Dart-side policy
@@ -936,6 +1010,17 @@ API int aterm_rdp_can_resize(void* handle) {
   AtermContext* c = (AtermContext*)handle;
   return c->disp && c->disp_ready ? 1 : 0;
 }
+// All callers run on the owning poll thread; pointers remain valid until the
+// next poll. info: shape revision/kind/size/hotspot, position revision/x/y.
+API const BYTE* aterm_rdp_pointer(void* handle, UINT32* info) {
+  if (!handle || !info) return NULL;
+  AtermContext* c = (AtermContext*)handle;
+  info[0] = c->cursor_revision; info[1] = c->cursor_kind;
+  info[2] = c->cursor_width; info[3] = c->cursor_height;
+  info[4] = c->cursor_hot_x; info[5] = c->cursor_hot_y;
+  info[6] = c->pointer_revision; info[7] = c->pointer_x; info[8] = c->pointer_y;
+  return c->cursor_pixels;
+}
 API int aterm_rdp_paste(void* handle, const BYTE* utf16, UINT32 length) {
   AtermContext* c = (AtermContext*)handle;
   if (!c->clip || !c->clipboard_enabled || length > 131072 || (length & 1)) return 0;
@@ -1044,6 +1129,7 @@ API void aterm_rdp_free(void* handle) {
   if (c->local_clipboard) { SecureZeroMemory(c->local_clipboard, c->local_clipboard_len); free(c->local_clipboard); }
   if (c->remote_clipboard) { SecureZeroMemory(c->remote_clipboard, c->remote_clipboard_len); free(c->remote_clipboard); }
   free(c->local_files); free(c->remote_files);
+  free(c->cursor_pixels);
   free_events(c);
   SecureZeroMemory(c->pin, sizeof(c->pin));
   DeleteCriticalSection(&c->lock);

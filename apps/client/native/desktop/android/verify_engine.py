@@ -37,6 +37,7 @@ REQUIRED_EXPORTS = frozenset(
         "aterm_rdp_poll",
         "aterm_rdp_frame",
         "aterm_rdp_frame_ex",
+        "aterm_rdp_pointer",
         "aterm_rdp_key",
         "aterm_rdp_mouse",
         "aterm_rdp_resize",

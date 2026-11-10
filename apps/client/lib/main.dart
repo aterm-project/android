@@ -1,4 +1,6 @@
 import 'platform/file_window_tracking.dart';
+import 'desktop/desktop_keyboard_mode.dart';
+import 'storage/desktop_keyboard_store.dart';
 
 import 'dart:async';
 
@@ -83,7 +85,9 @@ Future<void> main(List<String> arguments) async {
       runApp(
         GuestApp(
           slug: slug,
-          secret: ShareLinkSecret.fromFragment(PendingCloudLink.takeLinkFragment()),
+          secret: ShareLinkSecret.fromFragment(
+            PendingCloudLink.takeLinkFragment(),
+          ),
           api: GuestApi(origin: Uri.base),
           sodium: () => sodium ??= Future.value(SodiumSumoInit.init()),
         ),
@@ -137,6 +141,7 @@ Future<void> main(List<String> arguments) async {
   );
   // Geometry-only file tracking is ready before any authentication/UI startup.
   await startFileWindowTracking(arguments, filesLaunch);
+  await DesktopKeyboardController.instance.load(createDesktopKeyboardStore());
   // Device-local display language (plain preference file / localStorage, not
   // secure storage): safe for renderer children before any profile startup.
   await AppLanguageController.instance.load(createAppLanguageStore());
@@ -172,7 +177,9 @@ Future<void> main(List<String> arguments) async {
             themeMode: themeMode,
             builder: (context, child) => WindowsWindowChrome(
               navigationEmbedded: () => true,
-              child: WallpaperWindowHost(child: child!),
+              child: DesktopKeyboardViewport(
+                child: WallpaperWindowHost(child: child!),
+              ),
             ),
             home: DesktopWindowPage(launch: launch),
           ),
@@ -722,7 +729,9 @@ class _AtermiusAppState extends State<AtermiusApp> with WidgetsBindingObserver {
         onSwitch: _switchWorkspace,
         busy: _switchingMode,
         child: WorkspaceWindowShortcuts(
-          child: WallpaperWindowHost(child: child!),
+          child: DesktopKeyboardViewport(
+            child: WallpaperWindowHost(child: child!),
+          ),
         ),
       ),
     ),

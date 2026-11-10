@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' show Offset;
 
 import 'dart:collection';
 
@@ -497,9 +498,23 @@ class DesktopSession extends ChangeNotifier {
             }
             _pendingFrames.add(event);
             unawaited(_paintDirect());
+          } else if (event is DesktopCursor) {
+            unawaited(
+              display
+                  .updateCursor(
+                    event,
+                    () => !_closed && attempt == _directAttempt,
+                  )
+                  .catchError((Object error) {
+                    if (!_closed && attempt == _directAttempt) _fail('$error');
+                  }),
+            );
+          } else if (event is DesktopPointerPosition) {
+            display.movePointer(Offset(event.x.toDouble(), event.y.toDouble()));
           } else if (event is DesktopClipboard) {
             if (_clipboardText) display.clipboard = event.text;
           } else if (event is DesktopResizeStatus) {
+            final capabilityChanged = serverResize != event.serverResize;
             final first = serverResize != true && event.serverResize;
             serverResize = event.serverResize;
             if (event.result != null) {
@@ -522,7 +537,9 @@ class DesktopSession extends ChangeNotifier {
                 _vnc.resolution == VncResolutionMode.fixed) {
               send(['size', _vnc.width, _vnc.height, true]);
             }
-            displayGeneration++;
+            // A resize acknowledgement must not invalidate the sent viewport:
+            // doing so requests the same size again on every server response.
+            if (capabilityChanged) displayGeneration++;
             notifyListeners();
           } else if (event is DesktopRemoteFiles) {
             remoteFiles = event.names.isEmpty ? null : event;
@@ -823,6 +840,7 @@ class DesktopSession extends ChangeNotifier {
     await _direct?.close();
     _setupTimeout?.cancel();
     display.send = null;
+    display.resetCursor();
     await _subscription?.cancel();
     try {
       await _closeTransport?.call().timeout(const Duration(seconds: 2));

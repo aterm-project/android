@@ -18455,4 +18455,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reconnectEveryFiveSeconds =>
       'Reconnect automatically every 5 seconds';
+
+  @override
+  String get desktopKeyboardModeTitle => 'Remote desktop keyboard mode';
+
+  @override
+  String get desktopKeyboardOverlay => 'Overlay (keep resolution)';
+
+  @override
+  String get desktopKeyboardResize => 'Resize to keyboard';
+
+  @override
+  String get desktopKeyboardOverlayDescription =>
+      'Show the keyboard and special keys over the desktop without changing its resolution or scaling.';
+
+  @override
+  String get desktopKeyboardResizeDescription =>
+      'Shrink the desktop to the space above the keyboard. Window-following sessions also update the remote resolution.';
+
+  @override
+  String get desktopKeyboardSaveFailed =>
+      'This choice applies now, but could not be saved. Try again.';
 }
