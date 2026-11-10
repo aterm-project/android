@@ -1,5 +1,7 @@
 import 'package:aterm_client/l10n/l10n.dart';
+
 import 'support/l10n_fixture.dart';
+
 import 'package:aterm_client/domain/window_combination.dart';
 
 import 'dart:async';
@@ -372,7 +374,12 @@ void main() {
       await pumpUntilIdle(tester);
       expect(await tester.runAsync(() => emptyCatalog.list()), isEmpty);
       expect(sshHarness.socketCount, 0);
-      expect(find.text("The local profile requested by the file window doesn't exist."), findsOneWidget);
+      expect(
+        find.text(
+          "The local profile requested by the file window doesn't exist.",
+        ),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       await drainClose(tester);
       await emptyCatalog.close();
@@ -644,7 +651,9 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('workspace-tab-hosts')));
       await tester.pumpAndSettle();
       await tester.tap(
-        find.byTooltip(currentL10n.groupActionsName('Local terminal credential defaults')),
+        find.byTooltip(
+          currentL10n.groupActionsName('Local terminal credential defaults'),
+        ),
       );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save current window layout'));
@@ -692,7 +701,9 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('workspace-tab-hosts')));
       await tester.pumpAndSettle();
       await tester.tap(
-        find.byTooltip(currentL10n.groupActionsName('Local terminal credential defaults')),
+        find.byTooltip(
+          currentL10n.groupActionsName('Local terminal credential defaults'),
+        ),
       );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Reset layout'));
@@ -803,10 +814,16 @@ void main() {
     expect(find.text('Download file'), findsNothing);
     expect(find.byType(SegmentedButton<SshTransferProtocol>), findsNothing);
     expect(sshHarness.userAuthenticationCount, 1);
-    expect(
-      tester.widget<WorkspaceTabBar>(find.byType(WorkspaceTabBar)).tabs,
-      hasLength(2),
-    );
+    // The click opened the other host's tab at once; the rejected attempt
+    // stays there as a failed, never-connected tab (retry/close), as cloud
+    // tabs do. It never borrows the first host's session.
+    final tabs = tester
+        .widget<WorkspaceTabBar>(find.byType(WorkspaceTabBar))
+        .tabs;
+    expect(tabs, hasLength(3));
+    final rejected = tabs.singleWhere((t) => t.title == other.name);
+    expect(rejected.isConnected, isFalse);
+    expect(rejected.canOpenFiles, isFalse);
     await tester.pumpWidget(const SizedBox.shrink());
     await drainClose(tester);
   });
@@ -1181,15 +1198,34 @@ void main() {
       );
       expect(disconnected.terminal, same(secondView.terminal));
       expect(disconnected.readOnly, isTrue);
-      final stoppedClient = sshHarness.clients.singleWhere((c) => identical(c.session, secondSession));
+      final stoppedClient = sshHarness.clients.singleWhere(
+        (c) => identical(c.session, secondSession),
+      );
       for (var i = 0; i < 150 && !stoppedClient.closed; i++) {
-        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
         await tester.pump(const Duration(milliseconds: 20));
       }
-      expect(sshHarness.clients.singleWhere((c) => identical(c.session, secondSession)).closed, isTrue);
-      expect(sshHarness.clients.singleWhere((c) => identical(c.session, firstSession)).closed, isFalse);
-      expect(find.byKey(const ValueKey('session_restore_connection')), findsOneWidget);
-      final retainedTabs = tester.widget<WorkspaceTabBar>(find.byType(WorkspaceTabBar));
+      expect(
+        sshHarness.clients
+            .singleWhere((c) => identical(c.session, secondSession))
+            .closed,
+        isTrue,
+      );
+      expect(
+        sshHarness.clients
+            .singleWhere((c) => identical(c.session, firstSession))
+            .closed,
+        isFalse,
+      );
+      expect(
+        find.byKey(const ValueKey('session_restore_connection')),
+        findsOneWidget,
+      );
+      final retainedTabs = tester.widget<WorkspaceTabBar>(
+        find.byType(WorkspaceTabBar),
+      );
       expect(retainedTabs.tabs.where((tab) => !tab.isHome), hasLength(2));
       retainedTabs.onClose(retainedTabs.selectedId);
       await drainClose(tester);
@@ -1224,8 +1260,18 @@ void main() {
         find.byKey(const ValueKey('local_ssh_terminal_view')),
         findsOneWidget,
       );
-      expect(tester.widget<TerminalView>(find.byKey(const ValueKey('local_ssh_terminal_view'))).readOnly, isTrue);
-      expect(find.byKey(const ValueKey('session_restore_connection')), findsOneWidget);
+      expect(
+        tester
+            .widget<TerminalView>(
+              find.byKey(const ValueKey('local_ssh_terminal_view')),
+            )
+            .readOnly,
+        isTrue,
+      );
+      expect(
+        find.byKey(const ValueKey('session_restore_connection')),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     },
@@ -1458,9 +1504,13 @@ void main() {
             3,
             reason: 'no second owner or file fallback after scope revocation',
           );
+          // Disposal cancels the pending owner attempt: a client that finished
+          // authenticating afterwards is closed before any shell is opened.
           expect(
             sshHarness.authenticatedClients.every(
-              (c) => (c.session as _FakeSession).closed,
+              (c) =>
+                  (c.session as _FakeSession).closed ||
+                  (c.closed && !c.shellOpened),
             ),
             isTrue,
           );
@@ -1495,8 +1545,11 @@ void main() {
           reason: 'no implicit file-owner authentication',
         );
         expect(sshHarness.authenticationAttempts, 4);
+        // A failed owner keeps its (failed, never-connected) tab; files are
+        // only restored onto the connected exact owner.
+        expect(bar().tabs.where((t) => !t.isHome && !t.isFile), hasLength(2));
         expect(
-          bar().tabs.where((t) => !t.isHome && !t.isFile),
+          bar().tabs.where((t) => !t.isHome && !t.isFile && t.isConnected),
           hasLength(failOwner ? 1 : 2),
         );
         final restoredFiles = bar().tabs.where((t) => t.isFile).toList();
@@ -1730,6 +1783,7 @@ class _FakeClient implements SSHClient {
   final _FakeSftpClient sftpClient;
   final Future<void> _authenticated;
   bool closed = false;
+  bool shellOpened = false;
 
   @override
   Future<void> get authenticated => _authenticated;
@@ -1739,13 +1793,18 @@ class _FakeClient implements SSHClient {
     SSHPtyConfig? pty = const SSHPtyConfig(),
     SSHX11Config? x11,
     Map<String, String>? environment,
-  }) async => session;
+  }) async {
+    shellOpened = true;
+    return session;
+  }
 
   @override
   Future<SftpClient> sftp() async => sftpClient;
 
   @override
-  Future<void> close() async { closed = true; }
+  Future<void> close() async {
+    closed = true;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

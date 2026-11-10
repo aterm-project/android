@@ -4877,5 +4877,40 @@
   "desktopKeyboardResize": "Изменять размер под клавиатуру",
   "desktopKeyboardOverlayDescription": "Клавиатура и панель специальных клавиш перекрывают рабочий стол, не меняя его разрешение и масштаб.",
   "desktopKeyboardResizeDescription": "Рабочий стол уменьшается до области над клавиатурой. Сеансы с размером по окну также меняют удалённое разрешение.",
-  "desktopKeyboardSaveFailed": "Настройка действует, но сохранить её не удалось. Повторите попытку."
+  "desktopKeyboardSaveFailed": "Настройка действует, но сохранить её не удалось. Повторите попытку.",
+  "rdpAddDisk": "Добавить диск",
+  "rdpChooseDisk": "Выбрать диск",
+  "rdpLocalStorage": "Локальное хранилище",
+  "rdpStorageFolderUnavailable": "Папка «{name}» недоступна на этом устройстве. Подключите диск или выберите местную папку заново.",
+  "@rdpStorageFolderUnavailable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rdpStoragePermissionRequired": "Для перенаправления диска или папки разрешите Atermius доступ к файлам в настройках Android и повторите попытку. Доступны только папки, добавленные для этого хоста.",
+  "rdpStoragePickerFailed": "Не удалось выбрать местную папку. Попробуйте другую папку на этом устройстве.",
+  "rdpDriveMappingHelp": "Диски и папки доступны в удалённом сеансе по пути \\\\tsclient. Изменения применяются после переподключения. Для прямого доступа к дискам Android требует разрешение на файлы.",
+  "rdpRenameMapping": "Переименовать ресурс",
+  "rdpMappingName": "Имя ресурса",
+  "rdpMappingReconnect": "Переподключитесь к удалённому сеансу, чтобы применить изменения перенаправления.",
+  "keybarShiftGuidance": "Shift: одно касание — следующая клавиша, двойное — фиксация",
+  "lockShiftModifier": "Зафиксировать Shift",
+  "releaseModifiers": "Отпустить Ctrl, Alt и Shift",
+  "connectProgressConnectingTo": "Подключение к {name}",
+  "connectProgressFailedTo": "Не удалось подключиться к {name}",
+  "connectProgressStoppedTitle": "Загрузка остановлена",
+  "connectProgressStoppedDetail": "Попытка подключения остановлена. «Повторить» начнёт новую попытку в этой вкладке.",
+  "connectProgressStagePreparing": "Проверка настроек хоста и данных входа",
+  "connectProgressStageConnecting": "Установка соединения",
+  "connectProgressStageVerifyingHost": "Проверка подлинности хоста",
+  "connectProgressStageAwaitingUser": "Ожидание вашего ответа",
+  "connectProgressStageAuthenticating": "Выполняется вход",
+  "connectProgressStageStartingSession": "Запуск сеанса",
+  "connectProgressStop": "Остановить загрузку",
+  "connectProgressRetry": "Повторить",
+  "connectProgressClose": "Закрыть",
+  "connectProgressRetryUnavailable": "Эта вкладка относится к прежнему входу, сейфу или профилю, повторить нельзя. Закройте её и подключитесь заново.",
+  "connectProgressNoCredential": "У этого хоста нет пригодных сохранённых данных входа. Добавьте или исправьте учётные данные и повторите."
 }

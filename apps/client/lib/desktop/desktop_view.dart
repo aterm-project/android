@@ -5,6 +5,7 @@ import '../domain/models.dart';
 import 'desktop_mobile_controls.dart';
 import 'desktop_keyboard_mode.dart';
 import 'desktop_touch_input.dart';
+import 'desktop_direct_touch.dart';
 import '../ui/app_motion.dart';
 
 import 'dart:async';
@@ -54,6 +55,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
   bool _keyboardOpen = false;
   bool _pointerInside = false;
   late final DesktopTouchInput _touch;
+  final _directTouch = DesktopDirectTouch();
   bool get _mobilePlatform =>
       Theme.of(context).platform == TargetPlatform.android;
   void _sendMouse(Offset point, int buttons) {
@@ -66,6 +68,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
       _touch.reset();
+      _directTouch.reset();
       _release();
     }
   }
@@ -304,6 +307,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
   void didUpdateWidget(covariant DesktopView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.session, session)) {
+      _directTouch.reset();
       _mobile.currentState?.releaseInput(notify: false);
       _keyboardOpen = false;
       DesktopKeyboardController.instance.keyboardVisible(this, false);
@@ -339,6 +343,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
         focus: _focus,
       );
       _touch.reset();
+      _directTouch.reset();
       _release();
     }
   }
@@ -366,6 +371,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
     if (session.onNotice == _showNotice) session.onNotice = null;
     if (session.onFilesSaved == _filesSaved) session.onFilesSaved = null;
     WidgetsBinding.instance.removeObserver(this);
+    _directTouch.reset();
     _touch.dispose();
     _release();
     _resizeTimer?.cancel();
@@ -696,6 +702,33 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
                             ((event.localPosition.dy - offset.dy) / scale)
                                 .clamp(0, math.max(0, size.height - 1)),
                           );
+                      if (_mobilePlatform &&
+                          event.kind == PointerDeviceKind.touch) {
+                        if (event is PointerDownEvent) _focusAfterActivation();
+                        final receiver = session;
+                        _directTouch.handle(
+                          event,
+                          remotePoint: point,
+                          nativeTouch: receiver.nativeTouch,
+                          sendNative: (id, phase, point) => receiver.send([
+                            'touch',
+                            id,
+                            phase,
+                            point.dx.round(),
+                            point.dy.round(),
+                          ]),
+                          sendMouse: (point, buttons) {
+                            receiver.display.movePointer(point);
+                            receiver.send([
+                              'mouse',
+                              point.dx.round(),
+                              point.dy.round(),
+                              buttons,
+                            ]);
+                          },
+                        );
+                        return;
+                      }
                       if (event is PointerDownEvent) _focusAfterActivation();
                       _buttons =
                           (event.buttons & kPrimaryButton != 0 ? 1 : 0) |
@@ -742,6 +775,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
                           onPointerHover: mouse,
                           onPointerCancel: (_) {
                             _touch.reset();
+                            _directTouch.reset();
                             _release();
                           },
                           onPointerSignal: (e) {
@@ -884,6 +918,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
                     onTogglePointer: () {
                       _focusAfterActivation();
                       _touch.reset();
+                      _directTouch.reset();
                       _release();
                       setState(() => _touch.trackpad = !_touch.trackpad);
                       if (_touch.trackpad &&

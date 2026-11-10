@@ -96,6 +96,7 @@ import 'session_workspace.dart';
 import 'workspace_controls.dart';
 import 'workspace_status_bar.dart';
 import 'session_recovery_overlay.dart';
+import 'connect_progress_view.dart';
 import 'transfer_dialog.dart';
 import '../platform/application_windows.dart';
 import 'new_window.dart';
@@ -1385,6 +1386,7 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
     }
     final tab = app.terminalTabFor(id);
     if (tab == null || tab.detached) return;
+    Future<void>? opening;
     try {
       var source = app.visibleTerminalTabs
           .where(
@@ -1404,12 +1406,24 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
             .firstOrNull;
       } else if (source == null && tab.host != null) {
         final previous = app.terminalTabs.map((tab) => tab.id).toSet();
-        await app.openTerminalTab(tab.host!);
-        source = app.visibleTerminalTabs
+        // The new tab exists before its connection settles: split now so the
+        // pane shows the real progress, then report a failure afterwards.
+        opening = app.openTerminalTab(tab.host!);
+        TerminalTabSession? created() => app.visibleTerminalTabs
             .where((tab) => !previous.contains(tab.id))
             .firstOrNull;
+        source = created();
+        if (source == null) {
+          final pending = opening;
+          opening = null;
+          await pending;
+          source = created();
+        }
       }
-      if (!mounted || source == null || app.terminalTabFor(id) == null) return;
+      if (!mounted || source == null || app.terminalTabFor(id) == null) {
+        if (opening != null) await opening;
+        return;
+      }
       _sessionWorkspace.activate(id);
       _sessionWorkspace.split(
         source.id,
@@ -1420,6 +1434,7 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
       );
       app.activateTerminalTab(source.id);
       app.showWorkspacePage(WorkspacePage.terminal);
+      if (opening != null) await opening;
     } catch (error) {
       if (mounted) _snack(context, app.friendlyError(error), error: true);
     }
@@ -9002,7 +9017,11 @@ class _TerminalPageState extends State<_TerminalPage> {
                             child:
                                 widget.sessionWorkspace.sessionIds.length > 1 ||
                                     (!liveSplitReady &&
-                                        (connected || deviceSession) &&
+                                        (connected ||
+                                            deviceSession ||
+                                            activeTab?.connectProgress
+                                                    .isVisible ==
+                                                true) &&
                                         activeTab != null)
                                 ? _workspaceView()
                                 : liveSplitReady
@@ -9073,14 +9092,39 @@ class _TerminalPageState extends State<_TerminalPage> {
       }
       return ExcludeFocus(
         excluding: widget.sessionWorkspace.selectedId != id,
-        child: SessionRecoveryOverlay(
-          recovery: app.terminalTabFor(id)?.desktop == null
-              ? app.terminalTabFor(id)?.recovery : null,
-          child: _temporarySessionPane(id),
+        child: _withConnectProgress(
+          id,
+          SessionRecoveryOverlay(
+            recovery: app.terminalTabFor(id)?.desktop == null
+                ? app.terminalTabFor(id)?.recovery : null,
+            child: _temporarySessionPane(id),
+          ),
         ),
       );
     },
   );
+
+  /// Loading / failed / stopped surface of a tab's initial connection, with
+  /// stop loading, retry and close. Covers the pane until the first connect.
+  Widget _withConnectProgress(String id, Widget child) {
+    final tab = app.terminalTabFor(id);
+    if (tab == null) return child;
+    final host = tab.host;
+    final console = tab.consoleShell != null || tab.consoleSerialPort != null;
+    return ConnectProgressView(
+      key: ValueKey('connect_progress_$id'),
+      progress: tab.connectProgress,
+      title: host?.name ?? context.l10n.console,
+      detail: console || host == null
+          ? context.l10n.console
+          : connectProgressDetail(host),
+      canRetry: () => app.canRetryTerminalConnect(id),
+      onStop: () => unawaited(app.cancelTerminalConnect(id)),
+      onRetry: () => unawaited(app.retryTerminalConnect(id)),
+      onClose: () => widget.onWorkspaceClose(id),
+      child: child,
+    );
+  }
 
   Widget _temporarySessionPane(String id) {
     final tab = app.terminalTabFor(id);

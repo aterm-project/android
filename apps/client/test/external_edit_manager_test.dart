@@ -173,6 +173,49 @@ void main() {
   });
 
   test(
+    'Android chooser uses text MIME and watches changes without auto-upload',
+    () async {
+      for (final name in [
+        'notes.txt',
+        'settings.yaml',
+        'script.sh',
+        'README',
+        'app.exe',
+      ]) {
+        expect(
+          externalEditLaunchMode(
+            name,
+            Uint8List(0),
+            ExternalEditPlatformKind.android,
+          ),
+          ExternalEditLaunchMode.edit,
+        );
+      }
+      expect(
+        externalEditLaunchMode(
+          'photo.png',
+          Uint8List(0),
+          ExternalEditPlatformKind.android,
+        ),
+        ExternalEditLaunchMode.open,
+      );
+      final edits = manager(kind: ExternalEditPlatformKind.android);
+      final item = await edits.open('/srv/notes.txt');
+      expect(launches.single.$2, ExternalEditLaunchMode.edit);
+      await File(item.localPath)
+          .writeAsString('Android edited file', flush: true);
+      await _until(() => item.status == ExternalEditStatus.changed);
+      expect(remote.writes, 0);
+      expect(await edits.upload(item), ExternalEditUploadResult.uploaded);
+      expect(
+        String.fromCharCodes(remote.files['/srv/notes.txt']!),
+        'Android edited file',
+      );
+      await edits.close();
+    },
+  );
+
+  test(
     'directory atomic save marks a change; only Upload sends exact bytes',
     () async {
       final edits = manager();

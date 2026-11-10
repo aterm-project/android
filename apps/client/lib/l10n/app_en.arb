@@ -15134,5 +15134,54 @@
   "desktopKeyboardResize": "Resize to keyboard",
   "desktopKeyboardOverlayDescription": "Show the keyboard and special keys over the desktop without changing its resolution or scaling.",
   "desktopKeyboardResizeDescription": "Shrink the desktop to the space above the keyboard. Window-following sessions also update the remote resolution.",
-  "desktopKeyboardSaveFailed": "This choice applies now, but could not be saved. Try again."
+  "desktopKeyboardSaveFailed": "This choice applies now, but could not be saved. Try again.",
+  "rdpAddDisk": "Add disk",
+  "rdpChooseDisk": "Choose a disk",
+  "rdpLocalStorage": "Local Storage",
+  "rdpStorageFolderUnavailable": "Folder {name} is unavailable on this device. Reconnect the disk or choose a local folder again.",
+  "@rdpStorageFolderUnavailable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rdpStoragePermissionRequired": "To map a disk or folder, allow Atermius to access files in Android Settings, then try again. Only folders added to this host are shared.",
+  "rdpStoragePickerFailed": "Could not choose a local folder. Try another folder on this device.",
+  "rdpDriveMappingHelp": "Mapped disks and folders appear under \\\\tsclient in the remote session. Changes apply after reconnecting. Android requires file access permission for live disk mapping.",
+  "rdpRenameMapping": "Rename mapping",
+  "rdpMappingName": "Mapping name",
+  "rdpMappingReconnect": "Connect to the remote session again to apply mapping changes.",
+  "keybarShiftGuidance": "Shift: tap for the next key only, double-tap to lock",
+  "lockShiftModifier": "Lock Shift modifier",
+  "releaseModifiers": "Release Control, Alt and Shift",
+  "connectProgressConnectingTo": "Connecting to {name}",
+  "@connectProgressConnectingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "connectProgressFailedTo": "Couldn't connect to {name}",
+  "@connectProgressFailedTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "connectProgressStoppedTitle": "Loading stopped",
+  "connectProgressStoppedDetail": "The connection attempt was stopped. Retry starts a new attempt in this tab.",
+  "connectProgressStagePreparing": "Checking host settings and sign-in details",
+  "connectProgressStageConnecting": "Opening the connection",
+  "connectProgressStageVerifyingHost": "Verifying the host identity",
+  "connectProgressStageAwaitingUser": "Waiting for your response",
+  "connectProgressStageAuthenticating": "Signing in",
+  "connectProgressStageStartingSession": "Starting the session",
+  "connectProgressStop": "Stop loading",
+  "connectProgressRetry": "Retry",
+  "connectProgressClose": "Close",
+  "connectProgressRetryUnavailable": "This tab belongs to an earlier sign-in, Vault or profile and can't retry. Close it and connect again.",
+  "connectProgressNoCredential": "This host has no usable saved sign-in. Add or fix its credential, then retry."
 }

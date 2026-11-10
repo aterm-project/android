@@ -16505,4 +16505,97 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopKeyboardSaveFailed => '当前选择已生效，但未能保存，请重试。';
+
+  @override
+  String get rdpAddDisk => '添加磁盘';
+
+  @override
+  String get rdpChooseDisk => '选择磁盘';
+
+  @override
+  String get rdpLocalStorage => '本机存储';
+
+  @override
+  String rdpStorageFolderUnavailable(String name) {
+    return '本机无法访问映射文件夹“$name”。请连接磁盘，或在当前设备重新选择目录。';
+  }
+
+  @override
+  String get rdpStoragePermissionRequired =>
+      '映射磁盘或文件夹需要在 Android 设置中允许 Atermius 访问文件，然后重试。仅共享为此主机添加的目录。';
+
+  @override
+  String get rdpStoragePickerFailed => '无法选择本机文件夹，请换一个当前设备上的目录重试。';
+
+  @override
+  String get rdpDriveMappingHelp =>
+      '映射的磁盘和文件夹显示在远程会话的 \\\\tsclient 下，重新连接后生效。Android 实时磁盘映射需要文件访问授权。';
+
+  @override
+  String get rdpRenameMapping => '重命名映射';
+
+  @override
+  String get rdpMappingName => '映射名称';
+
+  @override
+  String get rdpMappingReconnect => '重新连接远程会话后，磁盘映射改动生效。';
+
+  @override
+  String get keybarShiftGuidance => 'Shift：单击仅对下一个按键生效，双击锁定';
+
+  @override
+  String get lockShiftModifier => '锁定 Shift 修饰键';
+
+  @override
+  String get releaseModifiers => '释放 Ctrl、Alt 和 Shift';
+
+  @override
+  String connectProgressConnectingTo(String name) {
+    return '正在连接 $name';
+  }
+
+  @override
+  String connectProgressFailedTo(String name) {
+    return '无法连接到 $name';
+  }
+
+  @override
+  String get connectProgressStoppedTitle => '已终止加载';
+
+  @override
+  String get connectProgressStoppedDetail => '连接尝试已终止。点击“重试”会在此标签页中重新发起连接。';
+
+  @override
+  String get connectProgressStagePreparing => '正在检查主机设置和登录信息';
+
+  @override
+  String get connectProgressStageConnecting => '正在建立连接';
+
+  @override
+  String get connectProgressStageVerifyingHost => '正在验证主机身份';
+
+  @override
+  String get connectProgressStageAwaitingUser => '等待您的确认';
+
+  @override
+  String get connectProgressStageAuthenticating => '正在登录';
+
+  @override
+  String get connectProgressStageStartingSession => '正在启动会话';
+
+  @override
+  String get connectProgressStop => '终止加载';
+
+  @override
+  String get connectProgressRetry => '重试';
+
+  @override
+  String get connectProgressClose => '关闭';
+
+  @override
+  String get connectProgressRetryUnavailable =>
+      '此标签页属于之前的登录、Vault 或配置文件，无法重试。请关闭后重新连接。';
+
+  @override
+  String get connectProgressNoCredential => '此主机没有可用的已保存登录凭据。请添加或修正凭据后重试。';
 }

@@ -17391,4 +17391,100 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get desktopKeyboardSaveFailed =>
       '今回の選択は適用されましたが、保存できませんでした。もう一度お試しください。';
+
+  @override
+  String get rdpAddDisk => 'ドライブを追加';
+
+  @override
+  String get rdpChooseDisk => 'ドライブを選択';
+
+  @override
+  String get rdpLocalStorage => 'ローカルストレージ';
+
+  @override
+  String rdpStorageFolderUnavailable(String name) {
+    return 'このデバイスでフォルダー「$name」にアクセスできません。ドライブを接続するか、このデバイスでフォルダーを選び直してください。';
+  }
+
+  @override
+  String get rdpStoragePermissionRequired =>
+      'ドライブまたはフォルダーを共有するには、Android 設定で Atermius のファイルアクセスを許可してから再試行してください。このホストに追加したフォルダーだけを共有します。';
+
+  @override
+  String get rdpStoragePickerFailed =>
+      'ローカルフォルダーを選択できません。このデバイス上の別のフォルダーをお試しください。';
+
+  @override
+  String get rdpDriveMappingHelp =>
+      '共有ドライブとフォルダーはリモートセッションの \\\\tsclient に表示されます。変更は再接続後に反映されます。Android のライブ共有にはファイルアクセスの許可が必要です。';
+
+  @override
+  String get rdpRenameMapping => '共有名を変更';
+
+  @override
+  String get rdpMappingName => '共有名';
+
+  @override
+  String get rdpMappingReconnect => '共有設定の変更を反映するにはリモートセッションに再接続してください。';
+
+  @override
+  String get keybarShiftGuidance => 'Shift：タップで次のキーのみ有効、ダブルタップで固定';
+
+  @override
+  String get lockShiftModifier => 'Shift を固定';
+
+  @override
+  String get releaseModifiers => 'Ctrl・Alt・Shift を解除';
+
+  @override
+  String connectProgressConnectingTo(String name) {
+    return '$name に接続しています';
+  }
+
+  @override
+  String connectProgressFailedTo(String name) {
+    return '$name に接続できませんでした';
+  }
+
+  @override
+  String get connectProgressStoppedTitle => '読み込みを中止しました';
+
+  @override
+  String get connectProgressStoppedDetail =>
+      '接続の試行を中止しました。「再試行」でこのタブから新しく接続します。';
+
+  @override
+  String get connectProgressStagePreparing => 'ホスト設定とサインイン情報を確認しています';
+
+  @override
+  String get connectProgressStageConnecting => '接続を確立しています';
+
+  @override
+  String get connectProgressStageVerifyingHost => 'ホストの身元を確認しています';
+
+  @override
+  String get connectProgressStageAwaitingUser => '応答を待っています';
+
+  @override
+  String get connectProgressStageAuthenticating => 'サインインしています';
+
+  @override
+  String get connectProgressStageStartingSession => 'セッションを開始しています';
+
+  @override
+  String get connectProgressStop => '読み込みを中止';
+
+  @override
+  String get connectProgressRetry => '再試行';
+
+  @override
+  String get connectProgressClose => '閉じる';
+
+  @override
+  String get connectProgressRetryUnavailable =>
+      'このタブは以前のサインイン、保管庫またはプロファイルのものなので再試行できません。閉じてから接続し直してください。';
+
+  @override
+  String get connectProgressNoCredential =>
+      'このホストには使用できる保存済みのサインイン情報がありません。認証情報を追加または修正してから再試行してください。';
 }

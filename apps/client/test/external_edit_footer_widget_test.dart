@@ -33,17 +33,26 @@ class _Transport extends Fake
 }
 
 void main() {
-  for (final width in [1440.0, 390.0]) {
+  for (final scenario in [
+    (1440.0, TargetPlatform.linux),
+    (390.0, TargetPlatform.linux),
+    (390.0, TargetPlatform.android),
+  ]) {
+    final (width, target) = scenario;
     testWidgets('external edit: open, persistent footer, explicit upload and '
-        'conflict confirmation at $width', (tester) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+        'conflict confirmation at $width $target', (tester) async {
+      debugDefaultTargetPlatformOverride = target;
       await tester.binding.setSurfaceSize(Size(width, 700));
       final listing = MemoryRemoteFs()
         ..addDirectory('/srv')
         ..addFile('/srv/a.txt', 'A');
       final remote = MemorySftpBytesFs()
         ..files['/srv/a.txt'] = Uint8List.fromList('A\r\n'.codeUnits);
-      final platform = MemoryExternalEditPlatform();
+      final platform = MemoryExternalEditPlatform(
+        kind: target == TargetPlatform.android
+            ? ExternalEditPlatformKind.android
+            : ExternalEditPlatformKind.linux,
+      );
       final model = FileWorkspaceController(
         connection: SshConnection(client: _Client(), session: _Session()),
         protocol: SshTransferProtocol.sftp,
@@ -62,13 +71,22 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byKey(const ValueKey('file_edit_footer')), findsNothing);
 
-        await tester.tapAt(
-          tester.getCenter(find.text('a.txt')),
-          buttons: kSecondaryMouseButton,
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('file_menu_openExternal')));
-        await tester.pumpAndSettle();
+        if (target == TargetPlatform.android) {
+          await tester.tap(find.text('a.txt'));
+          await tester.pumpAndSettle();
+          expect(find.byType(AlertDialog), findsNothing);
+          expect(find.textContaining('Opened "a.txt"'), findsNothing);
+        } else {
+          await tester.tapAt(
+            tester.getCenter(find.text('a.txt')),
+            buttons: kSecondaryMouseButton,
+          );
+          await tester.pumpAndSettle();
+          await tester.tap(
+            find.byKey(const ValueKey('file_menu_openExternal')),
+          );
+          await tester.pumpAndSettle();
+        }
         expect(platform.launches, hasLength(1));
         final item = model.externalEdits.items.single;
         final footer = find.byKey(const ValueKey('file_edit_footer'));
@@ -136,7 +154,7 @@ void main() {
     });
   }
 
-  testWidgets('browser/mobile explains external editing is unavailable', (
+  testWidgets('unsupported platform explains external editing is unavailable', (
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
