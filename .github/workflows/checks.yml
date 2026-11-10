@@ -22,8 +22,11 @@ jobs:
         working-directory: apps/client
       - run: flutter test --concurrency=2 test/session_workspace_actions_test.dart test/workspace_tab_drag_test.dart test/terminal_tools_sidebar_test.dart test/cloud_access_client_test.dart test/cloud_access_interop_test.dart test/fullscreen_test.dart test/desktop_keyboard_mode_test.dart test/direct_desktop_test.dart test/desktop_resolution_test.dart test/desktop_mobile_controls_test.dart test/desktop_protocol_test.dart
         working-directory: apps/client
-      - run: flutter build web --release --no-web-resources-cdn
-        working-directory: apps/client
-      - run: python3 tools/verify_cloud_proxy.py --web-root apps/client/build/web
+      # The release `flutter build web` moved to the quota-limited daily workflow
+      # (.github/workflows/daily-build.yml), which also runs this check on the
+      # built bundle. Here the deployment nginx config (headers, CSP, API proxy,
+      # WebSocket upgrade) is still checked on every push/PR, serving the
+      # checked-in web shell (index.html, share-bootstrap.js) without compiling.
+      - run: python3 tools/verify_cloud_proxy.py --web-root apps/client/web
       - run: flutter test --concurrency=2 test/session_recovery_test.dart test/desktop_reconnect_test.dart test/telnet_app_controller_test.dart test/terminal_tabs_controller_test.dart test/telnet_local_profile_widget_test.dart test/terminal_tabs_widget_test.dart
         working-directory: apps/client
