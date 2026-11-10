@@ -15128,5 +15128,11 @@
   "fullscreenUnavailable": "Fullscreen is unavailable for this window.",
   "@fullscreenUnavailable": {},
   "restoreConnection": "Restore connection",
-  "reconnectEveryFiveSeconds": "Reconnect automatically every 5 seconds"
+  "reconnectEveryFiveSeconds": "Reconnect automatically every 5 seconds",
+  "desktopKeyboardModeTitle": "Remote desktop keyboard mode",
+  "desktopKeyboardOverlay": "Overlay (keep resolution)",
+  "desktopKeyboardResize": "Resize to keyboard",
+  "desktopKeyboardOverlayDescription": "Show the keyboard and special keys over the desktop without changing its resolution or scaling.",
+  "desktopKeyboardResizeDescription": "Shrink the desktop to the space above the keyboard. Window-following sessions also update the remote resolution.",
+  "desktopKeyboardSaveFailed": "This choice applies now, but could not be saved. Try again."
 }

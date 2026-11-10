@@ -18501,4 +18501,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get reconnectEveryFiveSeconds => 'Автоподключение каждые 5 секунд';
+
+  @override
+  String get desktopKeyboardModeTitle => 'Клавиатура удалённого рабочего стола';
+
+  @override
+  String get desktopKeyboardOverlay => 'Поверх экрана (без смены разрешения)';
+
+  @override
+  String get desktopKeyboardResize => 'Изменять размер под клавиатуру';
+
+  @override
+  String get desktopKeyboardOverlayDescription =>
+      'Клавиатура и панель специальных клавиш перекрывают рабочий стол, не меняя его разрешение и масштаб.';
+
+  @override
+  String get desktopKeyboardResizeDescription =>
+      'Рабочий стол уменьшается до области над клавиатурой. Сеансы с размером по окну также меняют удалённое разрешение.';
+
+  @override
+  String get desktopKeyboardSaveFailed =>
+      'Настройка действует, но сохранить её не удалось. Повторите попытку.';
 }

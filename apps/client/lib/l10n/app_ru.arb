@@ -4871,5 +4871,11 @@
   "exitFullscreen": "Выйти из полноэкранного режима",
   "fullscreenUnavailable": "Для этого окна недоступен полноэкранный режим.",
   "restoreConnection": "Восстановить соединение",
-  "reconnectEveryFiveSeconds": "Автоподключение каждые 5 секунд"
+  "reconnectEveryFiveSeconds": "Автоподключение каждые 5 секунд",
+  "desktopKeyboardModeTitle": "Клавиатура удалённого рабочего стола",
+  "desktopKeyboardOverlay": "Поверх экрана (без смены разрешения)",
+  "desktopKeyboardResize": "Изменять размер под клавиатуру",
+  "desktopKeyboardOverlayDescription": "Клавиатура и панель специальных клавиш перекрывают рабочий стол, не меняя его разрешение и масштаб.",
+  "desktopKeyboardResizeDescription": "Рабочий стол уменьшается до области над клавиатурой. Сеансы с размером по окну также меняют удалённое разрешение.",
+  "desktopKeyboardSaveFailed": "Настройка действует, но сохранить её не удалось. Повторите попытку."
 }

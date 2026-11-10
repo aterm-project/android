@@ -62,14 +62,52 @@ class RfbConnection implements DirectDesktopConnection {
             if (count > 4096)
               throw const FormatException('Too many VNC rectangles');
             var resized = false;
+            var frameChanged = false;
             for (var i = 0; i < count; i++) {
               final h = ByteData.sublistView(await reader.read(12));
               final x = h.getUint16(0), y = h.getUint16(2);
               final w = h.getUint16(4), height = h.getUint16(6);
               final encoding = h.getInt32(8);
+              if (encoding == -239) {
+                // RichCursor: pixels followed by 1-bit alpha mask.
+                if (w == 0 || height == 0) {
+                  _events.add(DesktopCursor(DesktopCursorKind.hidden));
+                  continue;
+                }
+                if (w > 512 || height > 512 || x >= w || y >= height) {
+                  throw const FormatException('Invalid VNC cursor');
+                }
+                final pixels = await reader.read(w * height * 4);
+                final stride = (w + 7) ~/ 8;
+                final mask = await reader.read(stride * height);
+                for (var row = 0; row < height; row++) {
+                  for (var col = 0; col < w; col++) {
+                    pixels[(row * w + col) * 4 + 3] =
+                        mask[row * stride + col ~/ 8] & (0x80 >> (col % 8)) != 0
+                        ? 255
+                        : 0;
+                  }
+                }
+                _events.add(
+                  DesktopCursor(
+                    DesktopCursorKind.image,
+                    width: w,
+                    height: height,
+                    hotX: x,
+                    hotY: y,
+                    bgra: pixels,
+                  ),
+                );
+                continue;
+              }
+              if (encoding == -232) {
+                // PointerPos, independent of framebuffer damage.
+                _events.add(DesktopPointerPosition(x, y));
+                continue;
+              }
               if (encoding == -223) {
                 _resize(w, height);
-                resized = true;
+                resized = frameChanged = true;
                 continue;
               }
               if (encoding == -308) {
@@ -78,7 +116,9 @@ class RfbConnection implements DirectDesktopConnection {
                 if (screens > 16) {
                   throw const FormatException('Too many VNC screens');
                 }
-                final raw = ByteData.sublistView(await reader.read(screens * 16));
+                final raw = ByteData.sublistView(
+                  await reader.read(screens * 16),
+                );
                 final layout = [
                   for (var s = 0; s < screens; s++)
                     RfbScreen(
@@ -94,9 +134,10 @@ class RfbConnection implements DirectDesktopConnection {
                 final first = !_extendedDesktopSize;
                 _extendedDesktopSize = true;
                 if (status == 0) {
+                  frameChanged = true;
                   if (w != _width || height != _height) {
                     _resize(w, height);
-                    resized = true;
+                    resized = frameChanged = true;
                   }
                   _screens = List.unmodifiable(layout);
                 }
@@ -120,12 +161,14 @@ class RfbConnection implements DirectDesktopConnection {
                 throw const FormatException('Invalid VNC rectangle');
               }
               if (encoding == 0) {
+                frameChanged = true;
                 final data = await reader.read(w * height * 4);
                 for (var row = 0; row < height; row++) {
                   final start = ((y + row) * _width + x) * 4;
                   _pixels.setRange(start, start + w * 4, data, row * w * 4);
                 }
               } else if (encoding == 1) {
+                frameChanged = true;
                 final source = ByteData.sublistView(await reader.read(4));
                 final sx = source.getUint16(0), sy = source.getUint16(2);
                 if (sx + w > _width || sy + height > _height) {
@@ -146,10 +189,12 @@ class RfbConnection implements DirectDesktopConnection {
               }
             }
             // RFB's fourth byte is padding, Flutter requires opaque alpha.
-            for (var i = 3; i < _pixels.length; i += 4) {
-              _pixels[i] = 255;
+            if (frameChanged) {
+              for (var i = 3; i < _pixels.length; i += 4) {
+                _pixels[i] = 255;
+              }
             }
-            if (!_closed) {
+            if (!_closed && frameChanged) {
               final consumed = _frameConsumed = Completer<void>();
               _events.add(
                 DesktopFrame(
@@ -252,13 +297,15 @@ class RfbConnection implements DirectDesktopConnection {
       0,
       0,
     ]);
-    final encodings = ByteData(20)
+    final encodings = ByteData(28)
       ..setUint8(0, 2)
-      ..setUint16(2, 4)
+      ..setUint16(2, 6)
       ..setInt32(4, 0)
       ..setInt32(8, 1)
       ..setInt32(12, -223)
-      ..setInt32(16, -308);
+      ..setInt32(16, -308)
+      ..setInt32(20, -239)
+      ..setInt32(24, -232);
     _write!(encodings.buffer.asUint8List());
   }
 

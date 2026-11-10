@@ -2,6 +2,7 @@ import 'cloud_access/organizations_page.dart' show CloudAccessAccountCard;
 import 'cloud_access/share_host_dialog.dart' show showCloudShareDialog;
 import '../cloud/cloud_access_service.dart' show CloudAccessService;
 import 'app_menu.dart';
+import '../desktop/desktop_keyboard_mode.dart';
 import '../platform/file_window_tracking.dart';
 import '../desktop/window/desktop_window.dart';
 import '../domain/window_combination.dart';
@@ -15402,6 +15403,14 @@ class _SettingsPage extends StatelessWidget {
           ),
         ),
         // ACCOUNT worker: account/login category (identity, session actions).
+        if (Theme.of(context).platform == TargetPlatform.android)
+          SettingsSection(
+            id: 'remote-desktop',
+            title: context.l10n.remoteDesktop,
+            icon: Icons.desktop_windows_outlined,
+            description: context.l10n.desktopKeyboardModeTitle,
+            builder: (_) => const SettingsCard(child: DesktopKeyboardSettings()),
+          ),
         SettingsSection(
           id: accountSettingsSectionId,
           title: context.l10n.accountSettingsTitle,

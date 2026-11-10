@@ -5,7 +5,9 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
+
 import '../l10n/l10n.dart';
+import 'direct/connection.dart';
 
 // Implements the drawing subset used by guacd RDP/VNC with audio/video/GFX
 // disabled. Protocol reference: Apache Guacamole 1.6 (Apache-2.0).
@@ -15,6 +17,10 @@ class DesktopDisplay extends ChangeNotifier {
   String clipboard = '';
   ui.Image? cursor;
   ui.Offset cursorHotspot = ui.Offset.zero;
+  DesktopCursorKind cursorKind = DesktopCursorKind.defaultArrow;
+  int _cursorEpoch = 0;
+  (DesktopCursor, bool Function())? _pendingCursor;
+  bool _decodingCursor = false;
   ui.Offset pointer = ui.Offset.zero;
   bool closed = false;
   ui.Size get size =>
@@ -30,6 +36,81 @@ class DesktopDisplay extends ChangeNotifier {
   void movePointer(ui.Offset value) {
     pointer = value;
     if (!closed) notifyListeners();
+  }
+
+  void resetCursor() {
+    _cursorEpoch++;
+    _pendingCursor = null;
+    cursor?.dispose();
+    cursor = null;
+    cursorKind = DesktopCursorKind.defaultArrow;
+    cursorHotspot = ui.Offset.zero;
+    if (!closed) notifyListeners();
+  }
+
+  /// At most one decode and one newest pending shape. A closed/replaced
+  /// connection can never publish a late decoded cursor into its successor.
+  Future<void> updateCursor(
+    DesktopCursor shape,
+    bool Function() isCurrent,
+  ) async {
+    _pendingCursor = (shape, isCurrent);
+    if (_decodingCursor) return;
+    _decodingCursor = true;
+    try {
+      while (!closed && _pendingCursor != null) {
+        final (next, current) = _pendingCursor!;
+        _pendingCursor = null;
+        if (!current()) continue;
+        final epoch = _cursorEpoch;
+        ui.Image? image;
+        if (next.kind == DesktopCursorKind.image) {
+          final bytes = next.bgra;
+          if (next.width < 1 ||
+              next.height < 1 ||
+              next.width > 512 ||
+              next.height > 512 ||
+              next.hotX < 0 ||
+              next.hotY < 0 ||
+              next.hotX >= next.width ||
+              next.hotY >= next.height ||
+              bytes == null ||
+              bytes.length != next.width * next.height * 4) {
+            throw const FormatException('Invalid desktop cursor');
+          }
+          final done = Completer<ui.Image>();
+          // Protocol pixels have straight alpha; Flutter BGRA requires
+          // premultiplied channels, including zero RGB for invisible pixels.
+          final premultiplied = Uint8List.fromList(bytes);
+          for (var i = 0; i < premultiplied.length; i += 4) {
+            final alpha = premultiplied[i + 3];
+            for (var channel = 0; channel < 3; channel++) {
+              premultiplied[i + channel] =
+                  (premultiplied[i + channel] * alpha + 127) ~/ 255;
+            }
+          }
+          ui.decodeImageFromPixels(
+            premultiplied,
+            next.width,
+            next.height,
+            ui.PixelFormat.bgra8888,
+            done.complete,
+          );
+          image = await done.future;
+        }
+        if (closed || epoch != _cursorEpoch || !current()) {
+          image?.dispose();
+          continue;
+        }
+        cursor?.dispose();
+        cursor = image;
+        cursorKind = next.kind;
+        cursorHotspot = ui.Offset(next.hotX.toDouble(), next.hotY.toDouble());
+        notifyListeners();
+      }
+    } finally {
+      _decodingCursor = false;
+    }
   }
 
   /// Apply a native desktop framebuffer update. Without a region, [bgra]
@@ -66,7 +147,13 @@ class DesktopDisplay extends ChangeNotifier {
       throw const FormatException('Partial frame for a different desktop size');
     }
     final done = Completer<ui.Image>();
-    ui.decodeImageFromPixels(bgra, rw, rh, ui.PixelFormat.bgra8888, done.complete);
+    ui.decodeImageFromPixels(
+      bgra,
+      rw,
+      rh,
+      ui.PixelFormat.bgra8888,
+      done.complete,
+    );
     final image = await done.future;
     try {
       if (closed) return;
@@ -304,6 +391,9 @@ class DesktopDisplay extends ChangeNotifier {
           picture.dispose();
         }
         cursorHotspot = ui.Offset(d(1), d(2));
+        cursorKind = cursor == null
+            ? DesktopCursorKind.hidden
+            : DesktopCursorKind.image;
       case 'mouse':
         movePointer(ui.Offset(d(1), d(2)));
       case 'move':
@@ -471,7 +561,7 @@ class DesktopDisplay extends ChangeNotifier {
     image.dispose();
   }
 
-  void paint(ui.Canvas canvas) {
+  void paint(ui.Canvas canvas, {bool includeCursor = true}) {
     void draw(int id, Set<int> ancestors) {
       final l = layers[id];
       if (l == null || l.opacity <= 0 || !ancestors.add(id)) return;
@@ -499,13 +589,47 @@ class DesktopDisplay extends ChangeNotifier {
     }
 
     draw(0, {});
-    if (cursor != null)
+    if (includeCursor && cursor != null)
       canvas.drawImage(cursor!, pointer - cursorHotspot, ui.Paint());
+  }
+
+  /// Cursor size is local UI size, independent of framebuffer zoom. Shape
+  /// alpha and hotspot stay intact; SYSPTR_NULL must remain invisible.
+  void paintPointer(ui.Canvas canvas, ui.Offset position) {
+    if (cursorKind == DesktopCursorKind.hidden) return;
+    if (cursor != null) {
+      canvas.drawImage(cursor!, position - cursorHotspot, ui.Paint());
+      return;
+    }
+    final arrow = ui.Path()
+      ..moveTo(0, 0)
+      ..lineTo(0, 22)
+      ..lineTo(6, 16)
+      ..lineTo(10, 25)
+      ..lineTo(14, 23)
+      ..lineTo(10, 14)
+      ..lineTo(19, 14)
+      ..close();
+    canvas.save();
+    canvas.translate(position.dx, position.dy);
+    canvas.drawShadow(arrow, const ui.Color(0x88000000), 1, true);
+    canvas.drawPath(
+      arrow,
+      ui.Paint()
+        ..color = const ui.Color(0xff000000)
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeJoin = ui.StrokeJoin.round,
+    );
+    canvas.drawPath(arrow, ui.Paint()..color = const ui.Color(0xffffffff));
+    canvas.restore();
   }
 
   @override
   void dispose() {
     closed = true;
+    _cursorEpoch++;
+    _pendingCursor = null;
     send = null;
     for (final l in layers.values) {
       l.dispose();
