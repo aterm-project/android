@@ -114,6 +114,7 @@ class DesktopSession extends ChangeNotifier {
 
   /// Null until the server reports whether it can change resolution.
   bool? serverResize;
+  bool nativeTouch = false;
   DesktopResizeResult? lastResize;
 
   /// Bumped when the resize policy changes so views re-send their size.
@@ -437,6 +438,7 @@ class DesktopSession extends ChangeNotifier {
       }
       _host = host;
       serverResize = null;
+      nativeTouch = false;
       lastResize = null;
       String config = '';
       if (host.protocol == HostProtocol.rdp &&
@@ -501,6 +503,11 @@ class DesktopSession extends ChangeNotifier {
             display.movePointer(Offset(event.x.toDouble(), event.y.toDouble()));
           } else if (event is DesktopClipboard) {
             if (_clipboardText) display.clipboard = event.text;
+          } else if (event is DesktopTouchSupport) {
+            if (nativeTouch != event.available) {
+              nativeTouch = event.available;
+              notifyListeners();
+            }
           } else if (event is DesktopResizeStatus) {
             final capabilityChanged = serverResize != event.serverResize;
             final first = serverResize != true && event.serverResize;
@@ -818,6 +825,7 @@ class DesktopSession extends ChangeNotifier {
     _closed = true;
     _directAttempt++;
     certificateRequest = null;
+    nativeTouch = false;
     for (final frame in _pendingFrames) {
       frame.onConsumed?.call();
     }

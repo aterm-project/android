@@ -202,7 +202,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                 children: [
                   Expanded(
                     child: Text(
-                      widget.existing == null ? context.l10n.addAHost : context.l10n.editHost,
+                      widget.existing == null
+                          ? context.l10n.addAHost
+                          : context.l10n.editHost,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
@@ -311,8 +313,11 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                             ),
                             controller: _rdpFingerprint,
                             decoration: InputDecoration(
-                              labelText: context.l10n.rdpCertificateSha256Optional,
-                              helperText: context.l10n.pinTheCertificateFingerprintSuppliedBy,
+                              labelText:
+                                  context.l10n.rdpCertificateSha256Optional,
+                              helperText: context
+                                  .l10n
+                                  .pinTheCertificateFingerprintSuppliedBy,
                             ),
                           ),
                           fieldGap,
@@ -324,6 +329,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                                 RdpSettings.unreadable(widget.existing!),
                             features: rdpEngineFeatures(),
                             pickFolder: pickRdpRedirectFolder,
+                            pickDisk: rdpDiskPickerAvailable
+                                ? pickRdpRedirectDisk
+                                : null,
                             onChanged: (value) => _rdpSettings = value,
                           ),
                           fieldGap,
@@ -348,7 +356,8 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                             ),
                             items: _sourceItems(context),
                             onChanged: canEdit
-                                ? (value) => setState(() => _selectSource(value!))
+                                ? (value) =>
+                                      setState(() => _selectSource(value!))
                                 : null,
                           ),
                           if (_source != _sourceOwn)
@@ -358,7 +367,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                                 _source == _sourceInherit
                                     ? context.l10n.r7NavSignInInheritedNote
                                     : context.l10n.r7NavSignInKeychainNote,
-                                key: ValueKey('${widget.keyPrefix}_sign_in_note'),
+                                key: ValueKey(
+                                  '${widget.keyPrefix}_sign_in_note',
+                                ),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ),
@@ -480,7 +491,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                                       !widget.groups.any(
                                         (group) => group.id == _groupId,
                                       )
-                                  ? context.l10n.thisSavedGroupIsUnavailableChoose
+                                  ? context
+                                        .l10n
+                                        .thisSavedGroupIsUnavailableChoose
                                   : null,
                             ),
                             items: [
@@ -536,7 +549,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                   FilledButton(
                     key: ValueKey('${widget.keyPrefix}_save'),
                     onPressed: canEdit ? _save : null,
-                    child: Text(widget.submitLabel ?? context.l10n.saveEncryptedHost),
+                    child: Text(
+                      widget.submitLabel ?? context.l10n.saveEncryptedHost,
+                    ),
                   ),
                 ],
               ),
@@ -640,7 +655,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
             InputDecorator(
               decoration: InputDecoration(labelText: label),
               child: Text(
-                controller.text.isEmpty ? context.l10n.noKeyEntered : '••••••••',
+                controller.text.isEmpty
+                    ? context.l10n.noKeyEntered
+                    : '••••••••',
               ),
             ),
           Align(
@@ -655,7 +672,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                 size: 16,
               ),
               label: Text(
-                _editingPrivateKey ? context.l10n.hidePrivateKey : context.l10n.editPrivateKey,
+                _editingPrivateKey
+                    ? context.l10n.hidePrivateKey
+                    : context.l10n.editPrivateKey,
               ),
             ),
           ),
@@ -711,8 +730,7 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
           : null,
       username: _protocol == HostProtocol.telnet ? '' : _username.text.trim(),
       groupId: _groupId,
-      credentialId: _protocol == HostProtocol.ssh &&
-              _source.startsWith('k:')
+      credentialId: _protocol == HostProtocol.ssh && _source.startsWith('k:')
           ? _source.substring(2)
           : null,
       login:
@@ -747,15 +765,14 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
       revisionId: widget.existing?.revisionId,
       baseRevisionId: widget.existing?.baseRevisionId,
       online: widget.existing?.online ?? false,
-      manifest: (_protocol == HostProtocol.vnc
-              ? _vncSettings
-              : VncSettings.defaults)
-          .applyTo(
-            (_protocol == HostProtocol.rdp
-                    ? _rdpSettings
-                    : RdpSettings.defaults)
-                .applyTo(widget.existing?.manifest),
-          ),
+      manifest:
+          (_protocol == HostProtocol.vnc ? _vncSettings : VncSettings.defaults)
+              .applyTo(
+                (_protocol == HostProtocol.rdp
+                        ? _rdpSettings
+                        : RdpSettings.defaults)
+                    .applyTo(widget.existing?.manifest),
+              ),
     );
     final issue =
         (_protocol == HostProtocol.rdp ? _rdpSettings.validate() : null) ??

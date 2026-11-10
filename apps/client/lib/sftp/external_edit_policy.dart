@@ -24,7 +24,7 @@ enum ExternalEditLaunchMode {
   blocked,
 }
 
-enum ExternalEditPlatformKind { windows, macos, linux, unsupported }
+enum ExternalEditPlatformKind { windows, macos, linux, android, unsupported }
 
 /// Formats that launch, install, redirect or execute when "opened".
 /// Compared case-insensitively against the sanitized local name.
@@ -107,6 +107,30 @@ ExternalEditLaunchMode externalEditLaunchMode(
   final active = _activeExtensions.contains(extension);
   final executableContent = externalEditLooksExecutable(head);
   switch (platform) {
+    case ExternalEditPlatformKind.android:
+      // Android VIEW opens a user-chosen app, never a command. Scripts and
+      // configuration files use text/plain so they go to a text editor.
+      return active ||
+              executableContent ||
+              extension.isEmpty ||
+              const {
+                'txt',
+                'md',
+                'log',
+                'conf',
+                'config',
+                'ini',
+                'json',
+                'yaml',
+                'yml',
+                'xml',
+                'toml',
+                'properties',
+                'csv',
+                'sql',
+              }.contains(extension)
+          ? ExternalEditLaunchMode.edit
+          : ExternalEditLaunchMode.open;
     case ExternalEditPlatformKind.windows:
       if (!active) return ExternalEditLaunchMode.open;
       return _windowsEditableScripts.contains(extension)

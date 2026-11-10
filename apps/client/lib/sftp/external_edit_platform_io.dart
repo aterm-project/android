@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:win32/win32.dart' as win32;
+import 'package:flutter/services.dart';
 
 import 'external_edit_platform_contract.dart';
 import 'external_edit_policy.dart';
@@ -21,10 +22,12 @@ const _uuid = Uuid();
 /// the same process, so stale cleanup also consults this set).
 final _activeSessionRoots = <String>{};
 
-/// Desktop IO platform; `null` on Android/iOS where no external application
-/// can be watched.
+/// Desktop and Android private editing copies; unsupported on iOS.
 ExternalEditPlatform? createDefaultExternalEditPlatform() {
-  if (!(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+  if (!(Platform.isWindows ||
+      Platform.isLinux ||
+      Platform.isMacOS ||
+      Platform.isAndroid)) {
     return null;
   }
   return IoExternalEditPlatform();
@@ -55,6 +58,7 @@ final class IoExternalEditPlatform implements ExternalEditPlatform {
     if (Platform.isWindows) return ExternalEditPlatformKind.windows;
     if (Platform.isMacOS) return ExternalEditPlatformKind.macos;
     if (Platform.isLinux) return ExternalEditPlatformKind.linux;
+    if (Platform.isAndroid) return ExternalEditPlatformKind.android;
     return ExternalEditPlatformKind.unsupported;
   }
 
@@ -126,6 +130,12 @@ final class IoExternalEditPlatform implements ExternalEditPlatform {
     if (override != null) return override(path, mode);
     try {
       switch (kind) {
+        case ExternalEditPlatformKind.android:
+          await const MethodChannel('atermius/external_edit')
+              .invokeMethod<void>('open', {
+                'path': path,
+                'text': mode == ExternalEditLaunchMode.edit,
+              });
         case ExternalEditPlatformKind.windows:
           _shellExecute(path, mode == ExternalEditLaunchMode.edit);
         case ExternalEditPlatformKind.macos:

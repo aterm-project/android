@@ -72,6 +72,12 @@ class DesktopClipboard extends DesktopEvent {
 
 class DesktopReady extends DesktopEvent {}
 
+/// True only after the server's native touch channel has completed negotiation.
+class DesktopTouchSupport extends DesktopEvent {
+  DesktopTouchSupport(this.available);
+  final bool available;
+}
+
 enum DesktopCursorKind { defaultArrow, hidden, image }
 
 /// Shape and hotspot are supplied by RDP/RFB; position follows local input.
