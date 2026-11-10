@@ -60,7 +60,10 @@ $env:VCPKG_DISABLE_METRICS = '1'
 & (Join-Path $Vcpkg 'vcpkg.exe') install openssl:x64-windows-static-md zlib:x64-windows-static-md
 $Info.vcpkg = [ordered]@{
     commit = (git -C $Vcpkg rev-parse HEAD).Trim()
-    packages = @(& (Join-Path $Vcpkg 'vcpkg.exe') list openssl zlib | ForEach-Object { "$_".Trim() } | Where-Object { $_ })
+    # `vcpkg list` accepts at most one filter. Query once, then retain both
+    # installed target packages for the release evidence.
+    packages = @(& (Join-Path $Vcpkg 'vcpkg.exe') list | ForEach-Object { "$_".Trim() } |
+        Where-Object { $_ -match '^(openssl|zlib):x64-windows-static-md\s' })
 }
 Write-Host '::endgroup::'
 
