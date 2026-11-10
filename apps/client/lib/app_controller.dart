@@ -11,6 +11,7 @@ import 'dart:convert';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:intl/intl.dart';
 import 'package:sodium/sodium_sumo.dart';
 import 'package:uuid/uuid.dart';
@@ -53,6 +54,7 @@ import 'terminal/terminal_collaboration_service.dart';
 import 'terminal/mirrored_terminal.dart';
 import 'terminal/session_log.dart';
 import 'terminal/session_recovery.dart';
+import 'terminal/connect_progress.dart';
 import 'telnet/telnet_errors.dart';
 import 'telnet/telnet_session.dart';
 import 'telnet/telnet_transport.dart';
@@ -297,6 +299,10 @@ class TerminalTabSession {
   bool closed = false;
   SessionRecovery? recovery;
   int connectionGeneration = 0;
+
+  /// Initial-connection surface (loading / failed / stopped). Idle once the
+  /// tab has connected; later drops use [recovery] instead.
+  final ConnectProgress connectProgress = ConnectProgress();
 
   /// Session-log lifecycle row for this SSH tab (sanitized; transcript only
   /// when the user enabled recording before the tab opened).
@@ -19963,6 +19969,175 @@ class AppController extends ChangeNotifier {
     );
   }
 
+  void _checkSshTestConnectorRoute(List<_ResolvedJumpHop> jumpRoute) {
+    if (jumpRoute.length > 1 &&
+        (sshConnectorForTesting != null ||
+            sshConnectorWithJumpForTesting != null) &&
+        sshConnectorWithRouteForTesting == null &&
+        sshConnectorWithUserInfoForTesting == null &&
+        sshConnectorWithCancellationForTesting == null) {
+      throw StateError(currentL10n.theCurrentTestSshConnectorDoesnt2);
+    }
+  }
+
+  /// Account/device/Vault/auth scope an attempt started in. A late result is
+  /// attached only while every part still matches (lock and sign-out also
+  /// close the tab; a Vault switch keeps tabs but ends this attempt).
+  bool Function() _captureTerminalConnectScope() {
+    final authGeneration = _authContextGeneration;
+    final vaultGeneration = _vaultSelectionGeneration;
+    final apiGeneration = _apiGeneration;
+    final accountId = session?.accountId;
+    final deviceId = identity?.deviceId;
+    final vaultId = activeVault?.id;
+    return () =>
+        !_controllerDisposed &&
+        !workspaceLocked &&
+        _authContextGeneration == authGeneration &&
+        _vaultSelectionGeneration == vaultGeneration &&
+        _apiGeneration == apiGeneration &&
+        session?.accountId == accountId &&
+        identity?.deviceId == deviceId &&
+        activeVault?.id == vaultId;
+  }
+
+  /// Registers and selects a new SSH tab before any asynchronous work so the
+  /// user sees the attempt immediately and can stop or close it.
+  TerminalTabSession _openPendingSshTab(
+    HostRecord host,
+    void Function(String tabId)? onTabOpened,
+  ) {
+    selectedHost = host;
+    page = WorkspacePage.terminal;
+    final tab = _createTerminalTab(id: _uuid.v4(), host: host);
+    tab.connectionGeneration++;
+    tab.state = 'connecting';
+    _terminalTabs[tab.id] = tab;
+    _terminalTabOrder.add(tab.id);
+    _activeTerminalTabId = tab.id;
+    _installTerminalRecovery(tab);
+    tab.connectProgress.begin();
+    onTabOpened?.call(tab.id);
+    notifyListeners();
+    return tab;
+  }
+
+  void _failTerminalConnectAttempt(
+    TerminalTabSession tab,
+    int? progressAttempt,
+    Object error,
+  ) {
+    if (!_isTerminalTabOpen(tab)) return;
+    tab.cancelPendingSshAuthentication();
+    tab.log?.markFailed(error);
+    tab.state = 'failed';
+    tab.errorMessage = _connectFailureMessage(error);
+    tab.recovery?.update(connected: false);
+    if (progressAttempt != null) {
+      tab.connectProgress.fail(progressAttempt, tab.errorMessage!);
+    }
+    _notifyListenersIfAlive();
+  }
+
+  /// Sanitized, localized text for a connection-attempt failure.
+  String _connectFailureMessage(Object error) =>
+      error is StateError ? error.message : friendlyError(error);
+
+  /// Whether the tab's progress surface may start a new attempt: it is not
+  /// loading and its sign-in/Vault/device scope (the same fence automatic
+  /// recovery uses) is still current. A tab from an earlier scope never
+  /// borrows the current authority; the user closes it and connects again.
+  bool canRetryTerminalConnect(String id) {
+    final tab = _terminalTabs[id];
+    return tab != null &&
+        _isTerminalTabOpen(tab) &&
+        tab.connectProgress.isVisible &&
+        !tab.connectProgress.isLoading &&
+        tab.recovery?.available == true;
+  }
+
+  /// "Stop loading": ends the tab's pending initial attempt but keeps the tab
+  /// with its retry/close controls. Cancellable sockets, relay channels,
+  /// desktop engines and console processes are closed now; any result that
+  /// arrives later (including from requests that cannot be cancelled) is
+  /// discarded by the attempt generation and never attached.
+  Future<void> cancelTerminalConnect(String id) async {
+    final tab = _terminalTabs[id];
+    if (tab == null || !_isTerminalTabOpen(tab)) return;
+    if (!tab.connectProgress.cancel()) return;
+    tab.recovery?.blockAutomatic();
+    tab.connectionGeneration++;
+    tab.cancelPendingSshAuthentication();
+    final cancellation = tab.connectionCancellation;
+    tab.connectionCancellation = null;
+    tab.telnetCancellation?.cancel();
+    tab.telnetCancellation = null;
+    final output = tab.outputSubscription;
+    final connection = tab.connection, telnet = tab.telnet;
+    final desktop = tab.desktop, console = tab.console;
+    tab.outputSubscription = null;
+    tab.connection = null;
+    tab.telnet = null;
+    tab.console = null;
+    tab.log?.markClosed(SessionLogEndReason.user);
+    tab.state = 'disconnected';
+    tab.errorMessage = null;
+    tab.recovery?.update(connected: false);
+    _notifyListenersIfAlive();
+    await cancellation?.cancel();
+    // The desktop object stays on the tab (closed) until retry replaces it or
+    // the tab closes, so its view never paints a disposed display.
+    await desktop?.close();
+    try {
+      await console?.close();
+    } catch (_) {}
+    await _cleanupEndedTerminalConnection(output, connection);
+    await telnet?.close();
+  }
+
+  /// "Retry" from the progress surface: a new attempt in the same tab, using
+  /// the Host, credential and scope that are current now.
+  Future<void> retryTerminalConnect(String id) async {
+    final tab = _terminalTabs[id];
+    if (tab == null || !canRetryTerminalConnect(id)) return;
+    try {
+      if (tab.consoleShell != null || tab.consoleSerialPort != null) {
+        await _openConsoleTab(
+          shell: tab.consoleShell,
+          serialPort: tab.consoleSerialPort,
+          baudRate: tab.consoleBaudRate ?? 115200,
+          reuseTab: tab,
+        );
+        return;
+      }
+      final saved = tab.host;
+      if (saved == null) return;
+      final host =
+          hosts.where((candidate) => candidate.id == saved.id).firstOrNull ??
+          saved;
+      if (host.protocol.isTerminal) {
+        await _openTerminalTab(host, reuseTab: tab);
+      } else {
+        await _openDesktopTab(host, reuseTab: tab);
+      }
+    } on Object catch (error) {
+      // Attempts report their own sanitized failure. A precondition that
+      // failed before the attempt began (for example a credential removed
+      // from the current Vault) is shown in the same surface.
+      final message = _connectFailureMessage(error);
+      final progress = tab.connectProgress;
+      if (_isTerminalTabOpen(tab) &&
+          progress.isVisible &&
+          !progress.isLoading &&
+          progress.error != message) {
+        tab.state = 'failed';
+        tab.errorMessage = message;
+        progress.fail(progress.begin(), message);
+        _notifyListenersIfAlive();
+      }
+    }
+  }
+
   Future<void> reconnectTerminalTab(String id) async {
     final tab = _terminalTabs[id];
     if (tab == null || tab.recovery?.available != true ||
@@ -19994,6 +20169,8 @@ class AppController extends ChangeNotifier {
     if (tab.console != null) return closeTerminalTab(id);
     if (tab.desktop != null) return;
     tab.recovery?.blockAutomatic();
+    // A disconnect during the initial attempt is the same as stop loading.
+    tab.connectProgress.cancel();
     tab.connectionGeneration++;
     tab.cancelPendingSshAuthentication();
     final cancellation = tab.connectionCancellation;
@@ -20024,6 +20201,7 @@ class AppController extends ChangeNotifier {
   Future<void> _openDesktopTab(
     HostRecord host, {
     void Function(String)? onTabOpened,
+    TerminalTabSession? reuseTab,
   }) async {
     final client = _requireApi();
     final deviceId = identity?.deviceId;
@@ -20033,7 +20211,15 @@ class AppController extends ChangeNotifier {
     }
     final issue = host.validate();
     if (issue != null) throw StateError(issue);
-    final tab = _addDeviceTab(host);
+    // A retry replaces the never-connected desktop session of the same tab;
+    // it needs the tab's scope (the recovery fence) to still be current.
+    if (reuseTab != null &&
+        (!_isTerminalTabOpen(reuseTab) ||
+            reuseTab.recovery?.available != true)) {
+      return;
+    }
+    final tab = reuseTab ?? _addDeviceTab(host);
+    final previousDesktop = reuseTab?.desktop;
     final reviewedVault = activeVault?.id;
     final reviewedAccount = session?.accountId;
     final reviewedDevice = identity?.deviceId;
@@ -20071,16 +20257,57 @@ class AppController extends ChangeNotifier {
         return saved;
       },
     );
+    final progressAttempt = tab.connectProgress.begin(
+      ConnectStage.connecting,
+    );
+    tab.host = host;
+    tab.state = 'connecting';
+    tab.errorMessage = null;
     tab.desktop = desktop;
     desktop.addListener(() {
-      if (!_isTerminalTabOpen(tab)) return;
+      if (!_isTerminalTabOpen(tab) || !identical(tab.desktop, desktop)) return;
+      final progress = tab.connectProgress;
+      if (progress.isCurrent(progressAttempt)) {
+        switch (desktop.state) {
+          case 'connected':
+            if (!current()) {
+              // The first frame arrived after the account/Vault scope this
+              // attempt was started in ended: never show it.
+              unawaited(desktop.close());
+              tab.state = 'failed';
+              tab.errorMessage = currentL10n.theWorkspaceChanged;
+              progress.fail(progressAttempt, currentL10n.theWorkspaceChanged);
+              tab.recovery?.update(connected: false);
+              _notifyListenersIfAlive();
+              return;
+            }
+            progress.succeed(progressAttempt);
+          case 'certificate':
+            progress.advance(progressAttempt, ConnectStage.awaitingUser);
+          case 'connecting':
+            progress.advance(progressAttempt, ConnectStage.connecting);
+          case 'disconnected':
+            progress.fail(
+              progressAttempt,
+              desktop.error ?? currentL10n.theRemoteDesktopConnectionFailed,
+            );
+        }
+      }
       tab.state = desktop.state;
       tab.errorMessage = desktop.error;
       tab.recovery?.update(connected: desktop.state == 'connected',
           connecting: desktop.state == 'connecting' || desktop.state == 'certificate');
       _notifyListenersIfAlive();
     });
-    onTabOpened?.call(tab.id);
+    if (previousDesktop != null) {
+      // Closed now; released once the view has swapped to the new session.
+      unawaited(previousDesktop.close());
+      SchedulerBinding.instance.addPostFrameCallback(
+        (_) => previousDesktop.dispose(),
+      );
+      SchedulerBinding.instance.ensureVisualUpdate();
+    }
+    if (reuseTab == null) onTabOpened?.call(tab.id);
     notifyListeners();
     if (DesktopSession.supportsDirect(host.protocol)) {
       await desktop.connectLocal(host);
@@ -20126,6 +20353,11 @@ class AppController extends ChangeNotifier {
     tab.host = host;
     tab.state = 'connecting';
     tab.errorMessage = null;
+    // New tabs and retries from the progress surface show their stage; a
+    // recovery reconnect of a once-connected tab keeps its own overlay.
+    final progressAttempt = reuseTab == null || reuseTab.connectProgress.isVisible
+        ? tab.connectProgress.begin(ConnectStage.connecting)
+        : null;
     final reviewedVault = activeVault?.id;
     final reviewedAccount = session?.accountId;
     final reviewedDevice = identity?.deviceId;
@@ -20166,10 +20398,19 @@ class AppController extends ChangeNotifier {
         // Closed, locked or switched scope while connecting: never attach a
         // late connection to a stale or reused tab.
         await telnet.close();
-        if (_isTerminalTabOpen(tab)) {
+        // Only this attempt may report the scope change; a stopped or newer
+        // attempt already owns the tab state.
+        if (_isTerminalTabOpen(tab) &&
+            tab.connectionGeneration == connectionGeneration) {
           tab.telnetCancellation = null;
           tab.state = 'failed';
           tab.errorMessage = currentL10n.theWorkspaceChanged;
+          if (progressAttempt != null) {
+            tab.connectProgress.fail(
+              progressAttempt,
+              currentL10n.theWorkspaceChanged,
+            );
+          }
           _notifyListenersIfAlive();
         }
         return;
@@ -20178,6 +20419,9 @@ class AppController extends ChangeNotifier {
       tab.telnetCancellation = null;
       tab.state = 'connected';
       tab.errorMessage = null;
+      if (progressAttempt != null) {
+        tab.connectProgress.succeed(progressAttempt);
+      }
       tab.recovery?.update(connected: true);
       tab.log?.markConnected();
       tab.outputSubscription = telnet.output.listen(
@@ -20207,6 +20451,9 @@ class AppController extends ChangeNotifier {
       tab.log?.markFailed(error);
       tab.state = 'failed';
       tab.errorMessage = friendlyError(error);
+      if (progressAttempt != null) {
+        tab.connectProgress.fail(progressAttempt, tab.errorMessage!);
+      }
       tab.recovery?.update(connected: false);
       _setError(friendlyError(error));
       rethrow;
@@ -20302,6 +20549,7 @@ class AppController extends ChangeNotifier {
     LocalShellLaunch? shell,
     String? serialPort,
     int baudRate = 115200,
+    TerminalTabSession? reuseTab,
   }) async {
     if (!localConsoleSupported && localConsoleOpenerForTesting == null) {
       throw UnsupportedError(currentL10n.theLocalConsoleRequiresTheDesktop);
@@ -20309,7 +20557,7 @@ class AppController extends ChangeNotifier {
     final launch = serialPort == null
         ? shell ?? LocalShellLaunch.systemDefault
         : null;
-    final tab = _addDeviceTab(
+    final tab = reuseTab ?? _addDeviceTab(
       HostRecord(
         id: _uuid.v4(),
         name: serialPort != null
@@ -20321,6 +20569,12 @@ class AppController extends ChangeNotifier {
     tab.consoleSerialPort = serialPort;
     tab.consoleBaudRate = serialPort == null ? null : baudRate;
     tab.consoleShell = launch;
+    final connectionGeneration = ++tab.connectionGeneration;
+    final progressAttempt = tab.connectProgress.begin(
+      ConnectStage.startingSession,
+    );
+    tab.state = 'connecting';
+    tab.errorMessage = null;
     notifyListeners();
     try {
       final opener = localConsoleOpenerForTesting;
@@ -20329,13 +20583,15 @@ class AppController extends ChangeNotifier {
           : serialPort == null
           ? openLocalConsole(launch: launch!)
           : openSerialConsole(serialPort, baudRate: baudRate);
-      if (!_isTerminalTabOpen(tab)) {
-        // The tab was closed (or the workspace reset) while starting.
+      if (!_isTerminalTabOpen(tab) ||
+          tab.connectionGeneration != connectionGeneration) {
+        // The tab was closed, stopped or reset while starting.
         unawaited(console.close().catchError((Object _) {}));
         return null;
       }
       tab.console = console;
       tab.state = 'connected';
+      tab.connectProgress.succeed(progressAttempt);
       tab.outputSubscription = console.output.listen(
         (text) {
           if (_isTerminalTabOpen(tab)) tab.terminal.write(text);
@@ -20360,13 +20616,17 @@ class AppController extends ChangeNotifier {
         }, onError: (Object _) {}),
       );
     } on LocalShellException catch (error) {
+      if (tab.connectionGeneration != connectionGeneration) return null;
       tab.state = 'disconnected';
       tab.errorMessage = localShellIssueMessage(currentL10n, error.issue);
       tab.terminal.write('\r\n[${tab.errorMessage}]\r\n');
+      tab.connectProgress.fail(progressAttempt, tab.errorMessage!);
     } catch (_) {
+      if (tab.connectionGeneration != connectionGeneration) return null;
       tab.state = 'disconnected';
       tab.errorMessage = currentL10n.couldntStartTheLocalShell;
       tab.terminal.write('\r\n[${tab.errorMessage}]\r\n');
+      tab.connectProgress.fail(progressAttempt, tab.errorMessage!);
     }
     _notifyListenersIfAlive();
     return tab.id;
@@ -20397,7 +20657,11 @@ class AppController extends ChangeNotifier {
       );
     }
     if (host.protocol != HostProtocol.ssh) {
-      return _openDesktopTab(host, onTabOpened: onTabOpened);
+      return _openDesktopTab(
+        host,
+        onTabOpened: onTabOpened,
+        reuseTab: reuseTab,
+      );
     }
     final initialKnownHostAccountId = session?.accountId;
     final initialKnownHostDeviceId = identity?.deviceId;
@@ -20425,77 +20689,158 @@ class AppController extends ChangeNotifier {
           ),
         )
         .toList(growable: false);
-    final connectionCredentialFingerprints = <String, String>{
-      host.id: await _fingerprintConnectionCredential(credential),
-      for (final hop in jumpRoute)
-        hop.host.id: await _fingerprintConnectionCredential(hop.credential),
-    };
-    final currentHost = hosts
-        .where((candidate) => candidate.id == host.id)
-        .firstOrNull;
-    if (expectedVaultId != null && activeVault?.id != expectedVaultId) {
-      throw StateError(currentL10n.theVaultWasSwitchedWhilePreparing);
-    }
-    if (expectedVaultId != null && currentHost == null) {
-      throw StateError(currentL10n.theWorkspaceHostWasRemovedFrom);
-    }
-    if (currentHost != null &&
-        canonicalJson(currentHost.toJson()) != hostSnapshot) {
-      throw StateError(currentL10n.theHostOrJumpHostRoute);
-    }
-    final currentTargetCredential = resolveHostCredential(
-      groupId: currentHost == null ? host.groupId : currentHost.groupId,
-      hostCredentialId: currentHost == null
-          ? host.credentialId
-          : currentHost.credentialId,
-    ).credential;
-    if (currentTargetCredential == null ||
-        canonicalJson(currentTargetCredential.toJson()) !=
-            targetCredentialSnapshot) {
-      throw StateError(currentL10n.theTargetHostsSshCredentialChanged);
-    }
-    final currentRoute = _resolveJumpHostConnection(currentHost ?? host);
-    if (currentRoute.length != jumpRoute.length) {
-      throw StateError(currentL10n.theJumpHostRouteChangedWhile);
-    }
-    for (var index = 0; index < currentRoute.length; index++) {
-      if (canonicalJson(currentRoute[index].host.toJson()) !=
-              jumpRouteSnapshots[index].$1 ||
-          canonicalJson(currentRoute[index].credential.toJson()) !=
-              jumpRouteSnapshots[index].$2 ||
-          !connectionCredentialFingerprints.containsKey(
-            currentRoute[index].host.id,
-          )) {
-        throw StateError(currentL10n.theJumpHostRouteOrCredential);
-      }
-    }
-    if (jumpRoute.length > 1 &&
-        (sshConnectorForTesting != null ||
-            sshConnectorWithJumpForTesting != null) &&
-        sshConnectorWithRouteForTesting == null &&
-        sshConnectorWithUserInfoForTesting == null &&
-        sshConnectorWithCancellationForTesting == null) {
-      throw StateError(currentL10n.theCurrentTestSshConnectorDoesnt2);
-    }
     final hasTestConnector =
         sshConnectorForTesting != null ||
         sshConnectorWithJumpForTesting != null ||
         sshConnectorWithRouteForTesting != null ||
         sshConnectorWithUserInfoForTesting != null ||
         sshConnectorWithCancellationForTesting != null;
-    final client = hasTestConnector ? api : _requireApi();
-    if (session == null || identity == null) {
-      throw StateError(currentL10n.unlockTheVaultFirst2);
+    // A new tab is opened and selected before any asynchronous work
+    // (credential fingerprinting, relay ticket, handshake, host-key review).
+    // The synchronous preconditions are checked first without throwing; when
+    // one fails no tab opens early and the checks below keep their original
+    // order and errors.
+    bool canOpenEarly() {
+      try {
+        _checkSshTestConnectorRoute(jumpRoute);
+        if (!hasTestConnector) _requireApi();
+      } on StateError {
+        return false;
+      }
+      return session != null && identity != null;
+    }
+
+    TerminalTabSession? earlyTab;
+    int? earlyAttempt;
+    if (reuseTab == null) {
+      if (canOpenEarly()) {
+        earlyTab = _openPendingSshTab(host, onTabOpened);
+        earlyAttempt = earlyTab.connectProgress.attempt;
+      }
+    } else if (reuseTab.connectProgress.isVisible) {
+      // Retry from the progress surface: show loading in the same tab now.
+      earlyAttempt = reuseTab.connectProgress.begin();
+    }
+    final earlyGeneration = earlyTab?.connectionGeneration;
+    final connectScopeCurrent = _captureTerminalConnectScope();
+
+    late final Map<String, String> connectionCredentialFingerprints;
+    late final ApiClient? client;
+    try {
+      connectionCredentialFingerprints = <String, String>{
+        host.id: await _fingerprintConnectionCredential(credential),
+        for (final hop in jumpRoute)
+          hop.host.id: await _fingerprintConnectionCredential(hop.credential),
+      };
+      final currentHost = hosts
+          .where((candidate) => candidate.id == host.id)
+          .firstOrNull;
+      if (expectedVaultId != null && activeVault?.id != expectedVaultId) {
+        throw StateError(currentL10n.theVaultWasSwitchedWhilePreparing);
+      }
+      if (expectedVaultId != null && currentHost == null) {
+        throw StateError(currentL10n.theWorkspaceHostWasRemovedFrom);
+      }
+      if (currentHost != null &&
+          canonicalJson(currentHost.toJson()) != hostSnapshot) {
+        throw StateError(currentL10n.theHostOrJumpHostRoute);
+      }
+      final currentTargetCredential = resolveHostCredential(
+        groupId: currentHost == null ? host.groupId : currentHost.groupId,
+        hostCredentialId: currentHost == null
+            ? host.credentialId
+            : currentHost.credentialId,
+      ).credential;
+      if (currentTargetCredential == null ||
+          canonicalJson(currentTargetCredential.toJson()) !=
+              targetCredentialSnapshot) {
+        throw StateError(currentL10n.theTargetHostsSshCredentialChanged);
+      }
+      final currentRoute = _resolveJumpHostConnection(currentHost ?? host);
+      if (currentRoute.length != jumpRoute.length) {
+        throw StateError(currentL10n.theJumpHostRouteChangedWhile);
+      }
+      for (var index = 0; index < currentRoute.length; index++) {
+        if (canonicalJson(currentRoute[index].host.toJson()) !=
+                jumpRouteSnapshots[index].$1 ||
+            canonicalJson(currentRoute[index].credential.toJson()) !=
+                jumpRouteSnapshots[index].$2 ||
+            !connectionCredentialFingerprints.containsKey(
+              currentRoute[index].host.id,
+            )) {
+          throw StateError(currentL10n.theJumpHostRouteOrCredential);
+        }
+      }
+      _checkSshTestConnectorRoute(jumpRoute);
+      client = hasTestConnector ? api : _requireApi();
+      if (session == null || identity == null) {
+        throw StateError(currentL10n.unlockTheVaultFirst2);
+      }
+    } catch (error) {
+      final pending = earlyTab;
+      if (pending != null &&
+          _isTerminalTabOpen(pending) &&
+          pending.connectionGeneration == earlyGeneration) {
+        if (expectedVaultId != null) {
+          // A saved-Workspace restore never leaves a tab behind for a pane it
+          // could not prepare in the reviewed Vault.
+          await closeTerminalTab(pending.id);
+        } else {
+          _failTerminalConnectAttempt(pending, earlyAttempt, error);
+        }
+      } else if (reuseTab != null && earlyAttempt != null) {
+        reuseTab.connectProgress.fail(
+          earlyAttempt,
+          _connectFailureMessage(error),
+        );
+      }
+      rethrow;
     }
     if (reuseTab != null && (reuseTab.recovery?.available != true ||
-        reuseTab.connectionGeneration != reuseGeneration)) return;
-    if (reuseTab == null) {
-      selectedHost = host;
-      page = WorkspacePage.terminal;
+        reuseTab.connectionGeneration != reuseGeneration)) {
+      if (earlyAttempt != null) {
+        reuseTab.connectProgress.fail(
+          earlyAttempt,
+          currentL10n.theWorkspaceChanged,
+        );
+      }
+      return;
     }
-    final id = reuseTab?.id ?? _uuid.v4();
-    final tab = reuseTab ?? _createTerminalTab(id: id, host: host);
-    final connectionGeneration = ++tab.connectionGeneration;
+    if (earlyTab != null) {
+      // Stopped, closed or superseded while preparing: that action already
+      // owns the tab state.
+      if (!_isTerminalTabOpen(earlyTab) ||
+          earlyTab.connectionGeneration != earlyGeneration) {
+        return;
+      }
+      if (!connectScopeCurrent()) {
+        _failTerminalConnectAttempt(
+          earlyTab,
+          earlyAttempt,
+          StateError(currentL10n.theWorkspaceChanged),
+        );
+        return;
+      }
+    }
+    // Preconditions that only became true while preparing open the tab now.
+    final pendingTab = reuseTab != null
+        ? null
+        : earlyTab ?? _openPendingSshTab(host, onTabOpened);
+    final int? progressAttempt = earlyTab != null || reuseTab != null
+        ? earlyAttempt
+        : pendingTab!.connectProgress.attempt;
+    final progressTab = reuseTab ?? pendingTab!;
+    void advance(ConnectStage stage) {
+      if (progressAttempt != null) {
+        progressTab.connectProgress.advance(progressAttempt, stage);
+      }
+    }
+
+    final id = reuseTab?.id ?? pendingTab!.id;
+    final tab = reuseTab ?? pendingTab!;
+    final connectionGeneration = pendingTab != null
+        ? pendingTab.connectionGeneration
+        : ++tab.connectionGeneration;
     bool attemptCurrent() => _isTerminalTabOpen(tab) &&
         tab.connectionGeneration == connectionGeneration;
     tab.host = host;
@@ -20514,17 +20859,27 @@ class AppController extends ChangeNotifier {
       tab.connectionHostSnapshots[jumpRoute[index].host.id] =
           jumpRouteSnapshots[index].$1;
     }
+    // A new tab was registered, ordered and selected by _openPendingSshTab.
     _terminalTabs[id] = tab;
-    if (reuseTab == null) {
-      _terminalTabOrder.add(id);
-      _activeTerminalTabId = id;
-    }
     _installTerminalRecovery(tab);
     tab.log = sessionLogs.begin(host: host, viaJump: jumpRoute.isNotEmpty);
     tab.shellHistoryRestoration = _restoreTerminalShellHistory(tab);
     unawaited(tab.shellHistoryRestoration);
-    onTabOpened?.call(id);
+    if (pendingTab == null) onTabOpened?.call(id);
+    advance(ConnectStage.connecting);
     notifyListeners();
+    Future<List<String>?> requestUserInfo(
+      HostRecord challengeHost,
+      SSHUserInfoRequest request,
+    ) async {
+      advance(ConnectStage.awaitingUser);
+      try {
+        return await _requestSshUserInfo(tab, challengeHost, request);
+      } finally {
+        advance(ConnectStage.authenticating);
+      }
+    }
+
     SshHostKeyFailure? hostKeyFailure;
     KnownHostApprovalRequest? hostKeyDecisionToResolve;
     // A full SSH retry starts at the first Jump Host again. Keep each
@@ -20679,22 +21034,35 @@ class AppController extends ChangeNotifier {
         }
       }
 
+      // Progress follows the real handshake: a presented key moves the tab to
+      // "verifying", an accepted key to "signing in".
+      Future<bool> trackedVerifyHostKeyFor(
+        HostRecord keyHost,
+        String type,
+        String fingerprint,
+      ) async {
+        advance(ConnectStage.verifyingHost);
+        final accepted = await verifyHostKeyFor(keyHost, type, fingerprint);
+        if (accepted) advance(ConnectStage.authenticating);
+        return accepted;
+      }
+
       Future<bool> verifyHostKey(String type, String fingerprint) =>
-          verifyHostKeyFor(host, type, fingerprint);
+          trackedVerifyHostKeyFor(host, type, fingerprint);
       final sshJumpHops = jumpRoute
           .map(
             (hop) => SshJumpHop(
               host: hop.host,
               credential: hop.credential,
               verifyHostKey: (type, fingerprint) =>
-                  verifyHostKeyFor(hop.host, type, fingerprint),
+                  trackedVerifyHostKeyFor(hop.host, type, fingerprint),
             ),
           )
           .toList(growable: false);
       Future<bool> verifyLegacyJumpHostKey(String type, String fingerprint) =>
           jumpRoute.isEmpty
           ? Future<bool>.value(false)
-          : verifyHostKeyFor(jumpRoute.last.host, type, fingerprint);
+          : trackedVerifyHostKeyFor(jumpRoute.last.host, type, fingerprint);
 
       final connector = sshConnectorForTesting;
       final jumpConnector = sshConnectorWithJumpForTesting;
@@ -20707,6 +21075,7 @@ class AppController extends ChangeNotifier {
       late SshConnection connection;
       while (true) {
         hostKeyDecisionToResolve = null;
+        advance(ConnectStage.connecting);
         SshConnection? attemptConnection;
         try {
           attemptConnection = cancellationConnector != null
@@ -20716,8 +21085,7 @@ class AppController extends ChangeNotifier {
                   verifyHostKey: verifyHostKey,
                   jumpHops: sshJumpHops,
                   cancellation: connectCancellation,
-                  onUserInfoRequest: (challengeHost, request) =>
-                      _requestSshUserInfo(tab, challengeHost, request),
+                  onUserInfoRequest: requestUserInfo,
                 )
               : userInfoConnector != null
               ? await userInfoConnector(
@@ -20725,8 +21093,7 @@ class AppController extends ChangeNotifier {
                   credential: credential,
                   verifyHostKey: verifyHostKey,
                   jumpHops: sshJumpHops,
-                  onUserInfoRequest: (challengeHost, request) =>
-                      _requestSshUserInfo(tab, challengeHost, request),
+                  onUserInfoRequest: requestUserInfo,
                 )
               : routeConnector != null
               ? await routeConnector(
@@ -20768,8 +21135,7 @@ class AppController extends ChangeNotifier {
                   knownHostDecisionScope:
                       _requireRepository().knownHostDecisionScope,
                   cancellation: connectCancellation,
-                  onUserInfoRequest: (challengeHost, request) =>
-                      _requestSshUserInfo(tab, challengeHost, request),
+                  onUserInfoRequest: requestUserInfo,
                 );
         } catch (_) {
           if (hostKeyDecisionToResolve == null) rethrow;
@@ -20819,6 +21185,7 @@ class AppController extends ChangeNotifier {
           );
           final confirmDetailed = askTrustHostApproval;
           final confirmLegacy = askTrustHost;
+          advance(ConnectStage.awaitingUser);
           final approved = confirmDetailed != null
               ? await confirmDetailed(approvalRequest)
               : confirmLegacy != null
@@ -20831,6 +21198,7 @@ class AppController extends ChangeNotifier {
             hostKeyFailure = SshHostKeyFailure.rejected;
             throw SshHostKeyVerificationException(hostKeyFailure!);
           }
+          advance(ConnectStage.verifyingHost);
           var approvalWasQueuedOffline = false;
           await approveKnownHost(
             host: approvalRequest.host,
@@ -20916,8 +21284,18 @@ class AppController extends ChangeNotifier {
         if (!attemptCurrent()) return;
       }
 
-      if (!attemptCurrent() || (reuseTab != null && tab.recovery?.available != true)) {
+      if (!attemptCurrent() || (reuseTab != null && tab.recovery?.available != true) ||
+          !connectScopeCurrent()) {
         await connection.close();
+        // Account/Vault/lock scope changed while connecting: this attempt is
+        // still the tab's own, so report it instead of leaving it loading.
+        if (attemptCurrent()) {
+          _failTerminalConnectAttempt(
+            tab,
+            progressAttempt,
+            StateError(currentL10n.theWorkspaceChanged),
+          );
+        }
         return;
       }
       tab.connection = connection;
@@ -20925,6 +21303,9 @@ class AppController extends ChangeNotifier {
       tab.connectionCancellation = null;
       tab.state = 'connected';
       tab.errorMessage = null;
+      if (progressAttempt != null) {
+        tab.connectProgress.succeed(progressAttempt);
+      }
       tab.recovery?.update(connected: true);
       tab.log?.markConnected();
       tab.outputSubscription = connection.output.listen(
@@ -20962,6 +21343,17 @@ class AppController extends ChangeNotifier {
             ? error
             : SshHostKeyVerificationException(hostKeyFailure!),
       );
+      if (progressAttempt != null) {
+        final reportedFailure = hostKeyFailure;
+        tab.connectProgress.fail(
+          progressAttempt,
+          _connectFailureMessage(
+            reportedFailure == null
+                ? error
+                : SshHostKeyVerificationException(reportedFailure),
+          ),
+        );
+      }
       final failure = hostKeyFailure;
       _setError(
         friendlyError(
@@ -20969,6 +21361,16 @@ class AppController extends ChangeNotifier {
         ),
       );
       rethrow;
+    } finally {
+      // Any exit that neither connected nor reported keeps no loading state.
+      if (progressAttempt != null &&
+          attemptCurrent() &&
+          tab.connectProgress.isCurrent(progressAttempt)) {
+        tab.connectProgress.fail(
+          progressAttempt,
+          tab.errorMessage ?? currentL10n.theWorkspaceChanged,
+        );
+      }
     }
   }
 
@@ -21339,6 +21741,8 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _closeTerminalTabResources(TerminalTabSession tab) async {
+    // Closed tabs never show or restart an attempt again.
+    tab.connectProgress.retire();
     tab.recovery?.dispose();
     tab.recovery = null;
     tab.log?.markClosed(SessionLogEndReason.user);

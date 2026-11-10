@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'app_menu.dart';
 
 import 'package:dartssh2/dartssh2.dart';
@@ -383,7 +385,8 @@ class _RemoteFileWorkspaceState extends State<RemoteFileWorkspace> {
     }
     try {
       await edits.open(owner.entryPath(item), listedSize: item.attr.size);
-      if (mounted) _snack(context.l10n.fileEditOpened(item.filename));
+      if (mounted && defaultTargetPlatform != TargetPlatform.android)
+        _snack(context.l10n.fileEditOpened(item.filename));
     } catch (error) {
       if (mounted) _snack(externalEditErrorText(context, error));
     }
@@ -689,7 +692,12 @@ class _RemoteFileWorkspaceState extends State<RemoteFileWorkspace> {
               ? null
               : () {
                   model.select(item);
-                  if (directory) model.enter(item);
+                  if (directory) {
+                    model.enter(item);
+                  } else if (!kIsWeb &&
+                      defaultTargetPlatform == TargetPlatform.android) {
+                    unawaited(_openExternal(item));
+                  }
                 },
           onSecondaryTapUp: disabled
               ? null

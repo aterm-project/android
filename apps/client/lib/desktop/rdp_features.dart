@@ -14,6 +14,7 @@ class RdpFeatures {
   static const fileClipboard = 1 << 7;
   static const camera = 1 << 8;
   static const usb = 1 << 9;
+  static const nativeTouch = 1 << 10;
 
   final int bits;
   bool has(int flag) => bits & configV1 != 0 && bits & flag == flag;

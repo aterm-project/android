@@ -4,8 +4,9 @@ import '../domain/models.dart';
 import '../storage/local_host_repository.dart';
 import 'ssh_service.dart';
 
-typedef LocalKnownHostApprovalPrompt =
-    Future<bool> Function(LocalKnownHostApprovalRequest request);
+typedef LocalKnownHostApprovalPrompt = Future<bool> Function(
+  LocalKnownHostApprovalRequest request,
+);
 
 /// Tracks one LocalVault SSH handshake's deferred host-key decision.
 ///
@@ -110,10 +111,13 @@ final class LocalProfileSshController {
   final LocalHostRepository repository;
   final SshService _service;
 
+  /// [cancellation] lets the owning tab stop loading: it closes the sockets
+  /// of the in-flight route, and every later trust restart observes it.
   Future<SshConnection> connect({
     required HostRecord host,
     required CredentialRecord credential,
     required LocalKnownHostApprovalPrompt askApproval,
+    SshConnectCancellation? cancellation,
   }) async {
     if (kIsWeb) {
       throw UnsupportedError(
@@ -164,6 +168,9 @@ final class LocalProfileSshController {
     final maxTrustRestarts = (jumpRoute.length + 1) * 2;
     for (var attempt = 0; attempt < maxTrustRestarts; attempt++) {
       pendingTrust = null;
+      if (cancellation?.isCancelled == true) {
+        throw const SshConnectCancelledException();
+      }
       try {
         return await _service.connect(
           host: host,
@@ -172,6 +179,7 @@ final class LocalProfileSshController {
           knownHostDecisionScope: repository.knownHostDecisionScope,
           verifyHostKey: (algorithm, fingerprint) =>
               verify(host, algorithm, fingerprint),
+          cancellation: cancellation,
         );
       } on Object {
         final trust = pendingTrust;

@@ -18522,4 +18522,103 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get desktopKeyboardSaveFailed =>
       'Настройка действует, но сохранить её не удалось. Повторите попытку.';
+
+  @override
+  String get rdpAddDisk => 'Добавить диск';
+
+  @override
+  String get rdpChooseDisk => 'Выбрать диск';
+
+  @override
+  String get rdpLocalStorage => 'Локальное хранилище';
+
+  @override
+  String rdpStorageFolderUnavailable(String name) {
+    return 'Папка «$name» недоступна на этом устройстве. Подключите диск или выберите местную папку заново.';
+  }
+
+  @override
+  String get rdpStoragePermissionRequired =>
+      'Для перенаправления диска или папки разрешите Atermius доступ к файлам в настройках Android и повторите попытку. Доступны только папки, добавленные для этого хоста.';
+
+  @override
+  String get rdpStoragePickerFailed =>
+      'Не удалось выбрать местную папку. Попробуйте другую папку на этом устройстве.';
+
+  @override
+  String get rdpDriveMappingHelp =>
+      'Диски и папки доступны в удалённом сеансе по пути \\\\tsclient. Изменения применяются после переподключения. Для прямого доступа к дискам Android требует разрешение на файлы.';
+
+  @override
+  String get rdpRenameMapping => 'Переименовать ресурс';
+
+  @override
+  String get rdpMappingName => 'Имя ресурса';
+
+  @override
+  String get rdpMappingReconnect =>
+      'Переподключитесь к удалённому сеансу, чтобы применить изменения перенаправления.';
+
+  @override
+  String get keybarShiftGuidance =>
+      'Shift: одно касание — следующая клавиша, двойное — фиксация';
+
+  @override
+  String get lockShiftModifier => 'Зафиксировать Shift';
+
+  @override
+  String get releaseModifiers => 'Отпустить Ctrl, Alt и Shift';
+
+  @override
+  String connectProgressConnectingTo(String name) {
+    return 'Подключение к $name';
+  }
+
+  @override
+  String connectProgressFailedTo(String name) {
+    return 'Не удалось подключиться к $name';
+  }
+
+  @override
+  String get connectProgressStoppedTitle => 'Загрузка остановлена';
+
+  @override
+  String get connectProgressStoppedDetail =>
+      'Попытка подключения остановлена. «Повторить» начнёт новую попытку в этой вкладке.';
+
+  @override
+  String get connectProgressStagePreparing =>
+      'Проверка настроек хоста и данных входа';
+
+  @override
+  String get connectProgressStageConnecting => 'Установка соединения';
+
+  @override
+  String get connectProgressStageVerifyingHost => 'Проверка подлинности хоста';
+
+  @override
+  String get connectProgressStageAwaitingUser => 'Ожидание вашего ответа';
+
+  @override
+  String get connectProgressStageAuthenticating => 'Выполняется вход';
+
+  @override
+  String get connectProgressStageStartingSession => 'Запуск сеанса';
+
+  @override
+  String get connectProgressStop => 'Остановить загрузку';
+
+  @override
+  String get connectProgressRetry => 'Повторить';
+
+  @override
+  String get connectProgressClose => 'Закрыть';
+
+  @override
+  String get connectProgressRetryUnavailable =>
+      'Эта вкладка относится к прежнему входу, сейфу или профилю, повторить нельзя. Закройте её и подключитесь заново.';
+
+  @override
+  String get connectProgressNoCredential =>
+      'У этого хоста нет пригодных сохранённых данных входа. Добавьте или исправьте учётные данные и повторите.';
 }

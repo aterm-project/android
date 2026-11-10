@@ -36,3 +36,19 @@ atermius_patch(channels/rdpecam/client/encoding.c
 atermius_patch(channels/rdpecam/client/encoding.c
   "\tif (!ecam_encoder_context_init(stream))\n\t\treturn FALSE;\n\n\treturn freerdp_video_sample_convert("
   "\tif (!ecam_encoder_context_init(stream))\n\t\treturn FALSE;\n\n\t/* atermius: passthrough without a codec context */\n\tif ((inputFormat != FREERDP_VIDEO_FORMAT_NONE) && (inputFormat == outputFormat))\n\t{\n\t\tif (!Stream_EnsureRemainingCapacity(output, srcSize))\n\t\t\treturn FALSE;\n\t\tStream_Write(output, srcData, srcSize);\n\t\treturn TRUE;\n\t}\n\n\treturn freerdp_video_sample_convert(")
+
+# 3. POSIX directory enumeration omits . and ..: an empty directory has no
+#    FindFirstFile result. It must still be removed (RDPDR DeleteDirectory).
+atermius_patch(winpr/libwinpr/path/path.c
+  "\t\tdir = FindFirstFileA(path_slash, &findFileData);\n\n\t\tif (dir == INVALID_HANDLE_VALUE)\n\t\t\tgoto fail;"
+  "\t\tdir = FindFirstFileA(path_slash, &findFileData);\n\n\t\tif (dir == INVALID_HANDLE_VALUE)\n\t\t{\n\t\t\tconst DWORD error = GetLastError();\n\t\t\tif ((error == ERROR_NO_MORE_FILES) || (error == ERROR_FILE_NOT_FOUND))\n\t\t\t\tret = winpr_RemoveDirectory(lpPathName);\n\t\t\tgoto fail;\n\t\t}")
+
+# 4. Report native touch only after the server SC_READY and our CS_READY.
+#    ChannelConnected precedes that handshake; GetVersion is initialized to
+#    V300 even before negotiation, so it cannot be used as a readiness flag.
+atermius_patch(include/freerdp/client/rdpei.h
+  "\t\tUINT32 clientFeaturesMask;"
+  "\t\tUINT32 clientFeaturesMask;\n\t\t/* atermius: optional callback after the RDPEI ready handshake */\n\t\tpcRdpeiResumeTouch Ready;")
+atermius_patch(channels/rdpei/client/rdpei_main.c
+  "\t\t\tbreak;\n\n\t\tcase EVENTID_SUSPEND_TOUCH:"
+  "\t\t\t/* atermius: both ready PDUs succeeded */\n\t\t\tIFCALLRET(rdpei->context->Ready, error, rdpei->context);\n\t\t\tif (error)\n\t\t\t\treturn error;\n\t\t\tbreak;\n\n\t\tcase EVENTID_SUSPEND_TOUCH:")

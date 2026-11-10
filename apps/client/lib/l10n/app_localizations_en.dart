@@ -18476,4 +18476,103 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopKeyboardSaveFailed =>
       'This choice applies now, but could not be saved. Try again.';
+
+  @override
+  String get rdpAddDisk => 'Add disk';
+
+  @override
+  String get rdpChooseDisk => 'Choose a disk';
+
+  @override
+  String get rdpLocalStorage => 'Local Storage';
+
+  @override
+  String rdpStorageFolderUnavailable(String name) {
+    return 'Folder $name is unavailable on this device. Reconnect the disk or choose a local folder again.';
+  }
+
+  @override
+  String get rdpStoragePermissionRequired =>
+      'To map a disk or folder, allow Atermius to access files in Android Settings, then try again. Only folders added to this host are shared.';
+
+  @override
+  String get rdpStoragePickerFailed =>
+      'Could not choose a local folder. Try another folder on this device.';
+
+  @override
+  String get rdpDriveMappingHelp =>
+      'Mapped disks and folders appear under \\\\tsclient in the remote session. Changes apply after reconnecting. Android requires file access permission for live disk mapping.';
+
+  @override
+  String get rdpRenameMapping => 'Rename mapping';
+
+  @override
+  String get rdpMappingName => 'Mapping name';
+
+  @override
+  String get rdpMappingReconnect =>
+      'Connect to the remote session again to apply mapping changes.';
+
+  @override
+  String get keybarShiftGuidance =>
+      'Shift: tap for the next key only, double-tap to lock';
+
+  @override
+  String get lockShiftModifier => 'Lock Shift modifier';
+
+  @override
+  String get releaseModifiers => 'Release Control, Alt and Shift';
+
+  @override
+  String connectProgressConnectingTo(String name) {
+    return 'Connecting to $name';
+  }
+
+  @override
+  String connectProgressFailedTo(String name) {
+    return 'Couldn\'t connect to $name';
+  }
+
+  @override
+  String get connectProgressStoppedTitle => 'Loading stopped';
+
+  @override
+  String get connectProgressStoppedDetail =>
+      'The connection attempt was stopped. Retry starts a new attempt in this tab.';
+
+  @override
+  String get connectProgressStagePreparing =>
+      'Checking host settings and sign-in details';
+
+  @override
+  String get connectProgressStageConnecting => 'Opening the connection';
+
+  @override
+  String get connectProgressStageVerifyingHost => 'Verifying the host identity';
+
+  @override
+  String get connectProgressStageAwaitingUser => 'Waiting for your response';
+
+  @override
+  String get connectProgressStageAuthenticating => 'Signing in';
+
+  @override
+  String get connectProgressStageStartingSession => 'Starting the session';
+
+  @override
+  String get connectProgressStop => 'Stop loading';
+
+  @override
+  String get connectProgressRetry => 'Retry';
+
+  @override
+  String get connectProgressClose => 'Close';
+
+  @override
+  String get connectProgressRetryUnavailable =>
+      'This tab belongs to an earlier sign-in, Vault or profile and can\'t retry. Close it and connect again.';
+
+  @override
+  String get connectProgressNoCredential =>
+      'This host has no usable saved sign-in. Add or fix its credential, then retry.';
 }

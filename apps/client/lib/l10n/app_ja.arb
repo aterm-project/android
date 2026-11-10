@@ -4877,5 +4877,40 @@
   "desktopKeyboardResize": "キーボードに合わせてサイズ変更",
   "desktopKeyboardOverlayDescription": "キーボードと特殊キーを画面に重ねて表示し、リモートの解像度と表示倍率を維持します。",
   "desktopKeyboardResizeDescription": "キーボードの上の領域にデスクトップを縮小します。ウィンドウサイズに追従する接続ではリモート解像度も変更します。",
-  "desktopKeyboardSaveFailed": "今回の選択は適用されましたが、保存できませんでした。もう一度お試しください。"
+  "desktopKeyboardSaveFailed": "今回の選択は適用されましたが、保存できませんでした。もう一度お試しください。",
+  "rdpAddDisk": "ドライブを追加",
+  "rdpChooseDisk": "ドライブを選択",
+  "rdpLocalStorage": "ローカルストレージ",
+  "rdpStorageFolderUnavailable": "このデバイスでフォルダー「{name}」にアクセスできません。ドライブを接続するか、このデバイスでフォルダーを選び直してください。",
+  "@rdpStorageFolderUnavailable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rdpStoragePermissionRequired": "ドライブまたはフォルダーを共有するには、Android 設定で Atermius のファイルアクセスを許可してから再試行してください。このホストに追加したフォルダーだけを共有します。",
+  "rdpStoragePickerFailed": "ローカルフォルダーを選択できません。このデバイス上の別のフォルダーをお試しください。",
+  "rdpDriveMappingHelp": "共有ドライブとフォルダーはリモートセッションの \\\\tsclient に表示されます。変更は再接続後に反映されます。Android のライブ共有にはファイルアクセスの許可が必要です。",
+  "rdpRenameMapping": "共有名を変更",
+  "rdpMappingName": "共有名",
+  "rdpMappingReconnect": "共有設定の変更を反映するにはリモートセッションに再接続してください。",
+  "keybarShiftGuidance": "Shift：タップで次のキーのみ有効、ダブルタップで固定",
+  "lockShiftModifier": "Shift を固定",
+  "releaseModifiers": "Ctrl・Alt・Shift を解除",
+  "connectProgressConnectingTo": "{name} に接続しています",
+  "connectProgressFailedTo": "{name} に接続できませんでした",
+  "connectProgressStoppedTitle": "読み込みを中止しました",
+  "connectProgressStoppedDetail": "接続の試行を中止しました。「再試行」でこのタブから新しく接続します。",
+  "connectProgressStagePreparing": "ホスト設定とサインイン情報を確認しています",
+  "connectProgressStageConnecting": "接続を確立しています",
+  "connectProgressStageVerifyingHost": "ホストの身元を確認しています",
+  "connectProgressStageAwaitingUser": "応答を待っています",
+  "connectProgressStageAuthenticating": "サインインしています",
+  "connectProgressStageStartingSession": "セッションを開始しています",
+  "connectProgressStop": "読み込みを中止",
+  "connectProgressRetry": "再試行",
+  "connectProgressClose": "閉じる",
+  "connectProgressRetryUnavailable": "このタブは以前のサインイン、保管庫またはプロファイルのものなので再試行できません。閉じてから接続し直してください。",
+  "connectProgressNoCredential": "このホストには使用できる保存済みのサインイン情報がありません。認証情報を追加または修正してから再試行してください。"
 }

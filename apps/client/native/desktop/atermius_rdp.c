@@ -16,6 +16,9 @@
 #include <freerdp/input.h>
 #include <freerdp/client/cmdline.h>
 #include <freerdp/client/disp.h>
+#if defined(ATERMIUS_RDP_NATIVE_TOUCH)
+#include <freerdp/client/rdpei.h>
+#endif
 #include <freerdp/client/cliprdr.h>
 #include <freerdp/channels/channels.h>
 #include <freerdp/channels/rdpdr.h>
@@ -41,6 +44,7 @@
 #define FEATURE_FILE_CLIPBOARD (1u << 7)
 #define FEATURE_CAMERA (1u << 8)
 #define FEATURE_USB (1u << 9)
+#define FEATURE_NATIVE_TOUCH (1u << 10)
 
 #define MAX_DESKTOP_SIDE 8192u
 #define MAX_DESKTOP_PIXELS (8192u * 4096u)
@@ -117,6 +121,11 @@ typedef struct {
   BOOL connected, pin_set, disp_ready, certificate_rejected;
   BOOL clipboard_enabled, files_enabled, server_files;
   BYTE pin[32], rejected_certificate[32];
+#if defined(ATERMIUS_RDP_NATIVE_TOUCH)
+  RdpeiClientContext* touch;
+  BOOL touch_ready;
+  struct { BOOL active; INT32 x, y; } contacts[10];
+#endif
   DispClientContext* disp;
   CliprdrClientContext* clip;
   CRITICAL_SECTION lock;
@@ -486,8 +495,38 @@ static UINT clip_file_response(CliprdrClientContext* clip,
   LeaveCriticalSection(&c->lock);
   return CHANNEL_RC_OK;
 }
+#if defined(ATERMIUS_RDP_NATIVE_TOUCH)
+static UINT touch_ready(RdpeiClientContext* context) {
+  AtermContext* c = context->custom;
+  EnterCriticalSection(&c->lock);
+  if (c->touch == context) c->touch_ready = TRUE;
+  LeaveCriticalSection(&c->lock);
+  return CHANNEL_RC_OK;
+}
+static UINT touch_suspended(RdpeiClientContext* context) {
+  AtermContext* c = context->custom;
+  EnterCriticalSection(&c->lock);
+  c->touch_ready = FALSE;
+  memset(c->contacts, 0, sizeof(c->contacts));
+  LeaveCriticalSection(&c->lock);
+  return CHANNEL_RC_OK;
+}
+#endif
 static void channel_connected(void* ctx, const ChannelConnectedEventArgs* event) {
   AtermContext* c = (AtermContext*)ctx;
+#if defined(ATERMIUS_RDP_NATIVE_TOUCH)
+  if (strcmp(event->name, RDPEI_DVC_CHANNEL_NAME) == 0) {
+    EnterCriticalSection(&c->lock);
+    c->touch = (RdpeiClientContext*)event->pInterface;
+    c->touch_ready = FALSE;
+    memset(c->contacts, 0, sizeof(c->contacts));
+    c->touch->custom = c;
+    c->touch->Ready = touch_ready;
+    c->touch->SuspendTouch = touch_suspended;
+    c->touch->ResumeTouch = touch_ready;
+    LeaveCriticalSection(&c->lock);
+  }
+#endif
   if (strcmp(event->name, DISP_DVC_CHANNEL_NAME) == 0) {
     c->disp = (DispClientContext*)event->pInterface;
     c->disp->custom = c; c->disp->DisplayControlCaps = disp_caps;
@@ -505,6 +544,15 @@ static void channel_connected(void* ctx, const ChannelConnectedEventArgs* event)
 }
 static void channel_disconnected(void* ctx, const ChannelDisconnectedEventArgs* event) {
   AtermContext* c = (AtermContext*)ctx;
+#if defined(ATERMIUS_RDP_NATIVE_TOUCH)
+  if (strcmp(event->name, RDPEI_DVC_CHANNEL_NAME) == 0) {
+    EnterCriticalSection(&c->lock);
+    c->touch = NULL;
+    c->touch_ready = FALSE;
+    memset(c->contacts, 0, sizeof(c->contacts));
+    LeaveCriticalSection(&c->lock);
+  }
+#endif
   if (strcmp(event->name, DISP_DVC_CHANNEL_NAME) == 0) { c->disp = NULL; c->disp_ready = FALSE; }
   if (strcmp(event->name, CLIPRDR_SVC_CHANNEL_NAME) == 0) c->clip = NULL;
 }
@@ -725,6 +773,9 @@ API UINT32 aterm_rdp_features(void) {
 #if defined(ATERMIUS_RDP_USB)
   bits |= FEATURE_USB;
 #endif
+#if defined(ATERMIUS_RDP_NATIVE_TOUCH)
+  bits |= FEATURE_NATIVE_TOUCH;
+#endif
   return bits;
 }
 
@@ -837,6 +888,11 @@ API void* aterm_rdp_create_ex(const char* host, int port, const char* user,
     if (!add_device(s, RDPDR_DTYP_SMARTCARD, 1, args)) goto fail;
     devices = TRUE;
   }
+#if defined(ATERMIUS_RDP_NATIVE_TOUCH)
+  { const char* params[] = { "rdpei" };
+    if (!freerdp_client_add_dynamic_channel(s, 1, params)) goto fail;
+  }
+#endif
   BOOLVAL(DeviceRedirection, devices);
   BOOLVAL(AudioPlayback, cfg.audio == 0);
   BOOLVAL(RemoteConsoleAudio, cfg.audio == 1);
@@ -955,6 +1011,56 @@ API int aterm_rdp_mouse(void* handle, int x, int y, UINT32 buttons) {
   if (buttons & 16) ok = freerdp_input_send_mouse_event(input, PTR_FLAGS_WHEEL | PTR_FLAGS_WHEEL_NEGATIVE | 0x88, 0, 0) && ok;
   c->buttons = buttons & 7;
   return ok;
+}
+// Optional exports: older installed DLLs continue to use mouse fallback.
+API int aterm_rdp_can_touch(void* handle) {
+#if defined(ATERMIUS_RDP_NATIVE_TOUCH)
+  AtermContext* c = handle;
+  if (!c) return 0;
+  EnterCriticalSection(&c->lock);
+  int ready = c->connected && c->touch && c->touch_ready;
+  LeaveCriticalSection(&c->lock);
+  return ready;
+#else
+  (void)handle; return 0;
+#endif
+}
+// phase: 0 down, 1 move, 2 up, 3 cancel. IDs are bounded per-session slots.
+API int aterm_rdp_touch(void* handle, int id, int phase, int x, int y) {
+#if defined(ATERMIUS_RDP_NATIVE_TOUCH)
+  AtermContext* c = handle;
+  if (!c || id < 1 || id > 10 || phase < 0 || phase > 3) return 0;
+  EnterCriticalSection(&c->lock);
+  int ok = 0, i = id - 1; INT32 contact = -1;
+  if (!c->connected || !c->touch || !c->touch_ready || !c->context.gdi) goto done;
+  if (x < 0) x = 0;
+  if (y < 0) y = 0;
+  if (x >= c->context.gdi->width) x = c->context.gdi->width - 1;
+  if (y >= c->context.gdi->height) y = c->context.gdi->height - 1;
+  if (phase == 0) {
+    if (c->contacts[i].active) goto done;
+    ok = c->touch->TouchBegin(c->touch, id, x, y, &contact) == CHANNEL_RC_OK;
+    if (ok) { c->contacts[i].active = TRUE; c->contacts[i].x = x; c->contacts[i].y = y; }
+  } else if (c->contacts[i].active) {
+    // MS-RDPEI UP retains the last engaged coordinates. A final move first
+    // records any new pointer-up coordinate before ending that contact.
+    if (phase == 1 || (phase == 2 && (x != c->contacts[i].x || y != c->contacts[i].y))) {
+      if (c->touch->TouchUpdate(c->touch, id, x, y, &contact) != CHANNEL_RC_OK) goto done;
+      c->contacts[i].x = x; c->contacts[i].y = y;
+    }
+    ok = 1;
+    if (phase >= 2) {
+      pcRdpeiTouchEvent finish = phase == 3 ? c->touch->TouchCancel : c->touch->TouchEnd;
+      ok = finish(c->touch, id, c->contacts[i].x, c->contacts[i].y, &contact) == CHANNEL_RC_OK;
+      if (ok) c->contacts[i].active = FALSE;
+    }
+  }
+done:
+  LeaveCriticalSection(&c->lock);
+  return ok;
+#else
+  (void)handle; (void)id; (void)phase; (void)x; (void)y; return 0;
+#endif
 }
 API int aterm_rdp_resize(void* handle, UINT32 width, UINT32 height) {
   AtermContext* c = (AtermContext*)handle;
