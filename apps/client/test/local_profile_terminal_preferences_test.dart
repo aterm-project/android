@@ -29,6 +29,8 @@ import 'package:aterm_client/ui/terminal_color_theme.dart';
 import 'package:aterm_client/ui/workspace_tab_bar.dart';
 import 'package:aterm_client/ui/session_workspace.dart';
 import 'package:aterm_client/ui/terminal_tools_sidebar.dart';
+import 'package:aterm_client/ui/terminal_keybar.dart';
+import 'package:aterm_client/ui/workspace_status_bar.dart';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -475,6 +477,166 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       await drainClose(tester);
     },
+  );
+  testWidgets(
+    'Android two-pane local split shares one keybar above the keyboard that drives only the focused pane',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await openFixtureTerminal(tester);
+      var bar = tester.widget<WorkspaceTabBar>(find.byType(WorkspaceTabBar));
+      final firstId = bar.selectedId;
+      bar.onDuplicate!(firstId);
+      for (
+        var attempt = 0;
+        attempt < 100 && sshHarness.userAuthenticationCount < 2;
+        attempt++
+      ) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 30)),
+        );
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await pumpUntilIdle(tester);
+      bar = tester.widget<WorkspaceTabBar>(find.byType(WorkspaceTabBar));
+      final secondId = bar.selectedId;
+      expect(secondId, isNot(firstId));
+      final layout = tester
+          .widget<SessionWorkspaceView>(find.byType(SessionWorkspaceView))
+          .controller;
+      layout.activate(firstId);
+      layout.split(secondId, firstId, SessionSplitEdge.right);
+      bar.onSelect(firstId);
+      await tester.pumpAndSettle();
+
+      final keybar = find.byType(TerminalKeybar);
+      final views = find.byType(TerminalView);
+      expect(views, findsNWidgets(2));
+      // One bar for the whole workspace, not one per pane.
+      expect(keybar, findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('local_shared_terminal_keybar')),
+        findsOneWidget,
+      );
+      for (final view in views.evaluate()) {
+        expect(
+          find.descendant(
+            of: find.byWidget(view.widget),
+            matching: find.byType(TerminalKeybar),
+          ),
+          findsNothing,
+        );
+      }
+      // Both panes keep the same height: the bar does not shrink one pane.
+      final paneHeights = [
+        for (final element in views.evaluate())
+          tester.getSize(find.byWidget(element.widget)).height,
+      ];
+      expect(paneHeights.first, closeTo(paneHeights.last, 0.5));
+      // Docked at the bottom, under the status bar, directly above the IME.
+      expect(tester.getRect(keybar).bottom, closeTo(900, 0.5));
+      expect(
+        tester.getRect(find.byType(WorkspaceStatusBar)).bottom,
+        lessThanOrEqualTo(tester.getRect(keybar).top + 0.5),
+      );
+
+      TerminalView viewOf(Terminal terminal) => tester
+          .widgetList<TerminalView>(views)
+          .singleWhere((view) => identical(view.terminal, terminal));
+      Finder paneOf(Terminal terminal) => find.byWidget(viewOf(terminal));
+      final terminals = tester
+          .widgetList<TerminalView>(views)
+          .map((view) => view.terminal)
+          .toList();
+      Terminal barTerminal() => tester.widget<TerminalKeybar>(keybar).terminal;
+      final firstTerminal = barTerminal();
+      final secondTerminal = terminals.singleWhere(
+        (terminal) => !identical(terminal, firstTerminal),
+      );
+      List<int> writeCounts() => [
+        for (final session in sshHarness.sessions) session.writes.length,
+      ];
+      List<String> newWrites(List<int> before) => [
+        for (var i = 0; i < sshHarness.sessions.length; i++)
+          for (final data in sshHarness.sessions[i].writes.skip(
+            i < before.length ? before[i] : 0,
+          ))
+            '$i:${utf8.decode(data)}',
+      ];
+      final input = tester.testTextInput;
+      bool shown() => input.log.any((call) => call.method == 'TextInput.show');
+
+      // The first pane is focused; the bar drives it alone.
+      expect(viewOf(firstTerminal).focusNode?.hasFocus, isTrue);
+      expect(viewOf(secondTerminal).focusNode?.hasFocus, isFalse);
+      var before = writeCounts();
+      await tester.tap(find.text('Esc'));
+      await tester.pump();
+      final firstWrites = newWrites(before);
+      expect(firstWrites, hasLength(1));
+      expect(firstWrites.single, endsWith(':\x1b'));
+      final firstSession = firstWrites.single.split(':').first;
+
+      // Arm Ctrl for the first pane, then touch the second pane.
+      await tester.tap(find.text('Ctrl'));
+      await tester.pump();
+      input.log.clear();
+      await tester.tap(paneOf(secondTerminal));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(layout.selectedId, secondId);
+      expect(keybar, findsOneWidget);
+      expect(identical(barTerminal(), secondTerminal), isTrue);
+      expect(viewOf(secondTerminal).focusNode?.hasFocus, isTrue);
+      expect(viewOf(firstTerminal).focusNode?.hasFocus, isFalse);
+      // Touch only focuses: the keyboard is not opened.
+      expect(shown(), isFalse);
+      before = writeCounts();
+      // The armed Ctrl belonged to the other pane and does not follow.
+      input.enterText('c');
+      await tester.pump();
+      await tester.tap(find.text('Tab'));
+      await tester.pump();
+      final secondWrites = newWrites(before);
+      expect(secondWrites.map((w) => w.split(':').last), ['c', '\t']);
+      final secondSession = secondWrites.first.split(':').first;
+      expect(secondSession, isNot(firstSession));
+      expect(
+        secondWrites.every((w) => w.startsWith('$secondSession:')),
+        isTrue,
+      );
+
+      // The single explicit button opens the keyboard for the focused pane.
+      input.log.clear();
+      await tester.tap(find.byKey(const ValueKey('terminal-keybar-keyboard')));
+      await tester.pump();
+      expect(shown(), isTrue);
+      final dpr = tester.view.devicePixelRatio;
+      tester.view.viewInsets = FakeViewPadding(bottom: 300 * dpr);
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pumpAndSettle();
+      // Above the keyboard once, with no double inset.
+      expect(tester.getRect(keybar).bottom, closeTo(600, 0.5));
+      expect(keybar, findsOneWidget);
+      before = writeCounts();
+      input.enterText('ls');
+      await tester.pump();
+      expect(newWrites(before), ['$secondSession:ls']);
+      // Back to the first pane: the bar follows, the keyboard stays open.
+      input.log.clear();
+      await tester.tap(paneOf(firstTerminal));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(identical(barTerminal(), firstTerminal), isTrue);
+      before = writeCounts();
+      await tester.tap(find.text('Tab'));
+      await tester.pump();
+      expect(newWrites(before), ['$firstSession:\t']);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await drainClose(tester);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
   );
   testWidgets(
     'topbar local sidebar preserves terminal and homepage search filters live',

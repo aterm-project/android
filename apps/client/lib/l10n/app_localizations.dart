@@ -24535,6 +24535,18 @@ abstract class AppLocalizations {
   /// **'Keep extra keys open'**
   String get keybarPinExpanded;
 
+  /// Terminal keybar button that shows the software keyboard when taps on the terminal only focus it.
+  ///
+  /// In en, this message translates to:
+  /// **'Show keyboard'**
+  String get keybarShowKeyboard;
+
+  /// Terminal keybar button that hides the software keyboard while it is shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide keyboard'**
+  String get keybarHideKeyboard;
+
   /// Terminal search status when the bounded query-length limit rejects the query.
   ///
   /// In en, this message translates to:

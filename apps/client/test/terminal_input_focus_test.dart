@@ -226,6 +226,109 @@ void main() {
       }
     },
   );
+
+  testWidgets(
+    'Android SSH tab: touch after hiding the keyboard only focuses and the keybar button reopens it',
+    (tester) async {
+      final sodium = await SodiumSumoInit.init();
+      final database = ClientDatabase.forTesting(NativeDatabase.memory());
+      final connection = _RecordingSshConnection();
+      final app =
+          AppController(
+              sodium: sodium,
+              database: database,
+              secureStore: ClientSecureStore(),
+            )
+            ..stage = ClientStage.workspace
+            ..page = WorkspacePage.terminal
+            ..activeVault = const VaultDescriptor(
+              id: '11111111-1111-4111-8111-111111111111',
+              role: 'owner',
+              activeKeyEpoch: '1',
+              membershipVersion: '1',
+            )
+            ..selectedHost = const HostRecord(
+              id: 'terminal-touch-host',
+              name: 'Terminal touch fixture',
+              address: '127.0.0.1',
+              username: 'fixture',
+            )
+            ..terminalConnection = connection;
+      final input = tester.binding.testTextInput;
+      bool shown() => input.log.any((call) => call.method == 'TextInput.show');
+      final keyboardButton = find.byKey(
+        const ValueKey('terminal-keybar-keyboard'),
+      );
+
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: buildAppTheme(),
+            home: AnimatedBuilder(
+              animation: app,
+              builder: (context, _) => AppShell(controller: app),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        final view = tester.widget<TerminalView>(find.byType(TerminalView));
+        final state = tester.state<TerminalViewState>(
+          find.byType(TerminalView),
+        );
+        expect(view.showKeyboardOnTap, isFalse);
+        expect(view.focusNode?.hasFocus, isTrue);
+        expect(state.hasInputConnection, isTrue);
+        expect(keyboardButton, findsOneWidget);
+
+        // Keyboard hidden by the user; repeated taps must not show it again.
+        input.log.clear();
+        for (var i = 0; i < 2; i++) {
+          await tester.tap(find.byType(TerminalView));
+          await tester.pump(const Duration(milliseconds: 350));
+        }
+        expect(shown(), isFalse);
+        expect(view.focusNode?.hasFocus, isTrue);
+        expect(state.hasInputConnection, isTrue);
+        input.enterText('printf hidden');
+        await tester.pump();
+        expect(connection.inputs, ['printf hidden']);
+
+        // From another focus owner, touch refocuses without the keyboard.
+        view.focusNode!.unfocus();
+        await tester.pump();
+        await tester.pump();
+        expect(state.hasInputConnection, isFalse);
+        input.log.clear();
+        await tester.tap(find.byType(TerminalView));
+        await tester.pump(const Duration(milliseconds: 350));
+        expect(view.focusNode?.hasFocus, isTrue);
+        expect(state.hasInputConnection, isTrue);
+        expect(shown(), isFalse);
+
+        // The explicit keybar button opens it, and typing reaches SSH.
+        await tester.ensureVisible(keyboardButton);
+        await tester.tap(keyboardButton);
+        await tester.pump();
+        await tester.pump();
+        expect(shown(), isTrue);
+        expect(view.focusNode?.hasFocus, isTrue);
+        input.enterText('printf shown');
+        await tester.pump();
+        expect(connection.inputs, ['printf hidden', 'printf shown']);
+        await tester.tap(find.text('Tab'));
+        await tester.pump();
+        expect(connection.inputs.last, '\t');
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        app.dispose();
+        await database.close();
+      }
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
 }
 
 Semantics _terminalSemantics(WidgetTester tester) => tester.widget<Semantics>(

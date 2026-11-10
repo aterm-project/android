@@ -205,6 +205,7 @@ class _LiveTerminalWindowPageState extends State<LiveTerminalWindowPage> {
                     focusNode: _focus,
                     readOnly: !client.connected,
                     hardwareKeyboardOnly: false,
+                    showKeyboardOnTap: !terminalTouchKeyboardOnDemand,
                     padding: const EdgeInsets.all(12),
                     backgroundOpacity:
                         wallpaperTerminalBackgroundOpacity(context),

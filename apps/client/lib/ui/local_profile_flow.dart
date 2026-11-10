@@ -4644,7 +4644,7 @@ _showMessage(
             ],
           ];
     return Scaffold(
-      body: SafeArea(
+      body: LayoutBuilder(builder: (context, body) => SafeArea(
         child: Column(
           children: [
             WorkspaceTabBar(
@@ -4931,6 +4931,8 @@ _showMessage(
                 ],
               ),
             ),
+            if (!terminalTouchKeyboardOnDemand)
+              _sharedTerminalKeybar(activeSession, body.maxHeight),
             AnimatedBuilder(
               animation: sshTransferActivity,
               builder: (_, _) {
@@ -4957,9 +4959,38 @@ _showMessage(
                 );
               },
             ),
+            // Android: the one shared bar docks directly above the keyboard.
+            if (terminalTouchKeyboardOnDemand)
+              _sharedTerminalKeybar(activeSession, body.maxHeight),
           ],
         ),
-      ),
+      )),
+    );
+  }
+
+  /// The single keybar of the terminal workspace. Split panes share it; it
+  /// always drives the selected SSH pane, so keys never reach another tab.
+  Widget _sharedTerminalKeybar(
+    _LocalTerminalSession? session,
+    double workspaceHeight,
+  ) {
+    final view = session?.viewKey.currentState;
+    if (_selectedTabId == 'hosts' ||
+        session == null ||
+        session._closed ||
+        session.connection == null ||
+        session.isTelnet ||
+        session.console != null ||
+        session.desktop != null ||
+        view == null) {
+      return const SizedBox.shrink();
+    }
+    return TerminalKeybar(
+      key: const ValueKey('local_shared_terminal_keybar'),
+      terminal: session.terminal,
+      focusNode: view.terminalFocus,
+      readOnly: !session.connected.value,
+      availablePaneHeight: workspaceHeight,
     );
   }
 
@@ -7512,6 +7543,9 @@ class _LocalSshTerminalDialog extends StatefulWidget {
 class _LocalSshTerminalDialogState extends State<_LocalSshTerminalDialog> {
   Widget? get toolsSidebar => _searchOpen ? _toolsSidebar() : null;
 
+  /// Input focus of this pane, driven by the workspace's shared keybar.
+  FocusNode get terminalFocus => _terminalFocus;
+
   void _updateTools(VoidCallback change) {
     setState(change);
     widget.onToolsChanged();
@@ -7558,6 +7592,10 @@ class _LocalSshTerminalDialogState extends State<_LocalSshTerminalDialog> {
     );
     _terminal.onPrivateOSC = _history.accept;
     unawaited(_history.load());
+    // The workspace builds its shared keybar from this mounted state.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onToolsChanged();
+    });
   }
 
   @override
@@ -7569,7 +7607,16 @@ class _LocalSshTerminalDialogState extends State<_LocalSshTerminalDialog> {
     }
     if (widget.active && !oldWidget.active) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && widget.active) _terminalFocus.requestFocus();
+        if (!mounted || !widget.active) return;
+        final view = terminalTouchKeyboardOnDemand
+            ? _terminalFocus.context?.findAncestorStateOfType<TerminalViewState>()
+            : null;
+        // Touch selection of a pane focuses it; the keybar opens the keyboard.
+        if (view != null) {
+          view.requestFocusWithoutKeyboard();
+        } else {
+          _terminalFocus.requestFocus();
+        }
       });
     }
   }
@@ -7904,8 +7951,7 @@ throw StateError(context.l10n.snippetChanged);
   Widget build(BuildContext context) => ExcludeFocus(
     excluding: !widget.active,
     child: Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) => Column(
+      body: Column(
           children: [
             Expanded(
               child: TerminalView(
@@ -7916,6 +7962,7 @@ throw StateError(context.l10n.snippetChanged);
                 scrollController: _terminalScrollController,
                 focusNode: _terminalFocus,
                 autofocus: widget.active && !_searchOpen,
+                showKeyboardOnTap: !terminalTouchKeyboardOnDemand,
                 onKeyEvent: _handleTerminalKeyEvent,
                 padding: const EdgeInsets.all(12),
                 backgroundOpacity: wallpaperTerminalBackgroundOpacity(context),
@@ -7926,14 +7973,8 @@ throw StateError(context.l10n.snippetChanged);
                 theme: terminalColorThemeOf(context, widget.theme),
               ),
             ),
-            TerminalKeybar(
-              terminal: _terminal,
-              focusNode: _terminalFocus,
-              availablePaneHeight: constraints.maxHeight,
-            ),
           ],
         ),
-      ),
     ),
   );
 }

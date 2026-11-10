@@ -14638,6 +14638,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get keybarPinExpanded => '追加キーを常に表示';
 
   @override
+  String get keybarShowKeyboard => 'キーボードを表示';
+
+  @override
+  String get keybarHideKeyboard => 'キーボードを隠す';
+
+  @override
   String get terminalSearchQueryTooLong => '検索語が長すぎます';
 
   @override

@@ -48,6 +48,7 @@ class TerminalView extends StatefulWidget {
     this.onKeyEvent,
     this.readOnly = false,
     this.hardwareKeyboardOnly = false,
+    this.showKeyboardOnTap = true,
     this.simulateScroll = true,
   });
 
@@ -134,6 +135,13 @@ class TerminalView extends StatefulWidget {
   /// True if only hardware keyboard events should be used as input. This will
   /// also prevent any on-screen keyboard to be shown.
   final bool hardwareKeyboardOnly;
+
+  /// Whether a primary tap on the terminal shows the software keyboard. When
+  /// false, a tap only focuses the terminal (hardware keys and IME commits
+  /// still arrive) and the keyboard opens through
+  /// [TerminalViewState.requestKeyboard], for example from an explicit
+  /// keyboard button. [true] by default.
+  final bool showKeyboardOnTap;
 
   /// If true, when the terminal is in alternate buffer (for example running
   /// vim, man, etc), if the application does not declare that it can handle
@@ -330,6 +338,16 @@ class TerminalViewState extends State<TerminalView> {
     _customTextEditKey.currentState?.closeKeyboard();
   }
 
+  /// Focuses the terminal without showing the software keyboard.
+  void requestFocusWithoutKeyboard() {
+    final textEdit = _customTextEditKey.currentState;
+    if (textEdit != null) {
+      textEdit.requestFocusWithoutKeyboard();
+    } else {
+      _focusNode.requestFocus();
+    }
+  }
+
   Rect get cursorRect {
     return renderTerminal.cursorOffset & renderTerminal.cellSize;
   }
@@ -348,7 +366,9 @@ class TerminalViewState extends State<TerminalView> {
     if (_controller.selection != null) {
       _controller.clearSelection();
     } else {
-      if (!widget.hardwareKeyboardOnly) {
+      if (!widget.hardwareKeyboardOnly && !widget.showKeyboardOnTap) {
+        requestFocusWithoutKeyboard();
+      } else if (!widget.hardwareKeyboardOnly) {
         _customTextEditKey.currentState?.requestKeyboard();
       } else {
         _focusNode.requestFocus();

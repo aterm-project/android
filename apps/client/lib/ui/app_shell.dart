@@ -9172,6 +9172,7 @@ return DesktopView(
             focusNode: _focusNodeFor(id),
             autofocus: id == app.activeTerminalTabId,
             hardwareKeyboardOnly: false,
+            showKeyboardOnTap: !terminalTouchKeyboardOnDemand,
             readOnly: tab.state != 'connected',
             onKeyEvent: (_, event) => _handleTerminalKeyEvent(id, event),
             padding: const EdgeInsets.all(12),
@@ -9216,7 +9217,12 @@ return DesktopView(
               behavior: HitTestBehavior.translucent,
               onPointerDown: (_) {
                 app.activateTerminalTab(id);
-                _requestTerminalKeyboard(id, fromUserGesture: true);
+                if (terminalTouchKeyboardOnDemand) {
+                  // Touch only focuses; the keybar button opens the keyboard.
+                  _focusTerminalWithoutKeyboard(id);
+                } else {
+                  _requestTerminalKeyboard(id, fromUserGesture: true);
+                }
               },
               child: MergeSemantics(
                 child: Semantics(
@@ -9368,6 +9374,7 @@ return DesktopView(
             focusNode: _focusNodeFor(tab.id),
             autofocus: tab.id == app.activeTerminalTabId,
             hardwareKeyboardOnly: false,
+            showKeyboardOnTap: !terminalTouchKeyboardOnDemand,
             onKeyEvent: (_, event) => _handleTerminalKeyEvent(tab.id, event),
             padding: const EdgeInsets.all(10),
             backgroundOpacity: wallpaperTerminalBackgroundOpacity(context),
@@ -9451,7 +9458,12 @@ return DesktopView(
               behavior: HitTestBehavior.translucent,
               onPointerDown: (_) {
                 app.activateTerminalTab(tab.id);
-                _requestTerminalKeyboard(tab.id, fromUserGesture: true);
+                if (terminalTouchKeyboardOnDemand) {
+                  // Touch only focuses; the keybar button opens the keyboard.
+                  _focusTerminalWithoutKeyboard(tab.id);
+                } else {
+                  _requestTerminalKeyboard(tab.id, fromUserGesture: true);
+                }
               },
               child: _terminalToolsLayout(tab, inputSurface),
             ),
@@ -9515,6 +9527,19 @@ return DesktopView(
         ],
       ),
     );
+  }
+
+  void _focusTerminalWithoutKeyboard(String id) {
+    if (app.activeTerminalTabId != id ||
+        app.terminalTabFor(id)?.liveTerminalTransport == null) {
+      return;
+    }
+    final view = _viewKeyFor(id).currentState;
+    if (view != null) {
+      view.requestFocusWithoutKeyboard();
+    } else {
+      _focusNodeFor(id).requestFocus();
+    }
   }
 
   void _requestTerminalKeyboard(String id, {bool fromUserGesture = false}) {

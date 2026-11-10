@@ -15591,6 +15591,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get keybarPinExpanded => 'Keep extra keys open';
 
   @override
+  String get keybarShowKeyboard => 'Show keyboard';
+
+  @override
+  String get keybarHideKeyboard => 'Hide keyboard';
+
+  @override
   String get terminalSearchQueryTooLong => 'Query too long';
 
   @override

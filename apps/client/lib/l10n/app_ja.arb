@@ -4054,6 +4054,14 @@
   "@keybarPinExpanded": {
     "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
   },
+  "keybarShowKeyboard": "キーボードを表示",
+  "@keybarShowKeyboard": {
+    "description": "Terminal keybar button that shows the software keyboard when taps on the terminal only focus it."
+  },
+  "keybarHideKeyboard": "キーボードを隠す",
+  "@keybarHideKeyboard": {
+    "description": "Terminal keybar button that hides the software keyboard while it is shown."
+  },
   "terminalSearchQueryTooLong": "検索語が長すぎます",
   "@terminalSearchQueryTooLong": {
     "description": "Terminal search status when the bounded query-length limit rejects the query."

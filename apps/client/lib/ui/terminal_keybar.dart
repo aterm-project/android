@@ -154,6 +154,15 @@ class TerminalKeybarPreferences extends ChangeNotifier {
   }
 }
 
+/// Whether touching a terminal only focuses it and leaves the software
+/// keyboard to the keybar's keyboard button.
+///
+/// Native Android only: once the user hides the keyboard, a tap (to scroll,
+/// select or read) must not bring it back. Pass the negation to
+/// [TerminalView.showKeyboardOnTap] for every terminal that has a keybar.
+bool get terminalTouchKeyboardOnDemand =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
 enum _Modifier { ctrl, alt, shift }
 
 enum _Latch { off, armed, locked }
@@ -173,6 +182,10 @@ enum _Latch { off, armed, locked }
 /// text that has no terminal key and clipboard paste neither use nor release
 /// an armed modifier. The bar is hidden on Windows, where physical keyboards
 /// are used directly and the terminal's input handler is left untouched.
+///
+/// Where [terminalTouchKeyboardOnDemand] applies, a keyboard button beside
+/// More shows the software keyboard (or hides it while it is shown), and the
+/// bar's keys focus the terminal without opening it.
 ///
 /// Rows are packed to the available width without shrinking tap targets. When
 /// the pane is too short for every expanded key, the bar keeps at most half of
@@ -202,13 +215,15 @@ class TerminalKeybar extends StatefulWidget {
   State<TerminalKeybar> createState() => _TerminalKeybarState();
 }
 
-class _TerminalKeybarState extends State<TerminalKeybar> {
+class _TerminalKeybarState extends State<TerminalKeybar>
+    with WidgetsBindingObserver {
   static const _horizontalPadding = 6.0;
   // Guards against sub-pixel differences between measuring and painting.
   static const _measureSlack = 4.0;
   static const _lockIconSize = 14.0;
   static const _lockIconGap = 2.0;
   static const _pinIconSize = 18.0;
+  static const _keyboardIconSize = 20.0;
 
   _ModifierInputHandler? _handler;
   TerminalKeybarPreferences? _preferences;
@@ -220,6 +235,9 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
   bool _expanded = false;
   _Modifier? _doubleTapCandidate;
   Timer? _doubleTapTimer;
+  bool _keyboardShown = false;
+
+  bool get _keyboardOnDemand => terminalTouchKeyboardOnDemand;
 
   @override
   void initState() {
@@ -229,6 +247,23 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
     _preferences = preferences..addListener(_preferencesChanged);
     unawaited(preferences.ensureLoaded());
     _attach();
+    if (_keyboardOnDemand) WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_visible && _keyboardOnDemand) _keyboardShown = _softKeyboardShown();
+  }
+
+  // The raw view inset: Scaffold bodies see a MediaQuery without it.
+  bool _softKeyboardShown() => View.of(context).viewInsets.bottom > 0;
+
+  @override
+  void didChangeMetrics() {
+    if (!mounted) return;
+    final shown = _softKeyboardShown();
+    if (shown != _keyboardShown) setState(() => _keyboardShown = shown);
   }
 
   void _preferencesChanged() {
@@ -276,6 +311,7 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cancelDoubleTap();
     _preferences?.removeListener(_preferencesChanged);
     _detach(widget.terminal);
@@ -399,7 +435,31 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
     _focusTerminal();
   }
 
-  void _focusTerminal() => widget.focusNode?.requestFocus();
+  /// The view whose input [TerminalKeybar.focusNode] drives.
+  TerminalViewState? get _terminalView =>
+      widget.focusNode?.context?.findAncestorStateOfType<TerminalViewState>();
+
+  void _focusTerminal() {
+    final view = _keyboardOnDemand ? _terminalView : null;
+    if (view != null) {
+      // Keys keep the terminal focused but leave the keyboard as it is.
+      view.requestFocusWithoutKeyboard();
+    } else {
+      widget.focusNode?.requestFocus();
+    }
+  }
+
+  void _toggleSoftKeyboard() {
+    if (widget.readOnly) return;
+    final view = _terminalView;
+    if (view == null) {
+      widget.focusNode?.requestFocus();
+    } else if (_keyboardShown) {
+      view.closeKeyboard();
+    } else {
+      view.requestKeyboard();
+    }
+  }
 
   void _send(TerminalKey key) {
     if (widget.readOnly) return;
@@ -526,6 +586,34 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
       widget.readOnly ? null : () => _send(key),
     );
 
+    // Arrows are drawn with a heavy stroke: font arrow glyphs are hairlines.
+    final arrowSize = scaler.scale(textStyle.fontSize ?? 14) * 1.3;
+    _KeySpec arrow(AxisDirection direction, TerminalKey key, String name) =>
+        _KeySpec(
+          measure('←'),
+          Tooltip(
+            message: name,
+            child: TextButton(
+              key: ValueKey('terminal-keybar-arrow-${direction.name}'),
+              style: buttonStyle,
+              onPressed: widget.readOnly ? null : () => _send(key),
+              child: Semantics(
+                label: name,
+                child: Builder(
+                  builder: (context) => CustomPaint(
+                    size: Size.square(arrowSize),
+                    painter: _ArrowPainter(
+                      direction,
+                      DefaultTextStyle.of(context).style.color ??
+                          theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
     _KeySpec modifier(
       _Modifier modifier,
       String label,
@@ -620,10 +708,10 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
         l10n.lockShiftModifier,
       ),
       key('Tab', TerminalKey.tab),
-      key('←', TerminalKey.arrowLeft, l10n.leftArrow),
-      key('↓', TerminalKey.arrowDown, l10n.downArrow),
-      key('↑', TerminalKey.arrowUp, l10n.upArrow),
-      key('→', TerminalKey.arrowRight, l10n.rightArrow),
+      arrow(AxisDirection.left, TerminalKey.arrowLeft, l10n.leftArrow),
+      arrow(AxisDirection.up, TerminalKey.arrowUp, l10n.upArrow),
+      arrow(AxisDirection.down, TerminalKey.arrowDown, l10n.downArrow),
+      arrow(AxisDirection.right, TerminalKey.arrowRight, l10n.rightArrow),
       button(
         l10n.keybarPaste,
         l10n.pasteClipboard,
@@ -646,7 +734,30 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
       l10n.moreTerminalKeys,
       () => _toggleExpanded(expanded),
     );
+    final keyboardLabel = _keyboardShown
+        ? l10n.keybarHideKeyboard
+        : l10n.keybarShowKeyboard;
     final trailing = <_KeySpec>[
+      if (_keyboardOnDemand)
+        _KeySpec(
+          kMinInteractiveDimension,
+          Tooltip(
+            message: keyboardLabel,
+            child: TextButton(
+              key: const ValueKey('terminal-keybar-keyboard'),
+              style: buttonStyle,
+              onPressed: widget.readOnly ? null : _toggleSoftKeyboard,
+              child: Semantics(
+                // Icon-only: the tooltip alone is not the accessible name.
+                label: keyboardLabel,
+                child: Icon(
+                  _keyboardShown ? Icons.keyboard_hide : Icons.keyboard,
+                  size: _keyboardIconSize,
+                ),
+              ),
+            ),
+          ),
+        ),
       // Same width for More and Less so toggling never reflows the rows.
       _KeySpec(
         math.max(measure(l10n.keybarMore), measure(l10n.keybarLess)),
@@ -777,6 +888,48 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
       style: decoration == null ? null : TextStyle(decoration: decoration),
     ),
   );
+}
+
+/// A thick arrow (shaft and open head) pointing in [direction].
+class _ArrowPainter extends CustomPainter {
+  const _ArrowPainter(this.direction, this.color);
+
+  final AxisDirection direction;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final extent = size.shortestSide;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(2, extent * 0.15)
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.save();
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.rotate(switch (direction) {
+      AxisDirection.up => 0,
+      AxisDirection.right => math.pi / 2,
+      AxisDirection.down => math.pi,
+      AxisDirection.left => -math.pi / 2,
+    });
+    final half = extent * 0.38;
+    final head = extent * 0.3;
+    canvas.drawLine(Offset(0, half), Offset(0, -half), paint);
+    canvas.drawPath(
+      Path()
+        ..moveTo(-head, -half + head)
+        ..lineTo(0, -half)
+        ..lineTo(head, -half + head),
+      paint,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_ArrowPainter oldDelegate) =>
+      oldDelegate.direction != direction || oldDelegate.color != color;
 }
 
 @immutable

@@ -13819,6 +13819,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get keybarPinExpanded => '保持展开更多按键';
 
   @override
+  String get keybarShowKeyboard => '显示键盘';
+
+  @override
+  String get keybarHideKeyboard => '隐藏键盘';
+
+  @override
   String get terminalSearchQueryTooLong => '查询过长';
 
   @override

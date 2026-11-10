@@ -15627,6 +15627,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get keybarPinExpanded => 'Не скрывать дополнительные клавиши';
 
   @override
+  String get keybarShowKeyboard => 'Показать клавиатуру';
+
+  @override
+  String get keybarHideKeyboard => 'Скрыть клавиатуру';
+
+  @override
   String get terminalSearchQueryTooLong => 'Слишком длинный запрос';
 
   @override

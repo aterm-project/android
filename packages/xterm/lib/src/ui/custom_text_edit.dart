@@ -105,6 +105,24 @@ class CustomTextEditState extends State<CustomTextEdit> with TextInputClient {
     }
   }
 
+  /// Focuses this input without showing the software keyboard. The input
+  /// connection still attaches, so hardware keys and IME commits keep working
+  /// and a later [requestKeyboard] only has to show the keyboard. A keyboard
+  /// that is already on screen (focus moving between terminals) stays open.
+  void requestFocusWithoutKeyboard() {
+    if (widget.focusNode.hasFocus || !widget.focusNode.canRequestFocus) {
+      return;
+    }
+    _focusWithoutKeyboard = View.of(context).viewInsets.bottom <= 0;
+    widget.focusNode.requestFocus();
+    // A request that never lands must not hide the keyboard of a later one.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusWithoutKeyboard = false;
+    });
+  }
+
+  bool _focusWithoutKeyboard = false;
+
   void closeKeyboard() {
     if (hasInputConnection) {
       _connection?.close();
@@ -143,21 +161,24 @@ class CustomTextEditState extends State<CustomTextEdit> with TextInputClient {
 
   void _openOrCloseInputConnectionIfNeeded() {
     if (widget.focusNode.hasFocus && widget.focusNode.consumeKeyboardToken()) {
-      _openInputConnection();
+      final showKeyboard = !_focusWithoutKeyboard;
+      _focusWithoutKeyboard = false;
+      _openInputConnection(showKeyboard: showKeyboard);
     } else if (!widget.focusNode.hasFocus) {
+      _focusWithoutKeyboard = false;
       _closeInputConnectionIfNeeded();
     }
   }
 
   bool get _shouldCreateInputConnection => kIsWeb || !widget.readOnly;
 
-  void _openInputConnection() {
+  void _openInputConnection({bool showKeyboard = true}) {
     if (!_shouldCreateInputConnection) {
       return;
     }
 
     if (hasInputConnection) {
-      _connection!.show();
+      if (showKeyboard) _connection!.show();
     } else {
       final config = TextInputConfiguration(
         // Native multi-view clients must belong to the actual hosting view.
@@ -172,7 +193,7 @@ class CustomTextEditState extends State<CustomTextEdit> with TextInputClient {
 
       _connection = TextInput.attach(this, config);
 
-      _connection!.show();
+      if (showKeyboard) _connection!.show();
 
       // setEditableRect(Rect.zero, Rect.zero);
 
