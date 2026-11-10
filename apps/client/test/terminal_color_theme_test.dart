@@ -11,20 +11,47 @@ void main() {
     final dark = buildTerminalColorTheme(VaultTerminalThemeChoice.atermDark);
     final light = buildTerminalColorTheme(VaultTerminalThemeChoice.light);
 
-    expect(dark.background.toARGB32(), 0xFF141729);
+    expect(dark.background.toARGB32(), 0xFF0F1425);
     // Default SSH text is grass green and independent of the blue app accent.
-    expect(dark.foreground.toARGB32(), 0xFF9BD477);
+    expect(dark.foreground.toARGB32(), 0xFF9BEF60);
     expect(dark.foreground, isNot(AppColors.accent));
     expect(dark.foreground, isNot(AppColors.accentText));
     // ANSI semantics are preserved (programs keep their colors).
-    expect(dark.red.toARGB32(), 0xFFEC7893);
-    expect(dark.green.toARGB32(), 0xFF74C99B);
-    expect(dark.blue.toARGB32(), 0xFF82A5F0);
-    expect(dark.white.toARGB32(), 0xFFD9DFF0);
+    expect(dark.red.toARGB32(), 0xFFFF6888);
+    expect(dark.green.toARGB32(), 0xFF69E19C);
+    expect(dark.blue.toARGB32(), 0xFF7CA7FF);
+    expect(dark.white.toARGB32(), 0xFFE9EDFF);
     expect(light.background.toARGB32(), 0xFFF8FAFC);
-    expect(light.foreground.toARGB32(), 0xFF1F2937);
+    expect(light.foreground.toARGB32(), 0xFF17202D);
     expect(light.background, isNot(dark.background));
     expect(light.cursor, isNot(dark.cursor));
+  });
+
+  test('default SSH text has stronger contrast and saturation', () {
+    final dark = buildTerminalColorTheme(VaultTerminalThemeChoice.atermDark);
+    double contrast(Color a, Color b) =>
+        (math.max(a.computeLuminance(), b.computeLuminance()) + .05) /
+        (math.min(a.computeLuminance(), b.computeLuminance()) + .05);
+    expect(
+      contrast(dark.foreground, dark.background),
+      greaterThan(contrast(const Color(0xFF9BD477), const Color(0xFF141729))),
+    );
+    expect(
+      HSVColor.fromColor(dark.foreground).saturation,
+      greaterThan(HSVColor.fromColor(const Color(0xFF9BD477)).saturation),
+    );
+    for (final color in [
+      dark.foreground,
+      dark.red,
+      dark.green,
+      dark.yellow,
+      dark.blue,
+      dark.magenta,
+      dark.cyan,
+      dark.white,
+    ]) {
+      expect(contrast(color, dark.background), greaterThan(4.5));
+    }
   });
 
   test('app theme uses the deep-blue emphasis with legible on-colors', () {
@@ -44,6 +71,9 @@ void main() {
     );
     expect(contrast(scheme.onSecondary, scheme.secondary), greaterThan(4.5));
     expect(contrast(AppColors.accentText, AppColors.surface), greaterThan(4.5));
-    expect(contrast(AppColors.accentText, AppColors.background), greaterThan(4.5));
+    expect(
+      contrast(AppColors.accentText, AppColors.background),
+      greaterThan(4.5),
+    );
   });
 }

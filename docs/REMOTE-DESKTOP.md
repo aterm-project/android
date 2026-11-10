@@ -75,3 +75,15 @@ The navigation bar's Tools menu and remote desktop's three-dot menu provide Ente
 On Android/iOS, pull a tab down to lift it from a scrolling strip, then drag to a highlighted pane edge. A diagonal pull is accepted while a horizontal swipe still scrolls tabs. A drop in the centre leaves the layout intact; a small amount of corner jitter keeps the highlighted direction. Stationary long-press still opens the tab/group context menu.
 
 VNC IME text retains legacy Latin-1 keysyms where available, and uses Unicode keysyms for additional characters, as required for maximum compatibility by [RFC 6143 §7.5.4](https://www.rfc-editor.org/rfc/rfc6143.html#section-7.5.4). RDP uses Unicode text events when no soft modifier is active.
+
+## Storage mappings and direct touch
+
+RDP options provide separate Add disk and Add folder actions on Android and Windows. Only explicitly saved mappings are sent to the remote session. On Android, adding a mapping first opens the system Files and media access setting; the native RDP drive channel needs live filesystem access, rather than a copied document URI. Connecting never opens Settings automatically. Missing disks, revoked permission and paths synchronized from another operating system are reported before connecting. Changes to mappings apply on reconnect.
+
+The Android native engine includes RDPDR drive redirection and RDPEI native touch. When the server negotiates RDPEI, direct touch forwards separate contact IDs, movement, release and cancellation; changing panes, input modes or app focus releases the contacts. Servers without RDPEI use pointer fallback. Standard VNC has no native Windows touch channel: direct mode provides tap, drag, long-press right-click and two-finger natural scrolling; relative touchpad mode remains available.
+
+Android file lists open a regular file with one tap through the system Open with chooser. The selected application receives a private, writable content URI for that file only. Local changes remain pending in the file manager footer until Upload is selected; remote conflicts still require confirmation. Long-press retains the file operations menu.
+
+SSH/Telnet's Android keybar includes Shift alongside Ctrl and Alt: tap for the next key, double-tap to lock, tap again or Reset to release. The default terminal palette uses brighter, more saturated text; saved custom palettes and presets keep their colors.
+
+Connection attempts open their tab before asynchronous credential lookup and network setup. The tab reports actual stages and provides Stop loading, Retry and Close. Retry uses the current saved settings in the same tab; late results from cancelled attempts cannot take over. An established session that later drops continues to use the existing reconnect controls.

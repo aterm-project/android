@@ -12,7 +12,7 @@ import 'package:xterm/xterm.dart';
 import '../l10n/l10n.dart';
 import '../storage/terminal_keybar_store.dart';
 
-/// Soft Ctrl/Alt state reported by [TerminalKeybar.onModifiersChanged].
+/// Soft Ctrl/Alt/Shift state reported by [TerminalKeybar.onModifiersChanged].
 ///
 /// [ctrl]/[alt] are true while the modifier applies to the next key, either
 /// armed for one key or locked; [ctrlLocked]/[altLocked] distinguish a lock.
@@ -21,30 +21,37 @@ class TerminalKeyModifiers {
   const TerminalKeyModifiers({
     this.ctrl = false,
     this.alt = false,
+    this.shift = false,
     this.ctrlLocked = false,
     this.altLocked = false,
+    this.shiftLocked = false,
   });
 
   final bool ctrl;
   final bool alt;
+  final bool shift;
   final bool ctrlLocked;
   final bool altLocked;
+  final bool shiftLocked;
 
   @override
   bool operator ==(Object other) =>
       other is TerminalKeyModifiers &&
       other.ctrl == ctrl &&
       other.alt == alt &&
+      other.shift == shift &&
       other.ctrlLocked == ctrlLocked &&
-      other.altLocked == altLocked;
+      other.altLocked == altLocked &&
+      other.shiftLocked == shiftLocked;
 
   @override
-  int get hashCode => Object.hash(ctrl, alt, ctrlLocked, altLocked);
+  int get hashCode =>
+      Object.hash(ctrl, alt, shift, ctrlLocked, altLocked, shiftLocked);
 
   @override
   String toString() =>
       'TerminalKeyModifiers(ctrl: $ctrl${ctrlLocked ? ' locked' : ''}, '
-      'alt: $alt${altLocked ? ' locked' : ''})';
+      'alt: $alt${altLocked ? ' locked' : ''}, shift: $shift${shiftLocked ? ' locked' : ''})';
 }
 
 /// Device-wide touch keybar preferences shared by every terminal pane.
@@ -147,13 +154,13 @@ class TerminalKeybarPreferences extends ChangeNotifier {
   }
 }
 
-enum _Modifier { ctrl, alt }
+enum _Modifier { ctrl, alt, shift }
 
 enum _Latch { off, armed, locked }
 
 /// Terminal keys that keep the terminal's input connection and selection alive.
 ///
-/// Ctrl and Alt are sticky modifiers:
+/// Ctrl, Alt and Shift are sticky modifiers:
 /// * a single tap arms the modifier for the next key only; it is released as
 ///   soon as a non-modifier key reaches the terminal input handler, whether
 ///   that key comes from this bar, a hardware keyboard or IME-committed ASCII;
@@ -209,6 +216,7 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
       kIsWeb || defaultTargetPlatform != TargetPlatform.windows;
   _Latch _ctrl = _Latch.off;
   _Latch _alt = _Latch.off;
+  _Latch _shift = _Latch.off;
   bool _expanded = false;
   _Modifier? _doubleTapCandidate;
   Timer? _doubleTapTimer;
@@ -234,8 +242,10 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
       () => TerminalKeyModifiers(
         ctrl: _ctrl != _Latch.off,
         alt: _alt != _Latch.off,
+        shift: _shift != _Latch.off,
         ctrlLocked: _ctrl == _Latch.locked,
         altLocked: _alt == _Latch.locked,
+        shiftLocked: _shift == _Latch.locked,
       ),
       _consumeArmed,
     );
@@ -272,8 +282,11 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
     super.dispose();
   }
 
-  _Latch _latchOf(_Modifier modifier) =>
-      modifier == _Modifier.ctrl ? _ctrl : _alt;
+  _Latch _latchOf(_Modifier modifier) => switch (modifier) {
+    _Modifier.ctrl => _ctrl,
+    _Modifier.alt => _alt,
+    _Modifier.shift => _shift,
+  };
 
   void _cancelDoubleTap() {
     _doubleTapTimer?.cancel();
@@ -283,21 +296,34 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
 
   void _releaseAll({bool deferNotification = false}) {
     _cancelDoubleTap();
-    _setLatches(_Latch.off, _Latch.off, deferNotification: deferNotification);
+    _setLatches(
+      _Latch.off,
+      _Latch.off,
+      _Latch.off,
+      deferNotification: deferNotification,
+    );
   }
 
-  void _setLatches(_Latch ctrl, _Latch alt, {bool deferNotification = false}) {
-    if (_ctrl == ctrl && _alt == alt) return;
+  void _setLatches(
+    _Latch ctrl,
+    _Latch alt,
+    _Latch shift, {
+    bool deferNotification = false,
+  }) {
+    if (_ctrl == ctrl && _alt == alt && _shift == shift) return;
     _ctrl = ctrl;
     _alt = alt;
+    _shift = shift;
     final modifiers = TerminalKeyModifiers(
       ctrl: ctrl != _Latch.off,
       alt: alt != _Latch.off,
+      shift: shift != _Latch.off,
       ctrlLocked: ctrl == _Latch.locked,
       altLocked: alt == _Latch.locked,
+      shiftLocked: shift == _Latch.locked,
     );
     void notify() {
-      if (!mounted || _ctrl != ctrl || _alt != alt) return;
+      if (!mounted || _ctrl != ctrl || _alt != alt || _shift != shift) return;
       widget.onModifiersChanged?.call(modifiers);
     }
 
@@ -311,16 +337,21 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
 
   /// Releases armed (not locked) modifiers after an effective key event.
   void _consumeArmed() {
-    if (!mounted || (_ctrl != _Latch.armed && _alt != _Latch.armed)) return;
+    if (!mounted ||
+        (_ctrl != _Latch.armed &&
+            _alt != _Latch.armed &&
+            _shift != _Latch.armed))
+      return;
     _cancelDoubleTap();
     final ctrl = _ctrl == _Latch.armed ? _Latch.off : _ctrl;
     final alt = _alt == _Latch.armed ? _Latch.off : _alt;
+    final shift = _shift == _Latch.armed ? _Latch.off : _shift;
     final building =
         SchedulerBinding.instance.schedulerPhase ==
         SchedulerPhase.persistentCallbacks;
     // The state change applies at once so a following key is unmodified; only
     // the repaint and callback wait when input arrives during a build.
-    _setLatches(ctrl, alt, deferNotification: building);
+    _setLatches(ctrl, alt, shift, deferNotification: building);
     if (building) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() {});
@@ -360,8 +391,10 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
   void _applyModifier(_Modifier modifier, _Latch latch) {
     setState(
       () => modifier == _Modifier.ctrl
-          ? _setLatches(latch, _alt)
-          : _setLatches(_ctrl, latch),
+          ? _setLatches(latch, _alt, _shift)
+          : modifier == _Modifier.alt
+          ? _setLatches(_ctrl, latch, _shift)
+          : _setLatches(_ctrl, _alt, latch),
     );
     _focusTerminal();
   }
@@ -580,6 +613,12 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
         l10n.keybarAltGuidance,
         l10n.lockAltModifier,
       ),
+      modifier(
+        _Modifier.shift,
+        'Shift',
+        l10n.keybarShiftGuidance,
+        l10n.lockShiftModifier,
+      ),
       key('Tab', TerminalKey.tab),
       key('←', TerminalKey.arrowLeft, l10n.leftArrow),
       key('↓', TerminalKey.arrowDown, l10n.downArrow),
@@ -592,8 +631,8 @@ class _TerminalKeybarState extends State<TerminalKeybar> {
       ),
       button(
         l10n.keybarReset,
-        l10n.releaseControlAndAlt,
-        _ctrl != _Latch.off || _alt != _Latch.off
+        l10n.releaseModifiers,
+        _ctrl != _Latch.off || _alt != _Latch.off || _shift != _Latch.off
             ? () {
                 setState(_releaseAll);
                 _focusTerminal();
@@ -844,6 +883,39 @@ class _ModifierInputHandler implements TerminalInputHandler {
   final TerminalKeyModifiers Function() modifiers;
   final VoidCallback onEffectiveKey;
 
+  String? _shiftedPrintable(TerminalKeyboardEvent event) {
+    final index = event.key.index - TerminalKey.keyA.index;
+    if (index >= 0 && index < 26) {
+      if (event.ctrl) return String.fromCharCode(index + 1);
+      return '${event.alt ? "\x1b" : ""}${String.fromCharCode(65 + index)}';
+    }
+    if (event.ctrl || event.alt) return null;
+    return const {
+      TerminalKey.digit1: '!',
+      TerminalKey.digit2: '@',
+      TerminalKey.digit3: '#',
+      TerminalKey.digit4: r'$',
+      TerminalKey.digit5: '%',
+      TerminalKey.digit6: '^',
+      TerminalKey.digit7: '&',
+      TerminalKey.digit8: '*',
+      TerminalKey.digit9: '(',
+      TerminalKey.digit0: ')',
+      TerminalKey.minus: '_',
+      TerminalKey.equal: '+',
+      TerminalKey.bracketLeft: '{',
+      TerminalKey.bracketRight: '}',
+      TerminalKey.backslash: '|',
+      TerminalKey.semicolon: ':',
+      TerminalKey.quote: '"',
+      TerminalKey.backquote: '~',
+      TerminalKey.comma: '<',
+      TerminalKey.period: '>',
+      TerminalKey.slash: '?',
+      TerminalKey.space: ' ',
+    }[event.key];
+  }
+
   /// Set once the owning keybar lets go, so a stale wrapper retained by some
   /// other handler chain neither applies nor consumes soft modifiers.
   bool detached = false;
@@ -852,13 +924,19 @@ class _ModifierInputHandler implements TerminalInputHandler {
   String? call(TerminalKeyboardEvent event) {
     if (detached) return delegate?.call(event);
     final soft = modifiers();
-    final result = delegate?.call(
-      event.copyWith(ctrl: event.ctrl || soft.ctrl, alt: event.alt || soft.alt),
+    final modified = event.copyWith(
+      ctrl: event.ctrl || soft.ctrl,
+      alt: event.alt || soft.alt,
+      shift: event.shift || soft.shift,
     );
+    final result =
+        delegate?.call(modified) ??
+        (soft.shift ? _shiftedPrintable(modified) : null);
     // Every non-modifier key reaching the handler is the "next key", even when
     // the combination has no mapping and TerminalView falls back to plain
     // text, so an armed modifier cannot linger onto a later key.
-    if ((soft.ctrl || soft.alt) && !_modifierOnlyKeys.contains(event.key)) {
+    if ((soft.ctrl || soft.alt || soft.shift) &&
+        !_modifierOnlyKeys.contains(event.key)) {
       onEffectiveKey();
     }
     return result;

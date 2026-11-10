@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Network access is required by release builds for API, sync, SSH relay and SFTP. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Live native RDP disk/folder mapping. Requested in system Settings
+         only after an explicit Add disk/folder action, never at startup. -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- External-AI MCP: user-started loopback listener kept reachable by a
@@ -9,11 +14,20 @@
     <!-- Requested only when the user starts MCP, so its Stop notification shows. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
-        android:label="aterm_client"
+        android:label="Atermius"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/atermius_launcher"
+        android:roundIcon="@mipmap/atermius_launcher"
+        android:requestLegacyExternalStorage="true"
         android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.externaledit"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/external_edit_paths" />
+        </provider>
         <service
             android:name=".TransferForegroundService"
             android:exported="false"

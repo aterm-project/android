@@ -20,6 +20,7 @@ const _expandedLabels = [
   'Esc',
   'Ctrl',
   'Alt',
+  'Shift',
   'Tab',
   '←',
   '↓',
@@ -159,6 +160,52 @@ void main() {
       focus.dispose();
     },
     variant: _platforms,
+  );
+
+  testWidgets(
+    'Shift applies once, combines with navigation and locks on double tap',
+    (tester) async {
+      final output = <String>[];
+      final terminal = Terminal()..onOutput = output.add;
+      final focus = FocusNode();
+      final modifiers = <TerminalKeyModifiers>[];
+      await tester.pumpWidget(
+        _harness(terminal, focus, onChanged: modifiers.add),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Shift'));
+      await tester.pump();
+      _commit(tester, 'a');
+      await tester.pump();
+      _commit(tester, 'a');
+      await tester.pump();
+      expect(output, ['A', 'a']);
+      expect(modifiers.last.shift, isFalse);
+      await tester.pump(kDoubleTapTimeout * 2);
+      await tester.tap(find.text('Shift'));
+      await tester.pump();
+      await tester.tap(find.text('Tab'));
+      await tester.pump();
+      expect(output.last, '\x1b[Z');
+      expect(modifiers.last.shift, isFalse);
+      await tester.pump(kDoubleTapTimeout * 2);
+      await tester.tap(find.text('Shift'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('Shift'));
+      await tester.pump();
+      expect(modifiers.last.shiftLocked, isTrue);
+      _commit(tester, 'b');
+      await tester.pump();
+      _commit(tester, 'c');
+      await tester.pump();
+      expect(output.sublist(output.length - 2), ['B', 'C']);
+      await tester.tap(find.text('Reset'));
+      await tester.pump();
+      expect(modifiers.last, const TerminalKeyModifiers());
+      await tester.pumpWidget(const SizedBox.shrink());
+      focus.dispose();
+    },
+    variant: _android,
   );
 
   testWidgets('double tap locks until tapped again and shows a lock', (

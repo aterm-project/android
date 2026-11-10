@@ -10,6 +10,8 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
 import '../rdp_features.dart';
+import '../rdp_storage.dart';
+import '../rdp_storage_io.dart';
 import '../rdp_file_clipboard.dart';
 import 'connection.dart';
 import 'rdp_file_transfer_io.dart';
@@ -103,6 +105,7 @@ class RdpConnection implements DirectDesktopConnection {
     final library = _libraryPath;
     unawaited(() async {
       try {
+        await validateRdpDriveConfig(config);
         final home = Platform.isAndroid ? await _androidEngineHome() : '';
         if (connection._closed) {
           connection._message(null);
@@ -124,10 +127,14 @@ class RdpConnection implements DirectDesktopConnection {
           onExit: connection._messages.sendPort,
           errorsAreFatal: true,
         );
-      } catch (_) {
+      } catch (error) {
         if (!connection._closed) {
           connection._events.addError(
-            StateError(currentL10n.couldntStartTheRdpEngineCheck),
+            StateError(
+              error is RdpStorageException
+                  ? error.message
+                  : currentL10n.couldntStartTheRdpEngineCheck,
+            ),
           );
         }
         connection._message(null);
@@ -166,6 +173,8 @@ class RdpConnection implements DirectDesktopConnection {
             onConsumed: () => _commands?.send(['frameAck']),
           ),
         );
+      case 'touchSupport':
+        _events.add(DesktopTouchSupport(message[1] as bool));
       case 'clipboard':
         _events.add(DesktopClipboard(message[1] as String));
       case 'cursor':
@@ -260,6 +269,7 @@ void _rdpWorker(List<dynamic> args) {
   int lastWidth = -1, lastHeight = -1;
   int cursorRevision = -1, pointerRevision = 0;
   bool canResize = false;
+  bool? canTouch;
   Pointer<Uint32> info = nullptr, clipRevision = nullptr, eventHeader = nullptr;
   Pointer<Uint32> pointerInfo = nullptr;
   Pointer<Uint8> clipBuffer = nullptr, eventBuffer = nullptr;
@@ -410,6 +420,14 @@ void _rdpWorker(List<dynamic> args) {
             command[1] as int,
             command[2] as int,
             command[3] as int,
+          );
+        case 'touch':
+          api!.touch?.call(
+            handle,
+            command[1] as int,
+            command[2] as int,
+            command[3] as int,
+            command[4] as int,
           );
         case 'size':
           final ok =
@@ -607,6 +625,11 @@ void _rdpWorker(List<dynamic> args) {
           return;
         }
         drainEvents();
+        final touchSupported = api.canTouch?.call(handle) == 1;
+        if (touchSupported != canTouch) {
+          canTouch = touchSupported;
+          output.send(['touchSupport', touchSupported]);
+        }
         final readPointer = api.pointer;
         if (readPointer != null) {
           final pixels = readPointer(handle, pointerInfo);
@@ -899,6 +922,18 @@ class _RdpNative {
             Int32 Function(Pointer<Void>, Int32, Int32, Uint32),
             int Function(Pointer<Void>, int, int, int)
           >('aterm_rdp_mouse'),
+      canTouch = library.providesSymbol('aterm_rdp_can_touch')
+          ? library.lookupFunction<
+              Int32 Function(Pointer<Void>),
+              int Function(Pointer<Void>)
+            >('aterm_rdp_can_touch')
+          : null,
+      touch = library.providesSymbol('aterm_rdp_touch')
+          ? library.lookupFunction<
+              Int32 Function(Pointer<Void>, Int32, Int32, Int32, Int32),
+              int Function(Pointer<Void>, int, int, int, int)
+            >('aterm_rdp_touch')
+          : null,
       resize = library
           .lookupFunction<
             Int32 Function(Pointer<Void>, Uint32, Uint32),
@@ -986,7 +1021,8 @@ class _RdpNative {
   final _Revisioned? remoteFiles;
   final _RequestFile? requestFile;
   final _NextEvent? nextEvent;
-  final int Function(Pointer<Void>)? canResize;
+  final int Function(Pointer<Void>)? canResize, canTouch;
+  final int Function(Pointer<Void>, int, int, int, int)? touch;
   final int Function(Pointer<Utf8>)? setHome;
   final void Function(Pointer<Void>) free;
 }

@@ -66,7 +66,9 @@ import '../terminal/terminal_search.dart';
 import '../terminal/mirrored_terminal.dart';
 import '../terminal/session_log.dart';
 import '../terminal/session_recovery.dart';
+import '../terminal/connect_progress.dart';
 import 'session_recovery_overlay.dart';
+import 'connect_progress_view.dart';
 import '../platform/application_windows.dart';
 import 'session_workspace.dart';
 import 'ssh_forwarding_page.dart';
@@ -1568,7 +1570,10 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
   }
 
   void _installLocalRecovery(_LocalTerminalSession session) {
-    if (session.recovery != null || session.console != null) return;
+    if (session.recovery != null || session.console != null ||
+        session.isConsoleTab) {
+      return;
+    }
     final profile = _activeProfile, repository = _repository;
     final saved = _hosts.any((h) => h.id == session.host.id);
     bool current() => mounted && !_disposing &&
@@ -1605,10 +1610,11 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     String? serialPort,
     int baudRate = 115200,
     LocalShellLaunch? shell,
+    _LocalTerminalSession? reuseSession,
   }) async {
     final opener = localProfileConsoleOpenerForTesting;
     if (_activeProfile == null ||
-        _busy ||
+        (_busy && reuseSession == null) ||
         _disposing ||
         (!localConsoleSupported && opener == null)) {
       if (!localConsoleSupported && opener == null && mounted) {
@@ -1629,6 +1635,19 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
         unawaited(console.close().catchError((Object _) {}));
         return null;
       }
+      if (reuseSession != null) {
+        final attempt = reuseSession.progress.begin(
+          ConnectStage.startingSession,
+        );
+        if (reuseSession._closed || !_sessions.contains(reuseSession)) {
+          unawaited(console.close().catchError((Object _) {}));
+          return null;
+        }
+        reuseSession.attachConsole(console);
+        reuseSession.progress.succeed(attempt);
+        setState(() {});
+        return reuseSession.id;
+      }
       final session = _LocalTerminalSession.console(
         console,
         title: serialPort == null
@@ -1641,16 +1660,135 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       _addDeviceSession(session);
       return session.id;
     } on LocalShellException catch (error) {
-      _showMessage(localShellIssueMessage(context.l10n, error.issue));
+      final message = localShellIssueMessage(context.l10n, error.issue);
+      _showMessage(message);
+      _reportConsoleFailure(reuseSession, launch, serialPort, baudRate, message);
     } catch (error) {
-      _showMessage(
-        error is UnsupportedError
-            ? error.message ?? context.l10n.thisConsoleIsntSupportedOnThis
-            : context.l10n.couldntStartTheConsole,
-      );
+      final message = error is UnsupportedError
+          ? error.message ?? context.l10n.thisConsoleIsntSupportedOnThis
+          : context.l10n.couldntStartTheConsole;
+      _showMessage(message);
+      _reportConsoleFailure(reuseSession, launch, serialPort, baudRate, message);
     }
     return null;
   }
+
+  /// A console that could not start still gets (or keeps) its tab, showing
+  /// the reason with retry and close.
+  void _reportConsoleFailure(
+    _LocalTerminalSession? reuseSession,
+    LocalShellLaunch? launch,
+    String? serialPort,
+    int baudRate,
+    String message,
+  ) {
+    if (!mounted || _disposing) return;
+    final session =
+        reuseSession ??
+        _LocalTerminalSession.failedConsole(
+          title: serialPort == null
+              ? localShellTabTitle(context.l10n, launch!)
+              : '$serialPort · $baudRate',
+          serialPort: serialPort,
+          baudRate: serialPort == null ? null : baudRate,
+          shell: launch,
+        );
+    if (session._closed) return;
+    session.progress.fail(
+      session.progress.begin(ConnectStage.startingSession),
+      message,
+    );
+    if (reuseSession == null) {
+      _addDeviceSession(session);
+    } else {
+      setState(() {});
+    }
+  }
+
+  bool _localSessionScopeCurrent(_LocalTerminalSession session) =>
+      mounted &&
+      !_disposing &&
+      !_storageRecoveryRequired &&
+      _activeProfile != null &&
+      _sessions.contains(session) &&
+      !session._closed &&
+      (session.isConsoleTab || session.recovery?.available == true);
+
+  bool _canRetryLocalSession(_LocalTerminalSession session) =>
+      session.progress.isVisible &&
+      !session.progress.isLoading &&
+      _localSessionScopeCurrent(session);
+
+  /// "Stop loading": cancels the attempt's sockets/engine; a late result is
+  /// closed by the attempt fences and never attached.
+  Future<void> _stopLocalConnect(_LocalTerminalSession session) async {
+    if (!_sessions.contains(session) || session._closed) return;
+    if (!session.progress.cancel()) return;
+    session.recovery?.blockAutomatic();
+    session.connectionGeneration++;
+    final ssh = session.sshCancellation;
+    session.sshCancellation = null;
+    session._telnetCancellation?.cancel();
+    session._telnetCancellation = null;
+    if (session.isTelnet) session.telnetState = 'disconnected';
+    session.telnetError = null;
+    session.connected.value = false;
+    session.recovery?.update(connected: false);
+    if (mounted) setState(() {});
+    await ssh?.cancel();
+    await session.desktop?.close();
+  }
+
+  /// "Retry": a new attempt in the same tab with the Host and credential that
+  /// are current in this profile now.
+  Future<void> _retryLocalSession(_LocalTerminalSession session) async {
+    if (!_canRetryLocalSession(session)) return;
+    if (session.isConsoleTab) {
+      await _openConsole(
+        serialPort: session.consoleSerialPort,
+        baudRate: session.consoleBaudRate ?? 115200,
+        shell: session.consoleShell,
+        reuseSession: session,
+      );
+      return;
+    }
+    final waiting = session.progress.begin();
+    // A stopped SSH attempt (or another profile operation) releases the
+    // profile operation first; queue behind it like recovery does.
+    final ssh = !session.isTelnet && session.desktop == null;
+    while (ssh && _busy && session.progress.isCurrent(waiting) && mounted) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    if (!session.progress.isCurrent(waiting)) return;
+    if (!_localSessionScopeCurrent(session)) {
+      session.progress.fail(waiting, currentL10n.theWorkspaceChanged);
+      return;
+    }
+    final host =
+        _hosts.where((candidate) => candidate.id == session.host.id).firstOrNull ??
+        session.host;
+    await _connectLocalHost(host, reuseSession: session);
+    if (session.progress.isCurrent(waiting)) {
+      session.progress.fail(waiting, currentL10n.couldntConnectToTheLocalSsh);
+    }
+  }
+
+  Widget _withLocalConnectProgress(
+    _LocalTerminalSession session,
+    Widget child,
+  ) => ConnectProgressView(
+    key: ValueKey('connect_progress_${session.id}'),
+    progress: session.progress,
+    title: session.host.name,
+    detail: session.isConsoleTab
+        ? context.l10n.console
+        : connectProgressDetail(session.host),
+    canRetry: () => _canRetryLocalSession(session),
+    onStop: () => unawaited(_stopLocalConnect(session)),
+    onRetry: () => unawaited(_retryLocalSession(session)),
+    onClose: () => _closeTerminalTab(session.id),
+    child: child,
+  );
 
   /// Independent copy of a Console session: serial stays serial (same port and
   /// baud), a shell keeps its kind and current/launch working directory.
@@ -1779,6 +1917,7 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     HostRecord host, {
     bool Function()? shouldContinue,
     void Function(_LocalTerminalSession session)? onSessionOpened,
+    void Function(_LocalTerminalSession session)? onTabCreated,
     _LocalTerminalSession? reuseSession,
   }) async {
     if (kIsWeb) {
@@ -1804,6 +1943,9 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
         reuseSession.telnetError = null;
         final cancellation = TelnetConnectCancellation();
         reuseSession._telnetCancellation = cancellation;
+        if (reuseSession.progress.isVisible) {
+          reuseSession.progress.begin(ConnectStage.connecting);
+        }
         await reuseSession._connectTelnet(localTelnetConnector, cancellation);
         return;
       }
@@ -1816,16 +1958,19 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
         },
       );
       _addDeviceSession(tab);
+      onTabCreated?.call(tab);
       onSessionOpened?.call(tab);
       await tab.telnetReady;
       return;
     }
     if (host.protocol != HostProtocol.ssh) {
-      if (reuseSession != null) {
+      // A once-connected desktop restores through its own session; a retry
+      // from the progress surface starts a fresh session in the same tab.
+      if (reuseSession != null && !reuseSession.progress.isVisible) {
         await reuseSession.desktop?.reconnect();
         return;
       }
-      if (_activeProfile == null || _busy) return;
+      if (_activeProfile == null || (_busy && reuseSession == null)) return;
       final repository = _repository;
       final profile = _activeProfile;
       if (repository == null) return;
@@ -1871,8 +2016,54 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
           return saved;
         },
       );
-      tab = _LocalTerminalSession.desktop(host, desktop);
-      _addDeviceSession(tab);
+      final previousDesktop = reuseSession?.desktop;
+      if (reuseSession != null) {
+        tab = reuseSession;
+        tab.host = host;
+        tab.attachDesktop(desktop);
+      } else {
+        tab = _LocalTerminalSession.desktop(host, desktop);
+      }
+      final attempt = tab.progress.begin(ConnectStage.connecting);
+      desktop.addListener(() {
+        if (tab._closed ||
+            !identical(tab.desktop, desktop) ||
+            !tab.progress.isCurrent(attempt)) {
+          return;
+        }
+        switch (desktop.state) {
+          case 'connected':
+            if (current()) {
+              tab.progress.succeed(attempt);
+            } else {
+              // First frame after the profile scope ended: never show it.
+              unawaited(desktop.close());
+              tab.progress.fail(attempt, currentL10n.theWorkspaceChanged);
+            }
+          case 'certificate':
+            tab.progress.advance(attempt, ConnectStage.awaitingUser);
+          case 'connecting':
+            tab.progress.advance(attempt, ConnectStage.connecting);
+          case 'disconnected':
+            tab.progress.fail(
+              attempt,
+              desktop.error ?? currentL10n.theRemoteDesktopConnectionFailed,
+            );
+        }
+      });
+      if (previousDesktop != null) {
+        // Closed now; released once the view has swapped sessions.
+        unawaited(previousDesktop.close());
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => previousDesktop.dispose(),
+        );
+      }
+      if (reuseSession == null) {
+        _addDeviceSession(tab);
+        onTabCreated?.call(tab);
+      } else if (mounted) {
+        setState(() {});
+      }
       await desktop.connectLocal(host);
       return;
     }
@@ -1880,6 +2071,41 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     if (repository == null) return;
     final generation = _beginOperation();
     if (generation < 0) return;
+    final profile = _activeProfile;
+    // The tab exists (and is selected) before credential lookup, host-key
+    // review and authentication, so the user sees the real stage and can stop
+    // or close it. A recovery reconnect of a once-connected tab keeps its own
+    // overlay and is not tracked here.
+    final session = reuseSession ?? _LocalTerminalSession.pending(host);
+    final attempt = reuseSession == null || session.progress.isVisible
+        ? session.progress.begin()
+        : null;
+    if (reuseSession == null) {
+      _addDeviceSession(session);
+      onTabCreated?.call(session);
+    }
+    final cancellation = SshConnectCancellation();
+    final previousCancellation = session.sshCancellation;
+    session.sshCancellation = cancellation;
+    unawaited(previousCancellation?.cancel());
+    bool attemptCurrent() =>
+        mounted &&
+        !_disposing &&
+        identical(_activeProfile, profile) &&
+        identical(_repository, repository) &&
+        _sessions.contains(session) &&
+        !session._closed &&
+        !cancellation.isCancelled &&
+        (attempt == null || session.progress.isCurrent(attempt)) &&
+        shouldContinue?.call() != false;
+    void advance(ConnectStage stage) {
+      if (attempt != null) session.progress.advance(attempt, stage);
+    }
+
+    void report(String message) {
+      if (attempt != null) session.progress.fail(attempt, message);
+    }
+
     SshConnection? connection;
     // Sanitized lifecycle row: categories only, never credential material.
     SessionLogRecorder? log = _sessionLogs?.begin(
@@ -1888,68 +2114,96 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     );
     try {
       final credential = await repository.resolveCredentialForHost(host);
-      if (shouldContinue?.call() == false) return;
+      if (!attemptCurrent()) return;
       if (credential == null) {
         log?.markFailed(const SshCredentialException());
+        report(currentL10n.connectProgressNoCredential);
         _finishOperation(generation);
         if (mounted) await _editHost(host);
         return;
       }
+      advance(ConnectStage.connecting);
       final sshController =
           widget.sshControllerFactory?.call(repository) ??
           LocalProfileSshController(repository: repository);
       connection = await sshController.connect(
         host: host,
         credential: credential,
-        askApproval: (request) async => shouldContinue?.call() == false
-            ? false
-            : _confirmLocalHostKey(request),
+        cancellation: cancellation,
+        askApproval: (request) async {
+          if (!attemptCurrent()) return false;
+          advance(ConnectStage.awaitingUser);
+          final approved = await _confirmLocalHostKey(request);
+          if (approved) advance(ConnectStage.verifyingHost);
+          return approved && attemptCurrent();
+        },
       );
-      if (!_isCurrentOperation(generation) || shouldContinue?.call() == false) {
+      if (!_isCurrentOperation(generation) || !attemptCurrent()) {
         return;
       }
       if (!mounted) return;
       log?.markConnected();
-      final session = reuseSession ?? _LocalTerminalSession(
-        host: host, connection: connection, log: log);
-      if (reuseSession != null) {
-        await session.attachSsh(connection, log);
-        session.host = host;
+      final owned = connection;
+      final recorder = log;
+      connection = null; // attachSsh owns (and closes when stale) it now.
+      log = null;
+      await session.attachSsh(owned, recorder);
+      if (!identical(session.connection, owned)) {
+        recorder?.markClosed(SessionLogEndReason.user);
+        return;
       }
-      log = null; // The tab now owns the log row.
-      if (reuseSession == null) _addDeviceSession(session);
+      session.host = host;
+      if (identical(session.sshCancellation, cancellation)) {
+        session.sshCancellation = null;
+      }
+      if (attempt != null) session.progress.succeed(attempt);
       unawaited(
         _observeHostOperatingSystem(session, repository, _activeProfile),
       );
-      connection = null; // The tab now owns the connection.
       onSessionOpened?.call(session);
     } on SshHostKeyVerificationException catch (error) {
       reuseSession?.recovery?.blockAutomatic();
       log?.markFailed(error);
-      if (_isCurrentOperation(generation)) {
-        setState(() {
-          _pageError = error.failure == SshHostKeyFailure.changed
-              ? context.l10n.theSshHostKeyChangedOr
-              : context.l10n.theSshHostKeyWasntApproved;
-        });
+      if (attemptCurrent()) {
+        final message = error.failure == SshHostKeyFailure.changed
+            ? currentL10n.theSshHostKeyChangedOr
+            : currentL10n.theSshHostKeyWasntApproved;
+        report(message);
+        if (_isCurrentOperation(generation)) {
+          setState(() => _pageError = message);
+        }
       }
     } on UnsupportedError catch (error) {
       log?.markFailed(error);
-      if (_isCurrentOperation(generation)) {
-        setState(
-          () => _pageError = error.message ?? context.l10n.thisLocalvaultSshRouteIsntSupported,
-        );
+      if (attemptCurrent()) {
+        final message =
+            error.message ?? currentL10n.thisLocalvaultSshRouteIsntSupported;
+        report(message);
+        if (_isCurrentOperation(generation)) {
+          setState(() => _pageError = message);
+        }
       }
     } on Object catch (error) {
       log?.markFailed(error);
-      if (_isCurrentOperation(generation)) {
-        setState(() => _pageError = context.l10n.couldntConnectToTheLocalSsh);
+      if (attemptCurrent()) {
+        report(currentL10n.couldntConnectToTheLocalSsh);
+        if (_isCurrentOperation(generation)) {
+          setState(() => _pageError = currentL10n.couldntConnectToTheLocalSsh);
+        }
       }
     } finally {
       // Abandoned (scope changed / cancelled) before a tab took ownership.
       log?.markClosed(SessionLogEndReason.user);
       if (connection != null) await connection.close();
+      if (identical(session.sshCancellation, cancellation)) {
+        session.sshCancellation = null;
+      }
       _finishOperation(generation);
+      // An exit that neither connected nor reported keeps no loading state.
+      if (attempt != null && session.progress.isCurrent(attempt)) {
+        report(currentL10n.couldntConnectToTheLocalSsh);
+      }
+      if (mounted && !_disposing) setState(() {});
     }
   }
 
@@ -2458,7 +2712,18 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       other = _visibleSessions.where((s) => s.id == copyId).firstOrNull;
     } else if (other == null) {
       final before = _sessions.map((s) => s.id).toSet();
-      await _connectLocalHost(source.host);
+      _LocalTerminalSession? created;
+      // The new tab exists before its connection settles: split now so the
+      // pane shows the real progress (stop/retry/close stay in that pane).
+      final opening = _connectLocalHost(
+        source.host,
+        onTabCreated: (session) => created = session,
+      );
+      if (created == null) {
+        await opening;
+      } else {
+        unawaited(opening.catchError((Object _) {}));
+      }
       other = _visibleSessions.where((s) => !before.contains(s.id)).firstOrNull;
     }
     if (!mounted ||
@@ -4579,23 +4844,26 @@ _showMessage(
                         if (session.desktop != null) {
                           return ExcludeFocus(
                             excluding: _selectedTabId != id,
-                            child: DesktopView(
-                              key: ValueKey(session.id),
-                              session: session.desktop!,
-                              onDetach: ApplicationWindows.instance.supported
-                                  ? () => unawaited(_detachTerminalTab(id))
-                                  : null,
-                              onOpenMonitorWindows:
-                                  ApplicationWindows.instance.supported
-                                  ? () => unawaited(
-                                      _openDesktopMonitorWindows(session),
-                                    )
-                                  : null,
+                            child: _withLocalConnectProgress(
+                              session,
+                              DesktopView(
+                                key: ValueKey(session.id),
+                                session: session.desktop!,
+                                onDetach: ApplicationWindows.instance.supported
+                                    ? () => unawaited(_detachTerminalTab(id))
+                                    : null,
+                                onOpenMonitorWindows:
+                                    ApplicationWindows.instance.supported
+                                    ? () => unawaited(
+                                        _openDesktopMonitorWindows(session),
+                                      )
+                                    : null,
+                              ),
                             ),
                           );
                         }
                         if (session.isTelnet) {
-                          return SessionRecoveryOverlay(recovery: session.recovery, child: ExcludeFocus(
+                          return _withLocalConnectProgress(session, SessionRecoveryOverlay(recovery: session.recovery, child: ExcludeFocus(
                             excluding: _selectedTabId != id,
                             child: TerminalView(
                               session.terminal,
@@ -4613,7 +4881,7 @@ _showMessage(
                                 _savedTerminalThemeChoice,
                               ),
                             ),
-                          ));
+                          )));
                         }
                         if (session.console != null) {
                           return ExcludeFocus(
@@ -4634,7 +4902,15 @@ _showMessage(
                             ),
                           );
                         }
-                        return SessionRecoveryOverlay(recovery: session.recovery, child: _LocalSshTerminalDialog(
+                        if (session.connection == null) {
+                          // SSH still loading (or a console that could not
+                          // start): only the progress surface is shown.
+                          return _withLocalConnectProgress(
+                            session,
+                            const SizedBox.expand(),
+                          );
+                        }
+                        return _withLocalConnectProgress(session, SessionRecoveryOverlay(recovery: session.recovery, child: _LocalSshTerminalDialog(
                           key: session.viewKey,
                           session: session,
                           host: session.host,
@@ -4648,7 +4924,7 @@ _showMessage(
                           onToolsChanged: () {
                             if (mounted) setState(() {});
                           },
-                        ));
+                        )));
                       },
                     ),
                   ),
@@ -6890,13 +7166,18 @@ String _formatDate(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
 class _LocalTerminalSession {
-  _LocalTerminalSession({
-    required this.host,
-    required SshConnection connection,
-    this.log,
-  }) : connection = connection {
-    _bindSsh(connection);
+  /// SSH tab shown as soon as the user connects: no transport yet. The
+  /// connection is attached by [attachSsh] once credential lookup, host-key
+  /// review and authentication finished for the current attempt.
+  _LocalTerminalSession.pending(this.host) : connection = null, log = null {
+    connected.value = false;
   }
+
+  /// Initial-connection surface (loading / failed / stopped) of this tab.
+  final ConnectProgress progress = ConnectProgress();
+
+  /// Cancels the sockets of the SSH attempt in flight (stop loading/close).
+  SshConnectCancellation? sshCancellation;
 
   Future<void> attachSsh(SshConnection value, SessionLogRecorder? recorder) async {
     final generation = connectionGeneration;
@@ -6961,26 +7242,54 @@ class _LocalTerminalSession {
        ),
        connection = null,
        log = null {
-    console = value;
     consoleSerialPort = serialPort;
     consoleBaudRate = baudRate;
     consoleShell = serialPort == null ? shell : null;
+    attachConsole(value);
+  }
+
+  /// Console/shell tab whose process could not start. It keeps the launch
+  /// metadata so the progress surface can retry in the same tab.
+  _LocalTerminalSession.failedConsole({
+    required String title,
+    String? serialPort,
+    int? baudRate,
+    LocalShellLaunch? shell,
+  }) : host = HostRecord(
+         id: const Uuid().v4(),
+         name: title,
+         address: 'localhost',
+       ),
+       connection = null,
+       log = null {
+    consoleSerialPort = serialPort;
+    consoleBaudRate = baudRate;
+    consoleShell = serialPort == null ? shell : null;
+    connected.value = false;
+  }
+
+  bool get isConsoleTab =>
+      console != null || consoleSerialPort != null || consoleShell != null;
+
+  void attachConsole(LocalConsole value) {
+    console = value;
     terminal.onOutput = value.input;
     terminal.onResize = (w, h, _, _) => value.resize(w, h);
     _stdout = value.output.listen(
       terminal.write,
       onError: (_) {
-        if (!_closed) connected.value = false;
+        if (!_closed && identical(console, value)) connected.value = false;
       },
     );
     unawaited(
       value.exitCode.then((code) {
-        if (!_closed) {
+        if (!_closed && identical(console, value)) {
           connected.value = false;
           terminal.write(currentL10n.consoleExitedCode(code));
         }
       }),
     );
+    connected.value = true;
   }
   /// Plaintext Telnet tab. The tab appears immediately in `connecting`
   /// state; [telnetReady] completes when the connection attempt settles.
@@ -6997,6 +7306,7 @@ class _LocalTerminalSession {
     terminal.write(telnetPlaintextTerminalNotice(host.endpoint));
     final cancellation = TelnetConnectCancellation();
     _telnetCancellation = cancellation;
+    progress.begin(ConnectStage.connecting);
     telnetReady = _connectTelnet(connector, cancellation);
   }
 
@@ -7004,6 +7314,8 @@ class _LocalTerminalSession {
     TelnetChannelConnector connector,
     TelnetConnectCancellation cancellation,
   ) async {
+    // Tracked only for a new tab or a retry from the progress surface.
+    final attempt = progress.isLoading ? progress.attempt : null;
     try {
       final session = await TelnetSession.connect(
         host: host.address,
@@ -7052,6 +7364,7 @@ class _LocalTerminalSession {
       session.resize(terminal.viewWidth, terminal.viewHeight);
       log?.markConnected();
       telnetState = 'connected';
+      if (attempt != null) progress.succeed(attempt);
       connected.value = true;
     } catch (error) {
       if (_closed || cancellation.isCancelled || !identical(_telnetCancellation, cancellation)) return;
@@ -7062,6 +7375,7 @@ class _LocalTerminalSession {
           : telnetFailureMessage(TelnetFailure.unreachable);
       log?.markFailed(error);
       terminal.write('\r\n\x1b[31m$telnetError\x1b[0m\r\n');
+      if (attempt != null) progress.fail(attempt, telnetError!);
       _onTelnetStateChanged?.call();
     }
   }
@@ -7069,10 +7383,18 @@ class _LocalTerminalSession {
   _LocalTerminalSession.desktop(this.host, DesktopSession value)
     : connection = null,
       log = null {
-    desktop = value;
     connected.value = false;
+    attachDesktop(value);
+  }
+
+  /// Binds [value] as this tab's desktop. A retry replaces a never-connected
+  /// session; the replaced one is closed and can no longer change this tab.
+  void attachDesktop(DesktopSession value) {
+    desktop = value;
     value.addListener(() {
-      if (!_closed) connected.value = value.state == 'connected';
+      if (!_closed && identical(desktop, value)) {
+        connected.value = value.state == 'connected';
+      }
     });
   }
   final String id = const Uuid().v4();
@@ -7105,6 +7427,11 @@ class _LocalTerminalSession {
   Future<void> disconnect() async {
     if (_closed) return;
     recovery?.blockAutomatic();
+    // A disconnect during the initial attempt is the same as stop loading.
+    progress.cancel();
+    final ssh = sshCancellation;
+    sshCancellation = null;
+    unawaited(ssh?.cancel());
     connectionGeneration++;
     _telnetCancellation?.cancel();
     _telnetCancellation = null;
@@ -7124,6 +7451,10 @@ class _LocalTerminalSession {
   Future<void> _close() async {
     if (_closed) return;
     _closed = true;
+    progress.retire();
+    final cancellation = sshCancellation;
+    sshCancellation = null;
+    unawaited(cancellation?.cancel());
     recovery?.dispose();
     recovery = null;
     log?.markClosed(SessionLogEndReason.user);

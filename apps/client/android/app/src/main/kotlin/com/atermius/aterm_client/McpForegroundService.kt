@@ -283,7 +283,7 @@ class McpForegroundService : Service() {
         }
         val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, CHANNEL)
             else @Suppress("DEPRECATION") Notification.Builder(this)
-        builder.setSmallIcon(android.R.drawable.stat_notify_sync_noanim)
+        builder.setSmallIcon(R.drawable.ic_atermius_notification)
             .setContentTitle(texts.title)
             .setContentText(texts.body)
             .setOngoing(true)

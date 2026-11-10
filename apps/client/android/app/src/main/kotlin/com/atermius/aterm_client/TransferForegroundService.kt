@@ -118,7 +118,7 @@ class TransferForegroundService : Service() {
             }
             val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, CHANNEL)
                 else Notification.Builder(this)
-            val notification = builder.setSmallIcon(android.R.drawable.stat_sys_upload)
+            val notification = builder.setSmallIcon(R.drawable.ic_atermius_notification)
                 .setContentTitle("Atermius file transfer")
                 .setContentText("Selecting or transferring a file")
                 .setOngoing(true).setCategory(Notification.CATEGORY_SERVICE).build()

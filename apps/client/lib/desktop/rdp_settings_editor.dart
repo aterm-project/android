@@ -4,6 +4,7 @@ import 'desktop_resolution.dart';
 import 'desktop_resolution_picker.dart';
 import 'rdp_features.dart';
 import 'rdp_settings.dart';
+import 'rdp_storage.dart';
 import '../l10n/l10n.dart';
 
 typedef RdpFolderPicker = Future<String?> Function();
@@ -17,6 +18,7 @@ class RdpSettingsEditor extends StatefulWidget {
     required this.onChanged,
     required this.features,
     this.pickFolder,
+    this.pickDisk,
     this.keyPrefix = 'host',
     this.unreadable = false,
   });
@@ -24,6 +26,7 @@ class RdpSettingsEditor extends StatefulWidget {
   final ValueChanged<RdpSettings> onChanged;
   final RdpFeatures features;
   final RdpFolderPicker? pickFolder;
+  final Future<String?> Function(BuildContext)? pickDisk;
   final String keyPrefix;
 
   /// The stored entry was written by a newer version; saving replaces it.
@@ -40,6 +43,8 @@ class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
     text: widget.initial.usbDevices.join(', '),
   );
   _RdpEditorError? _error;
+  String? _pickerError;
+  bool _picking = false;
 
   @override
   void dispose() {
@@ -85,28 +90,126 @@ class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
   Future<void> _addDrive() async {
     final picker = widget.pickFolder;
     if (picker == null) return;
-    final path = await picker();
+    await _pickDrive(picker);
+  }
+
+  Future<void> _pickDrive(RdpFolderPicker picker) async {
+    if (_picking) return;
+    // Do not restore a host/password field's IME when system storage Settings
+    // or the directory chooser returns to this form.
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _picking = true;
+      _pickerError = null;
+    });
+    String? path;
+    try {
+      path = await picker();
+    } catch (error) {
+      if (mounted)
+        setState(
+          () => _pickerError = error is RdpStorageException
+              ? error.message
+              : context.l10n.rdpStoragePickerFailed,
+        );
+      return;
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
     if (path == null || !mounted) return;
     if (!isSafeLocalPath(path)) {
       setState(() => _error = _RdpEditorError.invalidFolder);
       return;
     }
-    final base = path
-        .split(RegExp(r'[\\/]'))
-        .lastWhere((p) => p.isNotEmpty, orElse: () => 'Folder')
-        .replaceAll(RegExp(r'[^A-Za-z0-9 _-]'), '_');
-    var name = base.isEmpty || !RegExp('^[A-Za-z0-9]').hasMatch(base)
+    final diskLetter = RegExp(r'^([A-Za-z]):[\\/]*$').firstMatch(path);
+    final base =
+        (diskLetter != null
+                ? 'Drive ${diskLetter[1]!.toUpperCase()}'
+                : RegExp(r'^/storage/emulated/[0-9]+/?$').hasMatch(path)
+                ? 'Local Storage'
+                : path
+                      .split(RegExp(r'[\\/]'))
+                      .lastWhere((p) => p.isNotEmpty, orElse: () => 'Folder'))
+            .replaceAll(RegExp(r'[^A-Za-z0-9 _-]'), '_');
+    final safeBase = base.isEmpty || !RegExp('^[A-Za-z0-9]').hasMatch(base)
         ? 'Folder'
         : base.substring(0, base.length.clamp(0, 24));
+    var name = safeBase;
     final used = _value.drives.map((d) => d.name.toLowerCase()).toSet();
     for (var i = 2; used.contains(name.toLowerCase()); i++) {
-      name = '${base.substring(0, base.length.clamp(0, 24))} $i';
+      name = '$safeBase $i';
     }
     _set(
       _value.copyWith(
         drives: [
           ..._value.drives,
           RdpDriveRedirect(name: name, path: path),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _renameDrive(RdpDriveRedirect drive) async {
+    final controller = TextEditingController(text: drive.name);
+    String? error;
+    final route = DialogRoute<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, update) => AlertDialog(
+          title: Text(context.l10n.rdpRenameMapping),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLength: 31,
+            decoration: InputDecoration(
+              labelText: context.l10n.rdpMappingName,
+              errorText: error,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () {
+                final value = controller.text.trim();
+                final issue =
+                    RdpDriveRedirect(
+                      name: value,
+                      path: drive.path,
+                    ).validate() ??
+                    (_value.drives.any(
+                          (other) =>
+                              other != drive &&
+                              other.name.toLowerCase() == value.toLowerCase(),
+                        )
+                        ? context.l10n.redirectedFolderNamesMustBeUnique
+                        : null);
+                if (issue != null) {
+                  update(() => error = issue);
+                  return;
+                }
+                Navigator.pop(context, value);
+              },
+              child: Text(context.l10n.save),
+            ),
+          ],
+        ),
+      ),
+    );
+    final name = await Navigator.of(context, rootNavigator: true).push(route);
+    // Dispose after the route actually releases its TextField.
+    await route.completed;
+    controller.dispose();
+    if (!mounted || name == null) return;
+    _set(
+      _value.copyWith(
+        drives: [
+          for (final other in _value.drives)
+            other == drive
+                ? RdpDriveRedirect(name: name, path: drive.path)
+                : other,
         ],
       ),
     );
@@ -280,14 +383,29 @@ class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
           subtitle: context.l10n.requiresCameraRedirectionSupportOnThe,
         ),
         const SizedBox(height: 8),
-        Row(
+        Wrap(
+          spacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Expanded(child: Text(context.l10n.redirectedFolders)),
+            Text(context.l10n.redirectedFolders),
+            if (widget.pickDisk != null)
+              TextButton.icon(
+                key: _k('add_disk'),
+                onPressed:
+                    widget.features.has(RdpFeatures.drive) &&
+                        !_picking &&
+                        v.drives.length < RdpSettings.maxDrives
+                    ? () => _pickDrive(() => widget.pickDisk!(context))
+                    : null,
+                icon: const Icon(Icons.storage_outlined),
+                label: Text(context.l10n.rdpAddDisk),
+              ),
             TextButton.icon(
               key: _k('add_drive'),
               onPressed:
                   widget.features.has(RdpFeatures.drive) &&
                       widget.pickFolder != null &&
+                      !_picking &&
                       v.drives.length < RdpSettings.maxDrives
                   ? _addDrive
                   : null,
@@ -296,6 +414,13 @@ class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
             ),
           ],
         ),
+        if (_pickerError != null)
+          Text(_pickerError!, style: TextStyle(color: theme.colorScheme.error)),
+        if (widget.features.has(RdpFeatures.drive))
+          Text(
+            context.l10n.rdpDriveMappingHelp,
+            style: theme.textTheme.bodySmall,
+          ),
         if (!widget.features.has(RdpFeatures.drive))
           Text(
             _unavailable(RdpFeatures.drive)!,
@@ -309,17 +434,28 @@ class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
             leading: const Icon(Icons.folder_outlined),
             title: Text(drive.name),
             subtitle: Text(drive.path),
-            trailing: IconButton(
-              tooltip: context.l10n.removeFolder,
-              icon: const Icon(Icons.close),
-              onPressed: () => _set(
-                v.copyWith(
-                  drives: [
-                    for (final d in v.drives)
-                      if (d != drive) d,
-                  ],
+            onTap: () => _renameDrive(drive),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: context.l10n.rdpRenameMapping,
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => _renameDrive(drive),
                 ),
-              ),
+                IconButton(
+                  tooltip: context.l10n.removeFolder,
+                  icon: const Icon(Icons.close),
+                  onPressed: () => _set(
+                    v.copyWith(
+                      drives: [
+                        for (final d in v.drives)
+                          if (d != drive) d,
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         TextField(

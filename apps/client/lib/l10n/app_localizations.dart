@@ -29169,6 +29169,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This choice applies now, but could not be saved. Try again.'**
   String get desktopKeyboardSaveFailed;
+
+  /// No description provided for @rdpAddDisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Add disk'**
+  String get rdpAddDisk;
+
+  /// No description provided for @rdpChooseDisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a disk'**
+  String get rdpChooseDisk;
+
+  /// No description provided for @rdpLocalStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Storage'**
+  String get rdpLocalStorage;
+
+  /// No description provided for @rdpStorageFolderUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder {name} is unavailable on this device. Reconnect the disk or choose a local folder again.'**
+  String rdpStorageFolderUnavailable(String name);
+
+  /// No description provided for @rdpStoragePermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'To map a disk or folder, allow Atermius to access files in Android Settings, then try again. Only folders added to this host are shared.'**
+  String get rdpStoragePermissionRequired;
+
+  /// No description provided for @rdpStoragePickerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not choose a local folder. Try another folder on this device.'**
+  String get rdpStoragePickerFailed;
+
+  /// No description provided for @rdpDriveMappingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Mapped disks and folders appear under \\\\tsclient in the remote session. Changes apply after reconnecting. Android requires file access permission for live disk mapping.'**
+  String get rdpDriveMappingHelp;
+
+  /// No description provided for @rdpRenameMapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename mapping'**
+  String get rdpRenameMapping;
+
+  /// No description provided for @rdpMappingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Mapping name'**
+  String get rdpMappingName;
+
+  /// No description provided for @rdpMappingReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the remote session again to apply mapping changes.'**
+  String get rdpMappingReconnect;
+
+  /// No description provided for @keybarShiftGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift: tap for the next key only, double-tap to lock'**
+  String get keybarShiftGuidance;
+
+  /// No description provided for @lockShiftModifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Shift modifier'**
+  String get lockShiftModifier;
+
+  /// No description provided for @releaseModifiers.
+  ///
+  /// In en, this message translates to:
+  /// **'Release Control, Alt and Shift'**
+  String get releaseModifiers;
+
+  /// No description provided for @connectProgressConnectingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to {name}'**
+  String connectProgressConnectingTo(String name);
+
+  /// No description provided for @connectProgressFailedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to {name}'**
+  String connectProgressFailedTo(String name);
+
+  /// No description provided for @connectProgressStoppedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading stopped'**
+  String get connectProgressStoppedTitle;
+
+  /// No description provided for @connectProgressStoppedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection attempt was stopped. Retry starts a new attempt in this tab.'**
+  String get connectProgressStoppedDetail;
+
+  /// No description provided for @connectProgressStagePreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking host settings and sign-in details'**
+  String get connectProgressStagePreparing;
+
+  /// No description provided for @connectProgressStageConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening the connection'**
+  String get connectProgressStageConnecting;
+
+  /// No description provided for @connectProgressStageVerifyingHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying the host identity'**
+  String get connectProgressStageVerifyingHost;
+
+  /// No description provided for @connectProgressStageAwaitingUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your response'**
+  String get connectProgressStageAwaitingUser;
+
+  /// No description provided for @connectProgressStageAuthenticating.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in'**
+  String get connectProgressStageAuthenticating;
+
+  /// No description provided for @connectProgressStageStartingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the session'**
+  String get connectProgressStageStartingSession;
+
+  /// No description provided for @connectProgressStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop loading'**
+  String get connectProgressStop;
+
+  /// No description provided for @connectProgressRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get connectProgressRetry;
+
+  /// No description provided for @connectProgressClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get connectProgressClose;
+
+  /// No description provided for @connectProgressRetryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This tab belongs to an earlier sign-in, Vault or profile and can\'t retry. Close it and connect again.'**
+  String get connectProgressRetryUnavailable;
+
+  /// No description provided for @connectProgressNoCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'This host has no usable saved sign-in. Add or fix its credential, then retry.'**
+  String get connectProgressNoCredential;
 }
 
 class _AppLocalizationsDelegate

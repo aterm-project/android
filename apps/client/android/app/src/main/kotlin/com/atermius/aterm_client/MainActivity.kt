@@ -1,6 +1,7 @@
 package com.atermius.aterm_client
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.view.View
@@ -18,6 +19,8 @@ class MainActivity : FlutterActivity() {
     private var mcpChannel: MethodChannel? = null
     private var leaseOwner: Any? = null
     private var resumed = false
+    private var rdpStorage: RdpStorageAccess? = null
+    private var externalFileOpener: ExternalFileOpener? = null
 
     override fun onResume() {
         super.onResume()
@@ -32,6 +35,8 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         loadRdpEngine()
+        rdpStorage = RdpStorageAccess(this, flutterEngine.dartExecutor.binaryMessenger)
+        externalFileOpener = ExternalFileOpener(this, flutterEngine.dartExecutor.binaryMessenger)
         fullscreenChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
             "atermius/fullscreen").also { channel ->
             channel.setMethodCallHandler { call, result ->
@@ -156,11 +161,16 @@ class MainActivity : FlutterActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        rdpStorage?.activityResult(requestCode)
         if (requestCode != REQUEST_NOTIFICATIONS) return
         McpForegroundLease.recheckNotifications(applicationContext)
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        externalFileOpener?.close()
+        externalFileOpener = null
+        rdpStorage?.close()
+        rdpStorage = null
         transferChannel?.setMethodCallHandler(null)
         transferChannel = null
         mcpChannel?.setMethodCallHandler(null)
@@ -174,6 +184,11 @@ class MainActivity : FlutterActivity() {
         fullscreenChannel?.setMethodCallHandler(null)
         fullscreenChannel = null
         super.cleanUpFlutterEngine(flutterEngine)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        rdpStorage?.activityResult(requestCode)
     }
 
     companion object {
