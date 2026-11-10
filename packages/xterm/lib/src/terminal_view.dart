@@ -20,6 +20,7 @@ import 'package:xterm/src/ui/shortcut/shortcuts.dart';
 import 'package:xterm/src/ui/terminal_text_style.dart';
 import 'package:xterm/src/ui/terminal_theme.dart';
 import 'package:xterm/src/ui/themes.dart';
+import 'package:xterm/src/ui/touch_selection.dart';
 
 class TerminalView extends StatefulWidget {
   const TerminalView(
@@ -165,6 +166,8 @@ class TerminalViewState extends State<TerminalView> {
 
   final _viewportKey = GlobalKey();
 
+  final _touchSelectionKey = GlobalKey<TerminalTouchSelectionState>();
+
   String? _composingText;
 
   late TerminalController _controller;
@@ -173,6 +176,11 @@ class TerminalViewState extends State<TerminalView> {
 
   RenderTerminal get renderTerminal =>
       _viewportKey.currentContext!.findRenderObject() as RenderTerminal;
+
+  /// Touch selection chrome (magnifier, context preview, Copy/Paste toolbar)
+  /// of this view, or null before the first build.
+  TerminalTouchSelectionState? get touchSelection =>
+      _touchSelectionKey.currentState;
 
   @override
   void initState() {
@@ -252,6 +260,7 @@ class TerminalViewState extends State<TerminalView> {
     child = TerminalScrollGestureHandler(
       terminal: widget.terminal,
       simulateScroll: widget.simulateScroll,
+      readOnly: widget.readOnly,
       getCellOffset: (offset) => renderTerminal.getCellOffset(offset),
       getLineHeight: () => renderTerminal.lineHeight,
       child: child,
@@ -316,6 +325,20 @@ class TerminalViewState extends State<TerminalView> {
           ? _onSecondaryTapUp
           : null,
       readOnly: widget.readOnly,
+      child: child,
+    );
+
+    child = TerminalTouchSelection(
+      key: _touchSelectionKey,
+      terminal: widget.terminal,
+      controller: _controller,
+      focusNode: _focusNode,
+      scrollController: _scrollController,
+      renderTerminal: () =>
+          _viewportKey.currentContext?.findRenderObject() as RenderTerminal?,
+      textStyle: widget.textStyle,
+      readOnly: widget.readOnly,
+      onPaste: _onTouchPaste,
       child: child,
     );
 
@@ -384,6 +407,12 @@ class TerminalViewState extends State<TerminalView> {
   void _onSecondaryTapUp(TapUpDetails details) {
     final offset = renderTerminal.getCellOffset(details.localPosition);
     widget.onSecondaryTapUp?.call(details, offset);
+  }
+
+  void _onTouchPaste(String text) {
+    if (widget.readOnly) return;
+    widget.terminal.paste(text);
+    _scrollToBottom();
   }
 
   bool get hasInputConnection {

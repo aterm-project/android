@@ -72,7 +72,8 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
       onTertiaryTapUp: onSecondaryTapUp,
       onLongPressStart: onLongPressStart,
       onLongPressMoveUpdate: onLongPressMoveUpdate,
-      // onLongPressUp: onLongPressUp,
+      onLongPressEnd: onLongPressEnd,
+      onLongPressCancel: onLongPressCancel,
       onDragStart: onDragStart,
       onDragUpdate: onDragUpdate,
       onDoubleTapDown: onDoubleTapDown,
@@ -158,21 +159,41 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
 
   void onDoubleTapDown(TapDownDetails details) {
     renderTerminal.selectWord(details.localPosition);
+    final kind = details.kind;
+    if (kind != null &&
+        kind != PointerDeviceKind.mouse &&
+        kind != PointerDeviceKind.trackpad) {
+      terminalView.touchSelection?.showToolbarForSelection();
+    }
   }
 
   void onLongPressStart(LongPressStartDetails details) {
     _lastLongPressStartDetails = details;
+    // A new long press always starts a new selection, even on blank cells
+    // where no word can be selected (that long press offers Paste instead).
+    if (widget.terminalController.selection != null) {
+      widget.terminalController.clearSelection();
+    }
     renderTerminal.selectWord(details.localPosition);
+    terminalView.touchSelection?.beginDrag(details.globalPosition);
   }
 
   void onLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
-    renderTerminal.selectWord(
-      _lastLongPressStartDetails!.localPosition,
-      details.localPosition,
-    );
+    final start = _lastLongPressStartDetails;
+    if (start == null) return;
+    renderTerminal.selectWord(start.localPosition, details.localPosition);
+    terminalView.touchSelection?.updateDrag(details.globalPosition);
   }
 
-  // void onLongPressUp() {}
+  void onLongPressEnd(LongPressEndDetails details) {
+    _lastLongPressStartDetails = null;
+    terminalView.touchSelection?.endDrag(details.globalPosition);
+  }
+
+  void onLongPressCancel() {
+    _lastLongPressStartDetails = null;
+    terminalView.touchSelection?.cancelDrag();
+  }
 
   void onDragStart(DragStartDetails details) {
     _lastDragStartDetails = details;

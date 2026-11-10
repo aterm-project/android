@@ -44,3 +44,34 @@ changes here. The application selects this package through the path override in
   `apps/client/test/terminal_memory_test.dart`; the opt-in
   `terminal_memory_benchmark_test.dart` records native process RSS under glyph
   cache pressure. See `docs/MEMORY-PERFORMANCE.md` in the repository root.
+
+- Touch selection (`lib/src/ui/touch_selection.dart`): a touch/stylus long press
+  selects a word and shows Flutter's platform magnifier
+  (`TextMagnifier.adaptiveMagnifierConfiguration`: Android/iOS only) plus a compact
+  preview of the bounded surrounding text while dragging. Releasing shows
+  `AdaptiveTextSelectionToolbar` with localized Copy, plus Paste only when the view
+  is writable. A long press on blank cells offers Paste alone. Paste uses
+  `Terminal.paste` (bracketed paste aware) and is re-checked after the async
+  clipboard read against disposal, terminal replacement and `readOnly`. The chrome is
+  dismissed by a tap on the terminal, a tap outside, focus loss, terminal/controller
+  replacement and disposal. A touch double tap also shows the toolbar. Mouse drag
+  selection and desktop behaviour are unchanged. The preview reads at most 20 cells
+  on each side plus the head/tail of the selection, never the whole scrollback.
+  `TerminalViewState.touchSelection` exposes the state. `TerminalSelectionContext`
+  and `TerminalTouchSelectionState` are exported from `ui.dart`. The `TerminalView`
+  constructor is unchanged.
+- Touch/stylus tap-downs are delivered only once the tap is confirmed by its
+  tap-up (`gesture_detector.dart`). Upstream forwarded them after 100 ms even when
+  the pointer became a long press or a scroll. That focused the view, cleared the
+  selection being made and sent an unmatched mouse press to apps with mouse
+  reporting on. Mouse taps keep their immediate down/up timing.
+- Mouse reporting fixes: reports use live-screen rows, not buffer rows. Upstream
+  sent scrollback row indices, which produced non-ASCII/garbage bytes or wrong rows
+  in the main buffer. Taps on scrolled-back history are not reported. X10/UTF rows
+  are no longer off by one. Wheel buttons are 64/65/66/67; upstream's 68+ set the
+  Shift bit. Alternate-screen wheel reports use local coordinates, and `readOnly`
+  views no longer turn alternate-screen swipes into wheel reports or arrow keys.
+- Wide (CJK) characters: `getWordBoundary` no longer treats the empty trailing cell
+  of a double-width character as a separator. Word/character selections widen to
+  whole wide characters, so the copied text matches the highlight.
+- Covered by `apps/client/test/terminal_touch_selection_test.dart`.
