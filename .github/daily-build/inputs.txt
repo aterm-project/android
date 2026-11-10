@@ -1,0 +1,36 @@
+# Inputs of the daily release build (read by .github/daily-build/daily_gate.py
+# from the commit being considered). A build is due only when the fingerprint
+# of the selected files (path, mode, blob id) differs from the one recorded in
+# the last build that was compiled AND published.
+#   "+ glob" includes, "- glob" excludes, the last matching rule wins and
+#   unmatched files are not inputs. "*" stays in one path segment, "**" crosses.
+# Changing the rules changes the fingerprint (one rebuild). Comments do not.
+version 1
+
+# Product source, platform runners, lockfile, l10n config
++ apps/client/**
+- apps/client/test/**
+- apps/client/integration/**
+- apps/client/tool/**
+- apps/client/analysis_options.yaml
+
+# Local dependency forks (dependency_overrides)
++ packages/**
+- packages/*/test/**
+- packages/*/example/**
+- packages/*/doc/**
+- packages/*/analysis_options.yaml
+- packages/*/dart_test.yaml
+- packages/*/dartdoc_options.yaml
+
+# Documentation never changes a build (no .md file is a bundled asset)
+- **/*.md
+
+# Build recipe: pinned SDK installers and the daily build/packaging scripts.
+# The gate/publish scripts, tests and README in .github/daily-build/ are not inputs.
++ tools/install_flutter_linux.sh
++ .github/workflows/daily-build.yml
++ .github/daily-build/recipe/**
+
+# Windows engine helper used by the build (docs/INSTALLATION.en.md)
++ integration/native/build_rdp_windows.ps1
