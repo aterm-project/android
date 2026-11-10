@@ -58,11 +58,14 @@ if git ls-remote --exit-code origin "refs/tags/$ATERMIUS_RELEASE_TAG" >/dev/null
   release_target=(--verify-tag)
 fi
 if gh release view "$ATERMIUS_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-  die "release $ATERMIUS_RELEASE_TAG already exists; refusing to overwrite it"
+  [[ "${ATERMIUS_RECOVERY_USE_EXISTING_TAG:-false}" == true && "$artifact_run_id" != "$GITHUB_RUN_ID" ]] || \
+    die "release $ATERMIUS_RELEASE_TAG already exists; refusing to overwrite it"
+  echo "Verifying the existing recovery release; no assets will be changed or uploaded."
+else
+  mapfile -t assets < <(find "$dir" -maxdepth 1 -type f -print | LC_ALL=C sort)
+  gh release create "$ATERMIUS_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" "${release_target[@]}" \
+    --title "$ATERMIUS_RELEASE_TITLE" --notes-file "$work/notes.md" --prerelease --latest=false "${assets[@]}"
 fi
-mapfile -t assets < <(find "$dir" -maxdepth 1 -type f -print | LC_ALL=C sort)
-gh release create "$ATERMIUS_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" "${release_target[@]}" \
-  --title "$ATERMIUS_RELEASE_TITLE" --notes-file "$work/notes.md" --prerelease --latest=false "${assets[@]}"
 
 gh release view "$ATERMIUS_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets,url,isDraft,tagName \
   > "$work/published.json"

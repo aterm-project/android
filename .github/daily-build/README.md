@@ -111,6 +111,11 @@ actionlint -shellcheck= .github/workflows/*.yml
   For GitHub's historical-commit tag permission restriction, an administrator may create the
   original source tag first. Recovery checks its peeled commit against the full artifact source
   SHA and uses `--verify-tag`; normal daily publication still refuses pre-existing tags.
+  A recovery retry verifies an existing published release's complete asset list, sizes and
+  hashes without modifying or re-uploading assets, then finishes its original baseline.
+  If GitHub refuses the historical-workflow baseline push, an administrator can run the same
+  guarded `daily_gate.py advance` with the original claim and verified artifact manifest; the
+  recovery task verifies the completed publication and leaves the equal/newer baseline intact.
 * The native engine and Gradle use the same pinned NDK under `ANDROID_HOME/ndk/<revision>`;
   the cache restores that exact SDK package directory. No second private SDK is installed.
   Before restoring tools, the disposable GitHub-hosted Linux runner removes unused .NET,
