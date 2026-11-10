@@ -1,0 +1,47 @@
+# Publication-only recovery of the already built/signed 2026-11-10 APK.
+# The source run is fixed and validated against its original quota claim.
+# No compiler, Gradle or signing credentials are used here.
+name: Resume Android publication
+on:
+  workflow_dispatch: {}
+permissions: {}
+concurrency:
+  group: daily-build-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ATERMIUS_RECOVER_RUN_ID: "42875528747"
+      ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: true
+          sparse-checkout: .github/daily-build
+      - name: Verify original successful build and signature jobs, artifact and claim
+        run: python3 -I .github/daily-build/resume_publication.py prepare
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ env.ATERMIUS_RECOVER_ARTIFACT }}
+          run-id: ${{ env.ATERMIUS_ARTIFACT_RUN_ID }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release
+      - name: Verify cached signed APK; quarantine optional v4 sidecar
+        run: python3 -I .github/daily-build/resume_publication.py stage
+      - name: Publish original APK and advance its original baseline
+        run: bash .github/daily-build/publish.sh "$RUNNER_TEMP/release"
+      - name: Save publication recovery receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: publication-recovery-receipt
+          path: ${{ runner.temp }}/publication-recovery.json
+          if-no-files-found: ignore
+          retention-days: 30

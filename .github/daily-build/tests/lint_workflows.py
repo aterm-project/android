@@ -8,7 +8,8 @@ rules this CI design depends on:
 * no pull_request_target / workflow_run triggers, no workflow_dispatch inputs;
 * no `${{ ... }}` expression inside any `run:` script (values go through env);
 * workflow-level permissions are empty or read-only; write scopes only on the
-  daily gate/publish jobs, never on a job that compiles code;
+  daily gate/publish jobs and the manual main-only publication recovery job,
+  never on a job that compiles code;
 * compile jobs check out with persist-credentials: false; matrices have
   max-parallel <= 2; every job has a timeout;
 * contexts unavailable at job level (runner, steps, env) are not used in
@@ -59,6 +60,12 @@ def lint_file(path: Path) -> list[str]:
     if top not in ({}, "read-all") and not (isinstance(top, dict) and set(top.values()) <= {"read", "none"}):
         errors.append(f"{name}: workflow-level permissions must be empty or read-only")
     daily = name == "daily-build.yml"
+    recovery = name == "resume-publication.yml"
+    if recovery:
+        if not isinstance(on, dict) or on != {"workflow_dispatch": {}}:
+            errors.append(f"{name}: recovery must be manual only, without inputs")
+        if set(doc.get("jobs", {})) != {"publish"}:
+            errors.append(f"{name}: recovery may contain only the publication job")
     if daily:
         if not isinstance(on, dict) or set(on) != {"schedule", "workflow_dispatch"} \
                 or on["schedule"] != [{"cron": "0 0 * * *"}]:
@@ -74,10 +81,13 @@ def lint_file(path: Path) -> list[str]:
             errors.append(f"{where}: timeout-minutes missing")
         perms = job.get("permissions", top)
         writes = sorted(k for k, v in (perms or {}).items() if v == "write") if isinstance(perms, dict) else []
-        if perms == "write-all" or (writes and not (daily and job_id in WRITE_JOBS)):
+        if perms == "write-all" or (writes and not ((daily and job_id in WRITE_JOBS) or (recovery and job_id == "publish"))):
             errors.append(f"{where}: write permission {writes or perms} not allowed on this job")
         if daily and job_id in WRITE_JOBS and writes not in ([], ["contents"]):
             errors.append(f"{where}: only contents: write is allowed, got {writes}")
+        if recovery and (perms != {"contents": "write", "actions": "read"} or
+                         str(job.get("if", "")) != "github.ref == 'refs/heads/main'"):
+            errors.append(f"{where}: recovery needs main-only guard, contents:write and actions:read only")
         if daily and job_id != "gate":
             guard = str(job.get("if", ""))
             if "needs.gate.outputs.build == 'true'" not in guard or \

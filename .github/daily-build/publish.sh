@@ -25,16 +25,25 @@ die() { echo "::error::$*" >&2; exit 1; }
 [[ "$ATERMIUS_RELEASE_TAG" =~ ^daily-[0-9]{8}\.[1-9]-[0-9a-f]{12}$ ]] || die "invalid release tag"
 rm -rf "$work"
 mkdir -p "$work"
+# A publication-only recovery preserves the original build/claim provenance.
+# GITHUB_RUN_ID remains the actual recovery action; no build or signing reruns.
+artifact_run_id="${ATERMIUS_ARTIFACT_RUN_ID:-$GITHUB_RUN_ID}"
+artifact_run_attempt="${ATERMIUS_ARTIFACT_RUN_ATTEMPT:-$GITHUB_RUN_ATTEMPT}"
+[[ "$artifact_run_id" =~ ^[0-9]+$ && "$artifact_run_attempt" =~ ^[1-9][0-9]*$ ]] || die "invalid artifact run identity"
 claim_args=(--namespace "$ATERMIUS_DAILY_NAMESPACE" --quota-date "$ATERMIUS_QUOTA_DATE" --slot "$ATERMIUS_QUOTA_SLOT"
-            --claim-record "$ATERMIUS_CLAIM_RECORD" --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT"
+            --claim-record "$ATERMIUS_CLAIM_RECORD" --run-id "$artifact_run_id" --run-attempt "$artifact_run_attempt"
             --source-sha "$ATERMIUS_SOURCE_SHA")
 
 python3 -I "$TOOLS/daily_gate.py" check-claim "${claim_args[@]}"
 python3 -I "$TOOLS/release_tool.py" assemble --dir "$dir" --platforms "$ATERMIUS_PLATFORMS" \
   --source-sha "$ATERMIUS_SOURCE_SHA" --quota-date "$ATERMIUS_QUOTA_DATE" --release-tag "$ATERMIUS_RELEASE_TAG" \
-  --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" --repository "$GITHUB_REPOSITORY" \
-  --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+  --run-id "$artifact_run_id" --run-attempt "$artifact_run_attempt" --repository "$GITHUB_REPOSITORY" \
+  --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$artifact_run_id" \
   --sums-out "$work/SHA256SUMS" --notes-out "$work/notes.md" --artifacts-out "$work/artifacts.json"
+if [[ "$artifact_run_id" != "$GITHUB_RUN_ID" ]]; then
+  printf '\nPublication recovered without rebuilding or re-signing: %s/%s/actions/runs/%s\n' \
+    "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> "$work/notes.md"
+fi
 cp "$work/SHA256SUMS" "$dir/SHA256SUMS"
 
 if git ls-remote --exit-code origin "refs/tags/$ATERMIUS_RELEASE_TAG" >/dev/null 2>&1; then

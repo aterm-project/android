@@ -101,6 +101,13 @@ actionlint -shellcheck= .github/workflows/*.yml
 
 ## Android specifics
 
+* `resume-publication.yml` is a manual, main-only recovery for original run 42875528747.
+  It verifies that only publication failed, checks the original quota/run/attempt/source and
+  signed-artifact provenance, and publishes the already signed APK. It neither compiles nor
+  signs, needs no signing secrets, and does not claim another daily build. The optional v4
+  `.idsig` is quarantined with its hash recorded; the APK and original evidence stay byte-identical.
+  Normal signing explicitly disables the unused v4 sidecar. Recovery has the same concurrency
+  group as the daily build and cannot overwrite an existing release.
 * The native engine and Gradle use the same pinned NDK under `ANDROID_HOME/ndk/<revision>`;
   the cache restores that exact SDK package directory. No second private SDK is installed.
   Before restoring tools, the disposable GitHub-hosted Linux runner removes unused .NET,

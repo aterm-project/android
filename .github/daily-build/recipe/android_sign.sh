@@ -52,6 +52,7 @@ key_pass=(--key-pass env:ATERMIUS_ANDROID_KEYSTORE_PASSWORD)
 [[ -n "${ATERMIUS_ANDROID_KEY_PASSWORD:-}" ]] && key_pass=(--key-pass env:ATERMIUS_ANDROID_KEY_PASSWORD)
 "$ATERMIUS_BUILD_TOOLS/apksigner" sign --ks "$secret_dir/keystore" --ks-key-alias "$ATERMIUS_ANDROID_KEY_ALIAS" \
   --ks-pass env:ATERMIUS_ANDROID_KEYSTORE_PASSWORD "${key_pass[@]}" \
+  --v4-signing-enabled false \
   --out "$out_dir/$final" "$in_dir/$intermediate"
 rm -rf "$secret_dir"
 

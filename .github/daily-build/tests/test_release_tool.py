@@ -252,6 +252,21 @@ class LintTests(unittest.TestCase):
         text = WORKFLOW_OK.replace("workflow_dispatch: {}", "workflow_dispatch:\n    inputs:\n      ref: {type: string}")
         self.assertTrue(any("inputs" in e for e in self.check(text)))
 
+    def test_recovery_is_manual_main_only_with_narrow_permissions(self):
+        path = HERE.parents[1] / 'workflows/resume-publication.yml'
+        self.assertEqual(lint.lint_file(path), [])
+        original = path.read_text()
+        with tempfile.TemporaryDirectory() as directory:
+            candidate = Path(directory) / path.name
+            for old, new, error in [
+                ('  workflow_dispatch: {}', '  workflow_dispatch: {}\n  push: {}', 'manual only'),
+                ("github.ref == 'refs/heads/main'", 'always()', 'main-only guard'),
+                ('      actions: read', '      actions: write', 'actions:read only'),
+            ]:
+                with self.subTest(error=error):
+                    candidate.write_text(original.replace(old, new))
+                    self.assertTrue(any(error in item for item in lint.lint_file(candidate)))
+
 
 if __name__ == "__main__":
     unittest.main()
