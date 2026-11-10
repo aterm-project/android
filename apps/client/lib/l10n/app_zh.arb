@@ -4871,5 +4871,11 @@
   "exitFullscreen": "退出全屏",
   "fullscreenUnavailable": "当前窗口无法切换全屏。",
   "restoreConnection": "恢复连接",
-  "reconnectEveryFiveSeconds": "每 5 秒自动重连"
+  "reconnectEveryFiveSeconds": "每 5 秒自动重连",
+  "desktopKeyboardModeTitle": "远程桌面键盘模式",
+  "desktopKeyboardOverlay": "悬浮叠加（保持分辨率）",
+  "desktopKeyboardResize": "跟随键盘调整",
+  "desktopKeyboardOverlayDescription": "键盘和特殊键栏叠加在桌面上，不改变远端分辨率或画面缩放。",
+  "desktopKeyboardResizeDescription": "桌面缩小至键盘上方的可见区域；跟随窗口大小的会话也会调整远端分辨率。",
+  "desktopKeyboardSaveFailed": "当前选择已生效，但未能保存，请重试。"
 }

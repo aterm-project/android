@@ -17370,4 +17370,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get reconnectEveryFiveSeconds => '5 秒ごとに自動再接続';
+
+  @override
+  String get desktopKeyboardModeTitle => 'リモートデスクトップのキーボード';
+
+  @override
+  String get desktopKeyboardOverlay => '重ねて表示（解像度を維持）';
+
+  @override
+  String get desktopKeyboardResize => 'キーボードに合わせてサイズ変更';
+
+  @override
+  String get desktopKeyboardOverlayDescription =>
+      'キーボードと特殊キーを画面に重ねて表示し、リモートの解像度と表示倍率を維持します。';
+
+  @override
+  String get desktopKeyboardResizeDescription =>
+      'キーボードの上の領域にデスクトップを縮小します。ウィンドウサイズに追従する接続ではリモート解像度も変更します。';
+
+  @override
+  String get desktopKeyboardSaveFailed =>
+      '今回の選択は適用されましたが、保存できませんでした。もう一度お試しください。';
 }

@@ -50,7 +50,9 @@ class DesktopMobileControlsState extends State<DesktopMobileControls>
   );
   TextInputConnection? _connection;
   TextEditingValue _value = _seed;
-  bool _open = false, _left = false, _imeSeen = false;
+  bool _open = false, _imeSeen = false;
+  Alignment _edge = Alignment.centerRight;
+  Offset _anchor = const Offset(1, .3);
   ui.FlutterView? _view;
   @override
   void didChangeDependencies() {
@@ -58,7 +60,6 @@ class DesktopMobileControlsState extends State<DesktopMobileControls>
     _view = View.of(context);
   }
 
-  double _heightFraction = .3;
   int? _lastModifier;
   Timer? _doubleTap;
   final _modifiers = <int, _Latch>{
@@ -376,14 +377,32 @@ class DesktopMobileControlsState extends State<DesktopMobileControls>
     child: LayoutBuilder(
       builder: (context, constraints) {
         final buttonCount = widget.menu == null ? 2 : 3;
-        final narrow = constraints.maxWidth < buttonCount * 48;
-        final dockHeight = narrow ? buttonCount * 48.0 : 48.0;
-        final maxY = math.max(
-          0.0,
-          constraints.maxHeight - widget.keybarHeight - dockHeight,
+        final side = _edge.x.abs() == 1;
+        final vertical = side || constraints.maxWidth < buttonCount * 48;
+        final available = Size(
+          constraints.maxWidth,
+          math.max(0, constraints.maxHeight - widget.keybarHeight),
         );
-        const minY = 0.0;
-        final travelY = maxY - minY;
+        final dockSize = Size(
+          vertical ? 48 : buttonCount * 48.0,
+          vertical ? buttonCount * 48.0 : 48,
+        );
+        final x = _edge.x < 0
+            ? 0.0
+            : _edge.x > 0
+            ? math.max(0.0, available.width - dockSize.width)
+            : (_anchor.dx * available.width - dockSize.width / 2).clamp(
+                0.0,
+                math.max(0.0, available.width - dockSize.width),
+              );
+        final y = _edge.y < 0
+            ? 0.0
+            : _edge.y > 0
+            ? math.max(0.0, available.height - dockSize.height)
+            : (_anchor.dy * available.height - dockSize.height / 2).clamp(
+                0.0,
+                math.max(0.0, available.height - dockSize.height),
+              );
         final buttons = <Widget>[
           IconButton(
             key: const ValueKey('desktop_keyboard_toggle'),
@@ -422,39 +441,53 @@ class DesktopMobileControlsState extends State<DesktopMobileControls>
             if (_open)
               Positioned(left: 0, right: 0, bottom: 0, child: _keybar()),
             Positioned(
-              left: _left ? 0 : null,
-              right: _left ? null : 0,
-              top: minY + travelY * _heightFraction,
+              left: x.toDouble(),
+              top: y.toDouble(),
               child: GestureDetector(
                 key: const ValueKey('desktop_edge_dock'),
                 onPanUpdate: (details) {
                   final box = context.findRenderObject()! as RenderBox;
                   final point = box.globalToLocal(details.globalPosition);
                   setState(() {
-                    _left = point.dx < constraints.maxWidth / 2;
-                    if (travelY > 0)
-                      _heightFraction =
-                          (_heightFraction + details.delta.dy / travelY).clamp(
-                            0,
-                            1,
-                          );
+                    _anchor = Offset(
+                      (point.dx / math.max(1, available.width)).clamp(0, 1),
+                      (point.dy / math.max(1, available.height)).clamp(0, 1),
+                    );
+                    final distances = <Alignment, double>{
+                      Alignment.centerLeft: point.dx,
+                      Alignment.centerRight: available.width - point.dx,
+                      Alignment.topCenter: point.dy,
+                      Alignment.bottomCenter: available.height - point.dy,
+                    };
+                    _edge = distances.entries
+                        .reduce((a, b) => a.value < b.value ? a : b)
+                        .key;
                   });
                 },
                 child: Material(
                   color: Theme.of(context).colorScheme.surfaceContainerHigh
                       .withValues(alpha: .94),
                   elevation: 3,
-                  borderRadius: BorderRadius.horizontal(
-                    left: Radius.circular(_left ? 0 : 16),
-                    right: Radius.circular(_left ? 16 : 0),
-                  ),
+                  borderRadius: BorderRadius.circular(16),
                   clipBehavior: Clip.antiAlias,
-                  child: narrow
-                      ? Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: buttons,
-                        )
-                      : Row(mainAxisSize: MainAxisSize.min, children: buttons),
+                  child: SizedBox(
+                    width: math.min(dockSize.width, available.width),
+                    height: math.min(dockSize.height, available.height),
+                    child: SingleChildScrollView(
+                      scrollDirection: vertical
+                          ? Axis.vertical
+                          : Axis.horizontal,
+                      child: vertical
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: buttons,
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: buttons,
+                            ),
+                    ),
+                  ),
                 ),
               ),
             ),

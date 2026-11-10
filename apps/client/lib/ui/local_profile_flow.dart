@@ -27,6 +27,7 @@ import '../domain/quick_connect.dart';
 import 'host_search_field.dart';
 import 'host_search_palette.dart';
 import '../desktop/desktop_view.dart';
+import '../desktop/desktop_keyboard_mode.dart';
 import '../desktop/window/desktop_tab_windows.dart';
 import 'host_file_session.dart';
 import 'file_workspace_tabs.dart';
@@ -5600,6 +5601,14 @@ _showMessage(
         ),
       ),
       // ACCOUNT worker: local mode explains sync and routes to sign-in.
+      if (Theme.of(context).platform == TargetPlatform.android)
+        SettingsSection(
+          id: 'remote-desktop',
+          title: context.l10n.remoteDesktop,
+          icon: Icons.desktop_windows_outlined,
+          description: context.l10n.desktopKeyboardModeTitle,
+          builder: (_) => const SettingsCard(child: DesktopKeyboardSettings()),
+        ),
       SettingsSection(
         id: accountSettingsSectionId,
         title: context.l10n.accountSettingsTitle,

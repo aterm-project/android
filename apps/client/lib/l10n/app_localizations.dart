@@ -29133,6 +29133,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reconnect automatically every 5 seconds'**
   String get reconnectEveryFiveSeconds;
+
+  /// No description provided for @desktopKeyboardModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote desktop keyboard mode'**
+  String get desktopKeyboardModeTitle;
+
+  /// No description provided for @desktopKeyboardOverlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Overlay (keep resolution)'**
+  String get desktopKeyboardOverlay;
+
+  /// No description provided for @desktopKeyboardResize.
+  ///
+  /// In en, this message translates to:
+  /// **'Resize to keyboard'**
+  String get desktopKeyboardResize;
+
+  /// No description provided for @desktopKeyboardOverlayDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the keyboard and special keys over the desktop without changing its resolution or scaling.'**
+  String get desktopKeyboardOverlayDescription;
+
+  /// No description provided for @desktopKeyboardResizeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Shrink the desktop to the space above the keyboard. Window-following sessions also update the remote resolution.'**
+  String get desktopKeyboardResizeDescription;
+
+  /// No description provided for @desktopKeyboardSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This choice applies now, but could not be saved. Try again.'**
+  String get desktopKeyboardSaveFailed;
 }
 
 class _AppLocalizationsDelegate

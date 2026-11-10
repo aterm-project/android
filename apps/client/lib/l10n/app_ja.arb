@@ -4871,5 +4871,11 @@
   "exitFullscreen": "全画面表示を終了",
   "fullscreenUnavailable": "このウィンドウでは全画面表示に切り替えられません。",
   "restoreConnection": "再接続",
-  "reconnectEveryFiveSeconds": "5 秒ごとに自動再接続"
+  "reconnectEveryFiveSeconds": "5 秒ごとに自動再接続",
+  "desktopKeyboardModeTitle": "リモートデスクトップのキーボード",
+  "desktopKeyboardOverlay": "重ねて表示（解像度を維持）",
+  "desktopKeyboardResize": "キーボードに合わせてサイズ変更",
+  "desktopKeyboardOverlayDescription": "キーボードと特殊キーを画面に重ねて表示し、リモートの解像度と表示倍率を維持します。",
+  "desktopKeyboardResizeDescription": "キーボードの上の領域にデスクトップを縮小します。ウィンドウサイズに追従する接続ではリモート解像度も変更します。",
+  "desktopKeyboardSaveFailed": "今回の選択は適用されましたが、保存できませんでした。もう一度お試しください。"
 }
