@@ -11268,6 +11268,11 @@ class _TerminalObserverDialogState extends State<_TerminalObserverDialog> {
         _controllerFocusRequestScheduled = false;
         return;
       }
+      if (terminalTouchKeyboardOnDemand) {
+        _terminalViewKey.currentState?.requestFocusWithoutKeyboard();
+        _controllerFocusRequestScheduled = false;
+        return;
+      }
       _terminalFocusNode.requestFocus();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _controllerFocusRequestScheduled = false;
@@ -11458,8 +11463,10 @@ class _TerminalObserverDialogState extends State<_TerminalObserverDialog> {
                         focusNode: _terminalFocusNode,
                         readOnly: !hasController,
                         autoResize: false,
-                        autofocus: hasController,
+                        autofocus:
+                            hasController && !terminalTouchKeyboardOnDemand,
                         hardwareKeyboardOnly: hardwareKeyboardOnly,
+                        showKeyboardOnTap: !terminalTouchKeyboardOnDemand,
                         padding: EdgeInsets.zero,
                         textStyle: TerminalStyle(
                           fontSize: widget.app.terminalFontSize.toDouble(),
@@ -11485,6 +11492,19 @@ class _TerminalObserverDialogState extends State<_TerminalObserverDialog> {
                     ),
                   ),
                 ),
+                if (terminalTouchKeyboardOnDemand && hasController)
+                  TerminalKeybar(
+                    key: const ValueKey('shared_terminal_keybar'),
+                    terminal: widget.observer.terminal,
+                    focusNode: _terminalFocusNode,
+                    readOnly: !hasController,
+                    availablePaneHeight:
+                        (size.height -
+                                48 -
+                                MediaQuery.viewInsetsOf(context).bottom)
+                            .clamp(0.0, 760.0)
+                            .toDouble(),
+                  ),
               ],
             ),
           ),
