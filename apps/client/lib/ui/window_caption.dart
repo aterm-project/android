@@ -107,7 +107,7 @@ class _WindowsWindowChromeState extends State<WindowsWindowChrome> {
           child: Column(
             children: [
               if (controller.supported &&
-                  controller.state.enabled &&
+                  controller.state.customFrame &&
                   !(widget.navigationEmbedded?.call() ?? false))
                 WindowCaption(
                   controller: controller,
@@ -167,7 +167,7 @@ class WindowBarMetrics {
     BuildContext context,
     WindowChromeController controller,
   ) {
-    if (!controller.supported || !controller.state.enabled) return touch;
+    if (!controller.supported || !controller.state.customFrame) return touch;
     return WindowBarMetrics.native(
       controller.state.captionHeight ?? fallbackCaptionHeight,
       MediaQuery.textScalerOf(context),
@@ -345,7 +345,7 @@ class WindowCaptionControls extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
     builder: (context, _) {
-      if (!controller.supported || !controller.state.enabled) {
+      if (!controller.supported || !controller.state.customFrame) {
         return const SizedBox.shrink();
       }
       final height =

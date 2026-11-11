@@ -20161,6 +20161,12 @@ abstract class AppLocalizations {
   /// **'Sign-in details are stored encrypted. When connecting, the trusted remote desktop gateway handles the sign-in credentials and the display.'**
   String get signInDetailsAreStoredEncrypted;
 
+  /// No description provided for @directDesktopSignInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in details are stored encrypted. This device connects directly to the Host and uses them only for that connection; no gateway is involved.'**
+  String get directDesktopSignInHint;
+
   /// No description provided for @labelPressEnterToConnect.
   ///
   /// In en, this message translates to:
@@ -22738,7 +22744,7 @@ abstract class AppLocalizations {
   /// No description provided for @theBrowserAndMobileAppsDont.
   ///
   /// In en, this message translates to:
-  /// **'The browser and mobile apps don\'t provide a local MCP listener. Enable it after opening the workspace in the Windows, Linux or macOS desktop client.'**
+  /// **'This version of Atermius doesn\'t provide a local MCP listener. Enable it after opening the workspace in the Windows, Linux, macOS or Android app.'**
   String get theBrowserAndMobileAppsDont;
 
   /// No description provided for @portMustBe102465535.
@@ -24492,6 +24498,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset'**
   String get keybarReset;
+
+  /// Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl: tap for the next key only, double-tap to lock'**
+  String get keybarCtrlGuidance;
+
+  /// Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock.
+  ///
+  /// In en, this message translates to:
+  /// **'Alt: tap for the next key only, double-tap to lock'**
+  String get keybarAltGuidance;
+
+  /// Accessibility value of a released terminal keybar modifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get keybarModifierOff;
+
+  /// Accessibility value of a terminal keybar modifier armed for one key.
+  ///
+  /// In en, this message translates to:
+  /// **'Next key only'**
+  String get keybarModifierArmed;
+
+  /// Accessibility value of a locked terminal keybar modifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get keybarModifierLocked;
+
+  /// Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep extra keys open'**
+  String get keybarPinExpanded;
+
+  /// Terminal keybar button that shows the software keyboard when taps on the terminal only focus it.
+  ///
+  /// In en, this message translates to:
+  /// **'Show keyboard'**
+  String get keybarShowKeyboard;
+
+  /// Terminal keybar button that hides the software keyboard while it is shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide keyboard'**
+  String get keybarHideKeyboard;
 
   /// Terminal search status when the bounded query-length limit rejects the query.
   ///
@@ -28821,48 +28875,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The account, server or selected Vault changed after the server had already completed part of this action (for example, created the Vault or the invitation). That part was not undone; review it before trying again.'**
   String get cloudAccessErrorScopeEndedCommitted;
-
-  /// No description provided for @directDesktopSignInHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign-in details are stored encrypted. This device connects directly to the Host and uses them only for that connection; no gateway is involved.'**
-  String get directDesktopSignInHint;
-
-  /// Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock.
-  ///
-  /// In en, this message translates to:
-  /// **'Ctrl: tap for the next key only, double-tap to lock'**
-  String get keybarCtrlGuidance;
-
-  /// Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock.
-  ///
-  /// In en, this message translates to:
-  /// **'Alt: tap for the next key only, double-tap to lock'**
-  String get keybarAltGuidance;
-
-  /// Accessibility value of a released terminal keybar modifier.
-  ///
-  /// In en, this message translates to:
-  /// **'Off'**
-  String get keybarModifierOff;
-
-  /// Accessibility value of a terminal keybar modifier armed for one key.
-  ///
-  /// In en, this message translates to:
-  /// **'Next key only'**
-  String get keybarModifierArmed;
-
-  /// Accessibility value of a locked terminal keybar modifier.
-  ///
-  /// In en, this message translates to:
-  /// **'Locked'**
-  String get keybarModifierLocked;
-
-  /// Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep extra keys open'**
-  String get keybarPinExpanded;
 
   /// Settings › AI / MCP machine access (external AI permission UI).
   ///

@@ -10,32 +10,39 @@
 
 Releases 中尚无与当前主干对应的正式安装包，Desktop 的 `ci-input-*` 是构建输入。以下步骤用于自己构建应用；源码 CI 不代表完成了原生设备验收。
 
-## 构建环境
+## 构建环境与一键打包
 
-需要 **macOS、Xcode 与其命令行工具**，并安装 `flutter doctor` 要求的依赖；所选插件集成需要时安装 CocoaPods。Windows/Linux 不能构建已签名 iOS 应用，参考 [Flutter iOS 分发说明](https://docs.flutter.dev/deployment/ios)。
+需要 **macOS、Xcode 26+ 与其命令行工具**、CocoaPods 1.16+、CMake 3.28+ 与 Ninja。仓库已内置面向真机（`ios-arm64`）与模拟器（`ios-arm64-simulator`）双切片的 OpenSSL 3.5.9 + FreeRDP 3.33.0 原生引擎 `atermius_rdp.xcframework` 及一键构建脚本：
 
 ```sh
-git clone https://github.com/aterm-project/ios.git
-cd ios/apps/client
-flutter doctor -v
-flutter pub get --enforce-lockfile
-flutter build ios --no-codesign
-open ios/Runner.xcworkspace
+cd ios
+# 默认同时构建模拟器包 (.app/.zip) 与免签真机发行包 (.unsigned.ipa)
+./scripts/build_ios.sh --all
+
+# 仅构建 iOS 模拟器应用包
+./scripts/build_ios.sh --simulator
+
+# 仅构建 Release 免签真机 IPA
+./scripts/build_ios.sh --unsigned-ipa
 ```
 
-`--no-codesign` 仅验证编译，不生成可直接安装的签名发行版；应用目录通常为 `build/ios/iphoneos/Runner.app`。模拟器使用 `flutter build ios --simulator` 和匹配目标。
+构建脚本会自动校验/编译 `apps/client/native/desktop/build/ios/bundle/atermius_rdp.xcframework`，根据当前构建目标自动嵌入对应架构的 `atermius_rdp.framework` 与许可证，并在 **`ios/dist/`** 生成：
+
+- **`Atermius-iphonesimulator.app`** / **`Atermius-iphonesimulator-arm64.zip`**（可直接通过 `xcrun simctl install booted` 安装到模拟器）
+- **`Atermius-ios-unsigned.ipa`**（含 `.sha256` 校验和）
 
 ## 设备与分发签名
 
-在 `Runner.xcworkspace` 的 Runner Target 配置自己的 Apple 团队、唯一 Bundle ID、设备/描述文件和权限。当前 Bundle ID 为 `com.atermius.atermClient`，正式分发使用自己注册的身份。可选推送还需要匹配 APNs 环境，见[移动端提示](MOBILE-PUSH.md)。
+工程默认配置了自动签名（`CODE_SIGN_STYLE = Automatic`）与开发团队参数，且默认 `Runner.entitlements` 不强依赖受限推送权限以便普通开发描述文件直接签名（启用 APNs 生产推送时可将 `CODE_SIGN_ENTITLEMENTS` 指向 `Runner/RunnerPush.entitlements`，见[移动端提示](MOBILE-PUSH.md)）。
 
-签名就绪后，在 `apps/client` 执行：
+使用本地开发者证书构建真机签名 IPA：
 
 ```sh
-flutter build ipa --release
+cd ios
+./scripts/build_ios.sh --device --team-id <YOUR_TEAM_ID> --bundle-id <YOUR_PROVISIONED_BUNDLE_ID>
 ```
 
-输出位于 `build/ios/ipa/`，按受支持的设备、TestFlight 或 App Store 流程分发。本仓库未提供当前 App Store/TestFlight 发行版，尚未完成 iOS 设备/UI 验收，也不包含 Windows 原生 RDP 引擎。
+输出位于 **`ios/dist/Atermius-ios-signed.ipa`**；也可打开 `apps/client/ios/Runner.xcworkspace` 在 Xcode 中直接连真机运行调试，或执行 `flutter build ipa --release` 按 TestFlight / App Store 流程归档分发。
 
 ## 更新已有版本
 

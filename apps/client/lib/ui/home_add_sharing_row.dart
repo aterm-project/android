@@ -54,12 +54,13 @@ class HomeAddSharingRow extends StatelessWidget {
 
   bool get _shellSupported => shellSupportedOverride ?? localConsoleSupported;
 
-  /// COM serial consoles exist only in the Windows desktop client.
+  /// Serial consoles exist in the Windows (COMn) and macOS (/dev/cu.*) desktop clients.
   bool get _serialSupported =>
       serialSupportedOverride ??
       (!kIsWeb &&
           localConsoleSupported &&
-          defaultTargetPlatform == TargetPlatform.windows);
+          (defaultTargetPlatform == TargetPlatform.windows ||
+              defaultTargetPlatform == TargetPlatform.macOS));
 
   List<WorkspaceAction> _actions(BuildContext context) {
     final l10n = context.l10n;
@@ -274,10 +275,12 @@ class _HomeSerialConsoleDialogState extends State<_HomeSerialConsoleDialog> {
               autofocus: true,
               autocorrect: false,
               enableSuggestions: false,
-              maxLength: 8,
+              maxLength: defaultTargetPlatform == TargetPlatform.macOS ? 128 : 8,
               decoration: InputDecoration(
                 labelText: l10n.homeAddSerialConsolePort,
-                hintText: 'COM3',
+                hintText: defaultTargetPlatform == TargetPlatform.macOS
+                    ? '/dev/cu.usbserial-0001'
+                    : 'COM3',
                 counterText: '',
               ),
               onChanged: (_) {

@@ -109,7 +109,7 @@ void main() {
         .last;
     expect(
       (menuMaterial.shape! as RoundedRectangleBorder).borderRadius,
-      BorderRadius.circular(14),
+      BorderRadius.circular(12),
     );
     await tester.tap(find.text('Minimize'));
     await tester.pumpAndSettle();

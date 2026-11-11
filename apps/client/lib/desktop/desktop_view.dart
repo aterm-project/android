@@ -57,7 +57,8 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
   late final DesktopTouchInput _touch;
   final _directTouch = DesktopDirectTouch();
   bool get _mobilePlatform =>
-      Theme.of(context).platform == TargetPlatform.android;
+      Theme.of(context).platform == TargetPlatform.android ||
+      Theme.of(context).platform == TargetPlatform.iOS;
   void _sendMouse(Offset point, int buttons) {
     _buttons = buttons;
     session.display.movePointer(point);

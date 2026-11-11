@@ -26,7 +26,8 @@ class WorkspaceStatusBar extends StatelessWidget {
   );
 
   Widget _build(BuildContext context) {
-    if (Theme.of(context).platform == TargetPlatform.android &&
+    if ((Theme.of(context).platform == TargetPlatform.android ||
+            Theme.of(context).platform == TargetPlatform.iOS) &&
         FullscreenController.instance.enabled)
       return const SizedBox.shrink();
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {

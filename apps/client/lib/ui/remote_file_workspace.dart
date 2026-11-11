@@ -385,7 +385,9 @@ class _RemoteFileWorkspaceState extends State<RemoteFileWorkspace> {
     }
     try {
       await edits.open(owner.entryPath(item), listedSize: item.attr.size);
-      if (mounted && defaultTargetPlatform != TargetPlatform.android)
+      if (mounted &&
+          defaultTargetPlatform != TargetPlatform.android &&
+          defaultTargetPlatform != TargetPlatform.iOS)
         _snack(context.l10n.fileEditOpened(item.filename));
     } catch (error) {
       if (mounted) _snack(externalEditErrorText(context, error));
@@ -695,7 +697,8 @@ class _RemoteFileWorkspaceState extends State<RemoteFileWorkspace> {
                   if (directory) {
                     model.enter(item);
                   } else if (!kIsWeb &&
-                      defaultTargetPlatform == TargetPlatform.android) {
+                      (defaultTargetPlatform == TargetPlatform.android ||
+                          defaultTargetPlatform == TargetPlatform.iOS)) {
                     unawaited(_openExternal(item));
                   }
                 },

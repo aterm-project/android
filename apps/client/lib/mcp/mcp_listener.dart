@@ -4,6 +4,9 @@ import 'mcp_listener_stub.dart'
 import 'mcp_listener_contract.dart';
 export 'mcp_listener_contract.dart';
 
+/// Desktop and Android listen on IPv4 loopback only. Android additionally
+/// requires the MCP foreground lifecycle (see `platform/mcp_foreground.dart`)
+/// so a backgrounded process never keeps a frozen, still-valid token.
 bool get mcpListenerSupported => platform.supported;
 Future<McpListener> startMcpListener({
   required int port,

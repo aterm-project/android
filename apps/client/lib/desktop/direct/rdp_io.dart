@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 import '../rdp_features.dart';
 import '../rdp_storage.dart';
@@ -16,11 +17,38 @@ import 'connection.dart';
 import 'rdp_file_transfer_io.dart';
 import '../../l10n/l10n.dart';
 
-// Windows packages ship the engine. Other native platforms retain their
-// existing gateway path until their own engine packaging is enabled.
+// Windows packages ship the engine beside the executable. Android APKs, macOS
+// app bundles and iOS frameworks ship their native FreeRDP engine in the app's
+// packaged library directory and are detected by loading it. Other native
+// platforms retain their existing gateway path until their own engine
+// packaging is enabled.
 bool get bundledRdpAvailable =>
     Platform.isWindows ||
-    Platform.environment.containsKey('ATERMIUS_RDP_LIBRARY');
+    Platform.environment.containsKey('ATERMIUS_RDP_LIBRARY') ||
+    ((Platform.isAndroid || Platform.isMacOS || Platform.isIOS) &&
+        _nativeEngineLoads);
+
+bool? _nativeEngine;
+bool get _nativeEngineLoads => _nativeEngine ??= () {
+  try {
+    final library = DynamicLibrary.open(_libraryPath);
+    // Packaged mobile/Apple engines set an app-private HOME before FreeRDP starts.
+    return library.providesSymbol('aterm_rdp_create_ex') &&
+        library.providesSymbol('aterm_rdp_set_home');
+  } catch (_) {
+    return false;
+  }
+}();
+
+/// App-private directory used as the engine's HOME/XDG_CONFIG_HOME on Android,
+/// iOS and macOS so FreeRDP never relies on ambient process environment state.
+Future<String> _engineHome() async {
+  final directory = Directory(
+    path.join((await getApplicationSupportDirectory()).path, 'rdp-engine'),
+  );
+  await directory.create(recursive: true);
+  return directory.path;
+}
 
 String get _libraryPath =>
     Platform.environment['ATERMIUS_RDP_LIBRARY'] ??
@@ -29,6 +57,17 @@ String get _libraryPath =>
             path.dirname(Platform.resolvedExecutable),
             'atermius_rdp.dll',
           )
+        : Platform.isMacOS
+        ? path.normalize(
+            path.join(
+              path.dirname(Platform.resolvedExecutable),
+              '..',
+              'Frameworks',
+              'libatermius_rdp.dylib',
+            ),
+          )
+        : Platform.isIOS
+        ? 'atermius_rdp.framework/atermius_rdp'
         : 'libatermius_rdp.so');
 
 RdpFeatures? _features;
@@ -79,6 +118,9 @@ class RdpConnection implements DirectDesktopConnection {
     unawaited(() async {
       try {
         await validateRdpDriveConfig(config);
+        final home = (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)
+            ? await _engineHome()
+            : '';
         if (connection._closed) {
           connection._message(null);
           return;
@@ -94,6 +136,7 @@ class RdpConnection implements DirectDesktopConnection {
             password,
             pin,
             config,
+            home,
           ],
           onExit: connection._messages.sendPort,
           errorsAreFatal: true,
@@ -277,6 +320,18 @@ void _rdpWorker(List<dynamic> args) {
   try {
     api = _RdpNative(DynamicLibrary.open(args[1] as String));
     final config = args[7] as String;
+    final home = args[8] as String;
+    if (home.isNotEmpty) {
+      final setHome = api.setHome;
+      final native = home.toNativeUtf8();
+      try {
+        if (setHome == null || setHome(native) != 1) {
+          throw StateError(currentL10n.couldntStartTheRdpEngineCheck);
+        }
+      } finally {
+        calloc.free(native);
+      }
+    }
     if (config.isNotEmpty && api.createEx == null) {
       throw StateError(currentL10n.theRdpEngineIsTooOld);
     }
@@ -954,6 +1009,12 @@ class _RdpNative {
               _NextEvent
             >('aterm_rdp_next_event')
           : null,
+      setHome = library.providesSymbol('aterm_rdp_set_home')
+          ? library.lookupFunction<
+              Int32 Function(Pointer<Utf8>),
+              int Function(Pointer<Utf8>)
+            >('aterm_rdp_set_home')
+          : null,
       free = library
           .lookupFunction<
             Void Function(Pointer<Void>),
@@ -976,5 +1037,6 @@ class _RdpNative {
   final _NextEvent? nextEvent;
   final int Function(Pointer<Void>)? canResize, canTouch;
   final int Function(Pointer<Void>, int, int, int, int)? touch;
+  final int Function(Pointer<Utf8>)? setHome;
   final void Function(Pointer<Void>) free;
 }

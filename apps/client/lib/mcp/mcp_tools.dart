@@ -7,9 +7,11 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 
+import '../domain/models.dart';
 import '../sftp/dart_sftp_text_file_system.dart';
 import '../sftp/sftp_text_editor_service.dart';
 import '../ssh/ssh_service.dart';
+import 'mcp_access_policy.dart';
 import 'mcp_workspace.dart';
 
 const mcpTextBytes = 64 * 1024;
@@ -89,24 +91,24 @@ const mcpTools = [
   ),
   McpToolDefinition(
     'hosts_list',
-    'List saved host metadata. Passwords, keys and credential records are never returned.',
+    'List saved host metadata the user has made available to external AI, with each host\'s access (read_only or read_write). Passwords, keys and credential records are never returned.',
     _page,
   ),
   McpToolDefinition(
     'sessions_list',
-    'List open SSH, Console, RDP and VNC tabs.',
+    'List open SSH, Console, RDP and VNC tabs on machines available to external AI, with each session\'s access (read_only or read_write).',
     _page,
   ),
   McpToolDefinition(
     'host_connect',
-    'Open a saved host in an application tab. Existing trust/authentication prompts still require the user in Atermius. Do not retry automatically.',
+    'Open a saved host in an application tab. Requires read_write access to that host. Existing trust/authentication prompts still require the user in Atermius. Do not retry automatically.',
     {'host_id': _id},
     required: ['host_id'],
     mutating: true,
   ),
   McpToolDefinition(
     'console_open',
-    'Open a local desktop shell tab. Requires operation permission.',
+    'Open a local desktop shell tab. Requires read_write access to the local device.',
     {},
     mutating: true,
   ),
@@ -184,19 +186,83 @@ const mcpTools = [
   ),
 ];
 
-class McpToolRunner {
-  const McpToolRunner(this.workspace);
-  final McpWorkspace workspace;
+/// Resolves the current access for a policy identity (saved host ID or
+/// [mcpLocalDeviceHostId]). A null identity must resolve to denied.
+typedef McpAccessResolver = McpAccessMode Function(String? accessHostId);
 
-  McpSession _session(String id, McpCallContext context) {
+const _sessionUnavailable = McpToolException(
+  'session_unavailable',
+  'Session no longer exists. Refresh sessions_list.',
+);
+const _hostUnavailable = McpToolException(
+  'host_unavailable',
+  'Saved host not found.',
+);
+const _readOnly = McpToolException(
+  'read_only',
+  'External AI has read-only access to this machine in Atermius MCP settings.',
+);
+const _accessRevoked = McpToolException(
+  'access_revoked',
+  'Access to this machine was changed in Atermius while the request was running. Its outcome may be unknown; inspect the application before retrying.',
+);
+
+/// Minimum access for a tool acting on one machine. Derived from the same
+/// [McpToolDefinition.mutating] flag that drives the advertised annotations.
+McpAccessMode mcpRequiredAccess(String tool) =>
+    mcpTools.firstWhere((t) => t.name == tool).mutating
+    ? McpAccessMode.readWrite
+    : McpAccessMode.readOnly;
+
+class McpToolRunner {
+  const McpToolRunner(this.workspace, {required this.access});
+  final McpWorkspace workspace;
+  final McpAccessResolver access;
+
+  McpAccessMode _hostAccess(HostRecord host) =>
+      host.id == mcpLocalDeviceHostId ? McpAccessMode.denied : access(host.id);
+
+  List<HostRecord> _visibleHosts() =>
+      workspace.hosts().where((h) => _hostAccess(h).canRead).toList();
+
+  List<McpSession> _visibleSessions() => workspace
+      .sessions()
+      .where((s) => access(s.accessHostId).canRead)
+      .toList();
+
+  Map<String, Object?> _sessionJson(McpSession session) => {
+    ...session.toJson(),
+    'access': access(session.accessHostId).storageName,
+  };
+
+  /// Requires [required] access to [hostKey] now and at every later
+  /// [McpCallContext.check], so a revocation suppresses the result.
+  void _authorize(
+    McpCallContext context,
+    String? hostKey,
+    McpAccessMode required, {
+    required McpToolException denied,
+  }) {
+    final mode = access(hostKey);
+    if (!mode.canRead) throw denied;
+    if (!mode.atLeast(required)) throw _readOnly;
+    context.guard(() {
+      if (!access(hostKey).atLeast(required)) throw _accessRevoked;
+    });
+  }
+
+  // A denied machine's sessions are indistinguishable from unknown IDs. The
+  // policy identity comes from the live workspace session, never the caller.
+  McpSession _session(String id, String tool, McpCallContext context) {
     context.check();
     final session = workspace.sessions().where((s) => s.id == id).firstOrNull;
-    if (session == null || !session.isAlive()) {
-      throw const McpToolException(
-        'session_unavailable',
-        'Session no longer exists. Refresh sessions_list.',
-      );
-    }
+    if (session == null || !session.isAlive()) throw _sessionUnavailable;
+    _authorize(
+      context,
+      session.accessHostId,
+      mcpRequiredAccess(tool),
+      denied: _sessionUnavailable,
+    );
     return session;
   }
 
@@ -221,31 +287,57 @@ class McpToolRunner {
     context.check();
     switch (name) {
       case 'workspace_status':
-        return workspace.describe();
+        // Counters must not reveal denied machines; never trust the
+        // workspace's own unfiltered counts.
+        final status = Map.of(workspace.describe())
+          ..remove('hosts')
+          ..remove('sessions');
+        return {
+          ...status,
+          'hosts': _visibleHosts().length,
+          'sessions': _visibleSessions().length,
+          if (workspace.localDeviceSupported())
+            'local_device_access': access(mcpLocalDeviceHostId).storageName,
+        };
       case 'hosts_list':
-        return _page(workspace.hosts().map(mcpHostMetadata).toList(), args);
-      case 'sessions_list':
         return _page(
-          workspace.sessions().map((s) => s.toJson()).toList(),
+          _visibleHosts()
+              .map(
+                (h) => {
+                  ...mcpHostMetadata(h),
+                  'access': _hostAccess(h).storageName,
+                },
+              )
+              .toList(),
           args,
         );
+      case 'sessions_list':
+        return _page(_visibleSessions().map(_sessionJson).toList(), args);
       case 'host_connect':
         final host = workspace
             .hosts()
             .where((h) => h.id == args['host_id'])
             .firstOrNull;
-        if (host == null) {
-          throw const McpToolException(
-            'host_unavailable',
-            'Saved host not found.',
-          );
+        if (host == null || host.id == mcpLocalDeviceHostId) {
+          throw _hostUnavailable;
         }
+        _authorize(
+          context,
+          host.id,
+          McpAccessMode.readWrite,
+          denied: _hostUnavailable,
+        );
         final before = workspace.sessions().map((s) => s.id).toSet();
         await workspace.connect(host);
         context.check();
         final added = workspace
             .sessions()
-            .where((s) => !before.contains(s.id) && s.hostId == host.id)
+            .where(
+              (s) =>
+                  !before.contains(s.id) &&
+                  s.hostId == host.id &&
+                  s.accessHostId == host.id,
+            )
             .toList();
         if (added.isEmpty) {
           throw const McpToolException(
@@ -253,14 +345,27 @@ class McpToolRunner {
             'Connection was not opened. Check the application for trust, authentication or connection errors.',
           );
         }
-        return {'sessions': added.map((s) => s.toJson()).toList()};
+        return {'sessions': added.map(_sessionJson).toList()};
       case 'console_open':
+        _authorize(
+          context,
+          mcpLocalDeviceHostId,
+          McpAccessMode.readWrite,
+          denied: const McpToolException(
+            'access_denied',
+            'External AI is not permitted to use the local device.',
+          ),
+        );
         final before = workspace.sessions().map((s) => s.id).toSet();
         await workspace.openConsole();
         context.check();
         final added = workspace
             .sessions()
-            .where((s) => !before.contains(s.id))
+            .where(
+              (s) =>
+                  !before.contains(s.id) &&
+                  s.accessHostId == mcpLocalDeviceHostId,
+            )
             .toList();
         if (added.isEmpty) {
           throw const McpToolException(
@@ -268,9 +373,9 @@ class McpToolRunner {
             'Console was not opened.',
           );
         }
-        return {'sessions': added.map((s) => s.toJson()).toList()};
+        return {'sessions': added.map(_sessionJson).toList()};
     }
-    final session = _session(args['session_id'] as String, context);
+    final session = _session(args['session_id'] as String, name, context);
     void checkSession() {
       context.check();
       if (!session.isAlive()) {
@@ -286,6 +391,7 @@ class McpToolRunner {
         session.focus();
         return {'focused': true};
       case 'session_close':
+        context.check();
         await session.close();
         context.check();
         return {'closed': true};

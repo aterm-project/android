@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:xterm/src/core/buffer/cell_offset.dart';
 import 'package:xterm/src/core/buffer/range.dart';
+import 'package:xterm/src/core/buffer/range_line.dart';
 import 'package:xterm/src/core/buffer/segment.dart';
 import 'package:xterm/src/core/mouse/button.dart';
 import 'package:xterm/src/core/mouse/button_state.dart';
@@ -264,27 +265,25 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
   }
 
   /// Selects entire words in the terminal that contains [from] and [to].
+  ///
+  /// When [to] is given and either end lies on blank cells (spaces, empty
+  /// cells past the end of a line), that end extends to the touched cell
+  /// instead of freezing the selection, so a long-press drag keeps tracking
+  /// the finger across gaps between words.
   void selectWord(Offset from, [Offset? to]) {
     final fromOffset = getCellOffset(from);
     final fromBoundary = _terminal.buffer.getWordBoundary(fromOffset);
-    if (fromBoundary == null) return;
     if (to == null) {
-      _controller.setSelection(
-        _terminal.buffer.createAnchorFromOffset(fromBoundary.begin),
-        _terminal.buffer.createAnchorFromOffset(fromBoundary.end),
-        mode: SelectionMode.line,
-      );
-    } else {
-      final toOffset = getCellOffset(to);
-      final toBoundary = _terminal.buffer.getWordBoundary(toOffset);
-      if (toBoundary == null) return;
-      final range = fromBoundary.merge(toBoundary);
-      _controller.setSelection(
-        _terminal.buffer.createAnchorFromOffset(range.begin),
-        _terminal.buffer.createAnchorFromOffset(range.end),
-        mode: SelectionMode.line,
-      );
+      if (fromBoundary == null) return;
+      _setSnappedSelection(fromBoundary.begin, fromBoundary.end);
+      return;
     }
+    final toOffset = getCellOffset(to);
+    final toBoundary = _terminal.buffer.getWordBoundary(toOffset);
+    final range = (fromBoundary ?? BufferRangeLine.collapsed(fromOffset))
+        .merge(toBoundary ?? BufferRangeLine.collapsed(toOffset));
+    if (range.isCollapsed) return;
+    _setSnappedSelection(range.begin, range.end);
   }
 
   /// Selects characters in the terminal that starts from [from] to [to]. At
@@ -301,21 +300,77 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
       if (toPosition.x >= fromPosition.x) {
         toPosition = CellOffset(toPosition.x + 1, toPosition.y);
       }
-      _controller.setSelection(
-        _terminal.buffer.createAnchorFromOffset(fromPosition),
-        _terminal.buffer.createAnchorFromOffset(toPosition),
-      );
+      final range = BufferRangeLine(fromPosition, toPosition).normalized;
+      _setSnappedSelection(range.begin, range.end, mode: null);
     }
   }
 
+  /// Sets a selection from [begin] to the exclusive [end], widening either
+  /// edge that would split a double-width (CJK, emoji) character so the
+  /// highlighted cells and the copied text always agree.
+  void _setSnappedSelection(
+    CellOffset begin,
+    CellOffset end, {
+    SelectionMode? mode = SelectionMode.line,
+  }) {
+    final lines = _terminal.buffer.lines;
+    var b = begin;
+    var e = end;
+    if (b.y >= 0 && b.y < lines.length) {
+      final line = lines[b.y];
+      if (b.x > 0 &&
+          b.x < line.length &&
+          line.getCodePoint(b.x) == 0 &&
+          line.getWidth(b.x - 1) == 2) {
+        b = CellOffset(b.x - 1, b.y);
+      }
+    }
+    if (e.y >= 0 && e.y < lines.length) {
+      final line = lines[e.y];
+      if (e.x > 0 && e.x < line.length && line.getWidth(e.x - 1) == 2) {
+        e = CellOffset(e.x + 1, e.y);
+      }
+    }
+    _controller.setSelection(
+      _terminal.buffer.createAnchorFromOffset(b),
+      _terminal.buffer.createAnchorFromOffset(e),
+      mode: mode,
+    );
+  }
+
+  /// The local rectangle of the cell at [cellOffset], including scroll and
+  /// padding, in this render object's coordinate space.
+  Rect cellRect(CellOffset cellOffset) => getOffset(cellOffset) & cellSize;
+
+  /// The local rectangle of the whole buffer row [row].
+  Rect rowRect(int row) {
+    final top = getOffset(CellOffset(0, row)).dy;
+    return Rect.fromLTWH(0, top, size.width, cellSize.height);
+  }
+
   /// Send a mouse event at [offset] with [button] being currently in [buttonState].
+  ///
+  /// Mouse reports use screen coordinates (row 0 is the top of the live
+  /// screen), not buffer rows: with scrollback the buffer row would encode as
+  /// arbitrary (often non-ASCII) bytes that reach the remote shell as garbage.
+  /// A position in scrolled-back history has no screen coordinate and is not
+  /// reported; the caller then treats it as a local tap.
   bool mouseEvent(
     TerminalMouseButton button,
     TerminalMouseButtonState buttonState,
     Offset offset,
   ) {
-    final position = getCellOffset(offset);
+    final position = screenCellOffset(getCellOffset(offset));
+    if (position == null) return false;
     return _terminal.mouseInput(button, buttonState, position);
+  }
+
+  /// Converts a buffer cell to its live-screen cell, or null when the buffer
+  /// row is in the scrollback above the screen.
+  CellOffset? screenCellOffset(CellOffset bufferOffset) {
+    final row = bufferOffset.y - _terminal.buffer.scrollBack;
+    if (row < 0 || row >= _terminal.viewHeight) return null;
+    return CellOffset(bufferOffset.x, row);
   }
 
   void _notifyEditableRect() {

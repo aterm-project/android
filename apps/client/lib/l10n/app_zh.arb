@@ -3308,6 +3308,7 @@
   "thisSavedJumpHostIsUnavailable": "此已保存的跳板主机不可用、形成循环或超过 8 跳。请选择“直接连接”或有效的主机进行修复。",
   "unavailableJumpHost": "不可用的跳板主机",
   "signInDetailsAreStoredEncrypted": "登录信息加密保存；连接时，受信任的远程桌面网关会处理登录凭据与画面。",
+  "directDesktopSignInHint": "登录信息加密保存；本设备直接连接主机，凭据仅用于该连接，不经过任何网关。",
   "labelPressEnterToConnect": "{label}  ·  回车连接",
   "searchHostsOrTypeAnSsh": "搜索主机，或输入 ssh / rdp / vnc / console 命令",
   "clearSearch": "清空搜索",
@@ -3732,7 +3733,7 @@
   "recentCalls": "最近调用",
   "localListeningPort": "本机监听端口",
   "starting": "正在启动…",
-  "theBrowserAndMobileAppsDont": "浏览器和移动端不提供本机 MCP 监听。请在 Windows、Linux 或 macOS 桌面客户端打开工作区后启用。",
+  "theBrowserAndMobileAppsDont": "此版本的 Atermius 不提供本机 MCP 监听。请在 Windows、Linux、macOS 或 Android 应用中打开工作区后启用。",
   "portMustBe102465535": "端口范围为 1024–65535。",
   "runningValuevalue": "运行中 · {valueValue}",
   "letExternalAiUseTheHosts": "通过 MCP 让外部 AI 使用当前工作区的主机、会话、终端和远程文件。无需在 Atermius 内配置模型 API。",
@@ -4028,6 +4029,38 @@
   "keybarReset": "重置",
   "@keybarReset": {
     "description": "Release terminal Control and Alt modifier locks."
+  },
+  "keybarCtrlGuidance": "Ctrl：轻点仅作用于下一个按键，双击锁定",
+  "@keybarCtrlGuidance": {
+    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarAltGuidance": "Alt：轻点仅作用于下一个按键，双击锁定",
+  "@keybarAltGuidance": {
+    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarModifierOff": "关闭",
+  "@keybarModifierOff": {
+    "description": "Accessibility value of a released terminal keybar modifier."
+  },
+  "keybarModifierArmed": "仅下一个按键",
+  "@keybarModifierArmed": {
+    "description": "Accessibility value of a terminal keybar modifier armed for one key."
+  },
+  "keybarModifierLocked": "已锁定",
+  "@keybarModifierLocked": {
+    "description": "Accessibility value of a locked terminal keybar modifier."
+  },
+  "keybarPinExpanded": "保持展开更多按键",
+  "@keybarPinExpanded": {
+    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
+  },
+  "keybarShowKeyboard": "显示键盘",
+  "@keybarShowKeyboard": {
+    "description": "Terminal keybar button that shows the software keyboard when taps on the terminal only focus it."
+  },
+  "keybarHideKeyboard": "隐藏键盘",
+  "@keybarHideKeyboard": {
+    "description": "Terminal keybar button that hides the software keyboard while it is shown."
   },
   "terminalSearchQueryTooLong": "查询过长",
   "@terminalSearchQueryTooLong": {
@@ -4802,31 +4835,6 @@
   "cloudAccessErrorScopeChanged": "此操作期间账户、服务器或所选 Vault 已变更，未发送任何内容，请重试。",
   "cloudAccessErrorNotSynced": "共享 Vault 已创建但尚未同步。请先同步再添加成员。",
   "cloudAccessErrorScopeEndedCommitted": "服务器已完成此操作的一部分（例如已创建 Vault 或邀请）后，账户、服务器或所选 Vault 发生了变更。该部分不会被撤销；请先检查后再重试。",
-  "directDesktopSignInHint": "登录信息加密保存；本设备直接连接主机，凭据仅用于该连接，不经过任何网关。",
-  "keybarCtrlGuidance": "Ctrl：轻点仅作用于下一个按键，双击锁定",
-  "@keybarCtrlGuidance": {
-    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
-  },
-  "keybarAltGuidance": "Alt：轻点仅作用于下一个按键，双击锁定",
-  "@keybarAltGuidance": {
-    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
-  },
-  "keybarModifierOff": "关闭",
-  "@keybarModifierOff": {
-    "description": "Accessibility value of a released terminal keybar modifier."
-  },
-  "keybarModifierArmed": "仅下一个按键",
-  "@keybarModifierArmed": {
-    "description": "Accessibility value of a terminal keybar modifier armed for one key."
-  },
-  "keybarModifierLocked": "已锁定",
-  "@keybarModifierLocked": {
-    "description": "Accessibility value of a locked terminal keybar modifier."
-  },
-  "keybarPinExpanded": "保持展开更多按键",
-  "@keybarPinExpanded": {
-    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
-  },
   "mcpAccessModeDenied": "拒绝",
   "mcpAccessModeReadOnly": "只读",
   "mcpAccessModeReadWrite": "读写",

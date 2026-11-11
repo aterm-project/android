@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
@@ -6,11 +7,43 @@ import 'package:win32/win32.dart';
 
 import '../rdp_settings.dart';
 
-// Local Windows facilities used by RDP redirection. Read-only except for the
-// user-initiated clipboard write of downloaded file paths. No system settings
-// are changed.
+// Local Windows and macOS facilities used by RDP redirection. Read-only except
+// for the user-initiated clipboard write of downloaded file paths. No system
+// settings are changed.
 
-bool get supportsFileClipboardInterop => Platform.isWindows;
+bool get supportsFileClipboardInterop => Platform.isWindows || Platform.isMacOS;
+
+typedef _MacStringGetterNative = Pointer<Utf8> Function();
+typedef _MacStringGetter = Pointer<Utf8> Function();
+typedef _MacFreeStringNative = Void Function(Pointer<Utf8>);
+typedef _MacFreeString = void Function(Pointer<Utf8>);
+typedef _MacWriteClipboardNative = Int32 Function(Pointer<Utf8>);
+typedef _MacWriteClipboard = int Function(Pointer<Utf8>);
+
+String? _callMacRunnerString(String symbol) {
+  try {
+    final lib = DynamicLibrary.executable();
+    if (!lib.providesSymbol(symbol) ||
+        !lib.providesSymbol('aterm_macos_free_string')) {
+      return null;
+    }
+    final getter = lib.lookupFunction<_MacStringGetterNative, _MacStringGetter>(
+      symbol,
+    );
+    final releaser = lib.lookupFunction<_MacFreeStringNative, _MacFreeString>(
+      'aterm_macos_free_string',
+    );
+    final ptr = getter();
+    if (ptr == nullptr) return null;
+    try {
+      return ptr.toDartString();
+    } finally {
+      releaser(ptr);
+    }
+  } catch (_) {
+    return null;
+  }
+}
 
 final List<RdpMonitorLayout> _found = [];
 
@@ -38,6 +71,31 @@ int _monitor(int hMonitor, int hdc, Pointer rect, int data) {
 /// Monitor rectangles in virtual-screen pixels (the runner is per-monitor DPI
 /// aware, so these are physical pixels).
 List<RdpMonitorLayout> localMonitorLayout() {
+  if (Platform.isMacOS) {
+    final raw = _callMacRunnerString('aterm_macos_monitor_layout');
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return [
+        for (final item in decoded.take(16))
+          if (item is Map &&
+              item['x'] is int &&
+              item['y'] is int &&
+              item['width'] is int &&
+              item['height'] is int)
+            RdpMonitorLayout(
+              x: item['x'] as int,
+              y: item['y'] as int,
+              width: item['width'] as int,
+              height: item['height'] as int,
+              primary: item['primary'] == true,
+            ),
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
   if (!Platform.isWindows) return const [];
   _found.clear();
   final callback = Pointer.fromFunction<MONITORENUMPROC>(_monitor, 0);
@@ -48,6 +106,10 @@ List<RdpMonitorLayout> localMonitorLayout() {
 }
 
 String? localDefaultPrinterName() {
+  if (Platform.isMacOS) {
+    final name = _callMacRunnerString('aterm_macos_default_printer');
+    return (name == null || name.isEmpty || name.length > 1024) ? null : name;
+  }
   if (!Platform.isWindows) return null;
   final size = calloc<Uint32>()..value = 0;
   try {
@@ -65,8 +127,22 @@ String? localDefaultPrinterName() {
   }
 }
 
-/// Paths currently copied in Explorer (CF_HDROP), or empty.
+/// Paths currently copied in Explorer (CF_HDROP) or Finder (NSPasteboard), or empty.
 List<String> readClipboardFilePaths() {
+  if (Platform.isMacOS) {
+    final raw = _callMacRunnerString('aterm_macos_read_clipboard_files');
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return [
+        for (final item in decoded.take(4096))
+          if (item is String && item.isNotEmpty && item.length <= 32767) item,
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
   if (!Platform.isWindows) return const [];
   if (OpenClipboard(NULL) == 0) return const [];
   try {
@@ -92,9 +168,30 @@ List<String> readClipboardFilePaths() {
   }
 }
 
-/// Place downloaded files on the Windows clipboard so Explorer can paste them.
+/// Place downloaded files on the local OS clipboard so Explorer/Finder can paste them.
 bool writeClipboardFilePaths(List<String> paths) {
-  if (!Platform.isWindows || paths.isEmpty) return false;
+  if (paths.isEmpty) return false;
+  if (Platform.isMacOS) {
+    try {
+      final lib = DynamicLibrary.executable();
+      if (!lib.providesSymbol('aterm_macos_write_clipboard_files')) {
+        return false;
+      }
+      final writer = lib
+          .lookupFunction<_MacWriteClipboardNative, _MacWriteClipboard>(
+            'aterm_macos_write_clipboard_files',
+          );
+      final encoded = jsonEncode(paths).toNativeUtf8();
+      try {
+        return writer(encoded) == 1;
+      } finally {
+        calloc.free(encoded);
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+  if (!Platform.isWindows) return false;
   final units = <int>[
     for (final p in paths) ...[...p.codeUnits, 0],
     0,

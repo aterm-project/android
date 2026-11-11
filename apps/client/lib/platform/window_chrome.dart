@@ -7,13 +7,20 @@ import 'package:flutter/services.dart';
 class WindowChromeState {
   const WindowChromeState({
     this.enabled = false,
+    bool? customFrame,
     this.maximized = false,
     this.minimized = false,
     this.focused = true,
     this.captionHeight,
-  });
+  }) : customFrame = customFrame ?? enabled;
 
   final bool enabled;
+
+  /// True when the native runner removed the OS title bar so Flutter should
+  /// draw custom caption controls (Windows). False when native window lifecycle
+  /// and close-guard control are enabled while keeping the native title bar
+  /// (macOS traffic-light title bar).
+  final bool customFrame;
   final bool maximized;
   final bool minimized;
   final bool focused;
@@ -50,8 +57,12 @@ class WindowChromeState {
         ].any((key) => value[key] is! bool)) {
       return null;
     }
+    final enabled = value['enabled'] as bool;
     return WindowChromeState(
-      enabled: value['enabled'] as bool,
+      enabled: enabled,
+      customFrame: value['customFrame'] is bool
+          ? (value['customFrame'] as bool && enabled)
+          : enabled,
       maximized: value['maximized'] as bool,
       minimized: value['minimized'] as bool,
       focused: value['focused'] as bool,
@@ -71,7 +82,9 @@ class WindowChromeController extends ChangeNotifier {
   }) : _channel = channel,
        supported =
            supported ??
-           (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows);
+           (!kIsWeb &&
+               (defaultTargetPlatform == TargetPlatform.windows ||
+                   defaultTargetPlatform == TargetPlatform.macOS));
 
   static final instance = WindowChromeController();
   final MethodChannel _channel;
@@ -117,6 +130,7 @@ class WindowChromeController extends ChangeNotifier {
     final next = WindowChromeState.fromNative(value);
     if (_disposed || next == null) return;
     if (next.enabled == _state.enabled &&
+        next.customFrame == _state.customFrame &&
         next.maximized == _state.maximized &&
         next.minimized == _state.minimized &&
         next.focused == _state.focused &&
