@@ -1399,6 +1399,8 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
   /// The forwarding scope (repository/profile lifetime) changed: pending
   /// connect-and-start requests are dropped even while the page is hidden.
   void _notifyForwardingScopeChanged() {
+    // Never notify MCP listeners from inside this State's setState callback.
+    scheduleMicrotask(McpService.instance.workspaceChanged);
     if (!_disposing && mounted) _portForwardChanges.fire();
   }
 
@@ -1580,6 +1582,7 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
         (!saved || _hosts.any((h) => h.id == session.host.id));
     session.recovery = SessionRecovery(
       automatic: session.host.protocol.isTerminal,
+      keepSshAlive: session.host.protocol == HostProtocol.ssh,
       isCurrent: current,
       reconnect: () async {
         if (!current()) return;
@@ -2669,12 +2672,19 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     }
   }
 
-  Future<void> _splitTerminalTab(String id, Axis axis) async {
+  /// [newSession]: the pane handle's direction choices always open a fresh
+  /// connection (or Console copy) beside [id] instead of pairing it with an
+  /// already-open tab; those are offered separately as explicit partners.
+  Future<void> _splitTerminalTab(
+    String id,
+    Axis axis, {
+    bool newSession = false,
+  }) async {
     final file = _files.find(id);
     final otherFile = _files.entries
         .where((entry) => entry.id != id)
         .firstOrNull;
-    if (file != null || otherFile != null) {
+    if (file != null || (!newSession && otherFile != null)) {
       final target =
           _layout.sessionIds.where((value) => value != id).firstOrNull ??
           otherFile?.id ??
@@ -2698,11 +2708,12 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     }
     final source = _visibleSessions.where((s) => s.id == id).firstOrNull;
     if (source == null || _busy) return;
-    final target =
-        _visibleSessions
-            .where((s) => s.id != id && s.id == _selectedTabId)
-            .firstOrNull ??
-        _visibleSessions.where((s) => s.id != id).firstOrNull;
+    final target = newSession
+        ? null
+        : _visibleSessions
+                  .where((s) => s.id != id && s.id == _selectedTabId)
+                  .firstOrNull ??
+              _visibleSessions.where((s) => s.id != id).firstOrNull;
     var other = target;
     if (other == null && source.console != null) {
       // A lone Console splits into a new independent PTY/serial session.
@@ -4642,7 +4653,7 @@ _showMessage(
             ],
           ];
     return Scaffold(
-      body: SafeArea(
+      body: LayoutBuilder(builder: (context, body) => SafeArea(
         child: Column(
           children: [
             WorkspaceTabBar(
@@ -4809,6 +4820,13 @@ _showMessage(
                       onClose: _closeTerminalTab,
                       onDuplicate: (id) => unawaited(_duplicateWorkspaceTab(id)),
                       onUnsplit: _unsplitTerminalTab,
+                      onSplit: (id, axis) => unawaited(
+                        _splitTerminalTab(id, axis, newSession: true),
+                      ),
+                      splitTargets: () => _tabOrder.arrange<String>([
+                        for (final session in _visibleSessions) session.id,
+                        for (final entry in _files.entries) entry.id,
+                      ], (id) => id),
                       paneLabel: (id) =>
                           _files.find(id)?.title ??
                           _visibleSessions
@@ -4929,6 +4947,8 @@ _showMessage(
                 ],
               ),
             ),
+            if (!terminalTouchKeyboardOnDemand)
+              _sharedTerminalKeybar(activeSession, body.maxHeight),
             AnimatedBuilder(
               animation: sshTransferActivity,
               builder: (_, _) {
@@ -4955,9 +4975,38 @@ _showMessage(
                 );
               },
             ),
+            // Android: the one shared bar docks directly above the keyboard.
+            if (terminalTouchKeyboardOnDemand)
+              _sharedTerminalKeybar(activeSession, body.maxHeight),
           ],
         ),
-      ),
+      )),
+    );
+  }
+
+  /// The single keybar of the terminal workspace. Split panes share it; it
+  /// always drives the selected SSH pane, so keys never reach another tab.
+  Widget _sharedTerminalKeybar(
+    _LocalTerminalSession? session,
+    double workspaceHeight,
+  ) {
+    final view = session?.viewKey.currentState;
+    if (_selectedTabId == 'hosts' ||
+        session == null ||
+        session._closed ||
+        session.connection == null ||
+        session.isTelnet ||
+        session.console != null ||
+        session.desktop != null ||
+        view == null) {
+      return const SizedBox.shrink();
+    }
+    return TerminalKeybar(
+      key: const ValueKey('local_shared_terminal_keybar'),
+      terminal: session.terminal,
+      focusNode: view.terminalFocus,
+      readOnly: !session.connected.value,
+      availablePaneHeight: workspaceHeight,
     );
   }
 
@@ -5877,7 +5926,8 @@ _showMessage(
         ),
       ),
       // ACCOUNT worker: local mode explains sync and routes to sign-in.
-      if (Theme.of(context).platform == TargetPlatform.android)
+      if (Theme.of(context).platform == TargetPlatform.android ||
+          Theme.of(context).platform == TargetPlatform.iOS)
         SettingsSection(
           id: 'remote-desktop',
           title: context.l10n.remoteDesktop,
@@ -7510,6 +7560,9 @@ class _LocalSshTerminalDialog extends StatefulWidget {
 class _LocalSshTerminalDialogState extends State<_LocalSshTerminalDialog> {
   Widget? get toolsSidebar => _searchOpen ? _toolsSidebar() : null;
 
+  /// Input focus of this pane, driven by the workspace's shared keybar.
+  FocusNode get terminalFocus => _terminalFocus;
+
   void _updateTools(VoidCallback change) {
     setState(change);
     widget.onToolsChanged();
@@ -7556,6 +7609,10 @@ class _LocalSshTerminalDialogState extends State<_LocalSshTerminalDialog> {
     );
     _terminal.onPrivateOSC = _history.accept;
     unawaited(_history.load());
+    // The workspace builds its shared keybar from this mounted state.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onToolsChanged();
+    });
   }
 
   @override
@@ -7567,7 +7624,16 @@ class _LocalSshTerminalDialogState extends State<_LocalSshTerminalDialog> {
     }
     if (widget.active && !oldWidget.active) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && widget.active) _terminalFocus.requestFocus();
+        if (!mounted || !widget.active) return;
+        final view = terminalTouchKeyboardOnDemand
+            ? _terminalFocus.context?.findAncestorStateOfType<TerminalViewState>()
+            : null;
+        // Touch selection of a pane focuses it; the keybar opens the keyboard.
+        if (view != null) {
+          view.requestFocusWithoutKeyboard();
+        } else {
+          _terminalFocus.requestFocus();
+        }
       });
     }
   }
@@ -7902,8 +7968,7 @@ throw StateError(context.l10n.snippetChanged);
   Widget build(BuildContext context) => ExcludeFocus(
     excluding: !widget.active,
     child: Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) => Column(
+      body: Column(
           children: [
             Expanded(
               child: TerminalView(
@@ -7914,6 +7979,7 @@ throw StateError(context.l10n.snippetChanged);
                 scrollController: _terminalScrollController,
                 focusNode: _terminalFocus,
                 autofocus: widget.active && !_searchOpen,
+                showKeyboardOnTap: !terminalTouchKeyboardOnDemand,
                 onKeyEvent: _handleTerminalKeyEvent,
                 padding: const EdgeInsets.all(12),
                 backgroundOpacity: wallpaperTerminalBackgroundOpacity(context),
@@ -7924,14 +7990,8 @@ throw StateError(context.l10n.snippetChanged);
                 theme: terminalColorThemeOf(context, widget.theme),
               ),
             ),
-            TerminalKeybar(
-              terminal: _terminal,
-              focusNode: _terminalFocus,
-              availablePaneHeight: constraints.maxHeight,
-            ),
           ],
         ),
-      ),
     ),
   );
 }

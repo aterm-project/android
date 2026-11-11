@@ -2,16 +2,10 @@ import '../app_controller.dart';
 import 'mcp_workspace.dart';
 
 McpWorkspace appMcpWorkspace(AppController app) => McpWorkspace(
-  scope: () =>
-      app.authenticated && !app.workspaceLocked && app.activeVault != null
-      ? 'cloud:${app.session!.accountId}:${app.currentVaultId}'
-      : null,
-  describe: () => {
-    'mode': 'account',
-    'vault_id': app.currentVaultId,
-    'hosts': app.hosts.length,
-    'sessions': app.terminalTabs.length,
-  },
+  scope: () => _cloudScope(app),
+  // Host/session counters are computed by the tool runner from the
+  // policy-filtered lists so denied machines are never counted.
+  describe: () => {'mode': 'account', 'vault_id': app.currentVaultId},
   hosts: () => List.of(app.hosts),
   sessions: () => app.terminalTabs
       .map(
@@ -38,6 +32,25 @@ McpWorkspace appMcpWorkspace(AppController app) => McpWorkspace(
   connect: app.openTerminalTab,
   openConsole: app.openConsoleTab,
 );
+
+/// Identifies the authorization (and stored MCP policy) scope: the pinned
+/// server instance and space, the account and the Vault. Null while locked or
+/// before the server identity is known, which denies all MCP access.
+String? _cloudScope(AppController app) {
+  final instance = app.instance;
+  final session = app.session;
+  if (!app.authenticated ||
+      app.workspaceLocked ||
+      app.activeVault == null ||
+      instance == null ||
+      session == null ||
+      instance.instanceId.isEmpty ||
+      instance.serverSpaceId.isEmpty) {
+    return null;
+  }
+  return 'cloud:${instance.instanceId}:${instance.serverSpaceId}:'
+      '${session.accountId}:${app.currentVaultId}';
+}
 
 // Keep a failed Shell/serial startup identifiable without exposing its
 // synthetic Host id as a saved SSH host.

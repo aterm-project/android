@@ -1,0 +1,7 @@
+"CFBundleDisplayName" = "Atermius";
+"CFBundleName" = "Atermius";
+"NSLocalNetworkUsageDescription" = "Atermius 需要访问局域网以连接本地网络中的 SSH、SFTP、RDP、VNC 和 MCP 主机。";
+"NSDesktopFolderUsageDescription" = "Atermius 在通过 SFTP、SCP 或 RDP 传输文件时按需访问桌面文件夹。";
+"NSDocumentsFolderUsageDescription" = "Atermius 在导入 SSH 密钥或通过 SFTP、SCP、RDP 传输文件时按需访问文稿文件夹。";
+"NSDownloadsFolderUsageDescription" = "Atermius 在传输下载文件时按需读写下载文件夹。";
+"NSRemovableVolumesUsageDescription" = "Atermius 在您选择外置磁盘进行 SFTP 传输或 RDP 磁盘重定向时访问该卷。";

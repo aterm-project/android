@@ -3308,6 +3308,7 @@
   "thisSavedJumpHostIsUnavailable": "Сохранённый промежуточный хост недоступен, образует цикл или превышает 8 переходов. Выберите «Прямое подключение» или допустимый хост.",
   "unavailableJumpHost": "Недоступный промежуточный хост",
   "signInDetailsAreStoredEncrypted": "Данные для входа хранятся в зашифрованном виде. При подключении доверенный шлюз удалённого рабочего стола обрабатывает учётные данные и изображение.",
+  "directDesktopSignInHint": "Данные для входа хранятся в зашифрованном виде. Это устройство подключается к хосту напрямую и использует их только для этого подключения, без шлюза.",
   "labelPressEnterToConnect": "{label}  ·  Enter — подключиться",
   "searchHostsOrTypeAnSsh": "Поиск хостов или команда ssh / rdp / vnc / console",
   "clearSearch": "Очистить поиск",
@@ -3732,7 +3733,7 @@
   "recentCalls": "Последние вызовы",
   "localListeningPort": "Локальный порт прослушивания",
   "starting": "Запуск…",
-  "theBrowserAndMobileAppsDont": "В браузере и мобильных приложениях локальный MCP-слушатель недоступен. Включите его, открыв рабочее пространство в настольном клиенте для Windows, Linux или macOS.",
+  "theBrowserAndMobileAppsDont": "В этой версии Atermius локальный MCP-слушатель недоступен. Включите его, открыв рабочее пространство в приложении для Windows, Linux, macOS или Android.",
   "portMustBe102465535": "Порт должен быть в диапазоне 1024–65535.",
   "runningValuevalue": "Работает · {valueValue}",
   "letExternalAiUseTheHosts": "Позвольте внешнему ИИ использовать хосты, сеансы, терминалы и удалённые файлы текущего рабочего пространства через MCP. Настраивать API модели в Atermius не нужно.",
@@ -4028,6 +4029,38 @@
   "keybarReset": "Сброс",
   "@keybarReset": {
     "description": "Release terminal Control and Alt modifier locks."
+  },
+  "keybarCtrlGuidance": "Ctrl: нажмите для следующей клавиши, дважды — чтобы зафиксировать",
+  "@keybarCtrlGuidance": {
+    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarAltGuidance": "Alt: нажмите для следующей клавиши, дважды — чтобы зафиксировать",
+  "@keybarAltGuidance": {
+    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarModifierOff": "Выкл.",
+  "@keybarModifierOff": {
+    "description": "Accessibility value of a released terminal keybar modifier."
+  },
+  "keybarModifierArmed": "Только следующая клавиша",
+  "@keybarModifierArmed": {
+    "description": "Accessibility value of a terminal keybar modifier armed for one key."
+  },
+  "keybarModifierLocked": "Зафиксирован",
+  "@keybarModifierLocked": {
+    "description": "Accessibility value of a locked terminal keybar modifier."
+  },
+  "keybarPinExpanded": "Не скрывать дополнительные клавиши",
+  "@keybarPinExpanded": {
+    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
+  },
+  "keybarShowKeyboard": "Показать клавиатуру",
+  "@keybarShowKeyboard": {
+    "description": "Terminal keybar button that shows the software keyboard when taps on the terminal only focus it."
+  },
+  "keybarHideKeyboard": "Скрыть клавиатуру",
+  "@keybarHideKeyboard": {
+    "description": "Terminal keybar button that hides the software keyboard while it is shown."
   },
   "terminalSearchQueryTooLong": "Слишком длинный запрос",
   "@terminalSearchQueryTooLong": {
@@ -4802,31 +4835,6 @@
   "cloudAccessErrorScopeChanged": "Во время действия изменились учётная запись, сервер или выбранный Vault. Ничего не отправлено; повторите.",
   "cloudAccessErrorNotSynced": "Общий Vault создан, но ещё не синхронизирован. Синхронизируйте его перед добавлением участников.",
   "cloudAccessErrorScopeEndedCommitted": "Учётная запись, сервер или выбранный Vault изменились после того, как сервер уже выполнил часть действия (например, создал Vault или приглашение). Эта часть не отменена; проверьте её перед повтором.",
-  "directDesktopSignInHint": "Данные для входа хранятся в зашифрованном виде. Это устройство подключается к хосту напрямую и использует их только для этого подключения, без шлюза.",
-  "keybarCtrlGuidance": "Ctrl: нажмите для следующей клавиши, дважды — чтобы зафиксировать",
-  "@keybarCtrlGuidance": {
-    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
-  },
-  "keybarAltGuidance": "Alt: нажмите для следующей клавиши, дважды — чтобы зафиксировать",
-  "@keybarAltGuidance": {
-    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
-  },
-  "keybarModifierOff": "Выкл.",
-  "@keybarModifierOff": {
-    "description": "Accessibility value of a released terminal keybar modifier."
-  },
-  "keybarModifierArmed": "Только следующая клавиша",
-  "@keybarModifierArmed": {
-    "description": "Accessibility value of a terminal keybar modifier armed for one key."
-  },
-  "keybarModifierLocked": "Зафиксирован",
-  "@keybarModifierLocked": {
-    "description": "Accessibility value of a locked terminal keybar modifier."
-  },
-  "keybarPinExpanded": "Не скрывать дополнительные клавиши",
-  "@keybarPinExpanded": {
-    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
-  },
   "mcpAccessModeDenied": "Запрещено",
   "mcpAccessModeReadOnly": "Только чтение",
   "mcpAccessModeReadWrite": "Чтение и запись",

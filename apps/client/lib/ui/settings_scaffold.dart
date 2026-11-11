@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_density.dart';
 import 'app_theme.dart';
+import 'responsive_layout.dart';
 import '../l10n/l10n.dart';
 
 @immutable
@@ -68,7 +69,11 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
     _visited.add(_selectedId!);
     final selected = sections.indexWhere((s) => s.id == _selectedId);
     final density = AppDensity.of(context);
-    final content = KeyedSubtree(
+    final touch = isTouchPlatform(Theme.of(context).platform);
+    // Padding follows the width this scaffold actually gets (not the window),
+    // so it always agrees with the picker/navigation choice below, e.g. on a
+    // tablet beside the Home rail or in Android split-screen.
+    Widget content(bool narrow) => KeyedSubtree(
       key: _contentKey,
       child: IndexedStack(
         index: selected,
@@ -83,7 +88,14 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
                   : SingleChildScrollView(
                       key: PageStorageKey('settings_scroll_${section.id}'),
                       primary: false,
-                      padding: MediaQuery.sizeOf(context).width < 700
+                      // Touch: dragging the page hides the soft keyboard, as
+                      // Android users expect, instead of leaving it covering
+                      // the form.
+                      // Desktop keeps the inherited scroll behaviour.
+                      keyboardDismissBehavior: touch
+                          ? ScrollViewKeyboardDismissBehavior.onDrag
+                          : null,
+                      padding: narrow
                           ? const EdgeInsets.all(12)
                           : density.pagePadding,
                       child: Align(
@@ -123,7 +135,7 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 700) {
+        if (constraints.maxWidth < AppBreakpoints.settingsNavigation) {
           return Column(
             children: [
               Padding(
@@ -147,7 +159,7 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
                   },
                 ),
               ),
-              Expanded(child: content),
+              Expanded(child: content(true)),
             ],
           );
         }
@@ -222,7 +234,7 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
               ),
             ),
             VerticalDivider(width: 1, color: context.palette.line),
-            Expanded(child: content),
+            Expanded(child: content(false)),
           ],
         );
       },
@@ -248,12 +260,25 @@ class SettingsCards extends StatelessWidget {
 }
 
 class SettingsCard extends StatelessWidget {
-  const SettingsCard({required this.child, super.key});
+  const SettingsCard({
+    required this.child,
+    this.semanticContainer = true,
+    super.key,
+  });
   final Widget child;
+
+  /// Passed to [Card.semanticContainer]. Keep the default for read-only cards
+  /// (they are announced as one block). Pass false for cards that hold
+  /// interactive controls such as text fields: otherwise a field that does not
+  /// form its own semantics boundary is merged into the card node, so Android
+  /// accessibility and UI automation report the field with the whole card's
+  /// bounds and all of the card's text as its label.
+  final bool semanticContainer;
 
   @override
   Widget build(BuildContext context) => Card(
     margin: EdgeInsets.zero,
+    semanticContainer: semanticContainer,
     child: Padding(
       padding: EdgeInsets.all(AppDensity.of(context).space6),
       child: child,

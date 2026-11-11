@@ -20,6 +20,7 @@ import 'package:xterm/src/ui/shortcut/shortcuts.dart';
 import 'package:xterm/src/ui/terminal_text_style.dart';
 import 'package:xterm/src/ui/terminal_theme.dart';
 import 'package:xterm/src/ui/themes.dart';
+import 'package:xterm/src/ui/touch_selection.dart';
 
 class TerminalView extends StatefulWidget {
   const TerminalView(
@@ -48,6 +49,7 @@ class TerminalView extends StatefulWidget {
     this.onKeyEvent,
     this.readOnly = false,
     this.hardwareKeyboardOnly = false,
+    this.showKeyboardOnTap = true,
     this.simulateScroll = true,
   });
 
@@ -135,6 +137,13 @@ class TerminalView extends StatefulWidget {
   /// also prevent any on-screen keyboard to be shown.
   final bool hardwareKeyboardOnly;
 
+  /// Whether a primary tap on the terminal shows the software keyboard. When
+  /// false, a tap only focuses the terminal (hardware keys and IME commits
+  /// still arrive) and the keyboard opens through
+  /// [TerminalViewState.requestKeyboard], for example from an explicit
+  /// keyboard button. [true] by default.
+  final bool showKeyboardOnTap;
+
   /// If true, when the terminal is in alternate buffer (for example running
   /// vim, man, etc), if the application does not declare that it can handle
   /// scrolling, the terminal will simulate scrolling by sending up/down arrow
@@ -157,6 +166,8 @@ class TerminalViewState extends State<TerminalView> {
 
   final _viewportKey = GlobalKey();
 
+  final _touchSelectionKey = GlobalKey<TerminalTouchSelectionState>();
+
   String? _composingText;
 
   late TerminalController _controller;
@@ -165,6 +176,11 @@ class TerminalViewState extends State<TerminalView> {
 
   RenderTerminal get renderTerminal =>
       _viewportKey.currentContext!.findRenderObject() as RenderTerminal;
+
+  /// Touch selection chrome (magnifier, context preview, Copy/Paste toolbar)
+  /// of this view, or null before the first build.
+  TerminalTouchSelectionState? get touchSelection =>
+      _touchSelectionKey.currentState;
 
   @override
   void initState() {
@@ -244,6 +260,7 @@ class TerminalViewState extends State<TerminalView> {
     child = TerminalScrollGestureHandler(
       terminal: widget.terminal,
       simulateScroll: widget.simulateScroll,
+      readOnly: widget.readOnly,
       getCellOffset: (offset) => renderTerminal.getCellOffset(offset),
       getLineHeight: () => renderTerminal.lineHeight,
       child: child,
@@ -311,6 +328,20 @@ class TerminalViewState extends State<TerminalView> {
       child: child,
     );
 
+    child = TerminalTouchSelection(
+      key: _touchSelectionKey,
+      terminal: widget.terminal,
+      controller: _controller,
+      focusNode: _focusNode,
+      scrollController: _scrollController,
+      renderTerminal: () =>
+          _viewportKey.currentContext?.findRenderObject() as RenderTerminal?,
+      textStyle: widget.textStyle,
+      readOnly: widget.readOnly,
+      onPaste: _onTouchPaste,
+      child: child,
+    );
+
     child = MouseRegion(cursor: widget.mouseCursor, child: child);
 
     child = Container(
@@ -328,6 +359,16 @@ class TerminalViewState extends State<TerminalView> {
 
   void closeKeyboard() {
     _customTextEditKey.currentState?.closeKeyboard();
+  }
+
+  /// Focuses the terminal without showing the software keyboard.
+  void requestFocusWithoutKeyboard() {
+    final textEdit = _customTextEditKey.currentState;
+    if (textEdit != null) {
+      textEdit.requestFocusWithoutKeyboard();
+    } else {
+      _focusNode.requestFocus();
+    }
   }
 
   Rect get cursorRect {
@@ -348,7 +389,9 @@ class TerminalViewState extends State<TerminalView> {
     if (_controller.selection != null) {
       _controller.clearSelection();
     } else {
-      if (!widget.hardwareKeyboardOnly) {
+      if (!widget.hardwareKeyboardOnly && !widget.showKeyboardOnTap) {
+        requestFocusWithoutKeyboard();
+      } else if (!widget.hardwareKeyboardOnly) {
         _customTextEditKey.currentState?.requestKeyboard();
       } else {
         _focusNode.requestFocus();
@@ -364,6 +407,12 @@ class TerminalViewState extends State<TerminalView> {
   void _onSecondaryTapUp(TapUpDetails details) {
     final offset = renderTerminal.getCellOffset(details.localPosition);
     widget.onSecondaryTapUp?.call(details, offset);
+  }
+
+  void _onTouchPaste(String text) {
+    if (widget.readOnly) return;
+    widget.terminal.paste(text);
+    _scrollToBottom();
   }
 
   bool get hasInputConnection {

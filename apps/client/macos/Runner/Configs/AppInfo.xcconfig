@@ -10,5 +10,8 @@ PRODUCT_NAME = Atermius
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.atermius.atermClient
 
+// Default Apple Developer team for local signed builds (can be overridden via xcodebuild)
+DEVELOPMENT_TEAM = HATJS45WQL
+
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.atermius. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Atermius. All rights reserved.

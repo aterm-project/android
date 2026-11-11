@@ -12085,6 +12085,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'サインイン情報は暗号化して保存されます。接続時は、信頼済みのリモートデスクトップゲートウェイがサインイン資格情報と画面を処理します。';
 
   @override
+  String get directDesktopSignInHint =>
+      'サインイン情報は暗号化して保存されます。このデバイスはホストに直接接続し、その接続にのみ使用します。ゲートウェイは経由しません。';
+
+  @override
   String labelPressEnterToConnect(String label) {
     return '$label  ·  Enter で接続';
   }
@@ -13618,7 +13622,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get theBrowserAndMobileAppsDont =>
-      'ブラウザ版とモバイル版ではローカルの MCP リスナーを利用できません。Windows、Linux、macOS のデスクトップクライアントでワークスペースを開いてから有効にしてください。';
+      'このバージョンの Atermius ではローカルの MCP リスナーを利用できません。Windows、Linux、macOS、Android のアプリでワークスペースを開いてから有効にしてください。';
 
   @override
   String get portMustBe102465535 => 'ポートの範囲は 1024〜65535 です。';
@@ -14614,6 +14618,30 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get keybarReset => '解除';
+
+  @override
+  String get keybarCtrlGuidance => 'Ctrl: タップで次のキーのみ、ダブルタップでロック';
+
+  @override
+  String get keybarAltGuidance => 'Alt: タップで次のキーのみ、ダブルタップでロック';
+
+  @override
+  String get keybarModifierOff => 'オフ';
+
+  @override
+  String get keybarModifierArmed => '次のキーのみ';
+
+  @override
+  String get keybarModifierLocked => 'ロック中';
+
+  @override
+  String get keybarPinExpanded => '追加キーを常に表示';
+
+  @override
+  String get keybarShowKeyboard => 'キーボードを表示';
+
+  @override
+  String get keybarHideKeyboard => 'キーボードを隠す';
 
   @override
   String get terminalSearchQueryTooLong => '検索語が長すぎます';
@@ -17189,28 +17217,6 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get cloudAccessErrorScopeEndedCommitted =>
       'サーバーがこの操作の一部（Vault や招待の作成など）を完了した後に、アカウント、サーバー、または選択中の Vault が変わりました。その部分は取り消されていません。確認してから再試行してください。';
-
-  @override
-  String get directDesktopSignInHint =>
-      'サインイン情報は暗号化して保存されます。このデバイスはホストに直接接続し、その接続にのみ使用します。ゲートウェイは経由しません。';
-
-  @override
-  String get keybarCtrlGuidance => 'Ctrl: タップで次のキーのみ、ダブルタップでロック';
-
-  @override
-  String get keybarAltGuidance => 'Alt: タップで次のキーのみ、ダブルタップでロック';
-
-  @override
-  String get keybarModifierOff => 'オフ';
-
-  @override
-  String get keybarModifierArmed => '次のキーのみ';
-
-  @override
-  String get keybarModifierLocked => 'ロック中';
-
-  @override
-  String get keybarPinExpanded => '追加キーを常に表示';
 
   @override
   String get mcpAccessModeDenied => '拒否';

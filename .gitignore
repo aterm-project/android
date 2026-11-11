@@ -38,3 +38,5 @@
 .codex-*/
 .claude-*/
 PROJECT_PLAN.md
+/dist/
+**/Pods/

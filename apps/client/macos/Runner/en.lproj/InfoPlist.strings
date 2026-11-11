@@ -1,0 +1,7 @@
+"CFBundleDisplayName" = "Atermius";
+"CFBundleName" = "Atermius";
+"NSLocalNetworkUsageDescription" = "Atermius connects to SSH, SFTP, RDP, VNC, and MCP hosts on your local network.";
+"NSDesktopFolderUsageDescription" = "Atermius accesses files on your Desktop when transferring files over SFTP, SCP, or RDP.";
+"NSDocumentsFolderUsageDescription" = "Atermius accesses files in your Documents folder when importing SSH keys or transferring files over SFTP, SCP, or RDP.";
+"NSDownloadsFolderUsageDescription" = "Atermius saves and reads transferred files in your Downloads folder when requested.";
+"NSRemovableVolumesUsageDescription" = "Atermius accesses mounted volumes when you choose them for SFTP transfers or RDP drive redirection.";

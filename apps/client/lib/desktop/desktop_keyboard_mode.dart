@@ -112,8 +112,10 @@ class _DesktopKeyboardViewportState extends State<DesktopKeyboardViewport> {
     child: widget.child,
     builder: (context, child) {
       final data = MediaQuery.of(context);
-      final android = Theme.of(context).platform == TargetPlatform.android;
-      final fullscreen = android && FullscreenController.instance.enabled;
+      final mobile =
+          Theme.of(context).platform == TargetPlatform.android ||
+          Theme.of(context).platform == TargetPlatform.iOS;
+      final fullscreen = mobile && FullscreenController.instance.enabled;
       // Capture the actual safe area before IME owns the navigation bar.
       // In fullscreen it starts at zero; while typing Android may add a
       // navigation bar, so using the *current* viewPadding would resize again.
@@ -133,7 +135,7 @@ class _DesktopKeyboardViewportState extends State<DesktopKeyboardViewport> {
         _holdOverlay = false;
       }
       final overlay =
-          android &&
+          mobile &&
           keyboards.mode == DesktopKeyboardMode.overlay &&
           (keyboards.overlayActive || _holdOverlay);
       return MediaQuery(

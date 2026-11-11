@@ -24,7 +24,14 @@ enum ExternalEditLaunchMode {
   blocked,
 }
 
-enum ExternalEditPlatformKind { windows, macos, linux, android, unsupported }
+enum ExternalEditPlatformKind {
+  windows,
+  macos,
+  linux,
+  android,
+  ios,
+  unsupported,
+}
 
 /// Formats that launch, install, redirect or execute when "opened".
 /// Compared case-insensitively against the sanitized local name.
@@ -108,8 +115,9 @@ ExternalEditLaunchMode externalEditLaunchMode(
   final executableContent = externalEditLooksExecutable(head);
   switch (platform) {
     case ExternalEditPlatformKind.android:
-      // Android VIEW opens a user-chosen app, never a command. Scripts and
-      // configuration files use text/plain so they go to a text editor.
+    case ExternalEditPlatformKind.ios:
+      // Android VIEW and iOS share/open sheets present a user-chosen app,
+      // never a command. Scripts and configuration files use text/plain.
       return active ||
               executableContent ||
               extension.isEmpty ||

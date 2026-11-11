@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:ffi/ffi.dart';
@@ -22,12 +21,13 @@ const _uuid = Uuid();
 /// the same process, so stale cleanup also consults this set).
 final _activeSessionRoots = <String>{};
 
-/// Desktop and Android private editing copies; unsupported on iOS.
+/// Desktop, Android and iOS private editing copies.
 ExternalEditPlatform? createDefaultExternalEditPlatform() {
   if (!(Platform.isWindows ||
       Platform.isLinux ||
       Platform.isMacOS ||
-      Platform.isAndroid)) {
+      Platform.isAndroid ||
+      Platform.isIOS)) {
     return null;
   }
   return IoExternalEditPlatform();
@@ -59,6 +59,7 @@ final class IoExternalEditPlatform implements ExternalEditPlatform {
     if (Platform.isMacOS) return ExternalEditPlatformKind.macos;
     if (Platform.isLinux) return ExternalEditPlatformKind.linux;
     if (Platform.isAndroid) return ExternalEditPlatformKind.android;
+    if (Platform.isIOS) return ExternalEditPlatformKind.ios;
     return ExternalEditPlatformKind.unsupported;
   }
 
@@ -131,6 +132,7 @@ final class IoExternalEditPlatform implements ExternalEditPlatform {
     try {
       switch (kind) {
         case ExternalEditPlatformKind.android:
+        case ExternalEditPlatformKind.ios:
           await const MethodChannel('atermius/external_edit')
               .invokeMethod<void>('open', {
                 'path': path,
@@ -371,8 +373,22 @@ Future<void> _deleteTree(String path) async {
   }
 }
 
+typedef _PosixChmodNative = Int32 Function(Pointer<Utf8>, Uint16);
+typedef _PosixChmod = int Function(Pointer<Utf8>, int);
+
 Future<void> _restrict(String path, {required bool directory}) async {
-  if (Platform.isLinux || Platform.isMacOS) {
+  if (Platform.isIOS) {
+    final chmod = DynamicLibrary.process()
+        .lookupFunction<_PosixChmodNative, _PosixChmod>('chmod');
+    final native = path.toNativeUtf8();
+    try {
+      if (chmod(native, directory ? 0x1c0 : 0x180) != 0) {
+        throw FileSystemException('Could not restrict permissions.', path);
+      }
+    } finally {
+      calloc.free(native);
+    }
+  } else if (Platform.isLinux || Platform.isMacOS) {
     final result = await Process.run('chmod', [
       directory ? '700' : '600',
       path,

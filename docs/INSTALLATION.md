@@ -60,20 +60,24 @@ flutter build linux --release
 
 部署 **`apps/client/build/linux/<arch>/release/bundle/`** 完整目录，保留 `lib/`、`data/`，在目标桌面会话运行。参考 [Flutter Linux 分发](https://docs.flutter.dev/platform-integration/linux/building)。Linux 不包含 Windows 原生 RDP 引擎，网关路径见[远程桌面](REMOTE-DESKTOP.md)。当前 Linux 源码/组件 CI 不代表新版本 Linux GUI 已验收。
 
-## macOS
+## macOS (Apple Silicon arm64)
 
-在 macOS 安装 Xcode、命令行工具及 `flutter doctor` 要求的依赖，使用仓库已有的 macOS 工程：
+在 macOS 安装 Xcode 26+、命令行工具、CMake 3.28+ 与 Ninja，并确保锁定的 **Flutter 3.47.5 / Dart 3.13.4** 位于 `PATH`。仓库现已内置 Apple 原生 FreeRDP 3.33.0 + OpenSSL 3.5.9 直连引擎与完整一键打包脚本：
 
 ```sh
-git clone https://github.com/aterm-project/desktop.git
-cd desktop/apps/client
-flutter doctor -v
-flutter pub get --enforce-lockfile
-flutter build macos --release
-open macos/Runner.xcworkspace
+cd desktop
+./scripts/build_macos.sh --release
 ```
 
-产物为 **`apps/client/build/macos/Build/Products/Release/`** 内的 `.app`。分发前配置自己的签名团队、权限与公证。当前 macOS 尚未完成新版本设备/UI 验收，Windows 引擎不代表 Mac 原生 RDP 支持；参考 [Flutter macOS 分发](https://docs.flutter.dev/platform-integration/macos/building)。
+脚本会自动完成以下闭环：
+
+1. 检查并按需编译 `apps/client/native/desktop/build/macos/bundle/libatermius_rdp.dylib`（导出全部 25 个 `aterm_rdp_*` C ABI 符号，并校验无外部非系统动态库依赖）；
+2. 执行 `flutter pub get --enforce-lockfile` 与 `flutter build macos --release`；
+3. 将 `libatermius_rdp.dylib` 与开源许可证内嵌至 `Atermius.app/Contents/Frameworks/` 与 `Contents/Resources/atermius_rdp_licenses/`，校验主程序导出的 `aterm_macos_*` 文件剪贴板/显示器布局 FFI 符号；
+4. 自动检测本机钥匙串中的 `Apple Development` 证书（无证书 CI 环境可传 `--adhoc`）进行分层代码签名并通过 `codesign --verify --deep --strict` 校验；
+5. 在 **`desktop/dist/`** 输出 **`Atermius.app`**、**`Atermius-macos-arm64.zip`**、**`Atermius-macos-arm64.dmg`** 及其 `.sha256` 摘要文件。
+
+如需在 Xcode 中交互调试，在完成一次引擎构建后直接打开 `apps/client/macos/Runner.xcworkspace` 即可运行。正式公开发行前请使用 Developer ID Application 证书签名并执行 Apple Notarization 公证。
 
 ## 更新已有版本
 

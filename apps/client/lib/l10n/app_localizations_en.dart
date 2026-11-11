@@ -12881,6 +12881,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign-in details are stored encrypted. When connecting, the trusted remote desktop gateway handles the sign-in credentials and the display.';
 
   @override
+  String get directDesktopSignInHint =>
+      'Sign-in details are stored encrypted. This device connects directly to the Host and uses them only for that connection; no gateway is involved.';
+
+  @override
   String labelPressEnterToConnect(String label) {
     return '$label  ·  Press Enter to connect';
   }
@@ -14500,7 +14504,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get theBrowserAndMobileAppsDont =>
-      'The browser and mobile apps don\'t provide a local MCP listener. Enable it after opening the workspace in the Windows, Linux or macOS desktop client.';
+      'This version of Atermius doesn\'t provide a local MCP listener. Enable it after opening the workspace in the Windows, Linux, macOS or Android app.';
 
   @override
   String get portMustBe102465535 => 'Port must be 1024–65535.';
@@ -15565,6 +15569,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keybarReset => 'Reset';
+
+  @override
+  String get keybarCtrlGuidance =>
+      'Ctrl: tap for the next key only, double-tap to lock';
+
+  @override
+  String get keybarAltGuidance =>
+      'Alt: tap for the next key only, double-tap to lock';
+
+  @override
+  String get keybarModifierOff => 'Off';
+
+  @override
+  String get keybarModifierArmed => 'Next key only';
+
+  @override
+  String get keybarModifierLocked => 'Locked';
+
+  @override
+  String get keybarPinExpanded => 'Keep extra keys open';
+
+  @override
+  String get keybarShowKeyboard => 'Show keyboard';
+
+  @override
+  String get keybarHideKeyboard => 'Hide keyboard';
 
   @override
   String get terminalSearchQueryTooLong => 'Query too long';
@@ -18266,30 +18296,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cloudAccessErrorScopeEndedCommitted =>
       'The account, server or selected Vault changed after the server had already completed part of this action (for example, created the Vault or the invitation). That part was not undone; review it before trying again.';
-
-  @override
-  String get directDesktopSignInHint =>
-      'Sign-in details are stored encrypted. This device connects directly to the Host and uses them only for that connection; no gateway is involved.';
-
-  @override
-  String get keybarCtrlGuidance =>
-      'Ctrl: tap for the next key only, double-tap to lock';
-
-  @override
-  String get keybarAltGuidance =>
-      'Alt: tap for the next key only, double-tap to lock';
-
-  @override
-  String get keybarModifierOff => 'Off';
-
-  @override
-  String get keybarModifierArmed => 'Next key only';
-
-  @override
-  String get keybarModifierLocked => 'Locked';
-
-  @override
-  String get keybarPinExpanded => 'Keep extra keys open';
 
   @override
   String get mcpAccessModeDenied => 'Denied';

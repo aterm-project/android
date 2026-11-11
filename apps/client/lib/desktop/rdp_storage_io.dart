@@ -19,7 +19,7 @@ Future<void> requestRdpStorageAccess() async {
 }
 
 Future<List<RdpStorageRoot>> localRdpStorageRoots() async {
-  if (Platform.isAndroid) {
+  if (Platform.isAndroid || Platform.isIOS) {
     final values = await rdpStorageChannel.invokeListMethod<Object?>('roots');
     return [
       for (final value in values ?? const [])
@@ -30,6 +30,31 @@ Future<List<RdpStorageRoot>> localRdpStorageRoots() async {
             primary: value['primary'] == true,
           ),
     ];
+  }
+  if (Platform.isMacOS) {
+    final roots = <RdpStorageRoot>[];
+    final home = Platform.environment['HOME'];
+    if (home != null && home.isNotEmpty && await Directory(home).exists()) {
+      roots.add(RdpStorageRoot(path: home, label: 'Home', primary: true));
+    }
+    final volumes = Directory('/Volumes');
+    if (await volumes.exists()) {
+      try {
+        await for (final entity in volumes.list(followLinks: false)) {
+          if (entity is Directory) {
+            final name = entity.uri.pathSegments
+                .where((segment) => segment.isNotEmpty)
+                .lastOrNull;
+            if (name != null && !name.startsWith('.')) {
+              roots.add(RdpStorageRoot(path: entity.path, label: name));
+            }
+          }
+        }
+      } on FileSystemException {
+        // Ignore restricted mount points while listing user-visible volumes.
+      }
+    }
+    return roots;
   }
   if (Platform.isWindows) {
     final mask = GetLogicalDrives();

@@ -3308,6 +3308,7 @@
   "thisSavedJumpHostIsUnavailable": "保存された踏み台ホストが利用できないか、循環しているか、8 ホップを超えています。「直接接続」または有効なホストを選択して修復してください。",
   "unavailableJumpHost": "利用できない踏み台ホスト",
   "signInDetailsAreStoredEncrypted": "サインイン情報は暗号化して保存されます。接続時は、信頼済みのリモートデスクトップゲートウェイがサインイン資格情報と画面を処理します。",
+  "directDesktopSignInHint": "サインイン情報は暗号化して保存されます。このデバイスはホストに直接接続し、その接続にのみ使用します。ゲートウェイは経由しません。",
   "labelPressEnterToConnect": "{label}  ·  Enter で接続",
   "searchHostsOrTypeAnSsh": "ホストを検索、または ssh / rdp / vnc / console コマンドを入力",
   "clearSearch": "検索をクリア",
@@ -3732,7 +3733,7 @@
   "recentCalls": "最近の呼び出し",
   "localListeningPort": "ローカルの待ち受けポート",
   "starting": "起動しています…",
-  "theBrowserAndMobileAppsDont": "ブラウザ版とモバイル版ではローカルの MCP リスナーを利用できません。Windows、Linux、macOS のデスクトップクライアントでワークスペースを開いてから有効にしてください。",
+  "theBrowserAndMobileAppsDont": "このバージョンの Atermius ではローカルの MCP リスナーを利用できません。Windows、Linux、macOS、Android のアプリでワークスペースを開いてから有効にしてください。",
   "portMustBe102465535": "ポートの範囲は 1024〜65535 です。",
   "runningValuevalue": "実行中 · {valueValue}",
   "letExternalAiUseTheHosts": "MCP を通じて、外部 AI が現在のワークスペースのホスト、セッション、ターミナル、リモートファイルを使用できるようにします。Atermius 内でモデル API を設定する必要はありません。",
@@ -4028,6 +4029,38 @@
   "keybarReset": "解除",
   "@keybarReset": {
     "description": "Release terminal Control and Alt modifier locks."
+  },
+  "keybarCtrlGuidance": "Ctrl: タップで次のキーのみ、ダブルタップでロック",
+  "@keybarCtrlGuidance": {
+    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarAltGuidance": "Alt: タップで次のキーのみ、ダブルタップでロック",
+  "@keybarAltGuidance": {
+    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
+  },
+  "keybarModifierOff": "オフ",
+  "@keybarModifierOff": {
+    "description": "Accessibility value of a released terminal keybar modifier."
+  },
+  "keybarModifierArmed": "次のキーのみ",
+  "@keybarModifierArmed": {
+    "description": "Accessibility value of a terminal keybar modifier armed for one key."
+  },
+  "keybarModifierLocked": "ロック中",
+  "@keybarModifierLocked": {
+    "description": "Accessibility value of a locked terminal keybar modifier."
+  },
+  "keybarPinExpanded": "追加キーを常に表示",
+  "@keybarPinExpanded": {
+    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
+  },
+  "keybarShowKeyboard": "キーボードを表示",
+  "@keybarShowKeyboard": {
+    "description": "Terminal keybar button that shows the software keyboard when taps on the terminal only focus it."
+  },
+  "keybarHideKeyboard": "キーボードを隠す",
+  "@keybarHideKeyboard": {
+    "description": "Terminal keybar button that hides the software keyboard while it is shown."
   },
   "terminalSearchQueryTooLong": "検索語が長すぎます",
   "@terminalSearchQueryTooLong": {
@@ -4802,31 +4835,6 @@
   "cloudAccessErrorScopeChanged": "この操作中にアカウント、サーバー、または選択中の Vault が変わりました。何も送信していません。もう一度お試しください。",
   "cloudAccessErrorNotSynced": "共有 Vault は作成されましたがまだ同期されていません。メンバーを追加する前に同期してください。",
   "cloudAccessErrorScopeEndedCommitted": "サーバーがこの操作の一部（Vault や招待の作成など）を完了した後に、アカウント、サーバー、または選択中の Vault が変わりました。その部分は取り消されていません。確認してから再試行してください。",
-  "directDesktopSignInHint": "サインイン情報は暗号化して保存されます。このデバイスはホストに直接接続し、その接続にのみ使用します。ゲートウェイは経由しません。",
-  "keybarCtrlGuidance": "Ctrl: タップで次のキーのみ、ダブルタップでロック",
-  "@keybarCtrlGuidance": {
-    "description": "Terminal keybar Ctrl tooltip explaining one-shot tap and double-tap lock."
-  },
-  "keybarAltGuidance": "Alt: タップで次のキーのみ、ダブルタップでロック",
-  "@keybarAltGuidance": {
-    "description": "Terminal keybar Alt tooltip explaining one-shot tap and double-tap lock."
-  },
-  "keybarModifierOff": "オフ",
-  "@keybarModifierOff": {
-    "description": "Accessibility value of a released terminal keybar modifier."
-  },
-  "keybarModifierArmed": "次のキーのみ",
-  "@keybarModifierArmed": {
-    "description": "Accessibility value of a terminal keybar modifier armed for one key."
-  },
-  "keybarModifierLocked": "ロック中",
-  "@keybarModifierLocked": {
-    "description": "Accessibility value of a locked terminal keybar modifier."
-  },
-  "keybarPinExpanded": "追加キーを常に表示",
-  "@keybarPinExpanded": {
-    "description": "Tooltip of the terminal keybar toggle that keeps expanded keys open everywhere."
-  },
   "mcpAccessModeDenied": "拒否",
   "mcpAccessModeReadOnly": "読み取り専用",
   "mcpAccessModeReadWrite": "読み書き",

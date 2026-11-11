@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
+import '../desktop/desktop_session.dart' show DesktopSession;
 import '../desktop/direct/rdp.dart' show rdpEngineFeatures;
 import '../desktop/desktop_resolution.dart';
 import '../desktop/rdp_folder_picker.dart';
@@ -431,6 +432,11 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                               ? context.l10n.loginDetailsBelongToThisHost
                               : _protocol == HostProtocol.telnet
                               ? context.l10n.telnetLoginInteractiveHint
+                              // Direct desktops (Android VNC/RDP, Windows) have
+                              // no gateway; the gateway notice stays for web
+                              // and gateway-routed clients.
+                              : DesktopSession.supportsDirect(_protocol)
+                              ? context.l10n.directDesktopSignInHint
                               : context.l10n.signInDetailsAreStoredEncrypted,
                           style: const TextStyle(fontSize: 12),
                         ),

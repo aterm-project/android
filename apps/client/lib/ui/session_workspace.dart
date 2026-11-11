@@ -12,6 +12,8 @@ import 'wallpaper.dart';
 import '../l10n/l10n.dart';
 import '../platform/fullscreen.dart';
 import 'fullscreen_menu.dart';
+import 'fullscreen_tabs_peek.dart';
+import 'window_caption.dart';
 
 @immutable
 class WorkspaceTabDragData {
@@ -285,6 +287,8 @@ class SessionWorkspaceView extends StatefulWidget {
     this.onUnsplit,
     this.onClose,
     this.onDuplicate,
+    this.onSplit,
+    this.splitTargets,
     this.paneLabel,
     this.paneStatus,
     this.dragScope = 'workspace',
@@ -293,6 +297,15 @@ class SessionWorkspaceView extends StatefulWidget {
   final SessionWorkspaceController controller;
   final Widget Function(BuildContext, String) terminalBuilder;
   final ValueChanged<String>? onSelect, onUnsplit, onClose, onDuplicate;
+
+  /// Splits the pane with a fresh connection/Console copy of its session
+  /// (left/right or top/bottom), via the owner's existing split flow. Offered
+  /// from the Android pane handle, including in fullscreen.
+  final void Function(String id, Axis axis)? onSplit;
+
+  /// Every open session/file tab; those outside the pane's current layout
+  /// are offered as explicit split partners on the Android pane handle.
+  final Iterable<String> Function()? splitTargets;
   final String Function(String)? paneLabel, paneStatus;
   final String dragScope;
   final bool Function(String)? acceptsSession;
@@ -307,14 +320,24 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
     animation: Listenable.merge([
       widget.controller,
       FullscreenController.instance,
+      FullscreenTabsPeek.instance,
     ]),
     builder: (context, _) => LayoutBuilder(
       builder: (context, constraints) {
         final root = widget.controller.root;
         if (root == null) return const SizedBox.shrink();
-        final immersive =
-            Theme.of(context).platform == TargetPlatform.android &&
-            FullscreenController.instance.enabled;
+        final mobile =
+            Theme.of(context).platform == TargetPlatform.android ||
+            Theme.of(context).platform == TargetPlatform.iOS;
+        final immersive = mobile && FullscreenController.instance.enabled;
+        final peek = FullscreenTabsPeek.instance;
+        final peekVisible = immersive && peek.visible;
+        // The dropped-down strip covers the top of the selected pane; its
+        // handle and actions move just below it.
+        final peekInset = WindowBarMetrics.of(
+          context,
+          WindowChromeScope.of(context),
+        ).height;
         final panes = <({String id, Rect bounds})>[];
         final dividers =
             <({SessionWorkspaceSplit split, Rect bounds, double usable})>[];
@@ -354,10 +377,20 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
 
         layout(root, Offset.zero & constraints.biggest);
         final grouped = panes.length > 1;
+        // Mobile handle: Close also covers a lone pane (closing its tab) and
+        // Split reuses the tab menu's flow, so fullscreen keeps both.
+        final handleClose = grouped || mobile;
+        final handleSplit = mobile && widget.onSplit != null;
+        Rect paneRect(({String id, Rect bounds}) pane) =>
+            immersive && widget.controller.selectedId == pane.id
+            ? Offset.zero & constraints.biggest
+            : pane.bounds;
         return PopScope(
           canPop: !immersive,
           onPopInvokedWithResult: (didPop, _) {
-            if (!didPop && immersive) toggleAppFullscreen(context);
+            if (didPop || !immersive) return;
+            // Back first retracts a dropped-down strip, then leaves fullscreen.
+            peek.visible ? peek.hide() : toggleAppFullscreen(context);
           },
           child: Stack(
             clipBehavior: Clip.hardEdge,
@@ -365,9 +398,7 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
               for (final pane in panes)
                 Positioned.fromRect(
                   key: ValueKey('position-${pane.id}'),
-                  rect: immersive && widget.controller.selectedId == pane.id
-                      ? Offset.zero & constraints.biggest
-                      : pane.bounds,
+                  rect: paneRect(pane),
                   child: Offstage(
                     offstage:
                         immersive && widget.controller.selectedId != pane.id,
@@ -377,13 +408,15 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
                       scope: widget.dragScope,
                       acceptsSession: widget.acceptsSession,
                       selected: widget.controller.selectedId == pane.id,
+                      // Split does not count here: on a narrow pane the action
+                      // row wraps instead of hiding Close behind a menu.
                       compactActions:
-                          pane.bounds.width <
+                          paneRect(pane).width <
                           ((FullscreenController.instance.supported ? 1 : 0) +
                                       (grouped && widget.onUnsplit != null
                                           ? 1
                                           : 0) +
-                                      (grouped && widget.onClose != null
+                                      (handleClose && widget.onClose != null
                                           ? 1
                                           : 0) +
                                       (widget.onDuplicate != null ? 1 : 0)) *
@@ -392,6 +425,12 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
                       label: widget.paneLabel?.call(pane.id) ?? pane.id,
                       status: widget.paneStatus?.call(pane.id),
                       fullscreen: FullscreenController.instance.enabled,
+                      immersive:
+                          immersive && widget.controller.selectedId == pane.id,
+                      peekVisible:
+                          peekVisible &&
+                          widget.controller.selectedId == pane.id,
+                      peekInset: peekInset,
                       onFullscreen: FullscreenController.instance.supported
                           ? () {
                               widget.controller.activate(pane.id);
@@ -402,9 +441,37 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
                       onUnsplit: grouped && widget.onUnsplit != null
                           ? () => widget.onUnsplit!(pane.id)
                           : null,
-                      onClose: grouped && widget.onClose != null
+                      onClose: handleClose && widget.onClose != null
                           ? () => widget.onClose!(pane.id)
                           : null,
+                      closeLabel: grouped
+                          ? context.l10n.closePane
+                          : context.l10n.closeTab,
+                      onSplit: handleSplit
+                          ? (axis) => widget.onSplit!(pane.id, axis)
+                          : null,
+                      splitTargets: !handleSplit || widget.splitTargets == null
+                          ? null
+                          : () => [
+                              for (final id in {...widget.splitTargets!()})
+                                if (id != pane.id &&
+                                    (widget.acceptsSession?.call(pane.id) ??
+                                        true) &&
+                                    !widget.controller.sessionIds.contains(
+                                      id,
+                                    ) &&
+                                    (widget.acceptsSession?.call(id) ?? true))
+                                  (
+                                    id: id,
+                                    label: widget.paneLabel?.call(id) ?? id,
+                                    status: widget.paneStatus?.call(id),
+                                  ),
+                            ],
+                      onSplitWith: (source, edge) {
+                        // Same as dropping [source] on this pane's edge.
+                        widget.controller.split(source, pane.id, edge);
+                        widget.onSelect?.call(source);
+                      },
                       onDuplicate: widget.onDuplicate == null
                           ? null
                           : () => widget.onDuplicate!(pane.id),
@@ -523,6 +590,13 @@ class _SessionPaneDropTarget extends StatefulWidget {
     this.onDuplicate,
     this.onFullscreen,
     this.fullscreen = false,
+    this.immersive = false,
+    this.peekVisible = false,
+    this.peekInset = 0,
+    this.closeLabel,
+    this.onSplit,
+    this.splitTargets,
+    this.onSplitWith,
   });
   final String label;
   final bool compactActions;
@@ -530,6 +604,18 @@ class _SessionPaneDropTarget extends StatefulWidget {
   final VoidCallback? onUnsplit, onClose, onDuplicate;
   final VoidCallback? onFullscreen;
   final bool fullscreen;
+
+  /// This pane alone fills the Android fullscreen view.
+  final bool immersive;
+
+  /// The workspace tab strip is dropped down over this pane.
+  final bool peekVisible;
+  final double peekInset;
+  final String? closeLabel;
+  final ValueChanged<Axis>? onSplit;
+  final List<({String id, String label, String? status})> Function()?
+  splitTargets;
+  final void Function(String source, SessionSplitEdge edge)? onSplitWith;
   final String sessionId, scope;
   final bool Function(String)? acceptsSession;
   final bool selected;
@@ -549,14 +635,32 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
       (widget.onFullscreen != null ? 1 : 0) +
       (widget.onUnsplit != null ? 1 : 0) +
       (widget.onClose != null ? 1 : 0) +
+      (widget.onSplit != null ? 1 : 0) +
       (widget.onDuplicate != null ? 1 : 0);
   bool get _hasActions => _actionCount > 0;
   double get _actionExtent => AppDensity.of(context).isCompact ? 36 : 48;
+
+  /// Handle offset below a dropped-down tab strip.
+  double get _inset => widget.peekVisible ? widget.peekInset : 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.peekVisible) _controlsVisible = _controlsPinned = true;
+  }
+
   @override
   void didUpdateWidget(_SessionPaneDropTarget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.fullscreen && !oldWidget.fullscreen && widget.selected) {
       _controlsVisible = _controlsPinned = true;
+    }
+    // In fullscreen the handle's actions drop down and retract together with
+    // the tab strip (tap, outside tap, Back or the auto-hide timeout).
+    if (widget.peekVisible && !oldWidget.peekVisible) {
+      _controlsVisible = _controlsPinned = true;
+    } else if (!widget.peekVisible && oldWidget.peekVisible) {
+      _controlsVisible = _controlsPinned = false;
     }
   }
 
@@ -575,8 +679,8 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return false;
     return (local.dx - box.size.width / 2).abs() <= 26 &&
-        local.dy >= 0 &&
-        local.dy <= 24;
+        local.dy >= _inset &&
+        local.dy <= _inset + 24;
   }
 
   bool _nearActions(Offset local) {
@@ -585,6 +689,7 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
         ? (widget.onFullscreen != null ? 1 : 0) +
               (_actionCount > (widget.onFullscreen != null ? 1 : 0) ? 1 : 0)
         : _actionCount;
+    final top = _inset + 24;
     final rows = box != null && box.hasSize
         ? (count * _actionExtent / math.max(_actionExtent, box.size.width))
               .ceil()
@@ -594,12 +699,14 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
         _controlsVisible &&
         (local.dx - box.size.width / 2).abs() <=
             count * _actionExtent / 2 + 8 &&
-        local.dy >= 24 &&
-        local.dy <= 24 + rows * _actionExtent + 8;
+        local.dy >= top &&
+        local.dy <= top + rows * _actionExtent + 8;
   }
 
   void _hoverControls(PointerEvent event) {
-    if (!_hasActions || _controlsFocus.hasPrimaryFocus) return;
+    if (!_hasActions || _controlsFocus.hasPrimaryFocus || widget.peekVisible) {
+      return;
+    }
     _controlsPinned = false;
     _showControls(
       _nearHandle(event.localPosition) || _nearActions(event.localPosition),
@@ -607,8 +714,90 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
   }
 
   void _toggleControls() {
+    if (widget.immersive) {
+      // Fullscreen: the handle drops the workspace tabs down as an overlay
+      // (and retracts them); the pane's actions follow the strip.
+      final peek = FullscreenTabsPeek.instance;
+      if (widget.peekVisible) {
+        peek.hide();
+      } else {
+        _controlsPinned = true;
+        _showControls(true);
+        peek.show();
+      }
+      return;
+    }
     _controlsPinned = !_controlsVisible;
     _showControls(!_controlsVisible);
+  }
+
+  void _afterAction() {
+    if (widget.peekVisible) {
+      FullscreenTabsPeek.instance.keepAlive();
+      return;
+    }
+    _controlsPinned = false;
+    _showControls(false);
+  }
+
+  SessionSplitEdge get _partnerEdge {
+    final box = context.findRenderObject() as RenderBox?;
+    final portrait =
+        box != null && box.hasSize && box.size.height > box.size.width;
+    return portrait ? SessionSplitEdge.bottom : SessionSplitEdge.right;
+  }
+
+  /// Direction choices use the tab menu's split flow; each listed session is
+  /// an explicit partner placed beside (landscape) or below (portrait).
+  List<PopupMenuEntry<String>> _splitItems(BuildContext context) {
+    final targets = widget.splitTargets?.call() ?? const [];
+    final portrait = _partnerEdge == SessionSplitEdge.bottom;
+    return [
+      appMenuItem(
+        context,
+        key: ValueKey('pane-split-horizontal-${widget.sessionId}'),
+        value: 'split:horizontal',
+        child: AppMenuLabel(
+          Icons.view_week_outlined,
+          context.l10n.splitLeftRight,
+        ),
+      ),
+      appMenuItem(
+        context,
+        key: ValueKey('pane-split-vertical-${widget.sessionId}'),
+        value: 'split:vertical',
+        child: AppMenuLabel(
+          Icons.splitscreen_outlined,
+          context.l10n.splitTopBottom,
+        ),
+      ),
+      if (targets.isNotEmpty) const PopupMenuDivider(height: 8),
+      for (final target in targets)
+        appMenuItem(
+          context,
+          key: ValueKey('pane-split-with-${target.id}'),
+          value: 'with:${target.id}',
+          child: AppMenuLabel(
+            portrait ? Icons.splitscreen_outlined : Icons.view_week_outlined,
+            target.label,
+            subtitle: target.status,
+          ),
+        ),
+    ];
+  }
+
+  /// Returns false when [action] is not a split command.
+  bool _runSplit(String action) {
+    if (action == 'split:horizontal') {
+      widget.onSplit?.call(Axis.horizontal);
+    } else if (action == 'split:vertical') {
+      widget.onSplit?.call(Axis.vertical);
+    } else if (action.startsWith('with:')) {
+      widget.onSplitWith?.call(action.substring(5), _partnerEdge);
+    } else {
+      return false;
+    }
+    return true;
   }
 
   Widget _handle() => Tooltip(
@@ -719,6 +908,7 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
             _controlsVisible) {
           _controlsPinned = false;
           _showControls(false);
+          if (widget.peekVisible) FullscreenTabsPeek.instance.hide();
           return KeyEventResult.handled;
         }
         return KeyEventResult.ignored;
@@ -764,31 +954,51 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
                 fit: StackFit.expand,
                 children: [
                   // Stable slot: per-pane wallpaper (follow-splits mode).
-                  WallpaperPaneBackdrop(child: widget.child),
+                  WallpaperPaneBackdrop(
+                    key: const ValueKey('pane-content'),
+                    child: widget.child,
+                  ),
+                  // While the tab strip is dropped down, a tap on the pane
+                  // only retracts it: nothing reaches the terminal/desktop.
+                  if (widget.peekVisible)
+                    Positioned.fill(
+                      key: const ValueKey('fullscreen-tabs-barrier'),
+                      child: Listener(
+                        behavior: HitTestBehavior.opaque,
+                        onPointerDown: (_) =>
+                            FullscreenTabsPeek.instance.hide(),
+                      ),
+                    ),
                   if (_hasActions)
                     Positioned(
-                      top: 0,
+                      key: const ValueKey('pane-handle-slot'),
+                      top: _inset,
                       left: 0,
                       right: 0,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _handle(),
-                          // Fades in when revealed (hit-testable at once);
-                          // hides instantly so no ghost keeps focus or taps.
-                          if (_controlsVisible)
-                            MotionEntrance(
-                              trigger: null,
-                              animateOnFirstBuild: true,
-                              duration: MotionDurations.quick,
-                              offset: const Offset(0, -4),
-                              child: _actions(context),
-                            ),
-                        ],
+                      child: _handleGroup(
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _handle(),
+                            // Fades in when revealed (hit-testable at once);
+                            // hides instantly so no ghost keeps focus or taps.
+                            if (_controlsVisible)
+                              MotionEntrance(
+                                trigger: null,
+                                animateOnFirstBuild: true,
+                                duration: MotionDurations.quick,
+                                offset: const Offset(0, -4),
+                                child: _actions(context),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   if (candidates.isNotEmpty && _edge != null)
-                    IgnorePointer(child: _SplitPreview(edge: _edge!)),
+                    IgnorePointer(
+                      key: const ValueKey('pane-split-preview'),
+                      child: _SplitPreview(edge: _edge!),
+                    ),
                 ],
               ),
             ),
@@ -797,6 +1007,23 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
       ),
     ),
   );
+
+  /// Fullscreen: the handle and its actions belong to the dropped-down tab
+  /// strip's tap group, and touching them keeps the strip on screen.
+  Widget _handleGroup(Widget child) {
+    if (!widget.immersive) return child;
+    final peek = FullscreenTabsPeek.instance;
+    return TapRegion(
+      groupId: FullscreenTabsPeek.tapGroup,
+      child: Listener(
+        onPointerDown: (event) => peek.pointerDown(event.pointer),
+        onPointerUp: (event) => peek.pointerUp(event.pointer),
+        onPointerCancel: (event) => peek.pointerUp(event.pointer),
+        child: child,
+      ),
+    );
+  }
+
   Widget _actions(BuildContext context) => Material(
     elevation: 3,
     borderRadius: BorderRadius.circular(7),
@@ -836,6 +1063,27 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
               icon: Icon(Icons.content_copy, size: appMenuIconSize(context)),
               onPressed: widget.onDuplicate,
             ),
+          if (widget.onSplit != null)
+            SizedBox(
+              width: _actionExtent,
+              height: _actionExtent,
+              child: PopupMenuButton<String>(
+                key: ValueKey('pane-split-${widget.sessionId}'),
+                popUpAnimationStyle: AppMotion.menuStyle(context),
+                tooltip: context.l10n.splitSelectedPane,
+                icon: Icon(
+                  Icons.vertical_split_outlined,
+                  size: appMenuIconSize(context),
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 180),
+                onSelected: (action) {
+                  _runSplit(action);
+                  _afterAction();
+                },
+                itemBuilder: _splitItems,
+              ),
+            ),
           if (widget.onUnsplit != null)
             IconButton(
               key: ValueKey('pane-unsplit-${widget.sessionId}'),
@@ -856,7 +1104,7 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
                 height: _actionExtent,
               ),
               padding: EdgeInsets.zero,
-              tooltip: context.l10n.closePane,
+              tooltip: widget.closeLabel ?? context.l10n.closePane,
               icon: Icon(Icons.close, size: appMenuIconSize(context)),
               onPressed: widget.onClose,
             ),
@@ -872,8 +1120,8 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
               constraints: const BoxConstraints(minWidth: 160),
               padding: EdgeInsets.zero,
               onSelected: (action) {
-                _controlsPinned = false;
-                _showControls(false);
+                _afterAction();
+                if (_runSplit(action)) return;
                 if (action == 'duplicate')
                   widget.onDuplicate?.call();
                 else if (action == 'unsplit')
@@ -901,6 +1149,7 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
                       context.l10n.duplicateTab,
                     ),
                   ),
+                if (widget.onSplit != null) ..._splitItems(context),
                 if (widget.onUnsplit != null)
                   appMenuItem(
                     context,
@@ -911,7 +1160,10 @@ class _SessionPaneDropTargetState extends State<_SessionPaneDropTarget> {
                   appMenuItem(
                     context,
                     value: 'close',
-                    child: AppMenuLabel(Icons.close, context.l10n.closePane),
+                    child: AppMenuLabel(
+                      Icons.close,
+                      widget.closeLabel ?? context.l10n.closePane,
+                    ),
                   ),
               ],
             ),

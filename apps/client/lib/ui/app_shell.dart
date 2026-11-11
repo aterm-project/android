@@ -1355,12 +1355,19 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
     }
   }
 
-  Future<void> _splitSession(String id, Axis axis) async {
+  /// [newSession]: the pane handle's direction choices always open a fresh
+  /// connection (or Console copy) beside [id] instead of pairing it with an
+  /// already-open tab; those are offered separately as explicit partners.
+  Future<void> _splitSession(
+    String id,
+    Axis axis, {
+    bool newSession = false,
+  }) async {
     final file = _fileTabs.find(id);
     final otherFile = _fileTabs.entries
         .where((entry) => entry.id != id)
         .firstOrNull;
-    if (file != null || otherFile != null) {
+    if (file != null || (!newSession && otherFile != null)) {
       final target =
           _sessionWorkspace.sessionIds
               .where((value) => value != id)
@@ -1388,16 +1395,18 @@ _snack(context, context.l10n.theCurrentWindowLayoutForThis);
     if (tab == null || tab.detached) return;
     Future<void>? opening;
     try {
-      var source = app.visibleTerminalTabs
-          .where(
-            (candidate) =>
-                candidate.id != id &&
-                (candidate.connection != null ||
-                    candidate.telnet != null ||
-                    candidate.desktop != null ||
-                    candidate.console != null),
-          )
-          .firstOrNull;
+      var source = newSession
+          ? null
+          : app.visibleTerminalTabs
+                .where(
+                  (candidate) =>
+                      candidate.id != id &&
+                      (candidate.connection != null ||
+                          candidate.telnet != null ||
+                          candidate.desktop != null ||
+                          candidate.console != null),
+                )
+                .firstOrNull;
       if (source == null && tab.console != null) {
         // A lone Console splits into a new independent PTY/serial session.
         final copyId = await app.duplicateConsoleTab(id);
@@ -1959,6 +1968,14 @@ _snack(context, context.l10n.couldntOpenANewWindow, error: true);
                                   unawaited(_closeWorkspaceTab(id)),
                               onWorkspaceUnsplit: _unsplitWorkspaceTab,
                               onWorkspaceDuplicate: (id) => unawaited(_duplicateWorkspaceTab(id)),
+                              onWorkspaceSplit: (id, axis) => unawaited(
+                                _splitSession(id, axis, newSession: true),
+                              ),
+                              workspaceSplitTargets: () => _tabOrder.arrange<String>([
+                                for (final tab in app.visibleTerminalTabs)
+                                  if (!tab.closed) tab.id,
+                                for (final file in _fileTabs.entries) file.id,
+                              ], (id) => id),
                               app: app,
                               onOpenFiles: _openHostFiles,
                               onOpenGroup: _openGroup,
@@ -2860,6 +2877,8 @@ class _WorkspacePage extends StatelessWidget {
     required this.onWorkspaceClose,
     required this.onWorkspaceUnsplit,
     required this.onWorkspaceDuplicate,
+    this.onWorkspaceSplit,
+    this.workspaceSplitTargets,
     this.enableWebCommandSuggestionsForTesting = false,
     this.onOpenLocalMigration,
     this.webAppUpdateMonitor,
@@ -2884,6 +2903,8 @@ class _WorkspacePage extends StatelessWidget {
   final bool openingCombination;
   final ValueChanged<String> onWorkspaceSelect;
   final ValueChanged<String> onWorkspaceClose, onWorkspaceUnsplit, onWorkspaceDuplicate;
+  final void Function(String id, Axis axis)? onWorkspaceSplit;
+  final Iterable<String> Function()? workspaceSplitTargets;
   final String dragScope;
   final bool enableWebCommandSuggestionsForTesting;
   final Future<void> Function(BuildContext context)? onOpenLocalMigration;
@@ -2947,6 +2968,8 @@ class _WorkspacePage extends StatelessWidget {
         onWorkspaceClose: onWorkspaceClose,
         onWorkspaceUnsplit: onWorkspaceUnsplit,
         onWorkspaceDuplicate: onWorkspaceDuplicate,
+        onWorkspaceSplit: onWorkspaceSplit,
+        workspaceSplitTargets: workspaceSplitTargets,
         enableWebCommandSuggestionsForTesting:
             enableWebCommandSuggestionsForTesting,
       ),
@@ -8328,6 +8351,8 @@ class _TerminalPage extends StatefulWidget {
     required this.onWorkspaceClose,
     required this.onWorkspaceUnsplit,
     required this.onWorkspaceDuplicate,
+    this.onWorkspaceSplit,
+    this.workspaceSplitTargets,
     this.enableWebCommandSuggestionsForTesting = false,
   });
   final AppController app;
@@ -8335,6 +8360,8 @@ class _TerminalPage extends StatefulWidget {
   final FileWorkspaceTabs fileTabs;
   final ValueChanged<String> onWorkspaceSelect;
   final ValueChanged<String> onWorkspaceClose, onWorkspaceUnsplit, onWorkspaceDuplicate;
+  final void Function(String id, Axis axis)? onWorkspaceSplit;
+  final Iterable<String> Function()? workspaceSplitTargets;
   final String dragScope;
   final bool enableWebCommandSuggestionsForTesting;
   @override
@@ -9075,6 +9102,8 @@ class _TerminalPageState extends State<_TerminalPage> {
     onClose: widget.onWorkspaceClose,
     onUnsplit: widget.onWorkspaceUnsplit,
     onDuplicate: widget.onWorkspaceDuplicate,
+    onSplit: widget.onWorkspaceSplit,
+    splitTargets: widget.workspaceSplitTargets,
     paneLabel: (id) =>
         widget.fileTabs.find(id)?.title ??
         app.terminalTabFor(id)?.host?.name ??
@@ -9172,6 +9201,7 @@ return DesktopView(
             focusNode: _focusNodeFor(id),
             autofocus: id == app.activeTerminalTabId,
             hardwareKeyboardOnly: false,
+            showKeyboardOnTap: !terminalTouchKeyboardOnDemand,
             readOnly: tab.state != 'connected',
             onKeyEvent: (_, event) => _handleTerminalKeyEvent(id, event),
             padding: const EdgeInsets.all(12),
@@ -9216,7 +9246,12 @@ return DesktopView(
               behavior: HitTestBehavior.translucent,
               onPointerDown: (_) {
                 app.activateTerminalTab(id);
-                _requestTerminalKeyboard(id, fromUserGesture: true);
+                if (terminalTouchKeyboardOnDemand) {
+                  // Touch only focuses; the keybar button opens the keyboard.
+                  _focusTerminalWithoutKeyboard(id);
+                } else {
+                  _requestTerminalKeyboard(id, fromUserGesture: true);
+                }
               },
               child: MergeSemantics(
                 child: Semantics(
@@ -9368,6 +9403,7 @@ return DesktopView(
             focusNode: _focusNodeFor(tab.id),
             autofocus: tab.id == app.activeTerminalTabId,
             hardwareKeyboardOnly: false,
+            showKeyboardOnTap: !terminalTouchKeyboardOnDemand,
             onKeyEvent: (_, event) => _handleTerminalKeyEvent(tab.id, event),
             padding: const EdgeInsets.all(10),
             backgroundOpacity: wallpaperTerminalBackgroundOpacity(context),
@@ -9451,7 +9487,12 @@ return DesktopView(
               behavior: HitTestBehavior.translucent,
               onPointerDown: (_) {
                 app.activateTerminalTab(tab.id);
-                _requestTerminalKeyboard(tab.id, fromUserGesture: true);
+                if (terminalTouchKeyboardOnDemand) {
+                  // Touch only focuses; the keybar button opens the keyboard.
+                  _focusTerminalWithoutKeyboard(tab.id);
+                } else {
+                  _requestTerminalKeyboard(tab.id, fromUserGesture: true);
+                }
               },
               child: _terminalToolsLayout(tab, inputSurface),
             ),
@@ -9515,6 +9556,19 @@ return DesktopView(
         ],
       ),
     );
+  }
+
+  void _focusTerminalWithoutKeyboard(String id) {
+    if (app.activeTerminalTabId != id ||
+        app.terminalTabFor(id)?.liveTerminalTransport == null) {
+      return;
+    }
+    final view = _viewKeyFor(id).currentState;
+    if (view != null) {
+      view.requestFocusWithoutKeyboard();
+    } else {
+      _focusNodeFor(id).requestFocus();
+    }
   }
 
   void _requestTerminalKeyboard(String id, {bool fromUserGesture = false}) {
@@ -11243,6 +11297,11 @@ class _TerminalObserverDialogState extends State<_TerminalObserverDialog> {
         _controllerFocusRequestScheduled = false;
         return;
       }
+      if (terminalTouchKeyboardOnDemand) {
+        _terminalViewKey.currentState?.requestFocusWithoutKeyboard();
+        _controllerFocusRequestScheduled = false;
+        return;
+      }
       _terminalFocusNode.requestFocus();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _controllerFocusRequestScheduled = false;
@@ -11433,8 +11492,10 @@ class _TerminalObserverDialogState extends State<_TerminalObserverDialog> {
                         focusNode: _terminalFocusNode,
                         readOnly: !hasController,
                         autoResize: false,
-                        autofocus: hasController,
+                        autofocus:
+                            hasController && !terminalTouchKeyboardOnDemand,
                         hardwareKeyboardOnly: hardwareKeyboardOnly,
+                        showKeyboardOnTap: !terminalTouchKeyboardOnDemand,
                         padding: EdgeInsets.zero,
                         textStyle: TerminalStyle(
                           fontSize: widget.app.terminalFontSize.toDouble(),
@@ -11460,6 +11521,19 @@ class _TerminalObserverDialogState extends State<_TerminalObserverDialog> {
                     ),
                   ),
                 ),
+                if (terminalTouchKeyboardOnDemand && hasController)
+                  TerminalKeybar(
+                    key: const ValueKey('shared_terminal_keybar'),
+                    terminal: widget.observer.terminal,
+                    focusNode: _terminalFocusNode,
+                    readOnly: !hasController,
+                    availablePaneHeight:
+                        (size.height -
+                                48 -
+                                MediaQuery.viewInsetsOf(context).bottom)
+                            .clamp(0.0, 760.0)
+                            .toDouble(),
+                  ),
               ],
             ),
           ),
@@ -15447,7 +15521,8 @@ class _SettingsPage extends StatelessWidget {
           ),
         ),
         // ACCOUNT worker: account/login category (identity, session actions).
-        if (Theme.of(context).platform == TargetPlatform.android)
+        if (Theme.of(context).platform == TargetPlatform.android ||
+            Theme.of(context).platform == TargetPlatform.iOS)
           SettingsSection(
             id: 'remote-desktop',
             title: context.l10n.remoteDesktop,

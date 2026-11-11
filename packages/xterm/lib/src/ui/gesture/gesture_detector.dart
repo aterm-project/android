@@ -17,6 +17,8 @@ class TerminalGestureDetector extends StatefulWidget {
     this.onLongPressStart,
     this.onLongPressMoveUpdate,
     this.onLongPressUp,
+    this.onLongPressEnd,
+    this.onLongPressCancel,
     this.onDragStart,
     this.onDragUpdate,
     this.onDoubleTapDown,
@@ -46,6 +48,13 @@ class TerminalGestureDetector extends StatefulWidget {
 
   final GestureLongPressUpCallback? onLongPressUp;
 
+  /// Called when an accepted long press is released, with its final position.
+  final GestureLongPressEndCallback? onLongPressEnd;
+
+  /// Called when a long press is cancelled, including after it was accepted
+  /// (for example when the platform cancels the pointer).
+  final GestureLongPressCancelCallback? onLongPressCancel;
+
   final GestureDragStartCallback? onDragStart;
 
   final GestureDragUpdateCallback? onDragUpdate;
@@ -63,6 +72,41 @@ class _TerminalGestureDetectorState extends State<TerminalGestureDetector> {
   // True if a second tap down of a double tap is detected. Used to discard
   // subsequent tap up / tap hold of the same tap.
   bool _isDoubleTap = false;
+
+  // Touch/stylus tap-downs are held until the tap is confirmed by its tap-up.
+  // The tap recognizer reports a down after [kPressTimeout] even when the
+  // pointer then becomes a long press or a scroll; forwarding it eagerly would
+  // focus/raise the keyboard, clear the selection being made and send an
+  // unmatched mouse-down to remote applications that enable mouse reporting.
+  TapDownDetails? _pendingTouchTapDown;
+
+  static bool _deferTapDown(PointerDeviceKind? kind) {
+    return kind == PointerDeviceKind.touch ||
+        kind == PointerDeviceKind.stylus ||
+        kind == PointerDeviceKind.invertedStylus;
+  }
+
+  void _handleRecognizerTapDown(TapDownDetails details) {
+    if (_deferTapDown(details.kind)) {
+      _pendingTouchTapDown = details;
+      return;
+    }
+    _pendingTouchTapDown = null;
+    _handleTapDown(details);
+  }
+
+  void _handleRecognizerTapUp(TapUpDetails details) {
+    final pending = _pendingTouchTapDown;
+    _pendingTouchTapDown = null;
+    if (pending != null) {
+      _handleTapDown(pending);
+    }
+    _handleTapUp(details);
+  }
+
+  void _handleRecognizerTapCancel() {
+    _pendingTouchTapDown = null;
+  }
 
   // The down handler is force-run on success of a single tap and optimistically
   // run before a long press success.
@@ -105,6 +149,12 @@ class _TerminalGestureDetectorState extends State<TerminalGestureDetector> {
   }
 
   @override
+  void dispose() {
+    _doubleTapTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final gestures = <Type, GestureRecognizerFactory>{};
 
@@ -113,8 +163,9 @@ class _TerminalGestureDetectorState extends State<TerminalGestureDetector> {
       () => TapGestureRecognizer(debugOwner: this),
       (TapGestureRecognizer instance) {
         instance
-          ..onTapDown = _handleTapDown
-          ..onTapUp = _handleTapUp
+          ..onTapDown = _handleRecognizerTapDown
+          ..onTapUp = _handleRecognizerTapUp
+          ..onTapCancel = _handleRecognizerTapCancel
           ..onSecondaryTapDown = widget.onSecondaryTapDown
           ..onSecondaryTapUp = widget.onSecondaryTapUp
           ..onTertiaryTapDown = widget.onTertiaryTapDown
@@ -128,6 +179,8 @@ class _TerminalGestureDetectorState extends State<TerminalGestureDetector> {
         debugOwner: this,
         supportedDevices: {
           PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.invertedStylus,
           // PointerDeviceKind.mouse, // for debugging purposes only
         },
       ),
@@ -135,7 +188,9 @@ class _TerminalGestureDetectorState extends State<TerminalGestureDetector> {
         instance
           ..onLongPressStart = widget.onLongPressStart
           ..onLongPressMoveUpdate = widget.onLongPressMoveUpdate
-          ..onLongPressUp = widget.onLongPressUp;
+          ..onLongPressUp = widget.onLongPressUp
+          ..onLongPressEnd = widget.onLongPressEnd
+          ..onLongPressCancel = widget.onLongPressCancel;
       },
     );
 

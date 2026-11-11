@@ -19958,6 +19958,7 @@ class AppController extends ChangeNotifier {
     final vaultId = activeVault?.id;
     tab.recovery = SessionRecovery(
       automatic: tab.host?.protocol.isTerminal == true,
+      keepSshAlive: tab.host?.protocol == HostProtocol.ssh,
       isCurrent: () => _isTerminalTabOpen(tab) && !workspaceLocked &&
           stage == ClientStage.workspace &&
           _authContextGeneration == authGeneration &&

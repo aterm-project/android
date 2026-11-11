@@ -518,6 +518,22 @@ class Buffer {
     }
 
     var line = lines[position.y];
+    final width = min(viewWidth, line.length);
+    if (position.x >= width) {
+      return null;
+    }
+
+    // The trailing cell of a wide (for example CJK) character stores no code
+    // point. It belongs to the character before it and must not act as the
+    // NUL separator, otherwise wide text can never be selected as a word.
+    bool isSeparator(int x) {
+      final char = line.getCodePoint(x);
+      if (char == 0 && x > 0 && line.getWidth(x - 1) == 2) {
+        return separators.contains(line.getCodePoint(x - 1));
+      }
+      return separators.contains(char);
+    }
+
     var start = position.x;
     var end = position.x;
 
@@ -525,19 +541,17 @@ class Buffer {
       if (start == 0) {
         break;
       }
-      final char = line.getCodePoint(start - 1);
-      if (separators.contains(char)) {
+      if (isSeparator(start - 1)) {
         break;
       }
       start--;
     } while (true);
 
     do {
-      if (end >= viewWidth) {
+      if (end >= width) {
         break;
       }
-      final char = line.getCodePoint(end);
-      if (separators.contains(char)) {
+      if (isSeparator(end)) {
         break;
       }
       end++;

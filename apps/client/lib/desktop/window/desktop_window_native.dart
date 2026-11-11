@@ -32,7 +32,7 @@ const _frameHeader = 32;
 const _maxFrameBytes = 8192 * 4096 * 4 + _frameHeader;
 const formatBgra = 0, formatRgba = 1;
 
-bool get supportsDesktopWindows => Platform.isWindows;
+bool get supportsDesktopWindows => Platform.isWindows || Platform.isMacOS;
 
 String _nonce(int bytes) => base64UrlEncode(
   List<int>.generate(bytes, (_) => Random.secure().nextInt(256)),

@@ -32,6 +32,55 @@
 #else
 #define API __attribute__((visibility("default")))
 #endif
+#if defined(__ANDROID__)
+#include <sys/stat.h>
+#include <pthread.h>
+#include <jni.h>
+// WinPR's Android string conversion (libwinpr/crt/unicode_android.c) asserts a
+// JavaVM, which only WinPR's own JNI_OnLoad (libwinpr/utils/android.c, exported
+// through android/exports.map) records. The app runs it with
+// System.loadLibrary("atermius_rdp"); a dart:ffi dlopen alone never does. Until
+// then the engine refuses to start instead of aborting the process.
+extern JavaVM* jniVm;
+static int jvm_ready(void) { return __atomic_load_n(&jniVm, __ATOMIC_ACQUIRE) != NULL; }
+// FreeRDP refuses to create settings without HOME (upstream aFreeRDP sets it to
+// the app files directory); Android app processes have none. Dart passes an
+// app-private directory before the first connection. An existing HOME is kept.
+static pthread_mutex_t home_lock = PTHREAD_MUTEX_INITIALIZER;
+API int aterm_rdp_set_home(const char* dir) {
+  if (!jvm_ready()) return 0;
+  if (!dir || dir[0] != '/' || strlen(dir) >= PATH_MAX) return 0;
+  struct stat st;
+  if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) return 0;
+  pthread_mutex_lock(&home_lock);
+  const char* current = getenv("HOME");
+  int ok = (current && *current) ? 1 : setenv("HOME", dir, 0) == 0;
+  pthread_mutex_unlock(&home_lock);
+  return ok;
+}
+#elif defined(__APPLE__)
+#include <TargetConditionals.h>
+#include <sys/stat.h>
+#include <pthread.h>
+// On iOS/macOS sandboxed containers, point XDG_CONFIG_HOME (and missing HOME)
+// to an app-writable Application Support directory so FreeRDP never tries to
+// mkdir inside an unwritable container root.
+static pthread_mutex_t home_lock = PTHREAD_MUTEX_INITIALIZER;
+API int aterm_rdp_set_home(const char* dir) {
+  if (!dir || dir[0] != '/' || strlen(dir) >= PATH_MAX) return 0;
+  struct stat st;
+  if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) return 0;
+  pthread_mutex_lock(&home_lock);
+  const char* xdg = getenv("XDG_CONFIG_HOME");
+  int ok = (xdg && *xdg) ? 1 : setenv("XDG_CONFIG_HOME", dir, 0) == 0;
+  const char* current = getenv("HOME");
+  if (!current || !*current) {
+    ok = ok && (setenv("HOME", dir, 0) == 0);
+  }
+  pthread_mutex_unlock(&home_lock);
+  return ok;
+}
+#endif
 
 // Feature bits; must match lib/desktop/rdp_features.dart.
 #define FEATURE_CONFIG_V1 (1u << 0)
@@ -782,6 +831,9 @@ API UINT32 aterm_rdp_features(void) {
 API void* aterm_rdp_create_ex(const char* host, int port, const char* user,
                               const char* password, const char* pin, const char* config) {
   if (!host || !*host || port < 1 || port > 65535 || !user || !password || !pin) return NULL;
+#if defined(__ANDROID__)
+  if (!jvm_ready()) return NULL;
+#endif
   AtermConfig cfg;
   if (!parse_config(config, &cfg)) { config_free(&cfg); return NULL; }
   const UINT32 features = aterm_rdp_features();
@@ -826,6 +878,11 @@ API void* aterm_rdp_create_ex(const char* host, int port, const char* user,
   #define NUM(k,v) if (!freerdp_settings_set_uint32(s, FreeRDP_##k, v)) goto fail
   #define BOOLVAL(k,v) if (!freerdp_settings_set_bool(s, FreeRDP_##k, v)) goto fail
   STR(ServerHostname, host); NUM(ServerPort, (UINT32)port);
+#if defined(__ANDROID__) || defined(__APPLE__)
+  // Connect straight to the Host through OS routing/VPN. FreeRDP would
+  // otherwise adopt http(s)_proxy from the process environment.
+  NUM(ProxyType, PROXY_TYPE_IGNORE);
+#endif
   const char* separator = strchr(user, '\\');
   if (separator) {
     size_t domain_size = (size_t)(separator - user);
@@ -861,6 +918,8 @@ API void* aterm_rdp_create_ex(const char* host, int port, const char* user,
   BOOLVAL(DynamicResolutionUpdate, cfg.monitor_count == 0);
   BOOLVAL(NetworkAutoDetect, FALSE);
   BOOLVAL(SupportHeartbeatPdu, FALSE); BOOLVAL(SupportMultitransport, FALSE);
+  // No message channel is negotiated; never advertise UDP multitransport.
+  NUM(MultitransportFlags, 0);
   BOOLVAL(RedirectClipboard, cfg.clipboard);
   BOOLVAL(AutoReconnectionEnabled, FALSE);
   // Redirection: each resource is explicit. No "all drives" and no hotplug of

@@ -6,9 +6,19 @@ include(FetchContent)
 # (Win32 files, winmm, spooler, winscard, Media Foundation). No driver is
 # installed or replaced. Generic USB (libusb) is opt-in and only reaches
 # devices already bound to WinUSB.
-if(ANDROID)
+if(ANDROID OR APPLE)
   # This engine uses no JSON files; avoid an accidental host JSON library.
   set(WITH_JSON_DISABLED ON CACHE BOOL "" FORCE)
+endif()
+if(APPLE)
+  set(WITH_CAIRO OFF CACHE BOOL "" FORCE)
+  set(WITH_MACAUDIO OFF CACHE BOOL "" FORCE)
+  set(WITH_IOSAUDIO OFF CACHE BOOL "" FORCE)
+  set(WITH_APPLE_VIDEOTOOLBOX OFF CACHE BOOL "" FORCE)
+  set(WITH_CLIENT_MAC OFF CACHE BOOL "" FORCE)
+  set(WITH_GSSAPI_HEIMDAL OFF CACHE BOOL "" FORCE)
+  set(WITH_INTERNAL_MD4 ON CACHE BOOL "" FORCE)
+  set(WITH_INTERNAL_RC4 ON CACHE BOOL "" FORCE)
 endif()
 if(WIN32)
   set(_windows_default ON)
@@ -152,6 +162,30 @@ target_include_directories(atermius_rdp PRIVATE
   ${freerdp_SOURCE_DIR}/include ${freerdp_BINARY_DIR}/include
   ${freerdp_SOURCE_DIR}/winpr/include ${freerdp_BINARY_DIR}/winpr/include)
 set_target_properties(atermius_rdp PROPERTIES C_STANDARD 11)
+if(ANDROID)
+  # One self-contained engine per ABI (android/build_engine.sh): FreeRDP, WinPR
+  # and OpenSSL are linked statically; android/exports.map exports only the
+  # engine ABI plus WinPR's JNI_OnLoad. Only Android system libraries stay
+  # dynamic. 16 KB page alignment for Android 15+.
+  set(_exports "${CMAKE_CURRENT_SOURCE_DIR}/android/exports.map")
+  target_link_libraries(atermius_rdp PRIVATE log)
+  target_link_options(atermius_rdp PRIVATE "-Wl,--version-script=${_exports}"
+    -Wl,-u,JNI_OnLoad -Wl,-z,max-page-size=16384 -Wl,--no-undefined
+    -Wl,--thinlto-jobs=2 -Wl,--threads=2)
+  set_target_properties(atermius_rdp PROPERTIES LINK_DEPENDS "${_exports}")
+elseif(APPLE)
+  # Self-contained Apple engine (apple/build_engine.sh): FreeRDP, WinPR and
+  # OpenSSL are linked statically; apple/exports.txt hides all OpenSSL/FreeRDP
+  # symbols so they never collide with Flutter/Firebase BoringSSL.
+  set(_exports "${CMAKE_CURRENT_SOURCE_DIR}/apple/exports.txt")
+  find_package(ZLIB REQUIRED)
+  target_link_libraries(atermius_rdp PRIVATE ZLIB::ZLIB "-framework CoreFoundation" "-framework Foundation")
+  target_link_options(atermius_rdp PRIVATE "-Wl,-exported_symbols_list,${_exports}" -Wl,-dead_strip)
+  set_target_properties(atermius_rdp PROPERTIES
+    MACOSX_RPATH ON
+    INSTALL_NAME_DIR "@rpath"
+    LINK_DEPENDS "${_exports}")
+endif()
 if(ATERMIUS_RDP_USB AND WIN32)
   add_custom_command(TARGET atermius_rdp POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ATERMIUS_LIBUSB_DLL}" "$<TARGET_FILE_DIR:atermius_rdp>")
