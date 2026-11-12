@@ -1,6 +1,6 @@
 #requires -Version 7.2
 <#
-Daily Windows x64 release (CI, windows-2022 runner, pwsh).
+Daily and published-release Windows x64 package (CI, windows-2022 runner, pwsh).
 
 Follows docs/INSTALLATION.en.md: vcpkg openssl/zlib (x64-windows-static-md),
 integration/native/build_rdp_windows.ps1 (pinned FreeRDP 3.33.0, VS 2022
@@ -147,7 +147,9 @@ $files | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $Meta 'bu
 $Info.engine_sha256 = $EngineSha
 $Info | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $Meta 'windows.json') -Encoding utf8NoBOM
 $version = ((Get-Content (Join-Path $App 'pubspec.yaml') | Where-Object { $_ -match '^version:\s*([0-9][0-9.]*)' } | Select-Object -First 1) -replace '^version:\s*([0-9][0-9.]*).*$', '$1')
-$name = "atermius-desktop-windows-x64-$version-$($Tag.Substring(6)).zip"
+# Daily tags lose their "daily-" prefix (as ${TAG#daily-} on Linux/macOS); release tags stay whole.
+$Suffix = if ($Tag.StartsWith('daily-')) { $Tag.Substring(6) } else { $Tag }
+$name = "atermius-desktop-windows-x64-$version-$Suffix.zip"
 & python -I (Join-Path $Tools 'release_tool.py') archive --src $Stage --out (Join-Path $Out $name) --prefix atermius-windows-x64
 & python -I (Join-Path $Tools 'release_tool.py') evidence --platform windows-x64 --out-dir $Out --artifact $name `
     --meta "version_name=$version" --meta 'entry_point=lib/main.dart' --meta "build_workers=$Workers" `

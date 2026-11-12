@@ -47,6 +47,44 @@ Inspect: `git fetch origin 'refs/atermius-ci/*:refs/atermius-ci/*'` then
 Force a rebuild at the next checkpoint: delete the `baseline` ref. Old `quota/*` refs may be deleted
 after a few days (only today's date is read).
 
+## Release builds (published GitHub Releases)
+
+Publishing a GitHub Release (or pre-release) whose tag is not `daily-*` attaches the Windows ZIP
+(with `atermius_rdp.dll`), Linux tar.gz, macOS ad-hoc signed ZIP (with `libatermius_rdp.dylib`),
+the engine licenses inside them, `evidence-*.json` and `SHA256SUMS` to **that** release. Manual
+releases are built immediately: they neither check nor consume the daily quota, and the
+once-a-day cron is unaffected.
+
+| Workflow | Runs | Permissions |
+| --- | --- | --- |
+| `release-trigger.yml` | `release: published`; skips `daily-*`; no checkout; validates tag/id, then `gh workflow run release-build.yml --ref main` | `actions: write` |
+| `release-build.yml` `prepare` | main only; `release_build.py prepare` | `contents: read` |
+| `release-build.yml` `build` | the daily `build` matrix steps unchanged (`max-parallel: 2`) | `contents: read`, no persisted credentials |
+| `release-build.yml` `publish` | `release_build.py publish` (REST API, no git push) | `contents: write` |
+
+Trust: a `release` event runs the workflow file **of the tagged commit**, which may be unreviewed
+(any writer can tag any commit, including a commit fetched from a fork's pull request: forks share
+the object store). That workflow gets no checkout and no secrets and can only dispatch the
+main-branch definition. `prepare` (main definition) treats the tag and release id as untrusted
+strings (regex-checked, passed through env, never interpolated into scripts), requires a published
+non-draft release whose id matches, peels the tag (annotated or lightweight) to **one** commit, and
+refuses unless that commit is an ancestor of `main` and carries the same `recipe/` and
+`release_tool.py` as the running workflow; every later job uses only that commit id. Forks cannot
+dispatch upstream workflows; their own release events run in the fork.
+
+Publication targets the release **id** from `prepare`: before and after uploading, the id must still
+own the tag, the release must be published, and the tag must still resolve to the built commit.
+Existing assets: identical name+size+SHA-256 digest ⇒ kept; same name in state `open` (interrupted
+upload) ⇒ deleted and re-uploaded; same name with other content ⇒ refused before any change; other
+names are never touched. `SHA256SUMS` is uploaded last; when it and every `evidence-<platform>.json`
+are attached, a new dispatch skips as `already-published`. Resume with **Re-run failed jobs**:
+successful platforms and their packages are reused (artifact names carry no attempt number). A full
+re-run or new dispatch rebuilds, and its bytes may differ from assets already attached.
+
+Manual start: Actions → Release build → Run workflow on `main` with the tag (needed for tags at
+commits that predate `release-trigger.yml`). GitHub's "immutable releases" setting must stay off.
+The Android repository additionally allocates its versionCode here; desktop builds have none.
+
 ## Inputs
 
 `inputs.txt` (read from the commit being considered) selects product and packaging files; the
@@ -93,6 +131,7 @@ checkpoint rebuilds (the extra release can be deleted by hand).
 ```sh
 python3 -I .github/daily-build/tests/test_daily_gate.py -v     # real git remotes, races, re-runs, UTC days
 python3 -I .github/daily-build/tests/test_release_tool.py -v   # packaging/evidence + policy lint
+python3 -I .github/daily-build/tests/test_release_build.py -v  # release prepare/publish, shared allocator, workflow policy
 python3 -I .github/daily-build/tests/lint_workflows.py         # pin/permission/guard policy (actionlint still primary)
 actionlint -shellcheck= .github/workflows/*.yml
 ```

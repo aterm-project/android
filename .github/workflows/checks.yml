@@ -17,6 +17,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: python3 -I .github/daily-build/tests/test_release_tool.py
+      - run: python3 -I .github/daily-build/tests/test_release_build.py
       - run: bash tools/install_flutter_linux.sh
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/client
