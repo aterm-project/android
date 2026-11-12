@@ -230,7 +230,9 @@ class _TerminalKeybarState extends State<TerminalKeybar>
   _ModifierInputHandler? _handler;
   TerminalKeybarPreferences? _preferences;
   bool get _visible =>
-      kIsWeb || defaultTargetPlatform != TargetPlatform.windows;
+      kIsWeb ||
+      (defaultTargetPlatform != TargetPlatform.windows &&
+          defaultTargetPlatform != TargetPlatform.macOS);
   _Latch _ctrl = _Latch.off;
   _Latch _alt = _Latch.off;
   _Latch _shift = _Latch.off;

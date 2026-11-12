@@ -30,6 +30,7 @@ class HomeAddSharingRow extends StatelessWidget {
     required this.onLaunchShell,
     required this.onSerialConsole,
     required this.sharing,
+    this.onQuickImportTermius,
     this.canAddHosts = true,
     this.enabled = true,
     this.shellSupportedOverride,
@@ -45,6 +46,7 @@ class HomeAddSharingRow extends StatelessWidget {
   /// Receives a validated serial request; callers pass it to their existing
   /// quick-connect route (`console COMn -b baud`).
   final FutureOr<void> Function(QuickConnectRequest request) onSerialConsole;
+  final FutureOr<void> Function()? onQuickImportTermius;
   final Widget sharing;
 
   /// False for read-only Vaults: Host entries stay visible but disabled.
@@ -62,9 +64,28 @@ class HomeAddSharingRow extends StatelessWidget {
           (defaultTargetPlatform == TargetPlatform.windows ||
               defaultTargetPlatform == TargetPlatform.macOS));
 
+  static String _quickImportLabel(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    return switch (lang) {
+      'zh' => '一键导入 Termius',
+      'ja' => 'Termius 一括取込',
+      'ru' => 'Импорт Termius в 1 клик',
+      _ => 'One-click Termius Import',
+    };
+  }
+
   List<WorkspaceAction> _actions(BuildContext context) {
     final l10n = context.l10n;
+    final quickTermius = onQuickImportTermius;
     return [
+      if (quickTermius != null)
+        WorkspaceAction(
+          '${idPrefix}_home_add_termius_one_click',
+          _quickImportLabel(context),
+          Icons.bolt_rounded,
+          quickTermius,
+          enabled: enabled && canAddHosts,
+        ),
       for (final protocol in const [
         HostProtocol.ssh,
         HostProtocol.telnet,
@@ -167,6 +188,35 @@ class HomeAddSharingRow extends StatelessWidget {
         ),
       ),
     );
+    final quickTermius = onQuickImportTermius;
+    final quickButton = quickTermius == null
+        ? null
+        : SizedBox(
+            height: 40,
+            child: OutlinedButton.icon(
+              key: ValueKey('${idPrefix}_home_one_click_termius'),
+              onPressed: enabled && canAddHosts ? () => quickTermius() : null,
+              icon: const Icon(Icons.bolt_rounded, size: 18),
+              label: Text(
+                _quickImportLabel(context),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          );
+    final leftCluster = quickButton == null
+        ? add
+        : Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [add, quickButton],
+          );
     // spaceBetween keeps Add on the left and sharing on the right while both
     // fit; on narrow screens the sharing cluster wraps to its own line.
     return SizedBox(
@@ -177,7 +227,7 @@ class HomeAddSharingRow extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 12,
         runSpacing: 8,
-        children: [add, sharing],
+        children: [leftCluster, sharing],
       ),
     );
   }

@@ -232,10 +232,17 @@ class TermiusOpenSshBundleImporter {
       for (final path in archive.rejectedPaths)
         TermiusIssue(TermiusIssueCode.bundleEntryRejected, detail: _short(path)),
     ];
-    final configs = archive.files.keys
+    var configs = archive.files.keys
         .where((path) => path == 'config' || path.endsWith('/config'))
-        .toList()
-      ..sort((a, b) => '/'.allMatches(a).length.compareTo('/'.allMatches(b).length));
+        .toList();
+    if (configs.isEmpty) {
+      configs = archive.files.keys
+          .where((path) => path == 'ssh_config' || path.endsWith('/ssh_config'))
+          .toList();
+    }
+    configs.sort(
+      (a, b) => '/'.allMatches(a).length.compareTo('/'.allMatches(b).length),
+    );
     if (configs.isEmpty) {
       return _failure(TermiusIssueCode.bundleConfigMissing, extra: rejected);
     }
@@ -384,6 +391,15 @@ class TermiusZip {
     return parts.isEmpty ? null : parts.join('/');
   }
 
+  static bool _isMacosArchiveMetadata(String normalizedPath) {
+    if (normalizedPath.startsWith('__MACOSX/')) return true;
+    final slash = normalizedPath.lastIndexOf('/');
+    final base = slash >= 0
+        ? normalizedPath.substring(slash + 1)
+        : normalizedPath;
+    return base == '.DS_Store' || base.startsWith('._');
+  }
+
   static Uint8List encode(List<TermiusZipEntry> entries) {
     final out = BytesBuilder(copy: false);
     final central = BytesBuilder(copy: false);
@@ -518,6 +534,11 @@ class TermiusZip {
       if (name.endsWith('/')) continue; // directory
       final unixType = madeBy == 3 ? (external >> 16) & 0xF000 : 0x8000;
       final path = normalizeEntryPath(name);
+      // Silently skip benign macOS Finder archive metadata (__MACOSX, .DS_Store,
+      // and AppleDouble `._*` resource-fork sidecars).
+      if (path != null && _isMacosArchiveMetadata(path)) {
+        continue;
+      }
       if (path == null ||
           (flags & 0x1) != 0 ||
           (method != 0 && method != 8) ||

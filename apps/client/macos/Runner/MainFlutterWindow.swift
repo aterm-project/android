@@ -127,6 +127,7 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
   private var fullscreenChannel: FlutterMethodChannel?
   private var chromeChannel: FlutterMethodChannel?
   private var geometryChannel: FlutterMethodChannel?
+  private var filePanelChannel: FlutterMethodChannel?
   private var windowObservers: [NSObjectProtocol] = []
   private var pendingFullscreen: FlutterResult?
   private var fullscreenEpoch = 0
@@ -190,6 +191,7 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     self.setFrame(windowFrame, display: true)
     self.savedNormalFrame = windowFrame
     self.delegate = self
+    self.configureUnifiedTitlebar()
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 
@@ -197,9 +199,38 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     setupFullscreenChannel(messenger: messenger)
     setupWindowChromeChannel(messenger: messenger)
     setupWindowGeometryChannel(messenger: messenger)
+    setupFilePanelChannel(messenger: messenger)
     registerWindowObservers()
 
     super.awakeFromNib()
+  }
+
+  private func configureUnifiedTitlebar() {
+    guard !isCoveringMonitor else { return }
+    styleMask.insert(.fullSizeContentView)
+    titleVisibility = .hidden
+    titlebarAppearsTransparent = true
+    isMovableByWindowBackground = false
+    if #available(macOS 11.0, *) {
+      toolbarStyle = .unifiedCompact
+    }
+  }
+
+  private func trafficLightLeadingInset() -> Double {
+    if styleMask.contains(.fullScreen) || isCoveringMonitor || !styleMask.contains(.titled) {
+      return 0.0
+    }
+    let buttons: [NSWindow.ButtonType] = [.closeButton, .miniaturizeButton, .zoomButton]
+    var maxX: CGFloat = 0
+    for type in buttons {
+      if let button = standardWindowButton(type), !button.isHidden {
+        maxX = max(maxX, button.frame.maxX)
+      }
+    }
+    if maxX > 0 {
+      return Double(ceil(maxX + 12.0))
+    }
+    return 76.0
   }
 
   // MARK: - Fullscreen (`atermius/fullscreen`)
@@ -259,12 +290,15 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
   // MARK: - Window Chrome & Close Guard (`atermius/window_chrome`)
 
   private func currentChromeState() -> [String: Any] {
+    let fullscreenOrCover = styleMask.contains(.fullScreen) || isCoveringMonitor
     return [
       "enabled": chromeEnabled,
       "customFrame": false,
       "maximized": isZoomed || styleMask.contains(.fullScreen),
       "minimized": isMiniaturized,
       "focused": isKeyWindow,
+      "captionHeight": fullscreenOrCover ? 36.0 : 38.0,
+      "leadingInset": trafficLightLeadingInset(),
     ]
   }
 
@@ -418,6 +452,7 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
       styleMask = mask
       preCoverStyleMask = nil
     }
+    configureUnifiedTitlebar()
     if let restore = preCoverFrame {
       setFrame(restore, display: true)
       savedNormalFrame = restore
@@ -425,6 +460,50 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     }
     emitChromeState()
     return true
+  }
+
+  // MARK: - Native File Panel (`atermius/file_panel`)
+
+  private func setupFilePanelChannel(messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "atermius/file_panel",
+      binaryMessenger: messenger
+    )
+    filePanelChannel = channel
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(nil)
+        return
+      }
+      guard call.method == "openFile" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      let args = call.arguments as? [String: Any]
+      let showsHidden = (args?["showsHiddenFiles"] as? Bool) ?? false
+      let initialDir = args?["initialDirectory"] as? String
+
+      let panel = NSOpenPanel()
+      panel.canChooseFiles = true
+      panel.canChooseDirectories = false
+      panel.allowsMultipleSelection = false
+      panel.resolvesAliases = true
+      panel.showsHiddenFiles = showsHidden
+      if let dirPath = initialDir, !dirPath.isEmpty {
+        var isDir: ObjCBool = false
+        if FileManager.default.fileExists(atPath: dirPath, isDirectory: &isDir), isDir.boolValue {
+          panel.directoryURL = URL(fileURLWithPath: dirPath, isDirectory: true)
+        }
+      }
+      if self.isVisible && !self.isMiniaturized {
+        panel.beginSheetModal(for: self) { response in
+          result(response == .OK ? panel.url?.path : nil)
+        }
+      } else {
+        let response = panel.runModal()
+        result(response == .OK ? panel.url?.path : nil)
+      }
+    }
   }
 
   private func setupWindowGeometryChannel(messenger: FlutterBinaryMessenger) {
@@ -551,5 +630,6 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     fullscreenChannel?.setMethodCallHandler(nil)
     chromeChannel?.setMethodCallHandler(nil)
     geometryChannel?.setMethodCallHandler(nil)
+    filePanelChannel?.setMethodCallHandler(nil)
   }
 }

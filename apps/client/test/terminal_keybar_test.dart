@@ -65,29 +65,37 @@ void main() {
   });
   tearDown(() => TerminalKeybarPreferences.debugInstance = null);
 
-  testWidgets('Windows hides the keybar without intercepting physical input', (
-    tester,
-  ) async {
-    final output = <String>[];
-    final terminal = Terminal()..onOutput = output.add;
-    final original = terminal.inputHandler;
-    final focus = FocusNode();
-    await tester.pumpWidget(_harness(terminal, focus));
-    await tester.pump();
-    expect(_find('Ctrl'), findsNothing);
-    expect(_find('Alt'), findsNothing);
-    expect(tester.getSize(find.byType(TerminalKeybar)).height, 0);
-    expect(terminal.inputHandler, same(original));
-    tester.testTextInput.updateEditingValue(const TextEditingValue(text: '你'));
-    await tester.pump();
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-    expect(output, ['你', '\x03']);
-    await tester.pumpWidget(const SizedBox.shrink());
-    expect(terminal.inputHandler, same(original));
-    focus.dispose();
-  }, variant: const TargetPlatformVariant({TargetPlatform.windows}));
+  testWidgets(
+    'Windows and macOS hide the keybar without intercepting physical input',
+    (tester) async {
+      final output = <String>[];
+      final terminal = Terminal()..onOutput = output.add;
+      final original = terminal.inputHandler;
+      final focus = FocusNode();
+      await tester.pumpWidget(_harness(terminal, focus));
+      await tester.pump();
+      expect(_find('Ctrl'), findsNothing);
+      expect(_find('Alt'), findsNothing);
+      expect(_find('More'), findsNothing);
+      expect(tester.getSize(find.byType(TerminalKeybar)).height, 0);
+      expect(terminal.inputHandler, same(original));
+      tester.testTextInput.updateEditingValue(
+        const TextEditingValue(text: '你'),
+      );
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      expect(output, ['你', '\x03']);
+      await tester.pumpWidget(const SizedBox.shrink());
+      expect(terminal.inputHandler, same(original));
+      focus.dispose();
+    },
+    variant: const TargetPlatformVariant({
+      TargetPlatform.windows,
+      TargetPlatform.macOS,
+    }),
+  );
 
   testWidgets(
     'single tap arms Ctrl for the next IME key only and keeps Unicode intact',

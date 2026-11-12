@@ -483,10 +483,7 @@ class TermiusCsvImporter {
     final unknownColumns = <int, String>{};
     for (var index = 0; index < headers.length; index++) {
       final header = headers[index];
-      final known = TermiusCsvColumn.known.firstWhere(
-        (column) => column.toLowerCase() == header.toLowerCase(),
-        orElse: () => '',
-      );
+      final known = _resolveKnownCsvHeader(header);
       if (known.isEmpty) {
         if (header.isEmpty) {
           unknownColumns[index] = '#${index + 1}';
@@ -593,6 +590,22 @@ class TermiusCsvImporter {
   static String _normalizeHeader(String header) =>
       header.replaceAll('﻿', '').trim();
 
+  static String _resolveKnownCsvHeader(String header) {
+    final lower = header.toLowerCase();
+    for (final column in TermiusCsvColumn.known) {
+      if (column.toLowerCase() == lower) return column;
+    }
+    return switch (lower) {
+      'address' || 'hostname' || 'host' || 'ip' => TermiusCsvColumn.hostname,
+      'name' || 'title' => TermiusCsvColumn.label,
+      'group' || 'folder' => TermiusCsvColumn.groups,
+      'user' => TermiusCsvColumn.username,
+      'tag' => TermiusCsvColumn.tags,
+      'ssh key' || 'private_key' || 'privatekey' => TermiusCsvColumn.sshKey,
+      _ => '',
+    };
+  }
+
   static TermiusImportRow _parseRow(
     TermiusCsvRecord record, {
     required int row,
@@ -640,10 +653,38 @@ class TermiusCsvImporter {
       }
     }
 
-    // Address.
+    // Address (supports optional `user@host:port` / `host:port` shorthand when
+    // the separate Username or Port cell was left empty).
     var address = (cell(TermiusCsvColumn.hostname) ?? '').trim();
-    if (address.startsWith('[') && address.endsWith(']') && address.length > 2) {
-      address = address.substring(1, address.length - 1);
+    String? inlineUser;
+    String? inlinePort;
+    if (address.contains('@') && !address.contains(' ')) {
+      final at = address.lastIndexOf('@');
+      if (at > 0 && at + 1 < address.length) {
+        inlineUser = address.substring(0, at);
+        address = address.substring(at + 1);
+      }
+    }
+    if (address.startsWith('[')) {
+      final close = address.indexOf(']');
+      if (close > 1) {
+        final rest = address.substring(close + 1);
+        if (rest.startsWith(':') && rest.length > 1) {
+          inlinePort = rest.substring(1);
+          address = address.substring(1, close);
+        } else if (rest.isEmpty) {
+          address = address.substring(1, close);
+        }
+      }
+    } else {
+      final firstColon = address.indexOf(':');
+      final lastColon = address.lastIndexOf(':');
+      if (firstColon > 0 &&
+          firstColon == lastColon &&
+          RegExp(r'^[0-9]{1,5}$').hasMatch(address.substring(firstColon + 1))) {
+        inlinePort = address.substring(firstColon + 1);
+        address = address.substring(0, firstColon);
+      }
     }
     if (address.isEmpty) {
       issue(TermiusIssueCode.missingAddress, blocking: true);
@@ -688,7 +729,8 @@ class TermiusCsvImporter {
     }
 
     // Port.
-    final portText = (cell(TermiusCsvColumn.port) ?? '').trim();
+    final rawPortCell = (cell(TermiusCsvColumn.port) ?? '').trim();
+    final portText = rawPortCell.isEmpty ? (inlinePort ?? '') : rawPortCell;
     int? port;
     if (portText.isEmpty) {
       port = protocol?.defaultPort;
@@ -704,7 +746,8 @@ class TermiusCsvImporter {
     }
 
     // Username. Trimmed: OpenSSH and Termius never use surrounding spaces.
-    final username = (cell(TermiusCsvColumn.username) ?? '').trim();
+    final rawUserCell = (cell(TermiusCsvColumn.username) ?? '').trim();
+    final username = rawUserCell.isEmpty ? (inlineUser ?? '') : rawUserCell;
     if (username.isNotEmpty &&
         (_hasControl(username) ||
             username.contains(RegExp(r'\s')) ||
@@ -927,6 +970,38 @@ class TermiusImportPlan {
 class TermiusImportPlanner {
   const TermiusImportPlanner._();
 
+  static bool _isMissingUsernameIssue(TermiusIssue issue) =>
+      issue.blocking &&
+      (issue.code == TermiusIssueCode.missingUsername ||
+          (issue.code == TermiusIssueCode.sshParserFinding &&
+              issue.detail?.toLowerCase() == 'user'));
+
+  /// True when at least one SSH row in [document] has an empty username and
+  /// would be unblocked by supplying a valid `fallbackUsername`.
+  static bool hasRowsMissingUsername(TermiusImportDocument document) =>
+      !document.blocksWholeFile &&
+      document.rows.any(
+        (row) =>
+            row.protocol == HostProtocol.ssh &&
+            row.username.isEmpty &&
+            row.issues.any(_isMissingUsernameIssue) &&
+            row.issues
+                .where((issue) => issue.blocking)
+                .every(_isMissingUsernameIssue),
+      );
+
+  static String? _normalizeFallbackUsername(String? raw) {
+    final trimmed = raw?.trim();
+    if (trimmed == null ||
+        trimmed.isEmpty ||
+        _hasControl(trimmed) ||
+        trimmed.contains(RegExp(r'\s')) ||
+        utf8.encode(trimmed).length > _maxUsernameBytes) {
+      return null;
+    }
+    return trimmed;
+  }
+
   static TermiusImportPlan plan(
     TermiusImportDocument document,
     TermiusCatalog catalog, {
@@ -934,8 +1009,10 @@ class TermiusImportPlanner {
     Set<int> excludedRows = const {},
     String Function()? newId,
     TermiusCertificateBridge? certificates,
+    String? fallbackUsername,
   }) {
     String id() => newId?.call() ?? _uuid.v4();
+    final defaultSshUser = _normalizeFallbackUsername(fallbackUsername);
 
     final groupsByParent = <String?, Map<String, GroupRecord>>{};
     for (final group in catalog.groups) {
@@ -985,7 +1062,29 @@ class TermiusImportPlanner {
 
     for (var index = 0; index < document.rows.length; index++) {
       final source = document.rows[index];
-      final issues = <TermiusIssue>[...source.issues];
+      final useFallbackUser =
+          defaultSshUser != null &&
+          source.protocol == HostProtocol.ssh &&
+          source.username.isEmpty &&
+          source.issues.any(_isMissingUsernameIssue);
+      final effectiveUsername = useFallbackUser
+          ? defaultSshUser
+          : source.username;
+      final issues = <TermiusIssue>[
+        for (final issue in source.issues)
+          if (useFallbackUser && _isMissingUsernameIssue(issue))
+            TermiusIssue(
+              issue.code,
+              severity: TermiusIssueSeverity.warning,
+              line: issue.line,
+              row: issue.row,
+              detail: issue.detail,
+              count: issue.count,
+              messageBuilder: issue.messageBuilder,
+            )
+          else
+            issue,
+      ];
       void add(TermiusIssueCode code, {bool blocking = false, int? row, String? detail}) =>
           issues.add(
             TermiusIssue(
@@ -999,7 +1098,7 @@ class TermiusImportPlanner {
             ),
           );
 
-      if (document.blocksWholeFile || source.blocked) {
+      if (document.blocksWholeFile || issues.any((issue) => issue.blocking)) {
         planned.add(
           TermiusPlannedRow(
             source: source,
@@ -1025,7 +1124,7 @@ class TermiusImportPlanner {
       final nameKey = source.label.trim().toLowerCase();
       final identity = jsonEncode([
         nameKey,
-        endpointKey(protocol, source.address, port, source.username),
+        endpointKey(protocol, source.address, port, effectiveUsername),
       ]);
       final firstRow = seenInFile[identity];
       if (firstRow != null) {
@@ -1066,7 +1165,7 @@ class TermiusImportPlanner {
           CredentialRecord(
             id: id(),
             name: source.label,
-            username: source.username,
+            username: effectiveUsername,
             kind: AuthKind.privateKey,
             privateKey: source.privateKey,
           ),
@@ -1089,7 +1188,7 @@ class TermiusImportPlanner {
         address: source.address,
         port: port,
         protocol: protocol,
-        username: source.username,
+        username: effectiveUsername,
         groupId: source.groupPath.isEmpty ? null : resolveGroup(source.groupPath),
         login: login,
         credentialId: credential?.id,

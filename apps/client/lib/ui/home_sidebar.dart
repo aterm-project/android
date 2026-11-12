@@ -116,14 +116,16 @@ class HomeSidebar extends StatelessWidget {
         key: const ValueKey('home_sidebar'),
         width: widthFor(mode),
         decoration: BoxDecoration(
-          color: context.palette.surface,
-          border: Border(right: BorderSide(color: context.palette.line)),
+          color: context.palette.rail,
+          border: Border(
+            right: BorderSide(color: context.palette.line.withValues(alpha: .8)),
+          ),
         ),
         child: Column(
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 children: [
                   for (final destination in destinations)
                     _HomeSidebarItem(
@@ -226,20 +228,26 @@ class _HomeSidebarItem extends StatelessWidget {
     final tile = Padding(
       padding: EdgeInsets.symmetric(
         horizontal: layout == HomeSidebarLayout.labelled ? 8 : 4,
-        vertical: 1,
+        vertical: 1.5,
       ),
       child: Material(
         color: selected
-            ? context.palette.accentText.withValues(alpha: .12)
+            ? (context.palette.isDark
+                  ? context.palette.accent.withValues(alpha: .22)
+                  : context.palette.accentContainer.withValues(alpha: .75))
             : Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: selected
-              ? BorderSide(color: context.palette.accentText.withValues(alpha: .22))
+              ? BorderSide(
+                  color: context.palette.accentText.withValues(alpha: .28),
+                )
               : BorderSide.none,
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          hoverColor: context.palette.text.withValues(alpha: .06),
           onTap: onTap,
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: height),

@@ -54,11 +54,11 @@ void main() {
     }
   });
 
-  test('app theme uses the deep-blue emphasis with legible on-colors', () {
+  test('app theme uses the emerald-teal emphasis with legible on-colors', () {
     final scheme = buildAppTheme().colorScheme;
-    expect(scheme.primary.toARGB32(), 0xFF315BC5);
-    expect(scheme.secondary.toARGB32(), 0xFF8DAEF4);
-    expect(AppColors.accentText.toARGB32(), 0xFF8DAEF4);
+    expect(scheme.primary.toARGB32(), 0xFF0F7B6C);
+    expect(scheme.secondary.toARGB32(), 0xFF4FD8C4);
+    expect(AppColors.accentText.toARGB32(), 0xFF4FD8C4);
     double contrast(Color a, Color b) {
       final la = a.computeLuminance(), lb = b.computeLuminance();
       return (math.max(la, lb) + .05) / (math.min(la, lb) + .05);
