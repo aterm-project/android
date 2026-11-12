@@ -108,6 +108,14 @@ class GitEnv(tdg.Env):
         run(["git", "clone", "--quiet", "--no-tags", self.url, str(path)], self.root)
         return path
 
+    def partial_clone(self) -> Path:
+        """Like the prepare job's checkout: full history, blobs fetched on demand."""
+        run(["git", "config", "uploadpack.allowFilter", "true"], self.origin)
+        self.clones += 1
+        path = self.root / f"partial{self.clones}"
+        run(["git", "clone", "--quiet", "--no-tags", "--filter=blob:none", self.url, str(path)], self.root)
+        return path
+
     def tag(self, name: str, sha: str, annotated: bool = True) -> None:
         args = ["git", "tag", "-f"] + (["-a", "-m", f"release {name}"] if annotated else []) + [name, sha]
         run(args, self.author)
@@ -316,6 +324,15 @@ class PrepareTests(unittest.TestCase):
         out = rb.prepare(prepare_args(self.env.full_clone(), "v11.0.0"), self.api)
         self.assertEqual((out["build"], out["reason"]), (False, "already-published"))
         self.assertEqual(self.env.remote_refs(), {})
+
+    def test_blobless_full_history_checkout_allocates_and_pushes(self):
+        old = self.env.head()
+        self.env.commit({"apps/client/lib/main.dart": "// later\n"}, "later")
+        self.publish_release(14, "v14.0.0", sha=old)
+        workspace = self.env.partial_clone()
+        out = rb.prepare(prepare_args(workspace, "v14.0.0", "14"), self.api)
+        self.assertEqual((out["source_sha"], out["version_code"]), (old, 2026111001))
+        self.assertIn(f"{NS}/release/14", self.env.remote_refs())
 
     def test_desktop_prepare_needs_no_allocator_or_write(self):
         self.publish_release(12, "v12.0.0")
@@ -561,8 +578,8 @@ class WorkflowTests(unittest.TestCase):
              "must not take inputs"),
             ("release-build.yml", build, "on:\n  workflow_dispatch:\n", "on:\n  push: {}\n  workflow_dispatch:\n",
              "only by workflow_dispatch"),
-            ("release-build.yml", build, "    permissions:\n      contents: read\n",
-             "    permissions:\n      contents: write\n", "write permission"),
+            ("release-build.yml", build, "    permissions:\n      contents: read\n    env:\n",
+             "    permissions:\n      contents: write\n    env:\n", "write permission"),  # compile job
             ("release-build.yml", build, "      ATERMIUS_RELEASE_ID: ${{ needs.prepare.outputs.release_id }}\n",
              "      ATERMIUS_RELEASE_ID: ${{ inputs.release_id }}\n", "inputs may only reach"),
             ("release-build.yml", build, "          GH_TOKEN: ${{ github.token }}\n        run: |\n          python3",
