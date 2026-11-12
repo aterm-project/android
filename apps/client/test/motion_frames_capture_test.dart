@@ -144,7 +144,7 @@ class _HarnessState extends State<_Harness> {
               children: [
                 Container(
                   width: 72,
-                  color: const Color(0xFF0D141C),
+                  color: AppPalette.dark.rail,
                   child: Column(
                     children: [
                       for (final (id, icon) in [

@@ -4,31 +4,32 @@ import 'app_density.dart';
 import 'app_motion.dart';
 
 abstract final class AppColors {
-  static const background = Color(0xFF0A0F15);
-  static const surface = Color(0xFF111923);
-  static const surfaceRaised = Color(0xFF17222D);
-  static const surfaceSoft = Color(0xFF1C2935);
-  static const line = Color(0xFF263544);
-  static const text = Color(0xFFEAF0F6);
-  static const muted = Color(0xFF8D9BAB);
+  static const background = Color(0xFF0B0F10);
+  static const surface = Color(0xFF12191C);
+  static const surfaceRaised = Color(0xFF182226);
+  static const surfaceSoft = Color(0xFF1F2C31);
+  static const line = Color(0xFF28383E);
+  static const text = Color(0xFFECF3F2);
+  static const muted = Color(0xFF91A3A0);
 
-  /// Deep-blue app emphasis. `accent` fills large controls (filled buttons,
-  /// switches, selection borders) and always pairs with [onAccent]; blue text
-  /// and small glyphs on dark surfaces use [accentText] for legible contrast.
-  /// Terminal text colors are owned by `terminal_color_theme.dart` and are
-  /// deliberately not derived from these values.
-  static const accent = Color(0xFF315BC5);
+  /// Obsidian-Emerald app emphasis. `accent` fills large controls (filled
+  /// buttons, switches, selection borders) and always pairs with [onAccent];
+  /// emerald-teal text and small glyphs on dark surfaces use [accentText] for
+  /// legible WCAG AA+ contrast. Terminal text colors are owned by
+  /// `terminal_color_theme.dart` and are deliberately not derived from these
+  /// values.
+  static const accent = Color(0xFF0F7B6C);
   static const onAccent = Color(0xFFFFFFFF);
-  static const accentContainer = Color(0xFF1D3466);
-  static const onAccentContainer = Color(0xFFDCE6FF);
-  static const accentText = Color(0xFF8DAEF4);
-  static const onAccentText = Color(0xFF0D1C40);
-  static const accentSoft = Color(0xFFB7CBF8);
-  // Compatibility names for existing surfaces share the blue emphasis.
+  static const accentContainer = Color(0xFF133B36);
+  static const onAccentContainer = Color(0xFFD2F7EE);
+  static const accentText = Color(0xFF4FD8C4);
+  static const onAccentText = Color(0xFF062924);
+  static const accentSoft = Color(0xFF8BE8D9);
+  // Compatibility names for existing surfaces share the emerald emphasis.
   static const lime = accentText;
   static const teal = accentSoft;
-  static const orange = Color(0xFFFFB865);
-  static const red = Color(0xFFFF7676);
+  static const orange = Color(0xFFFFB55E);
+  static const red = Color(0xFFFF7379);
 }
 
 /// Context-scoped UI chrome palette.
@@ -122,11 +123,11 @@ class AppPalette extends ThemeExtension<AppPalette> {
     surface: AppColors.surface,
     surfaceRaised: AppColors.surfaceRaised,
     surfaceSoft: AppColors.surfaceSoft,
-    rail: Color(0xFF0D141C),
+    rail: Color(0xFF0E1416),
     line: AppColors.line,
     text: AppColors.text,
     muted: AppColors.muted,
-    hint: Color(0xFF687788),
+    hint: Color(0xFF677A77),
     accent: AppColors.accent,
     onAccent: AppColors.onAccent,
     accentContainer: AppColors.accentContainer,
@@ -134,49 +135,49 @@ class AppPalette extends ThemeExtension<AppPalette> {
     accentText: AppColors.accentText,
     onAccentText: AppColors.onAccentText,
     accentSoft: AppColors.accentSoft,
-    info: Color(0xFF8CC8FF),
-    hostBlue: Color(0xFF82A7FF),
+    info: Color(0xFF67CBFF),
+    hostBlue: Color(0xFF6AA9FF),
     orange: AppColors.orange,
     red: AppColors.red,
-    errorContainer: Color(0xFF51251F),
+    errorContainer: Color(0xFF4F2224),
     onErrorContainer: Color(0xFFFFFFFF),
-    warningContainer: Color(0xFF302719),
-    codeBackground: Color(0xFF0B1016),
-    codeText: Color(0xFFC3D4E2),
-    tooltipBackground: Color(0xFF2A3A4A),
+    warningContainer: Color(0xFF332919),
+    codeBackground: Color(0xFF0A0E0F),
+    codeText: Color(0xFFC9DCD9),
+    tooltipBackground: Color(0xFF1C272B),
     tooltipText: Color(0xFFFFFFFF),
   );
 
-  /// White canvas and cards, cool-gray separators, dark readable text and the
-  /// same blue app accent. Text-role colors meet WCAG AA (>= 4.5:1) on white.
+  /// White canvas and cards, cool porcelain separators, dark readable text and
+  /// the emerald-teal app accent. Text-role colors meet WCAG AA (>= 4.5:1).
   static const light = AppPalette(
     brightness: Brightness.light,
     background: Color(0xFFFFFFFF),
     surface: Color(0xFFFFFFFF),
-    surfaceRaised: Color(0xFFF4F6F9),
-    surfaceSoft: Color(0xFFE9EDF2),
-    rail: Color(0xFFF4F6F9),
-    line: Color(0xFFDCE2E9),
-    text: Color(0xFF17202B),
-    muted: Color(0xFF586575),
-    hint: Color(0xFF6B7787),
+    surfaceRaised: Color(0xFFF3F7F6),
+    surfaceSoft: Color(0xFFE6EFED),
+    rail: Color(0xFFF3F7F6),
+    line: Color(0xFFD6E2DF),
+    text: Color(0xFF14211F),
+    muted: Color(0xFF516360),
+    hint: Color(0xFF657875),
     accent: AppColors.accent,
     onAccent: AppColors.onAccent,
-    accentContainer: Color(0xFFDCE6FF),
-    onAccentContainer: Color(0xFF1D3466),
-    accentText: Color(0xFF2A51B5),
+    accentContainer: Color(0xFFD4F5EC),
+    onAccentContainer: Color(0xFF0A3D35),
+    accentText: Color(0xFF0C6B5E),
     onAccentText: Color(0xFFFFFFFF),
-    accentSoft: Color(0xFF3B5DB8),
-    info: Color(0xFF1B5FAA),
-    hostBlue: Color(0xFF4767C9),
-    orange: Color(0xFFA34E00),
-    red: Color(0xFFC0262D),
-    errorContainer: Color(0xFFFDE8E6),
-    onErrorContainer: Color(0xFF7A1A16),
+    accentSoft: Color(0xFF137A6B),
+    info: Color(0xFF0E6496),
+    hostBlue: Color(0xFF2864B8),
+    orange: Color(0xFF9E4B00),
+    red: Color(0xFFBE2331),
+    errorContainer: Color(0xFFFDE8EA),
+    onErrorContainer: Color(0xFF75151E),
     warningContainer: Color(0xFFFFF4E0),
-    codeBackground: Color(0xFFF4F6F9),
-    codeText: Color(0xFF243142),
-    tooltipBackground: Color(0xFF26313E),
+    codeBackground: Color(0xFFF3F7F6),
+    codeText: Color(0xFF1E302D),
+    tooltipBackground: Color(0xFF1A2524),
     tooltipText: Color(0xFFFFFFFF),
   );
 
@@ -238,21 +239,30 @@ extension AppPaletteContext on BuildContext {
 /// framebuffer overlays) keep their own families.
 List<String> appFontFallback(Locale? locale) => switch (locale?.languageCode) {
   'ja' => const [
+    'Hiragino Sans',
     'Yu Gothic UI',
     'Meiryo UI',
-    'Hiragino Sans',
     'Noto Sans CJK JP',
     'Noto Sans JP',
     'Microsoft YaHei UI',
   ],
   'zh' => const [
-    'Microsoft YaHei UI',
     'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei UI',
     'Noto Sans CJK SC',
     'Noto Sans SC',
     'Yu Gothic UI',
   ],
-  _ => const ['Segoe UI', 'Roboto', 'Noto Sans', 'Microsoft YaHei UI'],
+  _ => const [
+    '.AppleSystemUIFont',
+    'SF Pro Text',
+    'Segoe UI',
+    'Roboto',
+    'Noto Sans',
+    'PingFang SC',
+    'Microsoft YaHei UI',
+  ],
 };
 
 /// Builds the app theme. The default (no [brightness]) is the historic dark
@@ -309,7 +319,7 @@ ThemeData buildAppTheme({
             onSecondaryContainer: p.onAccentContainer,
             tertiary: p.accentSoft,
             onTertiary: p.onAccentText,
-            inversePrimary: const Color(0xFF8DAEF4),
+            inversePrimary: const Color(0xFF4FD8C4),
             surfaceTint: Colors.transparent,
             surface: p.surface,
             onSurface: p.text,
@@ -319,7 +329,7 @@ ThemeData buildAppTheme({
             surfaceContainer: p.surface,
             surfaceContainerHigh: p.surfaceRaised,
             surfaceContainerHighest: p.surfaceSoft,
-            outline: const Color(0xFF8A96A5),
+            outline: const Color(0xFF809490),
             outlineVariant: p.line,
             inverseSurface: p.tooltipBackground,
             onInverseSurface: p.tooltipText,
@@ -359,17 +369,43 @@ ThemeData buildAppTheme({
       style: TextButton.styleFrom(
         foregroundColor: p.accentText,
         padding: EdgeInsets.symmetric(horizontal: density.space5),
+        shape: RoundedRectangleBorder(borderRadius: radiusMd),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: p.accentText,
+        side: BorderSide(color: p.line),
         padding: EdgeInsets.symmetric(horizontal: density.space6),
+        shape: RoundedRectangleBorder(borderRadius: radiusMd),
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         padding: EdgeInsets.symmetric(horizontal: density.space6),
+        shape: RoundedRectangleBorder(borderRadius: radiusMd),
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        visualDensity: density.isCompact
+            ? VisualDensity.compact
+            : VisualDensity.standard,
+        side: WidgetStatePropertyAll(BorderSide(color: p.line)),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: radiusMd),
+        ),
+      ),
+    ),
+    scrollbarTheme: ScrollbarThemeData(
+      radius: const Radius.circular(999),
+      thickness: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.hovered) ? 7.0 : 5.0,
+      ),
+      thumbColor: WidgetStateProperty.resolveWith(
+        (states) => p.muted.withValues(
+          alpha: states.contains(WidgetState.hovered) ? .55 : .30,
+        ),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
@@ -473,7 +509,9 @@ ThemeData buildAppTheme({
     dialogTheme: DialogThemeData(
       backgroundColor: p.surface,
       surfaceTintColor: Colors.transparent,
+      elevation: 12,
       shape: RoundedRectangleBorder(
+        side: BorderSide(color: p.line),
         borderRadius: BorderRadius.circular(density.radiusDialog),
       ),
       insetPadding: EdgeInsets.symmetric(
@@ -482,6 +520,7 @@ ThemeData buildAppTheme({
       ),
       titleTextStyle: textTheme.titleLarge?.copyWith(
         color: p.text,
+        fontWeight: FontWeight.w600,
         fontFamilyFallback: fallback,
       ),
       actionsPadding: EdgeInsets.fromLTRB(
