@@ -18637,4 +18637,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get termiusLocalFailTooLarge =>
       'The local Termius data exceeds the import safety limits, so nothing was imported. Use a Termius CSV export instead.';
+
+  @override
+  String get termiusLocalReviewNeeded =>
+      'Some Termius hosts need attention before import (for example a missing username). Nothing was guessed or imported yet: review the findings below, enter a default username or exclude rows, then import.';
 }

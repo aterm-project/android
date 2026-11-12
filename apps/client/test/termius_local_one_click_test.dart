@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -337,6 +338,56 @@ Uint8List _hostRecord(int id, String label) => _encodeIndexedDbRecord({
 List<_Op> _hostsDbName() => [
   (_encodeGlobalDbNameKey('file__0', 'hosts'), Uint8List.fromList([5])),
 ];
+
+/// Real [TermiusTransferTargetBase] apply algorithm over an in-memory store
+/// whose write scope identity can be swapped (sign-out/in, Vault switch).
+class _ScopedBaseTarget extends TermiusTransferTargetBase {
+  Object scopeToken = Object();
+  final created = <String>[];
+
+  @override
+  bool get canWrite => true;
+
+  @override
+  String? get contextKey => 'same-vault-id';
+
+  @override
+  Object? get writeScope => scopeToken;
+
+  @override
+  Future<TermiusCatalog> loadCatalog() async =>
+      TermiusCatalog(hosts: const [], groups: const []);
+
+  @override
+  Future<String> createGroup(GroupRecord group, Object scope) async {
+    created.add('group:${group.name}');
+    return 'r1';
+  }
+
+  @override
+  Future<String> createHost(HostRecord host, Object scope) async {
+    created.add('host:${host.name}');
+    return 'r1';
+  }
+
+  @override
+  Future<String> createCredential(CredentialRecord credential, Object scope) async {
+    created.add('credential:${credential.id}');
+    return 'r1';
+  }
+
+  @override
+  Future<void> removeCreated(
+    RecordKind kind,
+    String id,
+    String revisionId,
+    Object scope,
+  ) async {}
+
+  @override
+  Future<bool> recordExists(RecordKind kind, String id, Object scope) async =>
+      false;
+}
 
 class _FakeTransferTarget implements TermiusTransferTarget {
   _FakeTransferTarget({this.hosts = const [], this.contextKey = 'fake-local'});
@@ -1196,6 +1247,215 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(ru.termiusLocalFailKeyRejected), findsOneWidget);
       expect(target.appliedPlans, isEmpty);
+    });
+  });
+
+  group('One-click acceptance: fencing, disposal, review, telnet, bounds', () {
+    final readyDoc = buildTermiusDocumentFromDecryptedTables({
+      'hosts': [
+        {'id': 1, 'label': 'web', 'address': '192.0.2.1', 'username': 'ops'},
+      ],
+    });
+
+    Widget app(Widget home, {Locale locale = const Locale('en')}) => MaterialApp(
+      locale: locale,
+      localizationsDelegates: AppLocalizationSetup.delegates,
+      supportedLocales: AppLocalizationSetup.locales,
+      theme: buildAppTheme(),
+      home: Scaffold(body: home),
+    );
+
+    testWidgets('A->B->A write scope swap with an unchanged Vault id aborts', (
+      tester,
+    ) async {
+      final target = _ScopedBaseTarget();
+      TermiusTransferOutcome? outcome;
+      await tester.pumpWidget(
+        app(
+          Builder(
+            builder: (context) => TextButton(
+              key: const ValueKey('go'),
+              onPressed: () async {
+                outcome = await runOneClickTermiusImport(
+                  context,
+                  target: target,
+                  loadLocalAppForTesting: () async {
+                    // Sign-out and back in: same Vault id, new write scope.
+                    target.scopeToken = Object();
+                    return (document: readyDoc, sourceLabel: 'Termius Desktop');
+                  },
+                );
+              },
+              child: const Text('go'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('go')));
+      await tester.pumpAndSettle();
+      expect(outcome, isNull);
+      expect(target.created, isEmpty);
+      expect(
+        find.text(appLocalizationsFor(const Locale('en')).r7ImportFailScopeChanged),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('page disposed while the keychain prompt is held: no write', (
+      tester,
+    ) async {
+      final target = _ScopedBaseTarget();
+      final held = Completer<({TermiusImportDocument document, String sourceLabel})>();
+      var finished = false;
+      TermiusTransferOutcome? outcome;
+      await tester.pumpWidget(
+        app(
+          Builder(
+            builder: (context) => TextButton(
+              key: const ValueKey('go'),
+              onPressed: () async {
+                outcome = await runOneClickTermiusImport(
+                  context,
+                  target: target,
+                  loadLocalAppForTesting: () => held.future,
+                );
+                finished = true;
+              },
+              child: const Text('go'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('go')));
+      await tester.pump();
+      expect(
+        find.byKey(const ValueKey('termius_one_click_progress_dialog')),
+        findsOneWidget,
+      );
+      // Sign-out / profile switch tears the page down.
+      await tester.pumpWidget(const SizedBox.shrink());
+      held.complete((document: readyDoc, sourceLabel: 'Termius Desktop'));
+      await tester.pumpAndSettle();
+      expect(finished, isTrue);
+      expect(outcome, isNull);
+      expect(target.created, isEmpty);
+    });
+
+    testWidgets('dialog disposed while the loader is held: no write', (
+      tester,
+    ) async {
+      final target = _ScopedBaseTarget();
+      final held = Completer<({TermiusImportDocument document, String sourceLabel})>();
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1200, 1400);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      await tester.pumpWidget(
+        app(
+          TermiusTransferDialog(
+            target: target,
+            loadLocalAppForTesting: () => held.future,
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('termius_one_click_local_import')));
+      await tester.pump();
+      await tester.pumpWidget(const SizedBox.shrink());
+      held.complete((document: readyDoc, sourceLabel: 'Termius Desktop'));
+      await tester.pumpAndSettle();
+      expect(target.created, isEmpty);
+    });
+
+    testWidgets('missing usernames are not guessed: review opens, user supplies one', (
+      tester,
+    ) async {
+      final target = _ScopedBaseTarget();
+      final doc = buildTermiusDocumentFromDecryptedTables({
+        'hosts': [
+          {'id': 1, 'label': 'ready', 'address': '192.0.2.1', 'username': 'ops'},
+          {'id': 2, 'label': 'no-user', 'address': '192.0.2.2'},
+        ],
+      });
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1400, 1800);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      TermiusTransferOutcome? outcome;
+      await tester.pumpWidget(
+        app(
+          Builder(
+            builder: (context) => TextButton(
+              key: const ValueKey('go'),
+              onPressed: () async {
+                outcome = await runOneClickTermiusImport(
+                  context,
+                  target: target,
+                  loadLocalAppForTesting: () async =>
+                      (document: doc, sourceLabel: 'Termius Desktop'),
+                );
+              },
+              child: const Text('go'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('go')));
+      await tester.pumpAndSettle();
+
+      final en = appLocalizationsFor(const Locale('en'));
+      expect(find.text(en.termiusLocalReviewNeeded), findsOneWidget);
+      expect(target.created, isEmpty, reason: 'nothing applied before review');
+
+      await tester.enterText(
+        find.byKey(const ValueKey('termius_import_fallback_username')),
+        'deploy',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('termius_import_apply')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('termius_import_confirm_accept')));
+      await tester.pumpAndSettle();
+
+      expect(outcome?.importedHosts, 2);
+      expect(target.created, containsAll(['host:ready', 'host:no-user']));
+    });
+
+    test('telnet hosts import as Telnet without a username', () {
+      final doc = buildTermiusDocumentFromDecryptedTables({
+        'hosts': [
+          {'id': 1, 'label': 'switch', 'address': '192.0.2.9', 'protocol': 'telnet'},
+        ],
+      });
+      final row = doc.rows.single;
+      expect(row.protocol, HostProtocol.telnet);
+      expect(row.blocked, isFalse);
+      expect(row.port, HostProtocol.telnet.defaultPort);
+    });
+
+    test('snapshot byte bound fails closed as tooLarge without reading on', () async {
+      final dir = Directory.systemTemp.createTempSync('atermius-termius-bound-');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final leveldb = Directory('${dir.path}/IndexedDB/file__0.indexeddb.leveldb')
+        ..createSync(recursive: true);
+      File('${leveldb.path}/CURRENT').writeAsStringSync('MANIFEST-000001\n');
+      File('${leveldb.path}/000003.log').writeAsBytesSync(
+        _buildLevelDbLog([
+          (1, [
+            ..._hostsDbName(),
+            (_encodeIdbObjectDataKey(5, 1, 1), _hostRecord(1, 'h')),
+          ]),
+        ]),
+      );
+      await expectLater(
+        loadLocalTermiusAppDocument(customDataDir: dir.path, maxSnapshotBytes: 64),
+        throwsA(
+          isA<TermiusLocalImportException>().having(
+            (e) => e.failure,
+            'failure',
+            TermiusLocalImportFailure.tooLarge,
+          ),
+        ),
+      );
     });
   });
 }

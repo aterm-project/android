@@ -17546,4 +17546,8 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get termiusLocalFailTooLarge =>
       'この端末の Termius データが取り込みの安全上限を超えているため、何も取り込みませんでした。代わりに Termius の CSV エクスポートを使用してください。';
+
+  @override
+  String get termiusLocalReviewNeeded =>
+      '取り込む前に確認が必要な Termius ホストがあります（ユーザー名が未設定など）。まだ何も推測・取り込みしていません。下の指摘を確認し、既定のユーザー名を入力するか行を除外してから取り込んでください。';
 }

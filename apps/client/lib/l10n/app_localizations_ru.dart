@@ -18683,4 +18683,8 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get termiusLocalFailTooLarge =>
       'Локальные данные Termius превышают безопасные ограничения импорта, ничего не импортировано. Используйте экспорт Termius в CSV.';
+
+  @override
+  String get termiusLocalReviewNeeded =>
+      'Некоторые хосты Termius требуют внимания перед импортом (например, не указано имя пользователя). Ничего не угадывалось и не импортировано: проверьте замечания ниже, укажите имя пользователя по умолчанию или исключите строки, затем импортируйте.';
 }

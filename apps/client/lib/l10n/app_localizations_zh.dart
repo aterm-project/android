@@ -16656,4 +16656,8 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get termiusLocalFailTooLarge =>
       '本机 Termius 数据超出导入安全上限，未导入任何内容。请改用 Termius CSV 导出文件。';
+
+  @override
+  String get termiusLocalReviewNeeded =>
+      '部分 Termius 主机需要处理后才能导入（例如缺少用户名）。尚未猜测或导入任何内容：请查看下方提示，填写默认用户名或排除相应行后再导入。';
 }

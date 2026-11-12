@@ -80,38 +80,65 @@ String describeTermiusApplyFailure(
   _ => l10n.r7ImportFailRolledBack,
 };
 
+/// Pins the Vault/profile an import was started in. Captured before any
+/// await (keychain prompt, decryption, catalog load) and re-checked after
+/// each one and right before apply, so a switch A->B (or A->B->A, which
+/// yields a new write scope) can never redirect the import.
+class TermiusTargetFence {
+  TermiusTargetFence(this.target)
+    : _scope = _scopeOf(target),
+      _contextKey = target.contextKey;
+
+  final TermiusTransferTarget target;
+  final Object? _scope;
+  final String? _contextKey;
+
+  static Object? _scopeOf(TermiusTransferTarget target) =>
+      target is TermiusTransferTargetBase ? target.writeScope : null;
+
+  /// Throws [TermiusApplyException] unless [target] is still writable and
+  /// bound to the same write scope identity and context key.
+  void check() {
+    if (!target.canWrite) {
+      throw const TermiusApplyException(TermiusApplyFailure.readOnly);
+    }
+    if (target is TermiusTransferTargetBase && _scope == null) {
+      throw const TermiusApplyException(TermiusApplyFailure.stalePlan);
+    }
+    if (!identical(_scopeOf(target), _scope) ||
+        target.contextKey != _contextKey) {
+      throw const TermiusApplyException(TermiusApplyFailure.contextChanged);
+    }
+  }
+}
+
 /// Outcome of planning a local Termius import against [target].
 typedef _LocalTermiusPlan = ({
   TermiusImportDocument document,
   String sourceLabel,
   TermiusCatalog catalog,
   TermiusImportPlan plan,
+  TermiusTargetFence fence,
 });
 
 /// Loads the local Termius data and plans it against [target], refusing to
 /// continue when the Vault/profile changed while the keychain prompt or
 /// decryption was pending (the import must land where the user clicked).
+///
+/// No username is guessed: [fallbackUsername] is only an explicit user
+/// choice, so rows without one stay blocked for review.
 Future<_LocalTermiusPlan> _planLocalTermiusImport({
   required TermiusTransferTarget target,
   required TermiusLocalAppLoader loader,
   required TermiusDuplicatePolicy duplicates,
-  required String fallbackUsername,
+  String? fallbackUsername,
   TermiusCertificateBridge? certificates,
 }) async {
-  final contextKey = target.contextKey;
-  void ensureSameContext() {
-    if (!target.canWrite) {
-      throw const TermiusApplyException(TermiusApplyFailure.readOnly);
-    }
-    if (target.contextKey != contextKey) {
-      throw const TermiusApplyException(TermiusApplyFailure.contextChanged);
-    }
-  }
-
+  final fence = TermiusTargetFence(target)..check();
   final loaded = await loader();
-  ensureSameContext();
+  fence.check();
   final catalog = await target.loadCatalog();
-  ensureSameContext();
+  fence.check();
   final plan = TermiusImportPlanner.plan(
     loaded.document,
     catalog,
@@ -124,8 +151,13 @@ Future<_LocalTermiusPlan> _planLocalTermiusImport({
     sourceLabel: loaded.sourceLabel,
     catalog: catalog,
     plan: plan,
+    fence: fence,
   );
 }
+
+bool _hasBlockedRows(TermiusImportPlan plan) => plan.rows.any(
+  (row) => row.disposition == TermiusRowDisposition.blocked,
+);
 
 int _skippedExistingCount(TermiusImportPlan plan) => plan.rows
     .where((row) => row.disposition == TermiusRowDisposition.skippedExisting)
@@ -189,13 +221,33 @@ Future<TermiusTransferOutcome?> runOneClickTermiusImport(
       loader: loadLocalAppForTesting ?? loadLocalTermiusAppDocument,
       duplicates: TermiusDuplicatePolicy.skip,
       certificates: certificates,
-      fallbackUsername: defaultSystemSshUsername() ?? 'root',
     );
     final plan = planned.plan;
 
     if (plan.blocksWholeFile) {
       notify(l10n.r7ImportBlockedFile);
       return null;
+    }
+
+    if (_hasBlockedRows(plan)) {
+      // Some hosts lack required data (for example a username). Nothing is
+      // guessed: open the regular preview so the user reviews the findings,
+      // supplies a default username or excludes rows, then confirms.
+      closeProgress();
+      if (!context.mounted) return null;
+      return await showAppDialog<TermiusTransferOutcome>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => TermiusTransferDialog(
+          target: target,
+          certificates: certificates,
+          initialLocalImport: (
+            document: planned.document,
+            sourceLabel: planned.sourceLabel,
+          ),
+          initialLocalFence: planned.fence,
+        ),
+      );
     }
 
     if (plan.createCount == 0) {
@@ -208,6 +260,13 @@ Future<TermiusTransferOutcome?> runOneClickTermiusImport(
       return const TermiusTransferOutcome();
     }
 
+    // The caller's page may have been disposed (sign-out, profile switch)
+    // while the keychain prompt was open: never write in that case.
+    if (!context.mounted) {
+      closeProgress();
+      return null;
+    }
+    planned.fence.check();
     final report = await target.apply(plan);
     closeProgress();
     return TermiusTransferOutcome(
@@ -253,6 +312,8 @@ class TermiusTransferDialog extends StatefulWidget {
     this.pickBytesForTesting,
     this.loadLocalAppForTesting,
     this.saveForTesting,
+    this.initialLocalImport,
+    this.initialLocalFence,
     super.key,
   });
 
@@ -267,6 +328,14 @@ class TermiusTransferDialog extends StatefulWidget {
 
   @visibleForTesting
   final TermiusLocalAppLoader? loadLocalAppForTesting;
+
+  /// Already decrypted local Termius data that needs review before import
+  /// (opened by [runOneClickTermiusImport] when some rows are blocked).
+  final ({TermiusImportDocument document, String sourceLabel})?
+  initialLocalImport;
+
+  /// Fence captured before [initialLocalImport] was loaded.
+  final TermiusTargetFence? initialLocalFence;
 
   @visibleForTesting
   final TermiusExportSaver? saveForTesting;
@@ -292,6 +361,9 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
   final _excluded = <int>{};
   final _fallbackUserController = TextEditingController();
 
+  /// Vault/profile the current preview was loaded for; checked before apply.
+  TermiusTargetFence? _fence;
+
   // Export state.
   var _exportFormat = TermiusExportFormat.csv;
   var _includePasswords = false;
@@ -305,6 +377,37 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
   void initState() {
     super.initState();
     if (_mode == TermiusTransferMode.exportData) _loadExportCatalog();
+    final preloaded = widget.initialLocalImport;
+    if (preloaded != null && _mode == TermiusTransferMode.importData) {
+      _fence = widget.initialLocalFence ?? TermiusTargetFence(target);
+      _busy = true;
+      _loadPreloadedLocalImport(preloaded);
+    }
+  }
+
+  Future<void> _loadPreloadedLocalImport(
+    ({TermiusImportDocument document, String sourceLabel}) preloaded,
+  ) async {
+    try {
+      final catalog = await target.loadCatalog();
+      _fence?.check();
+      if (!mounted) return;
+      setState(() {
+        _fileName = preloaded.sourceLabel;
+        _document = preloaded.document;
+        _catalog = catalog;
+        _replan();
+        _notice = context.l10n.termiusLocalReviewNeeded;
+      });
+    } on TermiusApplyException catch (error) {
+      if (mounted) {
+        setState(() => _error = describeTermiusApplyFailure(context.l10n, error));
+      }
+    } on Object {
+      if (mounted) setState(() => _error = context.l10n.r7ImportFailRolledBack);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -364,21 +467,26 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
         loader: widget.loadLocalAppForTesting ?? loadLocalTermiusAppDocument,
         duplicates: _duplicates,
         certificates: widget.certificates,
-        fallbackUsername: typedFallback.isNotEmpty
-            ? typedFallback
-            : (defaultSystemSshUsername() ?? 'root'),
+        // Only an explicit user choice; never a guessed remote username.
+        fallbackUsername: typedFallback.isEmpty ? null : typedFallback,
       );
       if (!mounted) return;
       final plan = planned.plan;
-      if (plan.blocksWholeFile || plan.createCount == 0) {
+      if (plan.blocksWholeFile ||
+          plan.createCount == 0 ||
+          _hasBlockedRows(plan)) {
         final skippedExisting = _skippedExistingCount(plan);
         setState(() {
+          _fence = planned.fence;
+          _excluded.clear();
           _fileName = planned.sourceLabel;
           _document = planned.document;
           _catalog = planned.catalog;
           _plan = plan;
           if (plan.blocksWholeFile) {
             _error = l10n.r7ImportBlockedFile;
+          } else if (_hasBlockedRows(plan)) {
+            _notice = l10n.termiusLocalReviewNeeded;
           } else {
             _notice = skippedExisting > 0
                 ? l10n.termiusLocalAllExist(skippedExisting)
@@ -387,6 +495,7 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
         });
         return;
       }
+      planned.fence.check();
       final report = await target.apply(plan);
       if (!mounted) return;
       Navigator.pop(
@@ -425,6 +534,7 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
       _excluded.clear();
     });
     Uint8List? bytes;
+    final fence = TermiusTargetFence(target);
     try {
       final picked = await load();
       if (!mounted || picked == null) return;
@@ -442,6 +552,7 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
       final catalog = await target.loadCatalog();
       if (!mounted) return;
       setState(() {
+        _fence = fence;
         _fileName = picked.name;
         _document = document;
         _catalog = catalog;
@@ -519,6 +630,7 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
       _error = null;
     });
     try {
+      _fence?.check();
       final report = await target.apply(plan);
       if (!mounted) return;
       Navigator.pop(

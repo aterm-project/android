@@ -4934,5 +4934,6 @@
   "termiusLocalFailUnsupportedCipher": "此 Termius 版本使用了未知的加密格式（{header}），未导入任何内容；请改用 Termius CSV 导出文件。",
   "termiusLocalFailEmpty": "本机 Termius 数据中没有可导入的主机。",
   "termiusLocalFailReadFailed": "无法读取本机 Termius 数据，未导入任何内容。如 Termius 正在同步，请稍候再试。",
-  "termiusLocalFailTooLarge": "本机 Termius 数据超出导入安全上限，未导入任何内容。请改用 Termius CSV 导出文件。"
+  "termiusLocalFailTooLarge": "本机 Termius 数据超出导入安全上限，未导入任何内容。请改用 Termius CSV 导出文件。",
+  "termiusLocalReviewNeeded": "部分 Termius 主机需要处理后才能导入（例如缺少用户名）。尚未猜测或导入任何内容：请查看下方提示，填写默认用户名或排除相应行后再导入。"
 }

@@ -15221,5 +15221,6 @@
   "termiusLocalFailUnsupportedCipher": "This Termius version uses an unknown encryption format ({header}). Nothing was imported; use a Termius CSV export instead.",
   "termiusLocalFailEmpty": "The local Termius data contains no hosts to import.",
   "termiusLocalFailReadFailed": "Couldn’t read the local Termius data, so nothing was imported. If Termius is syncing, wait a moment and retry.",
-  "termiusLocalFailTooLarge": "The local Termius data exceeds the import safety limits, so nothing was imported. Use a Termius CSV export instead."
+  "termiusLocalFailTooLarge": "The local Termius data exceeds the import safety limits, so nothing was imported. Use a Termius CSV export instead.",
+  "termiusLocalReviewNeeded": "Some Termius hosts need attention before import (for example a missing username). Nothing was guessed or imported yet: review the findings below, enter a default username or exclude rows, then import."
 }

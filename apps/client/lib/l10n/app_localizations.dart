@@ -29433,6 +29433,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The local Termius data exceeds the import safety limits, so nothing was imported. Use a Termius CSV export instead.'**
   String get termiusLocalFailTooLarge;
+
+  /// No description provided for @termiusLocalReviewNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Some Termius hosts need attention before import (for example a missing username). Nothing was guessed or imported yet: review the findings below, enter a default username or exclude rows, then import.'**
+  String get termiusLocalReviewNeeded;
 }
 
 class _AppLocalizationsDelegate

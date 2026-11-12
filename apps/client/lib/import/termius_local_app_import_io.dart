@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:sodium/sodium_sumo.dart';
 
@@ -415,6 +416,7 @@ class _LocalKeyCache {
 
 Future<Map<String, Uint8List>> _readLevelDbSnapshotFilesOnce(
   Directory dir,
+  int maxBytes,
 ) async {
   final files = <String, Uint8List>{};
   var totalBytes = 0;
@@ -432,23 +434,12 @@ Future<Map<String, Uint8List>> _readLevelDbSnapshotFilesOnce(
           name.endsWith('.log');
       if (!relevant) continue;
 
-      final stat = await entity.stat();
-      if (stat.size <= 0) continue;
-      if (totalBytes + stat.size > _maxLevelDbSnapshotTotalBytes) {
-        throw const TermiusLocalImportException(
-          TermiusLocalImportFailure.tooLarge,
-          'snapshotBytes',
-        );
-      }
-      final bytes = await entity.readAsBytes();
+      final bytes = await _readFileBounded(
+        entity,
+        maxBytes - totalBytes,
+      );
+      if (bytes.isEmpty) continue;
       totalBytes += bytes.length;
-      if (totalBytes > _maxLevelDbSnapshotTotalBytes) {
-        bytes.fillRange(0, bytes.length, 0);
-        throw const TermiusLocalImportException(
-          TermiusLocalImportFailure.tooLarge,
-          'snapshotBytes',
-        );
-      }
       files[name] = bytes;
     }
   } on Object {
@@ -464,6 +455,47 @@ Future<Map<String, Uint8List>> _readLevelDbSnapshotFilesOnce(
   return files;
 }
 
+const int _readChunkBytes = 1024 * 1024;
+
+/// Reads [file] in chunks without ever holding more than [budget] bytes.
+/// A file that grows past the budget while being read (a live log) is
+/// rejected as soon as the budget is exceeded; partial buffers are wiped.
+Future<Uint8List> _readFileBounded(File file, int budget) async {
+  final raf = await file.open();
+  final chunks = <Uint8List>[];
+  var total = 0;
+  void wipeChunks() {
+    for (final chunk in chunks) {
+      chunk.fillRange(0, chunk.length, 0);
+    }
+  }
+
+  try {
+    while (true) {
+      final chunk = await raf.read(_readChunkBytes);
+      if (chunk.isEmpty) break;
+      chunks.add(chunk);
+      total += chunk.length;
+      if (total > budget) {
+        throw const TermiusLocalImportException(
+          TermiusLocalImportFailure.tooLarge,
+          'snapshotBytes',
+        );
+      }
+    }
+    final out = Uint8List(total);
+    var offset = 0;
+    for (final chunk in chunks) {
+      out.setRange(offset, offset + chunk.length, chunk);
+      offset += chunk.length;
+    }
+    return out;
+  } finally {
+    wipeChunks();
+    await raf.close();
+  }
+}
+
 void _wipeSnapshot(Map<String, Uint8List>? files) {
   if (files == null) return;
   for (final buf in files.values) {
@@ -475,10 +507,13 @@ void _wipeSnapshot(Map<String, Uint8List>? files) {
 /// Copies the LevelDB files into memory. A running Termius may compact while
 /// the copy is taken (files vanish, CURRENT moves to a new MANIFEST); such a
 /// torn snapshot is retried instead of being decoded.
-Future<Map<String, Uint8List>> _readLevelDbSnapshotFiles(Directory dir) async {
+Future<Map<String, Uint8List>> _readLevelDbSnapshotFiles(
+  Directory dir,
+  int maxBytes,
+) async {
   for (var attempt = 1; ; attempt++) {
     try {
-      final files = await _readLevelDbSnapshotFilesOnce(dir);
+      final files = await _readLevelDbSnapshotFilesOnce(dir, maxBytes);
       final manifest = utf8
           .decode(files['CURRENT']!, allowMalformed: true)
           .trim();
@@ -511,7 +546,10 @@ const _failureRank = <TermiusLocalImportFailure, int>{
 /// profile cannot hide the live one. When all fail, the failure that got
 /// furthest is reported.
 Future<({TermiusImportDocument document, String sourceLabel})>
-loadLocalTermiusAppDocument({String? customDataDir}) async {
+loadLocalTermiusAppDocument({
+  String? customDataDir,
+  @visibleForTesting int maxSnapshotBytes = _maxLevelDbSnapshotTotalBytes,
+}) async {
   final List<Directory> candidates;
   if (customDataDir != null) {
     final resolved = resolveTermiusLevelDbDir(customDataDir);
@@ -539,7 +577,12 @@ loadLocalTermiusAppDocument({String? customDataDir}) async {
             'sodiumUnavailable',
           );
         }
-        return await _loadFromLevelDbDir(levelDbDir, sodium, keys);
+        return await _loadFromLevelDbDir(
+          levelDbDir,
+          sodium,
+          keys,
+          maxSnapshotBytes,
+        );
       } on TermiusLocalImportException catch (error) {
         if (worst == null ||
             _failureRank[error.failure]! > _failureRank[worst.failure]!) {
@@ -558,13 +601,17 @@ _loadFromLevelDbDir(
   Directory levelDbDir,
   SodiumSumo sodium,
   _LocalKeyCache keys,
+  int maxSnapshotBytes,
 ) async {
   Map<String, Uint8List>? snapshotFiles;
   Uint8List? keyBytes;
   TermiusVaultDecryptor? decryptor;
 
   try {
-    snapshotFiles = await _readLevelDbSnapshotFiles(levelDbDir);
+    snapshotFiles = await _readLevelDbSnapshotFiles(
+      levelDbDir,
+      maxSnapshotBytes,
+    );
     final rawTables = readTermiusIndexedDbTables(snapshotFiles);
     _wipeSnapshot(snapshotFiles);
     // Fail closed: an undecodable live record in a table that is imported

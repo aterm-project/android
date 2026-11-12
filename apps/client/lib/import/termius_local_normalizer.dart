@@ -129,18 +129,8 @@ List<String> _resolveGroupPath(
     );
   }
   if (normalized == 'telnet') {
-    return (
-      HostProtocol.telnet,
-      [
-        TermiusIssue(
-          TermiusIssueCode.unsupportedProtocol,
-          severity: TermiusIssueSeverity.blocking,
-          row: rowIndex,
-          line: rowIndex,
-          detail: 'telnet',
-        ),
-      ],
-    );
+    // Atermius supports Telnet hosts natively.
+    return (HostProtocol.telnet, const []);
   }
   if (normalized == 'rdp') {
     return (
