@@ -74,10 +74,13 @@ dispatch upstream workflows; their own release events run in the fork.
 
 Publication targets the release **id** from `prepare`: before and after uploading, the id must still
 own the tag, the release must be published, and the tag must still resolve to the built commit.
-Existing assets: identical name+size+SHA-256 digest ⇒ kept; same name in state `open` (interrupted
-upload) ⇒ deleted and re-uploaded; same name with other content ⇒ refused before any change; other
-names are never touched. `SHA256SUMS` is uploaded last; when it and every `evidence-<platform>.json`
-are attached, a new dispatch skips as `already-published`. Resume with **Re-run failed jobs**:
+Existing assets: identical name+size+SHA-256 digest ⇒ kept; same name in state `open`/`starter`
+(interrupted upload) ⇒ deleted and re-uploaded; same name with other content or an unknown state ⇒
+refused before any change; other names are never touched. `SHA256SUMS` is uploaded last. A new
+dispatch skips as `already-published` only after verifying the attached `SHA256SUMS` (digest-checked
+download; a storage redirect is followed without the token), every listed asset's digest, and that
+each `evidence-<platform>.json` belongs to this tag and commit; otherwise it builds, and publish
+refuses stale assets of the same name. Resume with **Re-run failed jobs**:
 successful platforms and their packages are reused (artifact names carry no attempt number). A full
 re-run or new dispatch rebuilds, and its bytes may differ from assets already attached.
 
