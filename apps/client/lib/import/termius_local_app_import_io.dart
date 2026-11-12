@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'dart:io';
@@ -19,6 +20,10 @@ enum TermiusLocalImportFailure {
   unsupportedCipher,
   emptyDatabase,
   readFailed,
+
+  /// The local database exceeds a reader safety bound (size, records or
+  /// decompressed bytes); nothing was imported.
+  tooLarge,
 }
 
 class TermiusLocalImportException implements Exception {
@@ -32,7 +37,9 @@ class TermiusLocalImportException implements Exception {
 }
 
 const int _maxLevelDbSnapshotTotalBytes = 192 * 1024 * 1024;
+const int _snapshotReadAttempts = 3;
 const String _keyringAccount = 'localKey';
+const Duration _installationProbeTtl = Duration(seconds: 15);
 
 String? _userHomeDir() {
   final home = Platform.environment['HOME']?.trim();
@@ -130,8 +137,51 @@ List<Directory> discoverLocalTermiusLevelDbDirs() {
   return found;
 }
 
-/// True when a local Termius Desktop IndexedDB directory exists on this device.
-bool hasLocalTermiusInstallation() => discoverLocalTermiusLevelDbDirs().isNotEmpty;
+DateTime? _installationProbeAt;
+bool _installationProbeResult = false;
+
+/// True when a local Termius Desktop installation appears to exist.
+///
+/// Called from widget builds, so it is cached briefly and deliberately
+/// shallow: on macOS it only stats the direct-download profile and lists the
+/// *names* in `~/Library/Containers`, never descending into another app's
+/// sandbox container (which can raise the "access data from other apps"
+/// prompt). The full lookup runs only after the user clicks import.
+bool hasLocalTermiusInstallation() {
+  final now = DateTime.now();
+  final at = _installationProbeAt;
+  if (at != null && now.difference(at) < _installationProbeTtl) {
+    return _installationProbeResult;
+  }
+  _installationProbeAt = now;
+  try {
+    return _installationProbeResult = _probeLocalTermiusInstallation();
+  } on Object {
+    return _installationProbeResult = false;
+  }
+}
+
+bool _probeLocalTermiusInstallation() {
+  if (!Platform.isMacOS) return discoverLocalTermiusLevelDbDirs().isNotEmpty;
+  final home = _userHomeDir();
+  if (home == null) return false;
+  if (resolveTermiusLevelDbDir(
+        p.join(home, 'Library', 'Application Support', 'Termius'),
+      ) !=
+      null) {
+    return true;
+  }
+  final containers = Directory(p.join(home, 'Library', 'Containers'));
+  try {
+    return containers.existsSync() &&
+        containers
+            .listSync(followLinks: false)
+            .whereType<Directory>()
+            .any((dir) => p.basename(dir.path).toLowerCase().contains('termius'));
+  } on FileSystemException {
+    return false;
+  }
+}
 
 List<String> _candidateKeyringServicesForPath(String levelDbPath) {
   final lower = levelDbPath.toLowerCase();
@@ -307,15 +357,14 @@ String? _readFromWindowsCredentialManager(String service) {
   }
 }
 
-Future<Uint8List> _loadValidatedLocalKey({
-  required SodiumSumo sodium,
-  required String levelDbPath,
-  required String? sampleCiphertext,
-}) async {
-  final services = _candidateKeyringServicesForPath(levelDbPath);
-  var foundAnyKey = false;
+/// OS keyring lookups for one import attempt. Each service is queried at
+/// most once, so trying several data directories never repeats a keychain
+/// authorization prompt. Key bytes are wiped by [dispose].
+class _LocalKeyCache {
+  final _keys = <String, Uint8List?>{};
 
-  for (final service in services) {
+  Future<Uint8List?> _lookup(String service) async {
+    if (_keys.containsKey(service)) return _keys[service];
     String? encoded;
     if (Platform.isMacOS) {
       encoded = await _readFromMacOsKeychain(service);
@@ -324,58 +373,87 @@ Future<Uint8List> _loadValidatedLocalKey({
     } else if (Platform.isWindows) {
       encoded = _readFromWindowsCredentialManager(service);
     }
-    final keyBytes = _decodeKeyBase64(encoded);
-    if (keyBytes == null) continue;
-    foundAnyKey = true;
-
-    if (sampleCiphertext == null) {
-      return keyBytes;
-    }
-
-    final verifier = TermiusVaultDecryptor(sodium, keyBytes);
-    try {
-      if (verifier.canDecryptEnvelope(sampleCiphertext)) {
-        return keyBytes;
-      }
-    } finally {
-      verifier.dispose();
-    }
-    keyBytes.fillRange(0, keyBytes.length, 0);
+    return _keys[service] = _decodeKeyBase64(encoded);
   }
 
-  throw TermiusLocalImportException(
-    foundAnyKey
-        ? TermiusLocalImportFailure.keyRejected
-        : TermiusLocalImportFailure.keyNotFound,
-  );
+  /// Returns a copy of the first keyring entry that authenticates
+  /// [sampleCiphertext] with Poly1305 (the caller wipes it).
+  Future<Uint8List> validatedKey({
+    required SodiumSumo sodium,
+    required String levelDbPath,
+    required String? sampleCiphertext,
+  }) async {
+    var foundAnyKey = false;
+    for (final service in _candidateKeyringServicesForPath(levelDbPath)) {
+      final keyBytes = await _lookup(service);
+      if (keyBytes == null) continue;
+      foundAnyKey = true;
+      if (sampleCiphertext == null) return Uint8List.fromList(keyBytes);
+      final verifier = TermiusVaultDecryptor(sodium, keyBytes);
+      try {
+        if (verifier.canDecryptEnvelope(sampleCiphertext)) {
+          return Uint8List.fromList(keyBytes);
+        }
+      } finally {
+        verifier.dispose();
+      }
+    }
+    throw TermiusLocalImportException(
+      foundAnyKey
+          ? TermiusLocalImportFailure.keyRejected
+          : TermiusLocalImportFailure.keyNotFound,
+    );
+  }
+
+  void dispose() {
+    for (final key in _keys.values) {
+      key?.fillRange(0, key.length, 0);
+    }
+    _keys.clear();
+  }
 }
 
-Future<Map<String, Uint8List>> _readLevelDbSnapshotFiles(Directory dir) async {
+Future<Map<String, Uint8List>> _readLevelDbSnapshotFilesOnce(
+  Directory dir,
+) async {
   final files = <String, Uint8List>{};
   var totalBytes = 0;
+  try {
+    // Plain reads only: no LOCK file, no writes, no symlink following, and
+    // Termius is never opened, signalled or modified.
+    await for (final entity in dir.list(followLinks: false)) {
+      if (entity is! File) continue;
+      final name = p.basename(entity.path);
+      final relevant =
+          name == 'CURRENT' ||
+          name.startsWith('MANIFEST-') ||
+          name.endsWith('.ldb') ||
+          name.endsWith('.sst') ||
+          name.endsWith('.log');
+      if (!relevant) continue;
 
-  await for (final entity in dir.list(followLinks: false)) {
-    if (entity is! File) continue;
-    final name = p.basename(entity.path);
-    final relevant =
-        name == 'CURRENT' ||
-        name.startsWith('MANIFEST-') ||
-        name.endsWith('.ldb') ||
-        name.endsWith('.sst') ||
-        name.endsWith('.log');
-    if (!relevant) continue;
-
-    final stat = await entity.stat();
-    if (stat.size <= 0) continue;
-    if (totalBytes + stat.size > _maxLevelDbSnapshotTotalBytes) {
-      throw const TermiusLocalImportException(
-        TermiusLocalImportFailure.readFailed,
-        'snapshotTooLarge',
-      );
+      final stat = await entity.stat();
+      if (stat.size <= 0) continue;
+      if (totalBytes + stat.size > _maxLevelDbSnapshotTotalBytes) {
+        throw const TermiusLocalImportException(
+          TermiusLocalImportFailure.tooLarge,
+          'snapshotBytes',
+        );
+      }
+      final bytes = await entity.readAsBytes();
+      totalBytes += bytes.length;
+      if (totalBytes > _maxLevelDbSnapshotTotalBytes) {
+        bytes.fillRange(0, bytes.length, 0);
+        throw const TermiusLocalImportException(
+          TermiusLocalImportFailure.tooLarge,
+          'snapshotBytes',
+        );
+      }
+      files[name] = bytes;
     }
-    final bytes = await entity.readAsBytes();
-    totalBytes += bytes.length;
-    files[name] = bytes;
+  } on Object {
+    _wipeSnapshot(files);
+    rethrow;
   }
 
   if (!files.containsKey('CURRENT')) {
@@ -386,20 +464,101 @@ Future<Map<String, Uint8List>> _readLevelDbSnapshotFiles(Directory dir) async {
   return files;
 }
 
+void _wipeSnapshot(Map<String, Uint8List>? files) {
+  if (files == null) return;
+  for (final buf in files.values) {
+    buf.fillRange(0, buf.length, 0);
+  }
+  files.clear();
+}
+
+/// Copies the LevelDB files into memory. A running Termius may compact while
+/// the copy is taken (files vanish, CURRENT moves to a new MANIFEST); such a
+/// torn snapshot is retried instead of being decoded.
+Future<Map<String, Uint8List>> _readLevelDbSnapshotFiles(Directory dir) async {
+  for (var attempt = 1; ; attempt++) {
+    try {
+      final files = await _readLevelDbSnapshotFilesOnce(dir);
+      final manifest = utf8
+          .decode(files['CURRENT']!, allowMalformed: true)
+          .trim();
+      if (files.containsKey(manifest) || attempt >= _snapshotReadAttempts) {
+        return files;
+      }
+      _wipeSnapshot(files);
+    } on FileSystemException {
+      if (attempt >= _snapshotReadAttempts) rethrow;
+    }
+    await Future<void>.delayed(Duration(milliseconds: 150 * attempt));
+  }
+}
+
+const _failureRank = <TermiusLocalImportFailure, int>{
+  TermiusLocalImportFailure.notInstalled: 0,
+  TermiusLocalImportFailure.emptyDatabase: 1,
+  TermiusLocalImportFailure.readFailed: 2,
+  TermiusLocalImportFailure.tooLarge: 3,
+  TermiusLocalImportFailure.keyNotFound: 4,
+  TermiusLocalImportFailure.keyRejected: 5,
+  TermiusLocalImportFailure.unsupportedCipher: 6,
+};
+
 /// Reads, authenticates via OS keyring (`localKey`), and decrypts the local
 /// Termius Desktop database in memory into a [TermiusImportDocument].
+///
+/// Every discovered profile (direct download first, then Mac App Store
+/// containers) is tried in order until one decrypts, so a stale leftover
+/// profile cannot hide the live one. When all fail, the failure that got
+/// furthest is reported.
 Future<({TermiusImportDocument document, String sourceLabel})>
 loadLocalTermiusAppDocument({String? customDataDir}) async {
-  final Directory? levelDbDir = customDataDir != null
-      ? resolveTermiusLevelDbDir(customDataDir)
-      : discoverLocalTermiusLevelDbDirs().firstOrNull;
-
-  if (levelDbDir == null) {
+  final List<Directory> candidates;
+  if (customDataDir != null) {
+    final resolved = resolveTermiusLevelDbDir(customDataDir);
+    candidates = resolved == null ? const [] : [resolved];
+  } else {
+    candidates = discoverLocalTermiusLevelDbDirs();
+  }
+  if (candidates.isEmpty) {
     throw const TermiusLocalImportException(
       TermiusLocalImportFailure.notInstalled,
     );
   }
 
+  final keys = _LocalKeyCache();
+  SodiumSumo? sodium;
+  TermiusLocalImportException? worst;
+  try {
+    for (final levelDbDir in candidates) {
+      try {
+        try {
+          sodium ??= await SodiumSumoInit.init();
+        } on Object {
+          throw const TermiusLocalImportException(
+            TermiusLocalImportFailure.readFailed,
+            'sodiumUnavailable',
+          );
+        }
+        return await _loadFromLevelDbDir(levelDbDir, sodium, keys);
+      } on TermiusLocalImportException catch (error) {
+        if (worst == null ||
+            _failureRank[error.failure]! > _failureRank[worst.failure]!) {
+          worst = error;
+        }
+      }
+    }
+    throw worst!;
+  } finally {
+    keys.dispose();
+  }
+}
+
+Future<({TermiusImportDocument document, String sourceLabel})>
+_loadFromLevelDbDir(
+  Directory levelDbDir,
+  SodiumSumo sodium,
+  _LocalKeyCache keys,
+) async {
   Map<String, Uint8List>? snapshotFiles;
   Uint8List? keyBytes;
   TermiusVaultDecryptor? decryptor;
@@ -407,15 +566,28 @@ loadLocalTermiusAppDocument({String? customDataDir}) async {
   try {
     snapshotFiles = await _readLevelDbSnapshotFiles(levelDbDir);
     final rawTables = readTermiusIndexedDbTables(snapshotFiles);
+    _wipeSnapshot(snapshotFiles);
+    // Fail closed: an undecodable live record in a table that is imported
+    // would otherwise disappear silently from the migration.
+    if (rawTables.malformedRecords.keys.any(
+      termiusLocalImportedTables.contains,
+    )) {
+      throw const TermiusLocalImportException(
+        TermiusLocalImportFailure.readFailed,
+        'malformedRecord',
+      );
+    }
     if ((rawTables.tables['hosts'] ?? const []).isEmpty) {
       throw const TermiusLocalImportException(
         TermiusLocalImportFailure.emptyDatabase,
       );
     }
 
-    final sampleCiphertext = firstTermiusCiphertext(rawTables.tables);
-    final sodium = await SodiumSumoInit.init();
-    keyBytes = await _loadValidatedLocalKey(
+    final sampleCiphertext = firstTermiusCiphertext({
+      for (final name in termiusLocalImportedTables)
+        name: rawTables.tables[name],
+    });
+    keyBytes = await keys.validatedKey(
       sodium: sodium,
       levelDbPath: levelDbDir.path,
       sampleCiphertext: sampleCiphertext,
@@ -433,6 +605,11 @@ loadLocalTermiusAppDocument({String? customDataDir}) async {
     return (document: document, sourceLabel: sourceLabel);
   } on TermiusLocalImportException {
     rethrow;
+  } on TermiusIndexedDbLimitException catch (error) {
+    throw TermiusLocalImportException(
+      TermiusLocalImportFailure.tooLarge,
+      error.limit,
+    );
   } on TermiusUnknownCipherVersionException catch (error) {
     throw TermiusLocalImportException(
       TermiusLocalImportFailure.unsupportedCipher,
@@ -449,10 +626,6 @@ loadLocalTermiusAppDocument({String? customDataDir}) async {
   } finally {
     decryptor?.dispose();
     keyBytes?.fillRange(0, keyBytes.length, 0);
-    if (snapshotFiles != null) {
-      for (final buf in snapshotFiles.values) {
-        buf.fillRange(0, buf.length, 0);
-      }
-    }
+    _wipeSnapshot(snapshotFiles);
   }
 }

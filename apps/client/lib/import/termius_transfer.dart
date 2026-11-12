@@ -208,6 +208,7 @@ class TermiusImportRow {
     required this.tags,
     this.password,
     this.privateKey,
+    this.passphrase,
     this.jumpAlias,
     this.forwards = const [],
     this.certificate,
@@ -229,6 +230,9 @@ class TermiusImportRow {
 
   /// Inline private key text. Never logged.
   final String? privateKey;
+
+  /// Passphrase of [privateKey] when the source stores one. Never logged.
+  final String? passphrase;
   final String? jumpAlias;
   final List<SshPortForwardProfile> forwards;
 
@@ -1168,11 +1172,16 @@ class TermiusImportPlanner {
             username: effectiveUsername,
             kind: AuthKind.privateKey,
             privateKey: source.privateKey,
+            passphrase: source.passphrase,
           ),
           source.certificate!,
         );
       } else if (source.privateKey != null) {
-        login = HostLogin(kind: AuthKind.privateKey, privateKey: source.privateKey);
+        login = HostLogin(
+          kind: AuthKind.privateKey,
+          privateKey: source.privateKey,
+          passphrase: source.passphrase,
+        );
         if (source.certificate != null) {
           add(TermiusIssueCode.certificateNotStored);
         }

@@ -198,6 +198,20 @@ bool _isLoopbackAddress(String address) {
       low == '[::1]';
 }
 
+/// Tables [buildTermiusDocumentFromDecryptedTables] reads. Others (for
+/// example `known_hosts`, `proxies`) are never decrypted, so no secret that
+/// is not imported is ever materialized in memory.
+const Set<String> termiusLocalImportedTables = {
+  'hosts',
+  'keys',
+  'ssh_identities',
+  'ssh_configs',
+  'groups',
+  'tags',
+  'tag_hosts',
+  'pf_rules',
+};
+
 /// Decrypts [rawTables] with [decryptor] and builds a [TermiusImportDocument].
 TermiusImportDocument buildTermiusDocumentFromLocalTables(
   TermiusRawTables rawTables,
@@ -205,6 +219,7 @@ TermiusImportDocument buildTermiusDocumentFromLocalTables(
 ) {
   final decrypted = <String, List<Map<String, Object?>>>{};
   for (final entry in rawTables.tables.entries) {
+    if (!termiusLocalImportedTables.contains(entry.key)) continue;
     decrypted[entry.key] = [
       for (final row in entry.value)
         (decryptor.walk(row) as Map).cast<String, Object?>(),
@@ -340,7 +355,8 @@ TermiusImportDocument buildTermiusDocumentFromDecryptedTables(
 
     final rawPortText = _text(cfg['port'] ?? row['port']);
     int? port;
-    if (rawPortText.isEmpty) {
+    // Termius leaves an unset port empty or 0; both mean the protocol default.
+    if (rawPortText.isEmpty || rawPortText == '0') {
       port = protocol?.defaultPort ?? 22;
     } else {
       final parsed = int.tryParse(rawPortText);
@@ -383,10 +399,13 @@ TermiusImportDocument buildTermiusDocumentFromDecryptedTables(
 
     var password = _rawSecretString(identity['password'] ?? row['password']);
     String? privateKey;
+    String? passphrase;
     final rawPrivateKey = _text(keyRow?['private_key']);
     if (rawPrivateKey.isNotEmpty) {
       if (isInlinePrivateKeyText(rawPrivateKey)) {
         privateKey = normalizePrivateKeyText(rawPrivateKey);
+        // Exact passphrase (whitespace preserved); empty means none.
+        passphrase = _rawSecretString(keyRow?['passphrase']);
       } else {
         issues.add(
           TermiusIssue(
@@ -443,6 +462,7 @@ TermiusImportDocument buildTermiusDocumentFromDecryptedTables(
         tags: List.unmodifiable(tags),
         password: password,
         privateKey: privateKey,
+        passphrase: passphrase,
         jumpAlias: jumpAlias,
         forwards: List.unmodifiable(forwards),
         issues: issues,

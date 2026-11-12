@@ -16,6 +16,7 @@
 | Guest link is not yet usable or is expired | Check UTC start/expiry, openings, attempt/concurrency limits and revocation. A different link's existing cookie cannot open this link. |
 | Local settings/profile seem missing in a browser | Check the browser origin/profile, private mode and storage policy. A new origin is a separate storage scope. |
 | Full Flutter suite fails while focused CI passes | Keep the documented baseline failures separate; reproduce and report the exact failing case. Do not label the full suite green. |
+| One-click Termius import cannot read the key or the key is rejected | Open Termius Desktop once on this computer and choose Allow in the macOS Keychain prompt. If you switched between the App Store and downloaded builds, open the one you use and retry. Otherwise export CSV from Termius and import that file. |
 
 For server deployment, health and backup questions use the [server documentation](https://github.com/aterm-project/server/blob/main/docs/README.md). For protocol details see [remote desktop](REMOTE-DESKTOP.md) and [Telnet](TELNET.md).
 

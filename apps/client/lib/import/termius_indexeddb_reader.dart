@@ -24,6 +24,19 @@ const Set<String> wantedTermiusDatabases = {
 };
 
 const int _maxSnappyOutputBytes = 64 * 1024 * 1024;
+
+/// Upper bound on bytes produced by all Snappy blocks of one read (SST data
+/// blocks plus Blink-compressed values), so crafted copy chains cannot expand
+/// a bounded on-disk snapshot into unbounded memory.
+const int maxTermiusIndexedDbDecompressedBytes = 256 * 1024 * 1024;
+
+/// Upper bound on LevelDB entries (all keys, all generations) in one read.
+const int maxTermiusIndexedDbEntries = 500000;
+
+/// Upper bound on live rows decoded from one wanted Termius database.
+const int maxTermiusIndexedDbRowsPerTable = 50000;
+
+const int _maxV8Depth = 64;
 const int _levelDbSstFooterBytes = 48;
 const int _levelDbLogBlockBytes = 32768;
 const List<int> _levelDbTableMagic = [
@@ -37,22 +50,52 @@ const List<int> _levelDbTableMagic = [
   0xdb,
 ];
 
+/// A safety bound of the read-only reader was exceeded; nothing is returned.
+class TermiusIndexedDbLimitException implements Exception {
+  const TermiusIndexedDbLimitException(this.limit);
+
+  final String limit;
+
+  @override
+  String toString() => 'TermiusIndexedDbLimitException($limit)';
+}
+
 class TermiusRawTables {
   const TermiusRawTables({
     required this.tables,
     required this.countsBeforeDedup,
+    this.malformedRecords = const {},
   });
 
   final Map<String, List<Map<String, Object?>>> tables;
   final Map<String, int> countsBeforeDedup;
 
+  /// Live primary records per wanted database whose value could not be
+  /// decoded into an object. Callers that must not silently lose data fail
+  /// closed when a table they use has any.
+  final Map<String, int> malformedRecords;
+
   List<Map<String, Object?>> operator [](String name) =>
       tables[name] ?? const [];
 }
 
+class _ReadBudget {
+  int decompressedBytes = 0;
+
+  void consumeDecompressed(int bytes) {
+    decompressedBytes += bytes;
+    if (decompressedBytes > maxTermiusIndexedDbDecompressedBytes) {
+      throw const TermiusIndexedDbLimitException('decompressedBytes');
+    }
+  }
+}
+
 /// Decompresses a raw (unframed) Snappy block as stored in LevelDB SSTables
 /// and Blink `kCompressedWithSnappy` IndexedDB values.
-Uint8List snappyUncompress(Uint8List input) {
+Uint8List snappyUncompress(Uint8List input) =>
+    _snappyUncompress(input, null);
+
+Uint8List _snappyUncompress(Uint8List input, _ReadBudget? budget) {
   final header = _readVarint(input, 0);
   if (header == null) {
     throw const FormatException('Truncated Snappy length header');
@@ -61,6 +104,7 @@ Uint8List snappyUncompress(Uint8List input) {
   if (targetLen < 0 || targetLen > _maxSnappyOutputBytes) {
     throw const FormatException('Snappy uncompressed length out of bounds');
   }
+  budget?.consumeDecompressed(targetLen);
   final out = Uint8List(targetLen);
   var inPos = header.next;
   var outPos = 0;
@@ -243,8 +287,10 @@ String _hexKey(Uint8List bytes) {
 /// represented as `fileName -> bytes`.
 Map<String, _LevelDbEntry> _readLiveLevelDbEntries(
   Map<String, Uint8List> files,
+  _ReadBudget budget,
 ) {
   final records = <String, _LevelDbEntry>{};
+  var seenEntries = 0;
 
   void recordEntry(
     Uint8List userKey,
@@ -252,6 +298,9 @@ Map<String, _LevelDbEntry> _readLiveLevelDbEntries(
     int valueType,
     Uint8List? value,
   ) {
+    if (++seenEntries > maxTermiusIndexedDbEntries) {
+      throw const TermiusIndexedDbLimitException('entries');
+    }
     final keyHex = _hexKey(userKey);
     final existing = records[keyHex];
     if (existing != null && existing.sequence > sequence) return;
@@ -263,14 +312,32 @@ Map<String, _LevelDbEntry> _readLiveLevelDbEntries(
     );
   }
 
-  final liveTables = _readManifestLiveTables(files);
+  int? fileNumber(String name) {
+    final dot = name.lastIndexOf('.');
+    return int.tryParse(dot > 0 ? name.substring(0, dot) : name);
+  }
+
+  final manifest = _readManifestState(files);
+  final presentTables = {
+    for (final name in files.keys)
+      if (name.endsWith('.ldb') || name.endsWith('.sst')) ?fileNumber(name),
+  };
+  // Only trust the manifest when every table it lists is in this snapshot.
+  // A compaction racing the read can publish a new MANIFEST naming tables
+  // that were not captured; filtering by it would then silently drop live
+  // records. Falling back to all captured tables stays correct because the
+  // newest sequence number per key always wins.
+  final liveTables =
+      manifest != null &&
+          manifest.liveTables.isNotEmpty &&
+          manifest.liveTables.every(presentTables.contains)
+      ? manifest.liveTables
+      : null;
   final tableNames = files.keys
       .where((name) => name.endsWith('.ldb') || name.endsWith('.sst'))
       .where((name) {
-        if (liveTables == null || liveTables.isEmpty) return true;
-        final dot = name.lastIndexOf('.');
-        final stem = dot > 0 ? name.substring(0, dot) : name;
-        final num = int.tryParse(stem);
+        if (liveTables == null) return true;
+        final num = fileNumber(name);
         return num == null || liveTables.contains(num);
       })
       .toList()
@@ -279,11 +346,22 @@ Map<String, _LevelDbEntry> _readLiveLevelDbEntries(
   for (final name in tableNames) {
     final bytes = files[name];
     if (bytes != null) {
-      _readTableEntries(bytes, recordEntry);
+      _readTableEntries(bytes, recordEntry, budget);
     }
   }
 
-  final logNames = files.keys.where((name) => name.endsWith('.log')).toList()
+  // Logs older than the manifest's log number were already flushed into
+  // tables; replaying them could resurrect records whose tombstones were
+  // dropped by a later compaction.
+  final minLog = liveTables == null ? null : manifest?.minLiveLogNumber;
+  final logNames = files.keys
+      .where((name) => name.endsWith('.log'))
+      .where((name) {
+        if (minLog == null) return true;
+        final num = fileNumber(name);
+        return num == null || num >= minLog;
+      })
+      .toList()
     ..sort();
   for (final name in logNames) {
     final bytes = files[name];
@@ -295,24 +373,45 @@ Map<String, _LevelDbEntry> _readLiveLevelDbEntries(
   return records;
 }
 
-Set<int>? _readManifestLiveTables(Map<String, Uint8List> files) {
+class _ManifestState {
+  final live = <String, int>{};
+  int? logNumber;
+  int? prevLogNumber;
+
+  Set<int> get liveTables => live.values.toSet();
+
+  /// Lowest log file number that may still hold unflushed writes.
+  int? get minLiveLogNumber {
+    final log = logNumber;
+    if (log == null) return null;
+    final prev = prevLogNumber;
+    return prev != null && prev > 0 && prev < log ? prev : log;
+  }
+}
+
+_ManifestState? _readManifestState(Map<String, Uint8List> files) {
   final currentBytes = files['CURRENT'];
   if (currentBytes == null) return null;
   final manifestName = utf8
       .decode(currentBytes, allowMalformed: true)
       .trim();
-  if (manifestName.isEmpty) return null;
+  if (manifestName.isEmpty ||
+      manifestName.contains('/') ||
+      manifestName.contains(r'\')) {
+    return null;
+  }
   final manifestBytes = files[manifestName];
   if (manifestBytes == null) return null;
 
-  final live = <String, int>{};
+  final state = _ManifestState();
   for (final edit in _readLogPhysicalRecords(manifestBytes)) {
-    _applyVersionEdit(edit, live);
+    _applyVersionEdit(edit, state);
   }
-  return live.values.toSet();
+  return state;
 }
 
-void _applyVersionEdit(Uint8List edit, Map<String, int> live) {
+void _applyVersionEdit(Uint8List edit, _ManifestState state) {
+  final live = state.live;
   var pos = 0;
   while (pos < edit.length) {
     final tag = _readVarint(edit, pos);
@@ -327,6 +426,8 @@ void _applyVersionEdit(Uint8List edit, Map<String, int> live) {
         final val = _readVarint(edit, pos);
         if (val == null) return;
         pos = val.next;
+        if (tag.value == 2) state.logNumber = val.value;
+        if (tag.value == 9) state.prevLogNumber = val.value;
       case 5:
         final level = _readVarint(edit, pos);
         if (level == null) return;
@@ -362,6 +463,7 @@ void _applyVersionEdit(Uint8List edit, Map<String, int> live) {
 Uint8List? _readSstBlock(
   Uint8List fileBuffer,
   ({int offset, int size, int next}) handle,
+  _ReadBudget budget,
 ) {
   final blockEnd = handle.offset + handle.size;
   if (handle.offset < 0 ||
@@ -374,7 +476,7 @@ Uint8List? _readSstBlock(
   if (compressionType == 0) return raw;
   if (compressionType == 1) {
     try {
-      return snappyUncompress(raw);
+      return _snappyUncompress(raw, budget);
     } on FormatException {
       return null;
     }
@@ -434,6 +536,7 @@ void _readTableEntries(
   Uint8List fileBuffer,
   void Function(Uint8List userKey, int sequence, int valueType, Uint8List? value)
   onEntry,
+  _ReadBudget budget,
 ) {
   if (fileBuffer.length < _levelDbSstFooterBytes) return;
   final footer = Uint8List.sublistView(
@@ -448,11 +551,11 @@ void _readTableEntries(
   final index = _readBlockHandle(footer, metaIndex.next);
   if (index == null) return;
 
-  final indexBlock = _readSstBlock(fileBuffer, index);
+  final indexBlock = _readSstBlock(fileBuffer, index, budget);
   for (final indexEntry in _parseBlockEntries(indexBlock)) {
     final dataHandle = _readBlockHandle(indexEntry.value, 0);
     if (dataHandle == null) continue;
-    final dataBlock = _readSstBlock(fileBuffer, dataHandle);
+    final dataBlock = _readSstBlock(fileBuffer, dataHandle, budget);
     for (final entry in _parseBlockEntries(dataBlock)) {
       if (entry.key.length < 8) continue;
       final userKeyLen = entry.key.length - 8;
@@ -689,7 +792,8 @@ TermiusRawTables readTermiusIndexedDbTables(
   Set<String> wantedDatabases = wantedTermiusDatabases,
   bool keepAllVersions = false,
 }) {
-  final entries = _readLiveLevelDbEntries(levelDbFiles);
+  final budget = _ReadBudget();
+  final entries = _readLiveLevelDbEntries(levelDbFiles, budget);
 
   // 1. Resolve dbId -> database name from global metadata (`00 00 00 00 C9`).
   final dbNamesById = <int, String>{};
@@ -746,6 +850,8 @@ TermiusRawTables readTermiusIndexedDbTables(
 
   // 3. Collect and deserialize primary object records (`indexId == 1`).
   final rawRowsByDbStore = <int, Map<int, List<Map<String, Object?>>>>{};
+  final malformedByDbStore = <int, Map<int, int>>{};
+  final rowsByDb = <int, int>{};
   final sortedEntries = entries.values.toList()
     ..sort((a, b) => a.sequence.compareTo(b.sequence));
 
@@ -762,47 +868,67 @@ TermiusRawTables readTermiusIndexedDbTables(
     }
     if (!wantedDbIds.containsKey(prefix.dbId)) continue;
 
-    final decoded = decodeIndexedDbRecordValue(entry.value!);
+    if ((rowsByDb[prefix.dbId] = (rowsByDb[prefix.dbId] ?? 0) + 1) >
+        maxTermiusIndexedDbRowsPerTable) {
+      throw const TermiusIndexedDbLimitException('rowsPerTable');
+    }
+    final decoded = _decodeIndexedDbRecordValue(entry.value!, budget);
     if (decoded is Map<String, Object?>) {
       rawRowsByDbStore
           .putIfAbsent(prefix.dbId, () => {})
           .putIfAbsent(prefix.objStoreId, () => [])
           .add(decoded);
+    } else {
+      final perStore = malformedByDbStore.putIfAbsent(prefix.dbId, () => {});
+      perStore[prefix.objStoreId] = (perStore[prefix.objStoreId] ?? 0) + 1;
     }
   }
 
   final tables = <String, List<Map<String, Object?>>>{};
   final before = <String, int>{};
+  final malformed = <String, int>{};
 
   for (final dbEntry in wantedDbIds.entries) {
     final dbId = dbEntry.key;
     final dbName = dbEntry.value;
-    final stores = rawRowsByDbStore[dbId];
-    if (stores == null || stores.isEmpty) continue;
-    final preferredStoreId =
-        firstStoreByDb[dbId] ??
-        (stores.keys.toList()..sort()).first;
-    final rows =
-        stores[preferredStoreId] ??
-        stores[(stores.keys.toList()..sort()).first] ??
-        const [];
+    final stores = rawRowsByDbStore[dbId] ?? const {};
+    final badStores = malformedByDbStore[dbId] ?? const {};
+    if (stores.isEmpty && badStores.isEmpty) continue;
+    final storeIds = {...stores.keys, ...badStores.keys}.toList()..sort();
+    final storeId = firstStoreByDb[dbId] ?? storeIds.first;
+    final bad = badStores[storeId] ?? 0;
+    if (bad > 0) malformed[dbName] = bad;
+    final rows = stores[storeId] ?? const <Map<String, Object?>>[];
+    if (rows.isEmpty) continue;
     before[dbName] = rows.length;
     tables[dbName] = keepAllVersions ? rows : dedupTermiusTableRows(rows);
   }
 
-  return TermiusRawTables(tables: tables, countsBeforeDedup: before);
+  return TermiusRawTables(
+    tables: tables,
+    countsBeforeDedup: before,
+    malformedRecords: malformed,
+  );
 }
 
 /// Unwraps the IndexedDB value version + Blink SSV header and runs the V8
 /// structured-clone deserializer.
-Object? decodeIndexedDbRecordValue(Uint8List rawValue) {
+Object? decodeIndexedDbRecordValue(Uint8List rawValue) =>
+    _decodeIndexedDbRecordValue(rawValue, _ReadBudget());
+
+Object? _decodeIndexedDbRecordValue(Uint8List rawValue, _ReadBudget budget) {
   final valueVer = _readVarint(rawValue, 0);
   if (valueVer == null || valueVer.next >= rawValue.length) return null;
   final blinkSlice = Uint8List.sublistView(rawValue, valueVer.next);
-  return _unwrapBlinkAndDeserializeV8(blinkSlice);
+  return _unwrapBlinkAndDeserializeV8(blinkSlice, budget, 0);
 }
 
-Object? _unwrapBlinkAndDeserializeV8(Uint8List buffer) {
+Object? _unwrapBlinkAndDeserializeV8(
+  Uint8List buffer,
+  _ReadBudget budget,
+  int wrapDepth,
+) {
+  if (wrapDepth > 1) return null;
   if (buffer.isEmpty || buffer[0] != 0xff) return null;
   final blinkVer = _readVarint(buffer, 1);
   if (blinkVer == null) return null;
@@ -814,10 +940,15 @@ Object? _unwrapBlinkAndDeserializeV8(Uint8List buffer) {
     if (wrappingMode == 0x02) {
       // kCompressedWithSnappy
       try {
-        final decompressed = snappyUncompress(
+        final decompressed = _snappyUncompress(
           Uint8List.sublistView(buffer, pos),
+          budget,
         );
-        return _unwrapBlinkAndDeserializeV8(decompressed);
+        return _unwrapBlinkAndDeserializeV8(
+          decompressed,
+          budget,
+          wrapDepth + 1,
+        );
       } on FormatException {
         return null;
       }
@@ -834,6 +965,8 @@ Object? _unwrapBlinkAndDeserializeV8(Uint8List buffer) {
   try {
     final reader = _V8ValueDeserializer(Uint8List.sublistView(buffer, pos));
     return reader.read();
+  } on TermiusIndexedDbLimitException {
+    rethrow;
   } on Object {
     return null;
   }
@@ -856,8 +989,18 @@ class _V8ValueDeserializer {
 
   final Uint8List _buf;
   int _pos = 0;
+  int _depth = 0;
   late final int version;
   final List<Object?> _objects = [];
+
+  /// Rejects element counts that cannot fit in the remaining input (each
+  /// element needs at least one byte) before allocating for them.
+  int _checkedCount(int count) {
+    if (count < 0 || count > _buf.length - _pos) {
+      throw const FormatException('V8 element count exceeds input');
+    }
+    return count;
+  }
 
   int _readTag() {
     while (_pos < _buf.length) {
@@ -962,7 +1105,17 @@ class _V8ValueDeserializer {
   }
 
   Object? _readObjectInternal() {
-    final tag = _readTag();
+    if (++_depth > _maxV8Depth) {
+      throw const FormatException('V8 value nesting too deep');
+    }
+    try {
+      return _readObjectInternalTag(_readTag());
+    } finally {
+      _depth--;
+    }
+  }
+
+  Object? _readObjectInternalTag(int tag) {
     switch (tag) {
       case 0x5f /* '_' undefined */ || 0x2d /* '-' hole */ :
         return _undefined;
@@ -1051,7 +1204,7 @@ class _V8ValueDeserializer {
         }
         return map;
       case 0x41 /* 'A' BeginDenseJSArray */ :
-        final length = _readVarintChecked();
+        final length = _checkedCount(_readVarintChecked());
         final list = List<Object?>.filled(length, null, growable: true);
         _objects.add(list);
         for (var i = 0; i < length; i++) {

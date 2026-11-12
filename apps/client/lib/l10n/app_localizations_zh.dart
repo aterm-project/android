@@ -16604,4 +16604,56 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get connectProgressNoCredential => '此主机没有可用的已保存登录凭据。请添加或修正凭据后重试。';
+
+  @override
+  String get termiusLocalOneClickAction => '一键导入 Termius';
+
+  @override
+  String get termiusLocalDetectedTitle => '已检测到本机 Termius 桌面版';
+
+  @override
+  String get termiusLocalDetectedBody =>
+      '无需导出文件。Atermius 以只读方式读取本机 Termius 数据，通过系统钥匙串中的 Termius 密钥解锁（如有授权提示请选择“允许”），在内存中解密并导入主机、分组、标签、密码、SSH 密钥、端口转发与跳板机。已存在的主机会被跳过。';
+
+  @override
+  String get termiusLocalImportButton => '从本机 Termius 一键导入';
+
+  @override
+  String get termiusLocalProgress => '正在从本机 Termius 导入…如系统请求钥匙串访问权限，请选择“允许”。';
+
+  @override
+  String termiusLocalAllExist(int count) {
+    return '本机 Termius 中的 $count 台主机已全部存在，未导入任何内容。';
+  }
+
+  @override
+  String get termiusLocalNothingNew => '本机 Termius 中没有可导入的新主机。';
+
+  @override
+  String get termiusLocalFailNotInstalled =>
+      '未在本机找到 Termius 桌面版数据。请先在本机打开一次 Termius 桌面版，然后重试。';
+
+  @override
+  String get termiusLocalFailKeyNotFound =>
+      '无法从系统钥匙串或凭据管理器读取 Termius 密钥。如有授权提示请选择“允许”，并确认已在本机打开过 Termius，然后重试。';
+
+  @override
+  String get termiusLocalFailKeyRejected =>
+      '系统钥匙串中的 Termius 密钥无法解锁这份 Termius 数据，未导入任何内容。若曾在 App Store 版与下载版之间切换，请先打开当前使用的版本一次，然后重试。';
+
+  @override
+  String termiusLocalFailUnsupportedCipher(String header) {
+    return '此 Termius 版本使用了未知的加密格式（$header），未导入任何内容；请改用 Termius CSV 导出文件。';
+  }
+
+  @override
+  String get termiusLocalFailEmpty => '本机 Termius 数据中没有可导入的主机。';
+
+  @override
+  String get termiusLocalFailReadFailed =>
+      '无法读取本机 Termius 数据，未导入任何内容。如 Termius 正在同步，请稍候再试。';
+
+  @override
+  String get termiusLocalFailTooLarge =>
+      '本机 Termius 数据超出导入安全上限，未导入任何内容。请改用 Termius CSV 导出文件。';
 }

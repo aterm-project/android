@@ -2,7 +2,21 @@
 
 [首次使用](GETTING_STARTED.md) · [First use](GETTING_STARTED.en.md)
 
-当前支持 Termius 兼容 CSV、OpenSSH 配置和 OpenSSH 文件包。它们是已知格式的互操作，不读取 Termius 原生加密导出或云端数据库。/ Current transfer supports Termius-compatible CSV, OpenSSH config and OpenSSH bundles; it does not decrypt native Termius vault exports or cloud data.
+当前支持：Windows/macOS 本机 Termius 桌面版一键导入、Termius 兼容 CSV、未加密的 Termius JSON、OpenSSH 配置和 OpenSSH 文件包。不登录 Termius 云端、不读取云端数据库，也不访问手机上的 Termius。/ Current transfer supports one-click import from the Termius Desktop app installed on this Windows/macOS computer, Termius-compatible CSV, unencrypted Termius JSON, OpenSSH config and OpenSSH bundles. It never signs in to Termius cloud, reads cloud data or touches Termius on a phone.
+
+## 本机 Termius 一键导入 / One-click import from local Termius
+
+在本机安装并至少打开过一次 Termius 桌面版后，“导入/导出”对话框顶部、主机菜单和首页会出现“一键导入 Termius”。点击后无需选择文件：/ Once Termius Desktop is installed and has been opened on this computer, the Import/Export dialog, the host menu and the home page show "One-click Termius import". No file is picked:
+
+- 数据位置 / Data location：Windows `%APPDATA%\Termius`；macOS `~/Library/Application Support/Termius`（官网下载版）或 `~/Library/Containers/*termius*/Data/Library/Application Support/Termius`（App Store 版）。发现多个资料时依次尝试，使用第一个能被解密的。/ Windows `%APPDATA%\Termius`; macOS `~/Library/Application Support/Termius` (downloaded build) or the App Store sandbox container. When several profiles exist they are tried in order and the first one that decrypts is used.
+- 只读 / Read-only：只把 IndexedDB(LevelDB) 文件读入内存，不写入、不加锁、不打开/注入/结束 Termius；Termius 运行中也可导入。/ The IndexedDB (LevelDB) files are only copied into memory; nothing is written or locked, and Termius is never opened, injected into or closed. It may keep running.
+- 密钥 / Key：从系统钥匙串（macOS）或凭据管理器（Windows）读取当前用户的 Termius `localKey`。macOS 可能弹出钥匙串授权，选择“允许”即可。密钥先用一个加密字段做 Poly1305 校验再使用，解码后的密钥字节用完即清零；密钥与解密内容不记录、不导出、不上传。/ The current user's Termius `localKey` is read from the macOS Keychain or Windows Credential Manager (macOS may ask for permission; choose Allow). A key is verified against one encrypted field (Poly1305) before use and its decoded bytes are wiped afterwards; the key and decrypted data are never logged, exported or uploaded.
+- 解密与失败即停 / Decryption and fail-closed：字段为 XSalsa20-Poly1305（`04 01` 版本头）。密钥不匹配、未知加密版本、无法解析的主机/密钥等记录、或超出大小/记录数/解压上限时整体停止，不会导入部分数据。已删除（墓碑/软删除）的记录不会导入。/ Fields are XSalsa20-Poly1305 with a `04 01` version header. A wrong key, an unknown cipher version, an undecodable imported record or exceeding the size/record/decompression bounds stops the whole import; nothing partial is written. Deleted (tombstoned or soft-deleted) records are not imported.
+- 导入内容 / What is imported：主机、嵌套分组、标签、用户名、密码、SSH 私钥及其口令、端口转发和跳板机，写入当前资料或 Vault；已存在的主机按重复规则跳过。代理与 known_hosts 不导入也不解密。导入期间若切换了 Vault/资料，导入会中止。/ Hosts, nested groups, tags, usernames, passwords, SSH private keys with their passphrases, port forwards and jump hosts go to the current profile or Vault; existing hosts are skipped. Proxies and known_hosts are neither imported nor decrypted. Switching Vault/profile while the import runs aborts it.
+
+如果提示未知加密版本或超出安全上限，请在 Termius 中导出 CSV 后使用下方文件导入。/ If an unknown cipher version or a safety limit is reported, export CSV from Termius and use the file import below.
+
+## 文件导入 / File import
 
 Termius CSV 模板的八列顺序为 / The supported eight-column template is:
 

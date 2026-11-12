@@ -18627,4 +18627,60 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get connectProgressNoCredential =>
       'У этого хоста нет пригодных сохранённых данных входа. Добавьте или исправьте учётные данные и повторите.';
+
+  @override
+  String get termiusLocalOneClickAction => 'Импорт Termius в 1 клик';
+
+  @override
+  String get termiusLocalDetectedTitle =>
+      'На этом устройстве найден Termius Desktop';
+
+  @override
+  String get termiusLocalDetectedBody =>
+      'Экспорт не нужен. Atermius читает локальные данные Termius, не изменяя их, открывает их ключом Termius из системной связки ключей (если появится запрос, выберите «Разрешить»), расшифровывает в памяти и импортирует хосты, группы, теги, пароли, SSH-ключи, перенаправления портов и промежуточные хосты. Уже существующие хосты пропускаются.';
+
+  @override
+  String get termiusLocalImportButton => 'Импортировать из локального Termius';
+
+  @override
+  String get termiusLocalProgress =>
+      'Импорт из локального Termius… Если система запросит доступ к связке ключей, выберите «Разрешить».';
+
+  @override
+  String termiusLocalAllExist(int count) {
+    return 'Все хосты Termius ($count) уже есть здесь. Ничего не импортировано.';
+  }
+
+  @override
+  String get termiusLocalNothingNew =>
+      'В локальном Termius нет новых хостов для импорта.';
+
+  @override
+  String get termiusLocalFailNotInstalled =>
+      'Данные Termius Desktop на этом устройстве не найдены. Один раз откройте Termius Desktop и повторите попытку.';
+
+  @override
+  String get termiusLocalFailKeyNotFound =>
+      'Не удалось прочитать ключ Termius из системной связки ключей или диспетчера учётных данных. Если появится запрос, выберите «Разрешить», убедитесь, что Termius уже открывался на этом устройстве, и повторите попытку.';
+
+  @override
+  String get termiusLocalFailKeyRejected =>
+      'Ключ Termius из системной связки ключей не подходит к этим данным Termius. Ничего не импортировано. Если вы переходили между версией из App Store и загруженной версией, один раз откройте ту, которой пользуетесь, и повторите попытку.';
+
+  @override
+  String termiusLocalFailUnsupportedCipher(String header) {
+    return 'Эта версия Termius использует неизвестный формат шифрования ($header). Ничего не импортировано; используйте экспорт Termius в CSV.';
+  }
+
+  @override
+  String get termiusLocalFailEmpty =>
+      'В локальных данных Termius нет хостов для импорта.';
+
+  @override
+  String get termiusLocalFailReadFailed =>
+      'Не удалось прочитать локальные данные Termius, ничего не импортировано. Если Termius синхронизируется, подождите и повторите попытку.';
+
+  @override
+  String get termiusLocalFailTooLarge =>
+      'Локальные данные Termius превышают безопасные ограничения импорта, ничего не импортировано. Используйте экспорт Termius в CSV.';
 }

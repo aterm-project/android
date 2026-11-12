@@ -1753,9 +1753,7 @@ _snack(context, context.l10n.theNewWindowWasntReadyThe, error: true);
                   if (hasLocalTermiusInstallation())
                     WorkspaceAction(
                       'host_termius_one_click',
-                      Localizations.localeOf(context).languageCode == 'zh'
-                          ? '一键导入 Termius'
-                          : 'One-click Termius Import',
+                      context.l10n.termiusLocalOneClickAction,
                       Icons.bolt_rounded,
                       () => _runCloudOneClickTermiusImport(context, app),
                       enabled: app.activeVault?.canWrite == true,
@@ -2800,10 +2798,9 @@ HomeSidebarAction? _cloudTermiusOneClickAction(
   AppController app,
 ) {
   if (!hasLocalTermiusInstallation()) return null;
-  final lang = Localizations.localeOf(context).languageCode;
   return HomeSidebarAction(
     id: 'cloud_termius_one_click',
-    label: lang == 'zh' ? '一键导入 Termius' : 'One-click Termius Import',
+    label: context.l10n.termiusLocalOneClickAction,
     icon: Icons.bolt_rounded,
     enabled: app.activeVault?.canWrite == true,
     onSelected: () => _runCloudOneClickTermiusImport(context, app),

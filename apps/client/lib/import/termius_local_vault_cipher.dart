@@ -3,6 +3,9 @@
 ///
 /// Format:
 ///   `base64( 0x04 0x01 | nonce[24] | XSalsa20-Poly1305(ciphertext + MAC[16]) )`
+///
+/// Format notes follow the MIT-licensed termius-export project
+/// (https://github.com/y01and3/termius-export).
 library;
 
 import 'dart:convert';
@@ -18,6 +21,10 @@ const int termiusVaultMacBytes = 16;
 const int termiusVaultKeyBytes = 32;
 const int termiusVaultMinEnvelopeBytes =
     2 + termiusVaultNonceBytes + termiusVaultMacBytes;
+
+/// Maximum nesting [TermiusVaultDecryptor.walk] and [firstTermiusCiphertext]
+/// descend into.
+const int termiusVaultMaxWalkDepth = 64;
 
 class TermiusUnknownCipherVersionException implements Exception {
   const TermiusUnknownCipherVersionException(this.headerHex);
@@ -72,20 +79,21 @@ bool _isPlausibleUnknownEnvelope(Uint8List raw) =>
 
 /// Finds one `0x04 0x01` ciphertext anywhere in [node] so candidate keyring
 /// entries can be verified against Poly1305 before decrypting the full store.
-String? firstTermiusCiphertext(Object? node) {
+String? firstTermiusCiphertext(Object? node, [int depth = 0]) {
+  if (depth > termiusVaultMaxWalkDepth) return null;
   if (node is String) {
     return isTermiusEncryptedEnvelope(node) ? node : null;
   }
   if (node is Map) {
     for (final value in node.values) {
-      final found = firstTermiusCiphertext(value);
+      final found = firstTermiusCiphertext(value, depth + 1);
       if (found != null) return found;
     }
     return null;
   }
   if (node is Iterable) {
     for (final item in node) {
-      final found = firstTermiusCiphertext(item);
+      final found = firstTermiusCiphertext(item, depth + 1);
       if (found != null) return found;
     }
   }
@@ -199,15 +207,23 @@ class TermiusVaultDecryptor {
   }
 
   /// Recursively decrypts all string fields inside [node].
-  Object? walk(Object? node) {
+  ///
+  /// Nesting is bounded: structured-clone back-references can make a record
+  /// cyclic, and such a record is rejected instead of recursing forever.
+  Object? walk(Object? node) => _walk(node, 0);
+
+  Object? _walk(Object? node, int depth) {
+    if (depth > termiusVaultMaxWalkDepth) {
+      throw const FormatException('Termius record nesting too deep');
+    }
     if (node is Map) {
       return <String, Object?>{
         for (final entry in node.entries)
-          entry.key.toString(): walk(entry.value),
+          entry.key.toString(): _walk(entry.value, depth + 1),
       };
     }
     if (node is List) {
-      return <Object?>[for (final item in node) walk(item)];
+      return <Object?>[for (final item in node) _walk(item, depth + 1)];
     }
     return decryptField(node);
   }

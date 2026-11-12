@@ -7,6 +7,7 @@ enum TermiusLocalImportFailure {
   unsupportedCipher,
   emptyDatabase,
   readFailed,
+  tooLarge,
 }
 
 class TermiusLocalImportException implements Exception {

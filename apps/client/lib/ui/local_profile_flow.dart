@@ -5025,10 +5025,9 @@ _showMessage(
   /// Omitted from the Import / Export menu while null.
   HomeSidebarAction? _termiusOneClickSidebarAction() {
     if (!hasLocalTermiusInstallation()) return null;
-    final lang = Localizations.localeOf(context).languageCode;
     return HomeSidebarAction(
       id: 'local_termius_one_click',
-      label: lang == 'zh' ? '一键导入 Termius' : 'One-click Termius Import',
+      label: context.l10n.termiusLocalOneClickAction,
       icon: Icons.bolt_rounded,
       enabled: !_busy && _repository != null,
       onSelected: _oneClickImportTermius,

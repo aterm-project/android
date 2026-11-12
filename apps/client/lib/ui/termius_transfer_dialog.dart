@@ -49,36 +49,87 @@ typedef TermiusExportSaver =
       required bool containsSecrets,
     });
 
-/// localized status / error helpers for one-click Termius import.
+/// Localized, actionable message for a failed local Termius import.
 String describeTermiusLocalImportFailure(
-  String lang,
+  AppLocalizations l10n,
   TermiusLocalImportException error,
-) => switch ((lang, error.failure)) {
-  ('zh', TermiusLocalImportFailure.notInstalled) =>
-    '未在本机检测到 Termius 桌面版数据目录，请确认已安装并启动过 Termius。',
-  ('zh', TermiusLocalImportFailure.keyNotFound) =>
-    '未能从系统钥匙串获取 Termius 解密密钥（请在系统钥匙串授权弹窗中点击“允许”，并确认已登录过本机 Termius）。',
-  ('zh', TermiusLocalImportFailure.keyRejected) =>
-    '系统钥匙串中的密钥无法解密当前 Termius 数据（若曾切换过 App Store 版与安装包版，请检查对应钥匙串项）。',
-  ('zh', TermiusLocalImportFailure.unsupportedCipher) =>
-    '当前 Termius 本地数据库使用了未知的加密版本（${error.detail ?? 'unknown'}），暂不支持直接解密。',
-  ('zh', TermiusLocalImportFailure.emptyDatabase) =>
-    '本机 Termius 数据库中暂无可导入的主机记录。',
-  ('zh', TermiusLocalImportFailure.readFailed) =>
-    '读取本机 Termius 数据库失败，请稍后重试。',
-  (_, TermiusLocalImportFailure.notInstalled) =>
-    'No local Termius Desktop data directory was found on this device.',
-  (_, TermiusLocalImportFailure.keyNotFound) =>
-    'Could not read the Termius localKey from the OS keyring (please approve the keychain prompt if asked).',
-  (_, TermiusLocalImportFailure.keyRejected) =>
-    'The localKey in the OS keyring did not authenticate this Termius profile.',
-  (_, TermiusLocalImportFailure.unsupportedCipher) =>
-    'Unsupported Termius local cipher version (${error.detail ?? 'unknown'}).',
-  (_, TermiusLocalImportFailure.emptyDatabase) =>
-    'No hosts were found in the local Termius database.',
-  (_, TermiusLocalImportFailure.readFailed) =>
-    'Could not read the local Termius database.',
+) => switch (error.failure) {
+  TermiusLocalImportFailure.notInstalled => l10n.termiusLocalFailNotInstalled,
+  TermiusLocalImportFailure.keyNotFound => l10n.termiusLocalFailKeyNotFound,
+  TermiusLocalImportFailure.keyRejected => l10n.termiusLocalFailKeyRejected,
+  TermiusLocalImportFailure.unsupportedCipher =>
+    l10n.termiusLocalFailUnsupportedCipher(error.detail ?? '?'),
+  TermiusLocalImportFailure.emptyDatabase => l10n.termiusLocalFailEmpty,
+  TermiusLocalImportFailure.readFailed => l10n.termiusLocalFailReadFailed,
+  TermiusLocalImportFailure.tooLarge => l10n.termiusLocalFailTooLarge,
 };
+
+/// Localized message for a failed or refused [TermiusTransferTarget.apply].
+String describeTermiusApplyFailure(
+  AppLocalizations l10n,
+  TermiusApplyException error,
+) => switch (error.failure) {
+  TermiusApplyFailure.readOnly => l10n.r7ImportFailReadOnly,
+  TermiusApplyFailure.stalePlan => l10n.r7ImportFailStale,
+  TermiusApplyFailure.contextChanged => l10n.r7ImportFailScopeChanged,
+  _ when error.mutatedTarget => l10n.r7ImportFailPartial(
+    error.writtenHosts,
+    error.writtenGroups,
+    error.writtenCredentials,
+  ),
+  _ => l10n.r7ImportFailRolledBack,
+};
+
+/// Outcome of planning a local Termius import against [target].
+typedef _LocalTermiusPlan = ({
+  TermiusImportDocument document,
+  String sourceLabel,
+  TermiusCatalog catalog,
+  TermiusImportPlan plan,
+});
+
+/// Loads the local Termius data and plans it against [target], refusing to
+/// continue when the Vault/profile changed while the keychain prompt or
+/// decryption was pending (the import must land where the user clicked).
+Future<_LocalTermiusPlan> _planLocalTermiusImport({
+  required TermiusTransferTarget target,
+  required TermiusLocalAppLoader loader,
+  required TermiusDuplicatePolicy duplicates,
+  required String fallbackUsername,
+  TermiusCertificateBridge? certificates,
+}) async {
+  final contextKey = target.contextKey;
+  void ensureSameContext() {
+    if (!target.canWrite) {
+      throw const TermiusApplyException(TermiusApplyFailure.readOnly);
+    }
+    if (target.contextKey != contextKey) {
+      throw const TermiusApplyException(TermiusApplyFailure.contextChanged);
+    }
+  }
+
+  final loaded = await loader();
+  ensureSameContext();
+  final catalog = await target.loadCatalog();
+  ensureSameContext();
+  final plan = TermiusImportPlanner.plan(
+    loaded.document,
+    catalog,
+    duplicates: duplicates,
+    certificates: certificates,
+    fallbackUsername: fallbackUsername,
+  );
+  return (
+    document: loaded.document,
+    sourceLabel: loaded.sourceLabel,
+    catalog: catalog,
+    plan: plan,
+  );
+}
+
+int _skippedExistingCount(TermiusImportPlan plan) => plan.rows
+    .where((row) => row.disposition == TermiusRowDisposition.skippedExisting)
+    .length;
 
 /// Executes a true one-click import straight from the local Termius Desktop app
 /// into [target], prompting only the OS native keychain authorization if needed.
@@ -89,9 +140,9 @@ Future<TermiusTransferOutcome?> runOneClickTermiusImport(
   @visibleForTesting TermiusLocalAppLoader? loadLocalAppForTesting,
 }) async {
   if (!target.canWrite) return null;
-  final lang = Localizations.localeOf(context).languageCode;
   final l10n = context.l10n;
   final navigator = Navigator.of(context, rootNavigator: true);
+  final messenger = ScaffoldMessenger.maybeOf(context);
 
   // Present lightweight non-dismissible progress modal while OS keychain
   // authorization and in-memory decryption run.
@@ -111,13 +162,7 @@ Future<TermiusTransferOutcome?> runOneClickTermiusImport(
               child: CircularProgressIndicator(strokeWidth: 2.4),
             ),
             const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                lang == 'zh'
-                    ? '正在从本机 Termius 一键导入，若弹出系统钥匙串授权请点击“允许”…'
-                    : 'Importing from local Termius Desktop (approve the OS keychain prompt if requested)…',
-              ),
-            ),
+            Expanded(child: Text(l10n.termiusLocalProgress)),
           ],
         ),
       ),
@@ -131,46 +176,35 @@ Future<TermiusTransferOutcome?> runOneClickTermiusImport(
     }
   }
 
+  void notify(String message) {
+    closeProgress();
+    if (context.mounted) {
+      messenger?.showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
   try {
-    final loader = loadLocalAppForTesting ?? loadLocalTermiusAppDocument;
-    final loaded = await loader();
-    final catalog = await target.loadCatalog();
-    final fallbackUser = defaultSystemSshUsername() ?? 'root';
-    final plan = TermiusImportPlanner.plan(
-      loaded.document,
-      catalog,
+    final planned = await _planLocalTermiusImport(
+      target: target,
+      loader: loadLocalAppForTesting ?? loadLocalTermiusAppDocument,
       duplicates: TermiusDuplicatePolicy.skip,
       certificates: certificates,
-      fallbackUsername: fallbackUser,
+      fallbackUsername: defaultSystemSshUsername() ?? 'root',
     );
+    final plan = planned.plan;
 
     if (plan.blocksWholeFile) {
-      closeProgress();
-      if (context.mounted) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text(l10n.r7ImportBlockedFile)),
-        );
-      }
+      notify(l10n.r7ImportBlockedFile);
       return null;
     }
 
     if (plan.createCount == 0) {
-      closeProgress();
-      if (context.mounted) {
-        final skippedExisting = plan.rows
-            .where((r) => r.disposition == TermiusRowDisposition.skippedExisting)
-            .length;
-        final msg = lang == 'zh'
-            ? (skippedExisting > 0
-                  ? '本机 Termius 中的 $skippedExisting 台主机已全部存在于当前工作区，无需重复导入。'
-                  : '本机 Termius 中没有可导入的新主机。')
-            : (skippedExisting > 0
-                  ? 'All $skippedExisting Termius hosts already exist in this workspace.'
-                  : 'No new hosts to import from local Termius.');
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text(msg)),
-        );
-      }
+      final skippedExisting = _skippedExistingCount(plan);
+      notify(
+        skippedExisting > 0
+            ? l10n.termiusLocalAllExist(skippedExisting)
+            : l10n.termiusLocalNothingNew,
+      );
       return const TermiusTransferOutcome();
     }
 
@@ -181,20 +215,13 @@ Future<TermiusTransferOutcome?> runOneClickTermiusImport(
       createdGroups: report.createdGroups,
     );
   } on TermiusLocalImportException catch (error) {
-    closeProgress();
-    if (context.mounted) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(describeTermiusLocalImportFailure(lang, error))),
-      );
-    }
+    notify(describeTermiusLocalImportFailure(l10n, error));
+    return null;
+  } on TermiusApplyException catch (error) {
+    notify(describeTermiusApplyFailure(l10n, error));
     return null;
   } on Object {
-    closeProgress();
-    if (context.mounted) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(l10n.r7ImportFailRolledBack)),
-      );
-    }
+    notify(l10n.r7ImportFailRolledBack);
     return null;
   }
 }
@@ -324,7 +351,6 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
 
   Future<void> _importFromLocalTermiusApp() async {
     if (_busy || !target.canWrite) return;
-    final lang = Localizations.localeOf(context).languageCode;
     final l10n = context.l10n;
     setState(() {
       _busy = true;
@@ -332,48 +358,32 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
       _notice = null;
     });
     try {
-      final loader =
-          widget.loadLocalAppForTesting ?? loadLocalTermiusAppDocument;
-      final loaded = await loader();
-      final catalog = await target.loadCatalog();
-      if (!mounted) return;
       final typedFallback = _fallbackUserController.text.trim();
-      final fallbackUser = typedFallback.isNotEmpty
-          ? typedFallback
-          : (defaultSystemSshUsername() ?? 'root');
-      final plan = TermiusImportPlanner.plan(
-        loaded.document,
-        catalog,
+      final planned = await _planLocalTermiusImport(
+        target: target,
+        loader: widget.loadLocalAppForTesting ?? loadLocalTermiusAppDocument,
         duplicates: _duplicates,
         certificates: widget.certificates,
-        fallbackUsername: fallbackUser,
+        fallbackUsername: typedFallback.isNotEmpty
+            ? typedFallback
+            : (defaultSystemSshUsername() ?? 'root'),
       );
-      if (plan.blocksWholeFile) {
+      if (!mounted) return;
+      final plan = planned.plan;
+      if (plan.blocksWholeFile || plan.createCount == 0) {
+        final skippedExisting = _skippedExistingCount(plan);
         setState(() {
-          _fileName = loaded.sourceLabel;
-          _document = loaded.document;
-          _catalog = catalog;
+          _fileName = planned.sourceLabel;
+          _document = planned.document;
+          _catalog = planned.catalog;
           _plan = plan;
-          _error = l10n.r7ImportBlockedFile;
-        });
-        return;
-      }
-      if (plan.createCount == 0) {
-        final skippedExisting = plan.rows
-            .where((r) => r.disposition == TermiusRowDisposition.skippedExisting)
-            .length;
-        setState(() {
-          _fileName = loaded.sourceLabel;
-          _document = loaded.document;
-          _catalog = catalog;
-          _plan = plan;
-          _notice = lang == 'zh'
-              ? (skippedExisting > 0
-                    ? '本机 Termius 中的 $skippedExisting 台主机已全部存在于当前工作区。'
-                    : '本机 Termius 中没有可导入的新主机。')
-              : (skippedExisting > 0
-                    ? 'All $skippedExisting Termius hosts already exist in this workspace.'
-                    : 'No new hosts to import from local Termius.');
+          if (plan.blocksWholeFile) {
+            _error = l10n.r7ImportBlockedFile;
+          } else {
+            _notice = skippedExisting > 0
+                ? l10n.termiusLocalAllExist(skippedExisting)
+                : l10n.termiusLocalNothingNew;
+          }
         });
         return;
       }
@@ -388,23 +398,11 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
       );
     } on TermiusLocalImportException catch (error) {
       if (mounted) {
-        setState(() => _error = describeTermiusLocalImportFailure(lang, error));
+        setState(() => _error = describeTermiusLocalImportFailure(l10n, error));
       }
     } on TermiusApplyException catch (error) {
       if (!mounted) return;
-      setState(() {
-        _error = switch (error.failure) {
-          TermiusApplyFailure.readOnly => l10n.r7ImportFailReadOnly,
-          TermiusApplyFailure.stalePlan => l10n.r7ImportFailStale,
-          TermiusApplyFailure.contextChanged => l10n.r7ImportFailScopeChanged,
-          _ when error.mutatedTarget => l10n.r7ImportFailPartial(
-            error.writtenHosts,
-            error.writtenGroups,
-            error.writtenCredentials,
-          ),
-          _ => l10n.r7ImportFailRolledBack,
-        };
-      });
+      setState(() => _error = describeTermiusApplyFailure(l10n, error));
     } on Object {
       if (mounted) setState(() => _error = l10n.r7ImportFailRolledBack);
     } finally {
@@ -805,7 +803,7 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      _oneClickCardTitle(lang),
+                      l10n.termiusLocalDetectedTitle,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -815,7 +813,7 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
               ),
               const SizedBox(height: 6),
               Text(
-                _oneClickCardSubtitle(lang),
+                l10n.termiusLocalDetectedBody,
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 10),
@@ -823,7 +821,7 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
                 key: const ValueKey('termius_one_click_local_import'),
                 onPressed: _busy ? null : _importFromLocalTermiusApp,
                 icon: const Icon(Icons.bolt_rounded),
-                label: Text(_oneClickButtonLabel(lang)),
+                label: Text(l10n.termiusLocalImportButton),
               ),
             ],
           ),
@@ -1024,31 +1022,6 @@ class _TermiusTransferDialogState extends State<TermiusTransferDialog> {
     'ja' => 'Termius JSON を選択',
     'ru' => 'Выбрать Termius JSON',
     _ => 'Choose Termius JSON',
-  };
-
-  static String _oneClickCardTitle(String lang) => switch (lang) {
-    'zh' => '已检测到本机 Termius 桌面版',
-    'ja' => 'この端末の Termius デスクトップを検出しました',
-    'ru' => 'Обнаружен локальный Termius Desktop',
-    _ => 'Local Termius Desktop Detected',
-  };
-
-  static String _oneClickCardSubtitle(String lang) => switch (lang) {
-    'zh' =>
-      '无需手动导出文件：通过系统钥匙串安全读取本机密钥，在内存中一键解密并导入全部主机、分组、密码、SSH 私钥、端口转发与跳板机。',
-    'ja' =>
-      'ファイル書き出し不要：OS キーチェーン認証のみでホスト・グループ・パスワード・SSH 秘密鍵・ポート転送を一括インポートします。',
-    'ru' =>
-      'Без экспорта файлов: чтение локальной базы через системную связку ключей и импорт всех хостов, групп, ключей и туннелей в 1 клик.',
-    _ =>
-      'No manual export needed: unlock via OS keyring in memory and import all hosts, nested groups, passwords, SSH private keys, port forwards, and jump hosts in one click.',
-  };
-
-  static String _oneClickButtonLabel(String lang) => switch (lang) {
-    'zh' => '一键从本机 Termius 导入',
-    'ja' => 'Termius から一括インポート',
-    'ru' => 'Импортировать из Termius в 1 клик',
-    _ => 'One-click Import from Local Termius',
   };
 
   static String _loadLocalSshLabel(String lang) => switch (lang) {
