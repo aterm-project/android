@@ -53,6 +53,7 @@ class FakeGitHub:
         self.calls: list[tuple] = []
         self.last_date = ""
         self.fail_upload: str | None = None
+        self.blobs: dict[int, bytes] = {}
         self._next = 1000
 
     def add_release(self, rid: int, tag: str, sha: str, draft: bool = False) -> dict:
@@ -69,7 +70,14 @@ class FakeGitHub:
         asset = {"id": self._next, "name": name, "size": len(data), "state": state,
                  "digest": f"sha256:{hashlib.sha256(data).hexdigest()}" if state == "uploaded" else None}
         self.release_assets[rid].append(asset)
+        self.blobs[self._next] = data
         return asset
+
+    def download_asset(self, asset):
+        data = self.blobs[asset["id"]]
+        if asset.get("digest") != f"sha256:{hashlib.sha256(data).hexdigest()}":
+            raise rb.ReleaseError("digest")
+        return data
 
     def release(self, rid):
         return dict(self.releases[rid]) if rid in self.releases else None
@@ -99,6 +107,27 @@ class FakeGitHub:
             self.add_asset(rid, path.name, b"", state="open")
             raise rb.ReleaseError("upload interrupted")
         return self.add_asset(rid, path.name, path.read_bytes())
+
+
+APK = "atermius-android-1.0.0-{tag}-arm64-x86_64.apk"
+
+
+def make_packages(out: Path, source: str, tag: str, run_id: str = "77", payload: bytes = b"signed apk bytes") -> Path:
+    out.mkdir(parents=True)
+    apk = APK.format(tag=tag)
+    (out / apk).write_bytes(payload)
+    env = {"ATERMIUS_SOURCE_SHA": source, "ATERMIUS_QUOTA_DATE": "2026-11-10", "ATERMIUS_RELEASE_TAG": tag,
+           "GITHUB_RUN_ID": run_id, "GITHUB_RUN_ATTEMPT": "2"}
+    with mock.patch.dict(os.environ, env):
+        tool.write_evidence(argparse.Namespace(out_dir=str(out), artifact=[apk], platform="android",
+                                               meta=[], note=[], attach=[]))
+    return out
+
+
+def publish_args(out: Path, work: Path, tag: str, rid: int, source: str, run_id: str = "77"):
+    return argparse.Namespace(dir=str(out), work=str(work), platforms="android", release_tag=tag,
+                              release_id=str(rid), source_sha=source, build_date="2026-11-10", run_id=run_id,
+                              run_url="https://example.invalid/run")
 
 
 class GitEnv(tdg.Env):
@@ -317,13 +346,54 @@ class PrepareTests(unittest.TestCase):
         with self.assertRaisesRegex(rb.ReleaseError, "full commit history"):
             rb.prepare(prepare_args(shallow, "v10.0.0"), self.api)
 
-    def test_complete_publication_skips_without_allocating(self):
-        self.publish_release(11, "v11.0.0")
-        self.api.add_asset(11, "evidence-android.json", b"{}")
-        self.api.add_asset(11, "SHA256SUMS", b"x")
-        out = rb.prepare(prepare_args(self.env.full_clone(), "v11.0.0"), self.api)
+    def publish_for(self, rid, tag, source):
+        out = make_packages(self.tmp / f"pkg-{rid}-{source[:6]}", source, tag)
+        rb.publish(publish_args(out, self.tmp / f"work-{rid}-{source[:6]}", tag, rid, source), self.api)
+
+    def test_verified_complete_publication_skips(self):
+        sha = self.publish_release(11, "v11.0.0")
+        self.api.tags["v11.0.0"] = sha
+        self.publish_for(11, "v11.0.0", sha)
+        out = rb.prepare(prepare_args(self.env.full_clone(), "v11.0.0", allocator=False), self.api)
         self.assertEqual((out["build"], out["reason"]), (False, "already-published"))
         self.assertEqual(self.env.remote_refs(), {})
+
+    def test_marker_names_alone_never_skip(self):
+        sha = self.publish_release(15, "v15.0.0")
+        self.api.add_asset(15, "evidence-android.json", b"{}")
+        self.api.add_asset(15, "SHA256SUMS", b"x")
+        out = rb.prepare(prepare_args(self.env.full_clone(), "v15.0.0"), self.api)
+        self.assertTrue(out["build"])
+        self.assertIn("not ours", out["detail"])
+        # missing installer: genuine SHA256SUMS + evidence, but the APK asset is gone
+        self.publish_release(16, "v16.0.0", sha=sha)
+        self.publish_for(16, "v16.0.0", sha)
+        self.api.release_assets[16] = [a for a in self.api.release_assets[16] if not a["name"].endswith(".apk")]
+        out = rb.prepare(prepare_args(self.env.full_clone(), "v16.0.0"), self.api)
+        self.assertTrue(out["build"])
+        self.assertIn(".apk is missing", out["detail"])
+
+    def test_publication_of_another_source_does_not_skip(self):
+        old = self.publish_release(17, "v17.0.0")
+        self.publish_for(17, "v17.0.0", old)
+        new = self.env.commit({"apps/client/lib/main.dart": "// moved\n"}, "moved")
+        self.env.tag("v17.0.0", new)
+        self.api.tags["v17.0.0"] = new
+        out = rb.prepare(prepare_args(self.env.full_clone(), "v17.0.0", allocator=False), self.api)
+        self.assertTrue(out["build"])
+        self.assertIn("another platform, source or tag", out["detail"])
+
+    def test_moved_tag_is_refused_by_the_binding_before_any_skip(self):
+        old = self.publish_release(18, "v18.0.0")
+        rb.prepare(prepare_args(self.env.full_clone(), "v18.0.0"), self.api)  # binds release 18 to old
+        new = self.env.commit({"apps/client/lib/main.dart": "// moved\n"}, "moved")
+        self.env.tag("v18.0.0", new)
+        self.api.tags["v18.0.0"] = new
+        self.publish_for(18, "v18.0.0", new)  # even a complete publication of the new commit
+        with self.assertRaisesRegex(rb.ReleaseError, "already built from"):
+            rb.prepare(prepare_args(self.env.full_clone(), "v18.0.0"), self.api)
+        self.assertEqual(self.api.tags["v18.0.0"], new)
+        self.assertNotEqual(old, new)
 
     def test_blobless_full_history_checkout_allocates_and_pushes(self):
         old = self.env.head()
@@ -371,23 +441,15 @@ class PublishTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
-    def packages(self, name="out", source=None, payload=b"signed apk bytes"):
-        out = self.tmp / name
-        out.mkdir()
-        apk = "atermius-android-1.0.0-v5.0.0-arm64-x86_64.apk"
-        (out / apk).write_bytes(payload)
-        env = {"ATERMIUS_SOURCE_SHA": source or self.SHA, "ATERMIUS_QUOTA_DATE": "2026-11-10",
-               "ATERMIUS_RELEASE_TAG": "v5.0.0", "GITHUB_RUN_ID": "77", "GITHUB_RUN_ATTEMPT": "2"}
-        with mock.patch.dict(os.environ, env):
-            tool.write_evidence(argparse.Namespace(out_dir=str(out), artifact=[apk], platform="android",
-                                                   meta=[], note=[], attach=[]))
-        return out
+    def packages(self, name="out", source=None):
+        return make_packages(self.tmp / name, source or self.SHA, "v5.0.0")
 
     def publish(self, out, run_id="77"):
-        args = argparse.Namespace(dir=str(out), work=str(self.tmp / f"work-{out.name}"), platforms="android",
-                                  release_tag="v5.0.0", release_id="50", source_sha=self.SHA,
-                                  build_date="2026-11-10", run_id=run_id, run_url="https://example.invalid/run")
-        return rb.publish(args, self.api)
+        return rb.publish(publish_args(out, self.tmp / f"work-{out.name}", "v5.0.0", 50, self.SHA, run_id),
+                          self.api)
+
+    def complete(self):
+        return rb.publication_gap(self.api, self.api.assets(50), ["android"], "v5.0.0", self.SHA) is None
 
     def names(self):
         return sorted(a["name"] for a in self.api.release_assets[50])
@@ -402,7 +464,7 @@ class PublishTests(unittest.TestCase):
         self.assertIn("other-interrupted.bin", self.names())  # unrelated assets are never touched
         self.assertNotIn("delete", [c[0] for c in self.api.calls])
         self.assertEqual(result["identical"], [])
-        self.assertTrue(rb.publication_complete(self.api.assets(50), ["android"]))
+        self.assertTrue(self.complete())
 
     def test_rerun_with_the_same_packages_changes_nothing(self):
         out = self.packages()
@@ -417,14 +479,27 @@ class PublishTests(unittest.TestCase):
         self.api.fail_upload = "evidence-android.json"
         with self.assertRaisesRegex(rb.ReleaseError, "interrupted"):
             self.publish(out)
-        self.assertFalse(rb.publication_complete(self.api.assets(50), ["android"]))
+        self.assertFalse(self.complete())
         self.api.fail_upload = None
         self.api.calls.clear()
         result = self.publish(out)
         self.assertEqual(result["replaced_partial"], ["evidence-android.json"])
         self.assertEqual([c[0] for c in self.api.calls], ["delete", "upload", "upload"])
         self.assertIn("other-interrupted.bin", self.names())
-        self.assertTrue(rb.publication_complete(self.api.assets(50), ["android"]))
+        self.assertTrue(self.complete())
+
+    def test_starter_state_is_partial_but_unknown_states_are_never_deleted(self):
+        out = self.packages()
+        self.api.add_asset(50, "evidence-android.json", b"", state="starter")
+        self.publish(out)
+        self.assertIn(("upload", "evidence-android.json"), self.api.calls)
+        self.assertEqual(sum(c[0] == "delete" for c in self.api.calls), 1)
+        self.setUp()
+        self.api.add_asset(50, "evidence-android.json", b"", state="quarantined")
+        before = self.names()
+        with self.assertRaisesRegex(rb.ReleaseError, "different assets"):
+            self.publish(self.packages(name="out-b"))
+        self.assertEqual((self.api.calls, self.names()), ([], before))
 
     def test_different_existing_asset_is_refused_before_any_change(self):
         self.api.add_asset(50, "atermius-android-1.0.0-v5.0.0-arm64-x86_64.apk", b"another build")
@@ -479,7 +554,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):  # noqa: N802
         type(self).seen.append((self.path, self.headers.get("Authorization")))
         status, body, headers = type(self).routes.get(self.path, (404, {"message": "Not Found"}, {}))
-        data = json.dumps(body).encode()
+        data = body if isinstance(body, bytes) else json.dumps(body).encode()
         self.send_response(status)
         for key, value in {"Content-Type": "application/json", **headers}.items():
             self.send_header(key, value)
@@ -520,6 +595,21 @@ class ClientTests(unittest.TestCase):
         with self.assertRaisesRegex(rb.ReleaseError, "302"):
             self.api.release(6)
         self.assertTrue(all(auth == "Bearer secret-token" for _, auth in _Handler.seen))
+
+    def test_asset_download_drops_credentials_on_redirect_and_checks_digest(self):
+        blob = b"0" * 64 + b"  x.apk\n"
+        storage = f"http://127.0.0.1:{self.server.server_port}/storage/blob?sig=1"
+        _Handler.routes = {f"/repos/{REPO}/releases/assets/7": (302, b"", {"Location": storage}),
+                           "/storage/blob?sig=1": (200, blob, {"Content-Type": "application/octet-stream"})}
+        asset = {"id": 7, "name": "SHA256SUMS", "size": len(blob),
+                 "digest": f"sha256:{hashlib.sha256(blob).hexdigest()}"}
+        self.assertEqual(self.api.download_asset(asset), blob)
+        self.assertEqual(dict(_Handler.seen), {f"/repos/{REPO}/releases/assets/7": "Bearer secret-token",
+                                               "/storage/blob?sig=1": None})
+        with self.assertRaisesRegex(rb.ReleaseError, "digest"):
+            self.api.download_asset({**asset, "digest": "sha256:" + "f" * 64})
+        with self.assertRaisesRegex(rb.ReleaseError, "too large"):
+            self.api.download_asset({**asset, "size": 5 << 20})
 
 
 class WorkflowTests(unittest.TestCase):

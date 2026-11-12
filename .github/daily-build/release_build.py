@@ -24,6 +24,7 @@ Exit status: 0 decided/succeeded, 1 refused, 3 clock disagreement (retry).
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -44,6 +45,8 @@ RELEASE_ID_RE = re.compile(r"^[1-9][0-9]{0,15}$")
 # interface must be the one this workflow definition was written for.
 RECIPE_PATHS = (".github/daily-build/recipe", ".github/daily-build/release_tool.py")
 SUMS = "SHA256SUMS"
+PARTIAL_STATES = {"open", "starter"}  # interrupted uploads as reported by the release assets API
+SUMS_LINE = re.compile(r"^([0-9a-f]{64})  ([A-Za-z0-9][A-Za-z0-9._+-]{0,150})$")
 
 
 class ReleaseError(gate.GateError):
@@ -127,6 +130,30 @@ class GitHub:
             obj = (self.get(f"git/tags/{obj.get('sha')}") or {}).get("object") or {}
         raise ReleaseError(f"tag {tag} is nested too deeply")
 
+    def download_asset(self, asset: dict, limit: int = 4 << 20) -> bytes:
+        """Small asset (SHA256SUMS, evidence) by API; a storage redirect is followed WITHOUT the token.
+        The bytes must match the asset's SHA-256 digest."""
+        require(isinstance(asset.get("size"), int) and asset["size"] <= limit, f"{asset.get('name')} is too large")
+        url = f"{self.api_url}/repos/{self.repository}/releases/assets/{int(asset['id'])}"
+        req = urllib.request.Request(url, headers={
+            "Authorization": f"Bearer {self._token}", "Accept": "application/octet-stream",
+            "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "atermius-release-build"})
+        try:
+            with urllib.request.build_opener(_NoRedirect).open(req, timeout=120) as response:
+                data = response.read(limit + 1)
+        except urllib.error.HTTPError as error:
+            location = error.headers.get("Location", "") if error.code in (301, 302, 303, 307, 308) else ""
+            require(bool(location), f"download of {asset.get('name')} -> {error.code}")
+            require(urllib.parse.urlsplit(location).scheme == urllib.parse.urlsplit(self.api_url).scheme,
+                    "asset download redirect changes the URL scheme")
+            plain = urllib.request.Request(location, headers={"User-Agent": "atermius-release-build"})
+            with urllib.request.urlopen(plain, timeout=120) as response:
+                data = response.read(limit + 1)
+        require(len(data) == asset["size"], f"{asset.get('name')}: downloaded size differs")
+        require(asset.get("digest") == f"sha256:{hashlib.sha256(data).hexdigest()}",
+                f"{asset.get('name')}: downloaded bytes do not match the asset digest")
+        return data
+
     def delete_asset(self, asset_id: int) -> None:
         self._request("DELETE", f"{self.api_url}/repos/{self.repository}/releases/assets/{int(asset_id)}")
 
@@ -170,9 +197,47 @@ def check_release(release: dict | None, tag: str, release_id: int | None) -> dic
     return release
 
 
-def publication_complete(assets: list[dict], platforms: list[str]) -> bool:
-    uploaded = {a.get("name") for a in assets if a.get("state") == "uploaded"}
-    return SUMS in uploaded and all(f"evidence-{p}.json" in uploaded for p in platforms)
+def publication_gap(api, assets: list[dict], platforms: list[str], tag: str, source: str) -> str | None:
+    """None if the release already carries a complete, verified publication of ``source``:
+    SHA256SUMS lists every package and evidence file, each attached with that digest, and each
+    platform's evidence belongs to this tag and commit and lists only packages in SHA256SUMS.
+    Otherwise the first gap found (the caller builds; publish refuses conflicting stale assets)."""
+    uploaded: dict[str, dict] = {}
+    for asset in assets:
+        if asset.get("state") == "uploaded":
+            if asset.get("name") in uploaded:
+                return f"duplicate asset {asset.get('name')}"
+            uploaded[asset.get("name")] = asset
+    if SUMS not in uploaded:
+        return f"no {SUMS}"
+    listed: dict[str, str] = {}
+    for line in api.download_asset(uploaded[SUMS]).decode("utf-8", "replace").splitlines():
+        match = SUMS_LINE.match(line)
+        if not match or match.group(2) in listed:
+            return f"{SUMS} is not ours"
+        listed[match.group(2)] = match.group(1)
+    for name, digest in listed.items():
+        if (uploaded.get(name) or {}).get("digest") != f"sha256:{digest}":
+            return f"{name} is missing or differs from {SUMS}"
+    packages: set[str] = set()
+    for platform in platforms:
+        name = f"evidence-{platform}.json"
+        if name not in listed:
+            return f"{name} is not listed in {SUMS}"
+        try:
+            data = json.loads(api.download_asset(uploaded[name]))
+            items = {str(a["name"]): str(a["sha256"]) for a in data["artifacts"]}
+        except (ValueError, KeyError, TypeError):
+            return f"{name} is not valid evidence"
+        if (data.get("schema"), data.get("status"), data.get("platform"), data.get("source_sha"),
+                data.get("release_tag")) != (tool.SCHEMA, "built", platform, source, tag):
+            return f"{name} belongs to another platform, source or tag"
+        if not items or any(listed.get(k) != v for k, v in items.items()):
+            return f"packages of {name} are not all attached"
+        packages |= set(items)
+    if set(listed) != packages | {f"evidence-{p}.json" for p in platforms}:
+        return f"{SUMS} lists files that no evidence accounts for"
+    return None
 
 
 def emit(result: dict, github_output: str, summary: str) -> None:
@@ -239,14 +304,32 @@ def prepare(args: argparse.Namespace, api) -> dict:
               "source_sha": source, "short_sha": source[:12], "build_date": date, "clock_source": clock,
               "prerelease": bool(release.get("prerelease")), "branch_tip": tip}
 
-    if publication_complete(api.assets(release["id"]), args.platforms.split(",")):
+    # The release's recorded binding (Android) is checked before anything else may skip.
+    bound = release_binding(repo, args, release["id"], tag, source) if args.version_allocator else None
+    gap = publication_gap(api, api.assets(release["id"]), args.platforms.split(","), tag, source)
+    if gap is None:
         result.update(build=False, reason="already-published",
-                      detail=f"{SUMS} and evidence of {args.platforms} are already attached; delete them to rebuild")
+                      detail=f"verified packages, evidence and {SUMS} of {source[:12]} are already attached")
         return result
-
+    result["detail"] = f"publication incomplete: {gap}"
     if args.version_allocator:
-        result.update(allocate_release_version(repo, args, release["id"], tag, source, date, now))
+        result.update(bound or allocate_release_version(repo, args, release["id"], tag, source, date, now))
     return result
+
+
+def release_binding(repo: Path, args: argparse.Namespace, release_id: int, tag: str, source: str) -> dict | None:
+    """The versionCode/source recorded for this release id, if any; a moved tag is refused."""
+    ref = f"{args.namespace}/release/{release_id}"
+    sha = gate.ls_remote(repo, args.remote, [ref]).get(ref)
+    if not sha:
+        return None
+    gate.fetch_shas(repo, args.remote, [sha])
+    record = gate.read_record(repo, sha, "release-build")
+    require(record.get("release_tag") == tag and record.get("source_sha") == source,
+            f"release {release_id} was already built from {record.get('release_tag')} "
+            f"({str(record.get('source_sha'))[:12]}); its tag now resolves to {source[:12]}. "
+            "Publish a new release instead of moving a tag.")
+    return {"version_code": record["version_code"], "version_record": sha, "build_date": record["quota_date"]}
 
 
 def allocate_release_version(repo: Path, args: argparse.Namespace, release_id: int, tag: str, source: str,
@@ -255,20 +338,8 @@ def allocate_release_version(repo: Path, args: argparse.Namespace, release_id: i
     ref = f"{args.namespace}/release/{release_id}"
 
     def existing() -> dict | None:
-        sha = gate.ls_remote(repo, args.remote, [ref]).get(ref)
-        if not sha:
-            return None
-        gate.fetch_shas(repo, args.remote, [sha])
-        record = gate.read_record(repo, sha, "release-build")
-        require(record.get("release_tag") == tag and record.get("source_sha") == source,
-                f"release {release_id} was already built from {record.get('release_tag')} "
-                f"({str(record.get('source_sha'))[:12]}); its tag now resolves to {source[:12]}. "
-                "Publish a new release instead of moving a tag.")
-        return {"version_code": record["version_code"], "version_record": sha, "build_date": record["quota_date"]}
+        return release_binding(repo, args, release_id, tag, source)
 
-    found = existing()
-    if found:
-        return found
     info = gate.fingerprint(repo, source, args.rules)
     payload = {"purpose": "release", "repository": args.repository, "release_id": release_id, "release_tag": tag,
                "run_id": args.run_id, "run_attempt": args.run_attempt}
@@ -305,7 +376,10 @@ def plan_uploads(local: list[Path], remote_assets: list[dict]) -> tuple[list[Pat
             else:
                 conflicts.append(path.name)
             continue
-        delete += same  # interrupted uploads of exactly this name
+        if any(a.get("state") not in PARTIAL_STATES for a in same):
+            conflicts.append(path.name)  # unknown state: never deleted
+            continue
+        delete += same  # confirmed interrupted uploads of exactly this name
         upload.append(path)
     return upload, delete, identical, conflicts
 

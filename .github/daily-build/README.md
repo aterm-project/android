@@ -78,10 +78,13 @@ and their own release events run in the fork without these secrets.
 Publication targets the release **id** from `prepare`: before and after uploading, the id must still
 own the tag, the release must be published, and the tag must still resolve to the built commit (a
 moved tag or a replacement release is refused). Existing assets: identical name+size+SHA-256 digest
-⇒ kept; same name in state `open` (interrupted upload) ⇒ that asset is deleted and re-uploaded;
-same name with other content ⇒ refused before any change; other names are never touched.
-`SHA256SUMS` is uploaded last; when it and `evidence-android.json` are attached, a new dispatch
-skips as `already-published`. To resume after a failure use **Re-run failed jobs**: successful jobs,
+⇒ kept; same name in state `open`/`starter` (interrupted upload) ⇒ that asset is deleted and
+re-uploaded; same name with other content or an unknown state ⇒ refused before any change; other
+names are never touched. `SHA256SUMS` is uploaded last. A new dispatch skips as `already-published`
+only after verifying the attached `SHA256SUMS` (digest-checked download; a storage redirect is
+followed without the token), every listed asset's digest, and that `evidence-android.json` belongs to
+this tag and commit (the release's versionCode binding is checked first); otherwise it builds, and
+publish refuses stale assets of the same name. To resume after a failure use **Re-run failed jobs**: successful jobs,
 their outputs and their packages are reused (artifact names carry no attempt number), so the
 upload is byte-identical. A full re-run or a new dispatch reuses the release's versionCode but
 rebuilds, and its bytes may differ from assets already attached.
