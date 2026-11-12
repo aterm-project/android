@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'app_motion.dart';
+import 'app_theme.dart';
 import 'session_workspace.dart';
 import 'window_caption.dart';
 import 'workspace_controls.dart';
@@ -459,8 +460,10 @@ class WorkspaceTabBar extends StatelessWidget {
     WorkspaceTab tab,
     WindowBarMetrics bar, {
     double homeWidth = 136,
+    double sessionWidth = 192,
   }) {
     final colors = Theme.of(context).colorScheme;
+    final palette = context.palette;
     final selected =
         tab.id == selectedId ||
         tab.members.any((member) => member.id == selectedId);
@@ -505,6 +508,7 @@ class WorkspaceTabBar extends StatelessWidget {
         onSecondaryTapDown: tab.isHome
             ? null
             : (event) => _contextMenu(context, tab, event.globalPosition),
+        onTertiaryTapUp: tab.isHome ? null : (_) => _closeTab(tab),
         // Wins the arena only if the finger stays within touch slop for the
         // long-press timeout; any earlier motion goes to the tab drag or the
         // strip scroll instead.
@@ -513,118 +517,22 @@ class WorkspaceTabBar extends StatelessWidget {
             : (details) => _longPressMenu(context, tab, details.globalPosition),
         child: Padding(
           padding: EdgeInsets.fromLTRB(
-            tab.isHome ? 8 : 3,
+            tab.isHome ? 8 : 2,
             bar.tabInset,
-            3,
+            2,
             bar.tabInset,
           ),
-          // Selection fill and border cross-fade (120 ms) instead of jumping.
-          child: TweenAnimationBuilder<Color?>(
-            tween: ColorTween(
-              end: Color.alphaBlend(
-                colors.onSurface.withValues(alpha: selected ? .16 : .07),
-                colors.surfaceContainerLow,
-              ),
-            ),
-            duration: AppMotion.duration(context, MotionDurations.quick),
-            curve: MotionCurves.move,
-            builder: (context, color, child) => Material(
-              key: ValueKey('workspace-tab-surface-${tab.id}'),
-              color: color,
-              animationDuration: AppMotion.duration(
-                context,
-                MotionDurations.quick,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(
-                  color: selected
-                      ? colors.primary.withValues(alpha: .7)
-                      : colors.onSurface.withValues(alpha: .12),
-                ),
-              ),
-              child: child,
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => onSelect(_selectionFor(tab)),
-              child: SizedBox(
-                key: ValueKey('workspace-tab-${tab.id}'),
-                height: bar.tabHeight,
-                width: tab.isHome ? homeWidth : 196,
-                child: Row(
-                  children: [
-                    if (tab.isHome && homeMenuActions.isNotEmpty)
-                      WorkspaceOverflowMenu(
-                        key: const ValueKey('workspace_host_menu'),
-                        tooltip: context.l10n.hostMenuClickToOpen,
-                        actions: homeMenuActions,
-                        child: SizedBox(
-                          width: 48,
-                          height: bar.tabHeight,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.home_outlined, size: bar.iconSize),
-                              const Icon(Icons.expand_more, size: 14),
-                            ],
-                          ),
-                        ),
-                      )
-                    else ...[
-                      const SizedBox(width: 12),
-                      Icon(
-                        tab.icon ??
-                            (tab.isHome
-                                ? Icons.home_outlined
-                                : tab.isFile
-                                ? Icons.folder_outlined
-                                : Icons.terminal),
-                        size: bar.iconSize,
-                        color: tab.isConnected
-                            ? colors.primary
-                            : colors.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: Text(
-                        tab.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: bar.dense
-                            ? const TextStyle(
-                                fontSize: WindowBarMetrics.denseLabelSize,
-                              )
-                            : null,
-                        strutStyle: bar.dense
-                            ? WindowBarMetrics.denseLabelStrut
-                            : null,
-                      ),
-                    ),
-                    if (!tab.isHome)
-                      IconButton(
-                        tooltip: tab.members.isEmpty
-                            ? context.l10n.closeTitle(tab.title)
-                            : context.l10n.closeThisSplitGroup,
-                        visualDensity: VisualDensity.compact,
-                        iconSize: bar.dense ? 14 : 16,
-                        padding: bar.dense ? EdgeInsets.zero : null,
-                        constraints: bar.dense
-                            ? BoxConstraints.tightFor(
-                                width: 28,
-                                height: bar.tabHeight,
-                              )
-                            : null,
-                        onPressed: () => _closeTab(tab),
-                        icon: const Icon(Icons.close),
-                      )
-                    else
-                      const SizedBox(width: 12),
-                  ],
-                ),
-              ),
-            ),
+          child: _TabSurfaceChip(
+            tab: tab,
+            bar: bar,
+            palette: palette,
+            colors: colors,
+            selected: selected,
+            mobile: mobile,
+            width: tab.isHome ? homeWidth : sessionWidth,
+            homeMenuActions: homeMenuActions,
+            onTap: () => onSelect(_selectionFor(tab)),
+            onClose: () => _closeTab(tab),
           ),
         ),
       ),
@@ -650,14 +558,39 @@ class WorkspaceTabBar extends StatelessWidget {
       scope: dragScope,
     );
     final feedback = Material(
-      elevation: 8,
-      color: colors.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(8),
+      elevation: 10,
+      color: palette.isDark ? palette.surfaceSoft : palette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: colors.primary.withValues(alpha: .6)),
+      ),
       child: SizedBox(
-        width: 196,
-        height: 40,
-        child: Center(
-          child: Text(tab.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        width: sessionWidth,
+        height: bar.tabHeight + 4,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              Icon(
+                tab.icon ??
+                    (tab.isFile ? Icons.folder_outlined : Icons.terminal),
+                size: bar.iconSize,
+                color: tab.isConnected ? colors.primary : colors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  tab.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: bar.dense ? WindowBarMetrics.denseLabelSize : 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -759,134 +692,410 @@ class WorkspaceTabBar extends StatelessWidget {
     ColorScheme colors,
     List<WorkspaceTab> visibleTabs,
   ) {
-    final embedded = chrome.supported && chrome.state.customFrame;
+    final palette = context.palette;
+    final customCaption = chrome.supported && chrome.state.customFrame;
+    final mergedTitlebar =
+        customCaption ||
+        (chrome.supported &&
+            (chrome.state.leadingInset > 0 ||
+                (chrome.state.enabled &&
+                    Theme.of(context).platform == TargetPlatform.macOS)));
     final bar = WindowBarMetrics.of(context, chrome);
-    // Dense native-height bar: every trailing icon (including callers'
-    // actions) is exactly one bar tall so icons and caption buttons share
-    // one baseline; touch platforms keep the default button sizes.
+    // Dense native-height bar: Windows custom-caption buttons stay flush with
+    // caption controls; macOS unified titlebar uses rounded toolbar buttons.
     Widget sized(Widget row) => !bar.dense
         ? row
         : IconButtonTheme(
             data: IconButtonThemeData(
-              style: IconButton.styleFrom(
-                padding: EdgeInsets.zero,
-                iconSize: 18,
-                minimumSize: Size(bar.actionWidth, bar.height),
-                maximumSize: Size(bar.actionWidth, bar.height),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.standard,
-                shape: const RoundedRectangleBorder(),
-              ),
+              style: customCaption
+                  ? IconButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      iconSize: 18,
+                      minimumSize: Size(bar.actionWidth, bar.height),
+                      maximumSize: Size(bar.actionWidth, bar.height),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.standard,
+                      shape: const RoundedRectangleBorder(),
+                    )
+                  : IconButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      iconSize: 17,
+                      minimumSize: Size(bar.actionWidth - 4, bar.tabHeight),
+                      maximumSize: Size(bar.actionWidth - 4, bar.tabHeight),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                    ),
             ),
             child: row,
           );
     return Material(
-      color: colors.surfaceContainerLow,
-      child: SizedBox(
-        key: const ValueKey('workspace_navigation_bar'),
-        height: bar.height,
-        child: LayoutBuilder(
-          builder: (context, barConstraints) {
-            final homeWidth = barConstraints.maxWidth < 380 ? 112.0 : 136.0;
-            return sized(
-              Row(
-                children: [
-                  ?leading,
-                  for (final tab in visibleTabs.where((tab) => tab.isHome))
-                    _tab(context, tab, bar, homeWidth: homeWidth),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final usedWidth = visibleTabs
-                        .where((tab) => !tab.isHome)
-                        .fold<double>(
-                          0,
-                          (width, tab) => width + (tab.isHome ? 142 : 204),
-                        );
-                    final gapWidth = (constraints.maxWidth - usedWidth).clamp(
-                      32.0,
-                      double.infinity,
-                    );
-                    return SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          for (final tab in visibleTabs.where(
-                            (tab) => !tab.isHome,
-                          ))
-                            _TabEntrance(
-                              key: ValueKey('workspace-tab-motion-${tab.id}'),
-                              child: _tab(context, tab, bar),
+      color: palette.rail,
+      child: DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: palette.line.withValues(alpha: .72)),
+          ),
+        ),
+        child: SizedBox(
+          key: const ValueKey('workspace_navigation_bar'),
+          height: bar.height,
+          child: LayoutBuilder(
+            builder: (context, barConstraints) {
+              final homeWidth = barConstraints.maxWidth < 380 ? 110.0 : 128.0;
+              return sized(
+                Row(
+                  children: [
+                    if (chrome.state.leadingInset > 0)
+                      SizedBox(width: chrome.state.leadingInset),
+                    ?leading,
+                    for (final tab in visibleTabs.where((tab) => tab.isHome))
+                      _tab(context, tab, bar, homeWidth: homeWidth),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final sessionTabs = visibleTabs
+                              .where((tab) => !tab.isHome)
+                              .toList();
+                          final maxTabWidth = bar.dense ? 192.0 : 196.0;
+                          final minTabWidth = bar.dense ? 128.0 : 148.0;
+                          final sessionWidth = sessionTabs.isEmpty
+                              ? maxTabWidth
+                              : ((constraints.maxWidth - 44.0) /
+                                        sessionTabs.length -
+                                    4.0)
+                                    .clamp(minTabWidth, maxTabWidth);
+                          final usedWidth =
+                              sessionTabs.length * (sessionWidth + 4.0);
+                          final gapWidth = (constraints.maxWidth - usedWidth)
+                              .clamp(32.0, double.infinity);
+                          return _HorizontalTabStrip(
+                            child: Row(
+                              children: [
+                                for (final tab in sessionTabs)
+                                  _TabEntrance(
+                                    key: ValueKey(
+                                      'workspace-tab-motion-${tab.id}',
+                                    ),
+                                    child: _tab(
+                                      context,
+                                      tab,
+                                      bar,
+                                      sessionWidth: sessionWidth,
+                                    ),
+                                  ),
+                                DragTarget<WorkspaceTabDragData>(
+                                  onWillAcceptWithDetails: (details) =>
+                                      onReorder != null &&
+                                      details.data.scope == dragScope &&
+                                      _isLiveTab(details.data.tabId),
+                                  onAcceptWithDetails: (details) {
+                                    if (_isLiveTab(details.data.tabId)) {
+                                      onReorder?.call(
+                                        details.data.tabId,
+                                        null,
+                                      );
+                                    }
+                                  },
+                                  builder: (context, candidates, _) {
+                                    final gap = SizedBox(
+                                      width: gapWidth,
+                                      height: bar.height,
+                                      child: candidates.isEmpty
+                                          ? null
+                                          : ColoredBox(
+                                              color: colors.primary.withValues(
+                                                alpha: .2,
+                                              ),
+                                            ),
+                                    );
+                                    return mergedTitlebar
+                                        ? WindowDragArea(
+                                            controller: chrome,
+                                            child: gap,
+                                          )
+                                        : gap;
+                                  },
+                                ),
+                              ],
                             ),
-                          DragTarget<WorkspaceTabDragData>(
-                            onWillAcceptWithDetails: (details) =>
-                                onReorder != null &&
-                                details.data.scope == dragScope &&
-                                _isLiveTab(details.data.tabId),
-                            onAcceptWithDetails: (details) {
-                              if (_isLiveTab(details.data.tabId)) {
-                                onReorder?.call(details.data.tabId, null);
-                              }
-                            },
-                            builder: (context, candidates, _) {
-                              final gap = SizedBox(
-                                width: gapWidth,
-                                height: bar.height,
-                                child: candidates.isEmpty
-                                    ? null
-                                    : ColoredBox(
-                                        color: colors.primary.withValues(
-                                          alpha: .2,
-                                        ),
-                                      ),
-                              );
-                              return embedded
-                                  ? WindowDragArea(
-                                      controller: chrome,
-                                      child: gap,
-                                    )
-                                  : gap;
-                            },
+                          );
+                        },
+                      ),
+                    ),
+                    if (homeMenuActions.isEmpty &&
+                        supportsNewWindow &&
+                        onNewWindow != null)
+                      IconButton(
+                        tooltip: context.l10n.newWindowCtrlShiftN,
+                        onPressed: onNewWindow,
+                        icon: const Icon(Icons.add_to_queue_outlined),
+                      ),
+                    ...actions,
+                    const FullscreenToolsMenu(),
+                    if (onSearch != null)
+                      IconButton(
+                        key: const ValueKey('workspace_host_search_button'),
+                        tooltip: context.l10n.searchHostsOrQuickConnect,
+                        onPressed: onSearch,
+                        icon: Icon(
+                          Icons.search_rounded,
+                          size: bar.dense ? 17 : 21,
+                        ),
+                      ),
+                    if (onToggleTools != null)
+                      IconButton(
+                        key: const ValueKey('workspace_terminal_sidebar_button'),
+                        tooltip: context.l10n.terminalSidebar,
+                        onPressed: onToggleTools,
+                        icon: Icon(
+                          Icons.vertical_split_outlined,
+                          size: bar.dense ? 17 : 21,
+                        ),
+                      ),
+                    WindowCaptionControls(
+                      controller: chrome,
+                      height: bar.height,
+                    ),
+                    if (!customCaption) SizedBox(width: bar.dense ? 8 : 4),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HorizontalTabStrip extends StatefulWidget {
+  const _HorizontalTabStrip({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_HorizontalTabStrip> createState() => _HorizontalTabStripState();
+}
+
+class _HorizontalTabStripState extends State<_HorizontalTabStrip> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handlePointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || !_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (!position.hasContentDimensions ||
+        position.maxScrollExtent <= position.minScrollExtent) {
+      return;
+    }
+    final delta = event.scrollDelta.dx != 0
+        ? event.scrollDelta.dx
+        : event.scrollDelta.dy;
+    if (delta == 0) return;
+    final target = (position.pixels + delta).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if (target != position.pixels) {
+      _scrollController.jumpTo(target);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    onPointerSignal: _handlePointerSignal,
+    child: SingleChildScrollView(
+      controller: _scrollController,
+      scrollDirection: Axis.horizontal,
+      child: widget.child,
+    ),
+  );
+}
+
+class _TabSurfaceChip extends StatefulWidget {
+  const _TabSurfaceChip({
+    required this.tab,
+    required this.bar,
+    required this.palette,
+    required this.colors,
+    required this.selected,
+    required this.mobile,
+    required this.width,
+    required this.homeMenuActions,
+    required this.onTap,
+    required this.onClose,
+  });
+
+  final WorkspaceTab tab;
+  final WindowBarMetrics bar;
+  final AppPalette palette;
+  final ColorScheme colors;
+  final bool selected;
+  final bool mobile;
+  final double width;
+  final List<WorkspaceAction> homeMenuActions;
+  final VoidCallback onTap;
+  final VoidCallback onClose;
+
+  @override
+  State<_TabSurfaceChip> createState() => _TabSurfaceChipState();
+}
+
+class _TabSurfaceChipState extends State<_TabSurfaceChip> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final tab = widget.tab;
+    final bar = widget.bar;
+    final palette = widget.palette;
+    final colors = widget.colors;
+    final selected = widget.selected;
+    final targetFill = selected
+        ? (palette.isDark ? palette.surfaceSoft : palette.surface)
+        : Color.alphaBlend(
+            colors.onSurface.withValues(alpha: _hovered ? .09 : .02),
+            palette.rail,
+          );
+    final borderColor = selected
+        ? (palette.isDark
+              ? colors.primary.withValues(alpha: .55)
+              : palette.line)
+        : (_hovered
+              ? colors.onSurface.withValues(alpha: .12)
+              : Colors.transparent);
+    final showCloseStrong = widget.mobile || selected || _hovered;
+    final closeIconColor = colors.onSurfaceVariant.withValues(
+      alpha: showCloseStrong ? .9 : .40,
+    );
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: TweenAnimationBuilder<Color?>(
+        tween: ColorTween(end: targetFill),
+        duration: AppMotion.duration(context, MotionDurations.quick),
+        curve: MotionCurves.move,
+        builder: (context, color, child) => Material(
+          key: ValueKey('workspace-tab-surface-${tab.id}'),
+          color: color,
+          animationDuration: AppMotion.duration(
+            context,
+            MotionDurations.quick,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: borderColor),
+          ),
+          child: child,
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: widget.onTap,
+          child: SizedBox(
+            key: ValueKey('workspace-tab-${tab.id}'),
+            height: bar.tabHeight,
+            width: widget.width,
+            child: Row(
+              children: [
+                if (tab.isHome && widget.homeMenuActions.isNotEmpty)
+                  WorkspaceOverflowMenu(
+                    key: const ValueKey('workspace_host_menu'),
+                    tooltip: context.l10n.hostMenuClickToOpen,
+                    actions: widget.homeMenuActions,
+                    child: SizedBox(
+                      width: 44,
+                      height: bar.tabHeight,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.home_outlined,
+                            size: bar.iconSize,
+                            color: selected ? palette.accentText : palette.muted,
+                          ),
+                          Icon(
+                            Icons.expand_more,
+                            size: 14,
+                            color: selected ? palette.accentText : palette.muted,
                           ),
                         ],
                       ),
-                    );
-                  },
-                ),
-              ),
-              if (homeMenuActions.isEmpty &&
-                  supportsNewWindow &&
-                  onNewWindow != null)
-                IconButton(
-                  tooltip: context.l10n.newWindowCtrlShiftN,
-                  onPressed: onNewWindow,
-                  icon: const Icon(Icons.add_to_queue_outlined),
-                ),
-              ...actions,
-              const FullscreenToolsMenu(),
-              if (onSearch != null)
-                IconButton(
-                  key: const ValueKey('workspace_host_search_button'),
-                  tooltip: context.l10n.searchHostsOrQuickConnect,
-                  onPressed: onSearch,
-                  icon: Icon(Icons.search_rounded, size: bar.dense ? 18 : 21),
-                ),
-              if (onToggleTools != null)
-                IconButton(
-                  key: const ValueKey('workspace_terminal_sidebar_button'),
-                  tooltip: context.l10n.terminalSidebar,
-                  onPressed: onToggleTools,
-                  icon: Icon(
-                    Icons.vertical_split_outlined,
-                    size: bar.dense ? 18 : 21,
+                    ),
+                  )
+                else ...[
+                  const SizedBox(width: 10),
+                  Icon(
+                    tab.icon ??
+                        (tab.isHome
+                            ? Icons.home_outlined
+                            : tab.isFile
+                            ? Icons.folder_outlined
+                            : Icons.terminal),
+                    size: bar.iconSize,
+                    color: tab.isConnected
+                        ? palette.accentText
+                        : (selected ? palette.text : palette.muted),
+                  ),
+                  if (!tab.isHome && tab.isConnected) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF34C759),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(width: 7),
+                ],
+                Expanded(
+                  child: Text(
+                    tab.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: bar.dense ? 13.0 : null,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      color: selected ? palette.text : palette.muted,
+                    ),
+                    strutStyle: bar.dense
+                        ? WindowBarMetrics.denseLabelStrut
+                        : null,
                   ),
                 ),
-              WindowCaptionControls(controller: chrome, height: bar.height),
-              if (!embedded) const SizedBox(width: 4),
-            ],
+                if (!tab.isHome)
+                  IconButton(
+                    tooltip: tab.members.isEmpty
+                        ? context.l10n.closeTitle(tab.title)
+                        : context.l10n.closeThisSplitGroup,
+                    visualDensity: VisualDensity.compact,
+                    iconSize: bar.dense ? 13.5 : 15,
+                    padding: bar.dense ? EdgeInsets.zero : null,
+                    constraints: bar.dense
+                        ? BoxConstraints.tightFor(
+                            width: 24,
+                            height: bar.tabHeight - 4,
+                          )
+                        : null,
+                    onPressed: widget.onClose,
+                    icon: Icon(Icons.close, color: closeIconColor),
+                  )
+                else
+                  const SizedBox(width: 10),
+              ],
+            ),
           ),
-        );
-          },
         ),
       ),
     );

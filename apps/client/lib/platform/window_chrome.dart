@@ -12,6 +12,7 @@ class WindowChromeState {
     this.minimized = false,
     this.focused = true,
     this.captionHeight,
+    this.leadingInset = 0,
   }) : customFrame = customFrame ?? enabled;
 
   final bool enabled;
@@ -31,10 +32,15 @@ class WindowChromeState {
   /// GetDpiForWindow DPI. Null when the runner does not report it.
   final double? captionHeight;
 
+  /// Leading horizontal safe inset reserved for native window controls inside a
+  /// full-size unified title bar (e.g. macOS traffic lights, 0 in fullscreen).
+  final double leadingInset;
+
   /// Plausibility bounds for the reported metric. Values outside them are
   /// ignored (treated as unreported) rather than trusted.
   static const minCaptionHeight = 16.0;
   static const maxCaptionHeight = 96.0;
+  static const maxLeadingInset = 240.0;
 
   static double? _captionHeight(Object? value) {
     if (value is! num) return null;
@@ -45,6 +51,15 @@ class WindowChromeState {
       return null;
     }
     return height;
+  }
+
+  static double _leadingInset(Object? value) {
+    if (value is! num) return 0;
+    final inset = value.toDouble();
+    if (!inset.isFinite || inset < 0 || inset > maxLeadingInset) {
+      return 0;
+    }
+    return inset;
   }
 
   static WindowChromeState? fromNative(Object? value) {
@@ -67,6 +82,7 @@ class WindowChromeState {
       minimized: value['minimized'] as bool,
       focused: value['focused'] as bool,
       captionHeight: _captionHeight(value['captionHeight']),
+      leadingInset: enabled ? _leadingInset(value['leadingInset']) : 0,
     );
   }
 }
@@ -134,7 +150,8 @@ class WindowChromeController extends ChangeNotifier {
         next.maximized == _state.maximized &&
         next.minimized == _state.minimized &&
         next.focused == _state.focused &&
-        next.captionHeight == _state.captionHeight) {
+        next.captionHeight == _state.captionHeight &&
+        next.leadingInset == _state.leadingInset) {
       return;
     }
     _state = next;

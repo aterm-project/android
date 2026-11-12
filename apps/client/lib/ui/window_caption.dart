@@ -107,7 +107,8 @@ class _WindowsWindowChromeState extends State<WindowsWindowChrome> {
           child: Column(
             children: [
               if (controller.supported &&
-                  controller.state.customFrame &&
+                  (controller.state.customFrame ||
+                      controller.state.leadingInset > 0) &&
                   !(widget.navigationEmbedded?.call() ?? false))
                 WindowCaption(
                   controller: controller,
@@ -160,6 +161,9 @@ class WindowBarMetrics {
   /// Used only if a custom-chrome runner does not report the metric.
   static const fallbackCaptionHeight = 32.0;
 
+  /// Unified compact title-bar height on macOS (HIG standard 38 pt).
+  static const macosCaptionHeight = 38.0;
+
   /// Label font size inside dense native-height tabs.
   static const denseLabelSize = 13.5;
 
@@ -167,11 +171,21 @@ class WindowBarMetrics {
     BuildContext context,
     WindowChromeController controller,
   ) {
-    if (!controller.supported || !controller.state.customFrame) return touch;
-    return WindowBarMetrics.native(
-      controller.state.captionHeight ?? fallbackCaptionHeight,
-      MediaQuery.textScalerOf(context),
-    );
+    final scaler = MediaQuery.textScalerOf(context);
+    if (controller.supported && controller.state.customFrame) {
+      return WindowBarMetrics.native(
+        controller.state.captionHeight ?? fallbackCaptionHeight,
+        scaler,
+      );
+    }
+    if ((controller.supported && controller.state.leadingInset > 0) ||
+        Theme.of(context).platform == TargetPlatform.macOS) {
+      return WindowBarMetrics.macos(
+        controller.state.captionHeight ?? macosCaptionHeight,
+        scaler,
+      );
+    }
+    return touch;
   }
 
   /// [captionHeight] is the native metric in logical pixels.
@@ -187,6 +201,21 @@ class WindowBarMetrics {
       tabInset: inset,
       iconSize: 17,
       actionWidth: 42,
+    );
+  }
+
+  /// Compact macOS unified title-bar metrics (38 pt bar, 30 pt tabs).
+  factory WindowBarMetrics.macos(double captionHeight, TextScaler scaler) {
+    const inset = 4.0;
+    final label = scaler.scale(13.0) * _labelLineHeight + 2;
+    final height = math.max(captionHeight, label + inset * 2);
+    return WindowBarMetrics._(
+      height: height,
+      dense: true,
+      tabHeight: height - inset * 2,
+      tabInset: inset,
+      iconSize: 16,
+      actionWidth: 36,
     );
   }
 
@@ -236,6 +265,8 @@ class WindowCaption extends StatelessWidget {
         height: metrics.height,
         child: Row(
           children: [
+            if (controller.state.leadingInset > 0)
+              SizedBox(width: controller.state.leadingInset),
             ?leading,
             Expanded(
               child: WindowDragArea(

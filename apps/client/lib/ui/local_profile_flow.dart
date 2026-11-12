@@ -77,6 +77,7 @@ import 'workspace_controls.dart';
 import 'workspace_status_bar.dart';
 import 'transfer_dialog.dart';
 import '../terminal/terminal_shortcuts.dart';
+import '../import/termius_local_app_import.dart';
 import '../import/termius_transfer_target.dart';
 import '../import/termius_keychain_bridge.dart';
 import 'termius_transfer_dialog.dart';
@@ -5022,6 +5023,47 @@ _showMessage(
   /// `HomeSidebarAction` opening `showTermiusTransferDialog(context,
   /// target: LocalTermiusTransferTarget(repository, onChanged: ...))`.
   /// Omitted from the Import / Export menu while null.
+  HomeSidebarAction? _termiusOneClickSidebarAction() {
+    if (!hasLocalTermiusInstallation()) return null;
+    final lang = Localizations.localeOf(context).languageCode;
+    return HomeSidebarAction(
+      id: 'local_termius_one_click',
+      label: lang == 'zh' ? '一键导入 Termius' : 'One-click Termius Import',
+      icon: Icons.bolt_rounded,
+      enabled: !_busy && _repository != null,
+      onSelected: _oneClickImportTermius,
+    );
+  }
+
+  Future<void> _oneClickImportTermius() async {
+    final repository = _repository;
+    if (repository == null) return;
+    final generation = _beginOperation();
+    if (generation < 0) return;
+    try {
+      final outcome = await runOneClickTermiusImport(
+        context,
+        certificates: const KeychainTermiusCertificateBridge(),
+        target: LocalTermiusTransferTarget(
+          repository,
+          onChanged: () async {
+            if (!_isCurrentOperation(generation) ||
+                !identical(_repository, repository)) return;
+            await _reloadHosts(generation);
+            await _reloadCredentials(generation);
+            await _reloadGroups(generation);
+          },
+        ),
+      );
+      if (!mounted || outcome == null || outcome.importedHosts == 0) return;
+      _showMessage(
+        currentL10n.r7ImportDone(outcome.importedHosts, outcome.createdGroups),
+      );
+    } finally {
+      _finishOperation(generation);
+    }
+  }
+
   HomeSidebarAction? _termiusTransferAction() => HomeSidebarAction(
     id: 'local_termius_transfer',
     label: context.l10n.r7ImportMenuAction,
@@ -5093,6 +5135,7 @@ _showMessage(
   /// the LEFT navigation column once a Profile is unlocked.
   Widget _withHomeSidebar(UnlockedLocalProfile? active, Widget body) {
     if (active == null) return body;
+    final termiusOneClick = _termiusOneClickSidebarAction();
     final termius = _termiusTransferAction();
     return LayoutBuilder(
       builder: (context, constraints) => Row(
@@ -5126,6 +5169,7 @@ _showMessage(
                 onSelected: _exportLocalArchive,
                 enabled: !_busy,
               ),
+              ?termiusOneClick,
               ?termius,
             ],
           ),
@@ -5324,6 +5368,9 @@ _showMessage(
             onAddHost: _addHost,
             onLaunchShell: (launch) => _openConsole(shell: launch),
             onSerialConsole: _quickConnect,
+            onQuickImportTermius: hasLocalTermiusInstallation()
+                ? _oneClickImportTermius
+                : null,
             // A local Profile has no Vault members or presence: show the
             // truthful local-only indicator, never other users.
             sharing: HomeSharingCluster(
