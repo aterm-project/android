@@ -504,25 +504,32 @@ void _wipeSnapshot(Map<String, Uint8List>? files) {
   files.clear();
 }
 
-/// Copies the LevelDB files into memory. A running Termius may compact while
-/// the copy is taken (files vanish, CURRENT moves to a new MANIFEST); such a
-/// torn snapshot is retried instead of being decoded.
-Future<Map<String, Uint8List>> _readLevelDbSnapshotFiles(
+/// Copies the LevelDB files into memory and decodes them against the
+/// MANIFEST named by CURRENT. A running Termius may compact while the copy is
+/// taken (files vanish, the MANIFEST gains tables that were not captured);
+/// such a torn snapshot is retaken, and after the last attempt the import
+/// fails closed instead of decoding a partial set of files. The snapshot
+/// buffers are wiped before returning.
+Future<TermiusRawTables> _readConsistentTables(
   Directory dir,
   int maxBytes,
 ) async {
   for (var attempt = 1; ; attempt++) {
+    Map<String, Uint8List>? files;
     try {
-      final files = await _readLevelDbSnapshotFilesOnce(dir, maxBytes);
-      final manifest = utf8
-          .decode(files['CURRENT']!, allowMalformed: true)
-          .trim();
-      if (files.containsKey(manifest) || attempt >= _snapshotReadAttempts) {
-        return files;
+      files = await _readLevelDbSnapshotFilesOnce(dir, maxBytes);
+      return readTermiusIndexedDbTables(files, requireManifest: true);
+    } on TermiusIndexedDbSnapshotException {
+      if (attempt >= _snapshotReadAttempts) {
+        throw const TermiusLocalImportException(
+          TermiusLocalImportFailure.readFailed,
+          'inconsistentSnapshot',
+        );
       }
-      _wipeSnapshot(files);
     } on FileSystemException {
       if (attempt >= _snapshotReadAttempts) rethrow;
+    } finally {
+      _wipeSnapshot(files);
     }
     await Future<void>.delayed(Duration(milliseconds: 150 * attempt));
   }
@@ -603,17 +610,11 @@ _loadFromLevelDbDir(
   _LocalKeyCache keys,
   int maxSnapshotBytes,
 ) async {
-  Map<String, Uint8List>? snapshotFiles;
   Uint8List? keyBytes;
   TermiusVaultDecryptor? decryptor;
 
   try {
-    snapshotFiles = await _readLevelDbSnapshotFiles(
-      levelDbDir,
-      maxSnapshotBytes,
-    );
-    final rawTables = readTermiusIndexedDbTables(snapshotFiles);
-    _wipeSnapshot(snapshotFiles);
+    final rawTables = await _readConsistentTables(levelDbDir, maxSnapshotBytes);
     // Fail closed: an undecodable live record in a table that is imported
     // would otherwise disappear silently from the migration.
     if (rawTables.malformedRecords.keys.any(
@@ -673,6 +674,5 @@ _loadFromLevelDbDir(
   } finally {
     decryptor?.dispose();
     keyBytes?.fillRange(0, keyBytes.length, 0);
-    _wipeSnapshot(snapshotFiles);
   }
 }

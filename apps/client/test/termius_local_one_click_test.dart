@@ -878,7 +878,7 @@ void main() {
       expect(labels(readTermiusIndexedDbTables(files)), ['kept']);
     });
 
-    test('manifest filters obsolete logs and falls back on a torn snapshot', () {
+    test('manifest filters obsolete logs and rejects a torn snapshot', () {
       final table = _buildLevelDbTable([
         ..._hostsDbName().map((op) => (op.$1, op.$2!)),
         (_encodeIdbObjectDataKey(5, 1, 1), _hostRecord(1, 'in-table')),
@@ -904,12 +904,86 @@ void main() {
       ]);
 
       // A compaction published table 9 that this snapshot did not capture:
-      // the manifest is ignored rather than dropping captured live tables.
+      // decoding the remaining files is refused, never guessed.
       final torn = <String, Uint8List>{
         ...consistent,
         'MANIFEST-000002': _buildManifest(logNumber: 6, tables: [9]),
       };
-      expect(labels(readTermiusIndexedDbTables(torn)), contains('in-table'));
+      expect(
+        () => readTermiusIndexedDbTables(torn),
+        throwsA(isA<TermiusIndexedDbSnapshotException>()),
+      );
+    });
+
+    test('a missing new table holding a tombstone never resurrects the record', () {
+      // Old table 5 still holds host 1; compaction wrote table 9 holding its
+      // tombstone (higher sequence) and dropped 5 from the live set, but the
+      // copy captured only table 5 and the new MANIFEST.
+      final oldTable = _buildLevelDbTable([
+        ..._hostsDbName().map((op) => (op.$1, op.$2!)),
+        (_encodeIdbObjectDataKey(5, 1, 1), _hostRecord(1, 'deleted-in-termius')),
+      ], 5);
+      final torn = <String, Uint8List>{
+        'CURRENT': Uint8List.fromList(utf8.encode('MANIFEST-000002\n')),
+        'MANIFEST-000002': _buildManifest(logNumber: 10, tables: [9]),
+        '000005.ldb': oldTable,
+      };
+      for (final strict in [false, true]) {
+        expect(
+          () => readTermiusIndexedDbTables(torn, requireManifest: strict),
+          throwsA(isA<TermiusIndexedDbSnapshotException>()),
+          reason: 'requireManifest: $strict',
+        );
+      }
+    });
+
+    test('a valid empty live set reads no obsolete tables', () {
+      final obsoleteTable = _buildLevelDbTable([
+        ..._hostsDbName().map((op) => (op.$1, op.$2!)),
+        (_encodeIdbObjectDataKey(5, 1, 1), _hostRecord(1, 'compacted-away')),
+      ], 5);
+      final files = <String, Uint8List>{
+        'CURRENT': Uint8List.fromList(utf8.encode('MANIFEST-000002\n')),
+        'MANIFEST-000002': _buildManifest(logNumber: 6, tables: const []),
+        '000005.ldb': obsoleteTable,
+        '000006.log': _buildLevelDbLog([
+          (40, [
+            ..._hostsDbName(),
+            (_encodeIdbObjectDataKey(5, 1, 3), _hostRecord(3, 'in-live-log')),
+          ]),
+        ]),
+      };
+      expect(
+        labels(readTermiusIndexedDbTables(files, requireManifest: true)),
+        ['in-live-log'],
+      );
+    });
+
+    test('production mode rejects a missing or unparseable MANIFEST', () {
+      final log = _buildLevelDbLog([
+        (1, [
+          ..._hostsDbName(),
+          (_encodeIdbObjectDataKey(5, 1, 1), _hostRecord(1, 'h')),
+        ]),
+      ]);
+      final noManifest = <String, Uint8List>{
+        'CURRENT': Uint8List.fromList(utf8.encode('MANIFEST-000001\n')),
+        '000003.log': log,
+      };
+      expect(
+        () => readTermiusIndexedDbTables(noManifest, requireManifest: true),
+        throwsA(isA<TermiusIndexedDbSnapshotException>()),
+      );
+      final garbage = <String, Uint8List>{
+        ...noManifest,
+        'MANIFEST-000001': Uint8List.fromList([0, 0, 0, 0, 3, 0, 1, 0x63, 1, 2]),
+      };
+      for (final strict in [false, true]) {
+        expect(
+          () => readTermiusIndexedDbTables(garbage, requireManifest: strict),
+          throwsA(isA<TermiusIndexedDbSnapshotException>()),
+        );
+      }
     });
 
     test('undecodable live records are reported, not silently dropped', () {
@@ -1101,6 +1175,9 @@ void main() {
         '${dir.path}/IndexedDB/file__0.indexeddb.leveldb',
       )..createSync(recursive: true);
       File('${leveldb.path}/CURRENT').writeAsStringSync('MANIFEST-000001\n');
+      File('${leveldb.path}/MANIFEST-000001').writeAsBytesSync(
+        _buildManifest(logNumber: 3, tables: const []),
+      );
       File('${leveldb.path}/LOCK').writeAsBytesSync(const []);
       File('${leveldb.path}/000003.log')
           .writeAsBytesSync(_buildLevelDbLog([(1, ops)]));
@@ -1128,6 +1205,24 @@ void main() {
       expect(await failureFor(dir.path), TermiusLocalImportFailure.readFailed);
       // The source directory is read only: nothing was created or modified.
       expect(snapshot(), before);
+    });
+
+    test('a torn snapshot is retried and then fails closed', () async {
+      writeDb([
+        ..._hostsDbName(),
+        (_encodeIdbObjectDataKey(5, 1, 1), _hostRecord(1, 'h')),
+      ]);
+      // The MANIFEST names table 9, which never appears.
+      File(
+        '${dir.path}/IndexedDB/file__0.indexeddb.leveldb/MANIFEST-000001',
+      ).writeAsBytesSync(_buildManifest(logNumber: 3, tables: [9]));
+      try {
+        await loadLocalTermiusAppDocument(customDataDir: dir.path);
+        fail('expected failure');
+      } on TermiusLocalImportException catch (error) {
+        expect(error.failure, TermiusLocalImportFailure.readFailed);
+        expect(error.detail, 'inconsistentSnapshot');
+      }
     });
   });
 
@@ -1438,6 +1533,9 @@ void main() {
       final leveldb = Directory('${dir.path}/IndexedDB/file__0.indexeddb.leveldb')
         ..createSync(recursive: true);
       File('${leveldb.path}/CURRENT').writeAsStringSync('MANIFEST-000001\n');
+      File('${leveldb.path}/MANIFEST-000001').writeAsBytesSync(
+        _buildManifest(logNumber: 3, tables: const []),
+      );
       File('${leveldb.path}/000003.log').writeAsBytesSync(
         _buildLevelDbLog([
           (1, [

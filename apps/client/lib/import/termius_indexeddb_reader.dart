@@ -60,6 +60,19 @@ class TermiusIndexedDbLimitException implements Exception {
   String toString() => 'TermiusIndexedDbLimitException($limit)';
 }
 
+/// The LevelDB snapshot is not self-consistent (missing or unparseable
+/// MANIFEST, or a live table named by it is absent). A live database being
+/// compacted mid-copy produces this; the copy must be retaken, never decoded
+/// from the remaining files (that could resurrect deleted records).
+class TermiusIndexedDbSnapshotException implements Exception {
+  const TermiusIndexedDbSnapshotException(this.reason);
+
+  final String reason;
+
+  @override
+  String toString() => 'TermiusIndexedDbSnapshotException($reason)';
+}
+
 class TermiusRawTables {
   const TermiusRawTables({
     required this.tables,
@@ -287,8 +300,9 @@ String _hexKey(Uint8List bytes) {
 /// represented as `fileName -> bytes`.
 Map<String, _LevelDbEntry> _readLiveLevelDbEntries(
   Map<String, Uint8List> files,
-  _ReadBudget budget,
-) {
+  _ReadBudget budget, {
+  required bool requireManifest,
+}) {
   final records = <String, _LevelDbEntry>{};
   var seenEntries = 0;
 
@@ -317,29 +331,29 @@ Map<String, _LevelDbEntry> _readLiveLevelDbEntries(
     return int.tryParse(dot > 0 ? name.substring(0, dot) : name);
   }
 
+  // A MANIFEST that is present is always authoritative: only the tables it
+  // lists are live (an empty set means none), and a listed table missing
+  // from the snapshot makes the whole snapshot unusable. Decoding the
+  // remaining files instead could resurrect records whose tombstones live
+  // in the missing table. Only fixtures without any MANIFEST (and callers
+  // that do not set [requireManifest]) read every captured file.
   final manifest = _readManifestState(files);
-  final presentTables = {
-    for (final name in files.keys)
-      if (name.endsWith('.ldb') || name.endsWith('.sst')) ?fileNumber(name),
-  };
-  // Only trust the manifest when every table it lists is in this snapshot.
-  // A compaction racing the read can publish a new MANIFEST naming tables
-  // that were not captured; filtering by it would then silently drop live
-  // records. Falling back to all captured tables stays correct because the
-  // newest sequence number per key always wins.
-  final liveTables =
-      manifest != null &&
-          manifest.liveTables.isNotEmpty &&
-          manifest.liveTables.every(presentTables.contains)
-      ? manifest.liveTables
-      : null;
+  if (manifest == null && requireManifest) {
+    throw const TermiusIndexedDbSnapshotException('manifestMissing');
+  }
+  final liveTables = manifest?.liveTables;
+  if (liveTables != null) {
+    final presentTables = {
+      for (final name in files.keys)
+        if (name.endsWith('.ldb') || name.endsWith('.sst')) ?fileNumber(name),
+    };
+    if (!liveTables.every(presentTables.contains)) {
+      throw const TermiusIndexedDbSnapshotException('liveTableMissing');
+    }
+  }
   final tableNames = files.keys
       .where((name) => name.endsWith('.ldb') || name.endsWith('.sst'))
-      .where((name) {
-        if (liveTables == null) return true;
-        final num = fileNumber(name);
-        return num == null || liveTables.contains(num);
-      })
+      .where((name) => liveTables == null || liveTables.contains(fileNumber(name)))
       .toList()
     ..sort();
 
@@ -353,7 +367,7 @@ Map<String, _LevelDbEntry> _readLiveLevelDbEntries(
   // Logs older than the manifest's log number were already flushed into
   // tables; replaying them could resurrect records whose tombstones were
   // dropped by a later compaction.
-  final minLog = liveTables == null ? null : manifest?.minLiveLogNumber;
+  final minLog = manifest?.minLiveLogNumber;
   final logNames = files.keys
       .where((name) => name.endsWith('.log'))
       .where((name) {
@@ -389,75 +403,84 @@ class _ManifestState {
   }
 }
 
+/// Parses the MANIFEST named by CURRENT; null when there is none. A present
+/// but unparseable MANIFEST throws: it must never be mistaken for "absent".
 _ManifestState? _readManifestState(Map<String, Uint8List> files) {
   final currentBytes = files['CURRENT'];
   if (currentBytes == null) return null;
   final manifestName = utf8
       .decode(currentBytes, allowMalformed: true)
       .trim();
-  if (manifestName.isEmpty ||
-      manifestName.contains('/') ||
-      manifestName.contains(r'\')) {
-    return null;
+  if (!RegExp(r'^MANIFEST-[0-9]+$').hasMatch(manifestName)) {
+    throw const TermiusIndexedDbSnapshotException('currentInvalid');
   }
   final manifestBytes = files[manifestName];
   if (manifestBytes == null) return null;
 
   final state = _ManifestState();
+  var edits = 0;
   for (final edit in _readLogPhysicalRecords(manifestBytes)) {
-    _applyVersionEdit(edit, state);
+    edits++;
+    if (!_applyVersionEdit(edit, state)) {
+      throw const TermiusIndexedDbSnapshotException('manifestInvalid');
+    }
+  }
+  if (edits == 0 || state.logNumber == null) {
+    throw const TermiusIndexedDbSnapshotException('manifestInvalid');
   }
   return state;
 }
 
-void _applyVersionEdit(Uint8List edit, _ManifestState state) {
+/// Applies one VersionEdit; false when it is truncated or has unknown tags.
+bool _applyVersionEdit(Uint8List edit, _ManifestState state) {
   final live = state.live;
   var pos = 0;
   while (pos < edit.length) {
     final tag = _readVarint(edit, pos);
-    if (tag == null) return;
+    if (tag == null) return false;
     pos = tag.next;
     switch (tag.value) {
       case 1:
         final comp = _readLengthPrefixedSlice(edit, pos);
-        if (comp == null) return;
+        if (comp == null) return false;
         pos = comp.next;
       case 2 || 3 || 4 || 9:
         final val = _readVarint(edit, pos);
-        if (val == null) return;
+        if (val == null) return false;
         pos = val.next;
         if (tag.value == 2) state.logNumber = val.value;
         if (tag.value == 9) state.prevLogNumber = val.value;
       case 5:
         final level = _readVarint(edit, pos);
-        if (level == null) return;
+        if (level == null) return false;
         final key = _readLengthPrefixedSlice(edit, level.next);
-        if (key == null) return;
+        if (key == null) return false;
         pos = key.next;
       case 6:
         final level = _readVarint(edit, pos);
-        if (level == null) return;
+        if (level == null) return false;
         final file = _readVarint(edit, level.next);
-        if (file == null) return;
+        if (file == null) return false;
         live.remove('${level.value}:${file.value}');
         pos = file.next;
       case 7:
         final level = _readVarint(edit, pos);
-        if (level == null) return;
+        if (level == null) return false;
         final file = _readVarint(edit, level.next);
-        if (file == null) return;
+        if (file == null) return false;
         final size = _readVarint(edit, file.next);
-        if (size == null) return;
+        if (size == null) return false;
         final smallest = _readLengthPrefixedSlice(edit, size.next);
-        if (smallest == null) return;
+        if (smallest == null) return false;
         final largest = _readLengthPrefixedSlice(edit, smallest.next);
-        if (largest == null) return;
+        if (largest == null) return false;
         live['${level.value}:${file.value}'] = file.value;
         pos = largest.next;
       default:
-        return;
+        return false;
     }
   }
+  return true;
 }
 
 Uint8List? _readSstBlock(
@@ -787,13 +810,23 @@ List<Map<String, Object?>> dedupTermiusTableRows(
 }
 
 /// Reads Termius IndexedDB tables from an in-memory LevelDB snapshot.
+///
+/// Throws [TermiusIndexedDbSnapshotException] when the snapshot is torn
+/// (present MANIFEST unparseable or naming a table that was not captured);
+/// with [requireManifest] a missing MANIFEST is rejected too. Production
+/// reads of a live profile set it; synthetic WAL-only fixtures may not.
 TermiusRawTables readTermiusIndexedDbTables(
   Map<String, Uint8List> levelDbFiles, {
   Set<String> wantedDatabases = wantedTermiusDatabases,
   bool keepAllVersions = false,
+  bool requireManifest = false,
 }) {
   final budget = _ReadBudget();
-  final entries = _readLiveLevelDbEntries(levelDbFiles, budget);
+  final entries = _readLiveLevelDbEntries(
+    levelDbFiles,
+    budget,
+    requireManifest: requireManifest,
+  );
 
   // 1. Resolve dbId -> database name from global metadata (`00 00 00 00 C9`).
   final dbNamesById = <int, String>{};
