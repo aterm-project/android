@@ -30,6 +30,11 @@ State (refs on the state remote; quota refs may live on a separate remote)
                                   requires the ref to be absent; never moved.
   <ns>/baseline                   last build that was compiled and published;
                                   updated only by compare-and-swap.
+  <ns>/version-code               optional shared Android versionCode allocator
+                                  (``gate --version-allocator`` and the manual
+                                  release build); compare-and-swap, chained.
+  <ns>/release/<release id>       one versionCode allocation per published
+                                  GitHub Release (release_build.py prepare).
 
 A record is a commit object whose tree is the source tree (so it changes no
 file relative to its first parent), whose first parent is the source commit
@@ -66,6 +71,10 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 NAMESPACE_RE = re.compile(r"^refs/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$")
 BRANCH_RE = re.compile(r"^[A-Za-z0-9._/-]{1,200}$")
 MAX_SKEW_DEFAULT = 120
+VERSION_REF = "version-code"
+VERSION_CODE_MAX = 2_100_000_000  # largest versionCode Google Play accepts
+DAILY_MAX_SLOT = 99               # codes YYYYMMDD*100 + 1..99 belong to one UTC day
+RELEASE_MAX_SLOT = 90             # manual releases stop at +90: +91..99 stay free for daily attempts
 BOT_NAME = "github-actions[bot]"
 BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -268,7 +277,7 @@ def make_record(repo: Path, source: str, parents: list[str], payload: dict, when
     tree = tree_of(repo, source)
     if not tree:
         raise GateError(f"source commit {source[:12]} is not available locally")
-    title = f"atermius daily-build {payload['kind']} {payload.get('quota_date', '')}".rstrip()
+    title = f"atermius daily-build {payload['kind']} {payload.get('quota_date') or ''}".rstrip()
     message = title + "\n\n" + json.dumps(payload, indent=2, sort_keys=True) + "\n"
     stamp = f"{int(when.timestamp())} +0000"
     env = _git_env()
@@ -296,7 +305,52 @@ def read_record(repo: Path, sha: str, kind: str) -> dict:
     for key in ("source_sha", "fingerprint"):
         if not isinstance(data.get(key), str) or not (HEX40 if key == "source_sha" else HEX64).match(data[key]):
             raise GateError(f"{kind} record {sha[:12]} has an invalid {key}")
+    if kind in ("version-code", "release-build"):
+        code = data.get("version_code")
+        if not isinstance(code, int) or isinstance(code, bool) or not 0 < code <= VERSION_CODE_MAX:
+            raise GateError(f"{kind} record {sha[:12]} has an invalid version_code")
     return data
+
+
+def allocate_version_code(repo: Path, remote: str, namespace: str, date: str, source: str, fingerprint_hex: str,
+                          payload: dict, now: dt.datetime, *, max_slot: int, quota_remote: str = "") -> tuple[int, str]:
+    """Allocate the next Android versionCode from ``<ns>/version-code`` by compare-and-swap.
+
+    code = max(last allocated + 1, YYYYMMDD*100 + highest slot claimed today + 1, YYYYMMDD*100 + 1),
+    refused above YYYYMMDD*100 + ``max_slot``. Daily attempts and manual release builds share
+    the counter, so every allocated code is larger than all earlier ones regardless of which
+    kind came first on a day. The quota-slot floor keeps codes above a daily attempt that was
+    claimed before this allocator existed (legacy ``YYYYMMDD*100 + slot``). Losing a race only
+    retries; a code allocated by a run that later fails is skipped (gaps are harmless).
+    """
+    if not DATE_RE.match(date) or not 1 <= max_slot <= DAILY_MAX_SLOT:
+        raise GateError("invalid version allocation date/slot limit")
+    base = int(date.replace("-", "")) * 100
+    ref = f"{namespace}/{VERSION_REF}"
+    quota_prefix = f"{namespace}/quota/{date}/"
+    for _ in range(5):
+        refs = ls_remote(repo, remote, [ref, quota_prefix + "*"])
+        if quota_remote and quota_remote != remote:
+            refs.update(ls_remote(repo, quota_remote, [quota_prefix + "*"]))
+        current = refs.get(ref)
+        last = 0
+        if current:
+            fetch_shas(repo, remote, [current])
+            last = read_record(repo, current, "version-code")["version_code"]
+        slots = [int(r[len(quota_prefix):]) for r in refs if r.startswith(quota_prefix) and r[len(quota_prefix):].isdigit()]
+        code = max(last + 1, base + max(slots, default=0) + 1, base + 1)
+        if code > base + max_slot or code > VERSION_CODE_MAX:
+            raise GateError(f"no Android versionCode left for {date} (next {code}, limit {base + max_slot}); "
+                            "nothing was allocated")
+        # The nonce makes every attempt's record unique: cas_push treats "remote already equals
+        # our record" as success, which must never match a competitor's identical payload.
+        body = {**payload, "schema": SCHEMA, "kind": "version-code", "version_code": code, "quota_date": date,
+                "source_sha": source, "fingerprint": fingerprint_hex, "previous_version_code": last or None,
+                "previous_record": current or None, "allocated_at": utc_iso(now), "nonce": os.urandom(16).hex()}
+        record = make_record(repo, source, [source] + ([current] if current else []), body, now)
+        if cas_push(repo, remote, ref, record, current) == "ok":
+            return code, record
+    raise GateError("the versionCode allocator changed concurrently five times; nothing was allocated")
 
 
 # ------------------------------------------------------------------------ clock
@@ -467,6 +521,16 @@ def cmd_gate(args: argparse.Namespace) -> int:
         raise GateError("release prerequisites are not configured: " + ", ".join(missing)
                         + " (see .github/daily-build/README.md); nothing was claimed")
 
+    version_code = None
+    if args.version_allocator:
+        # Allocated before the claim: a lost claim race only leaves a gap in versionCodes,
+        # while an allocation failure must not consume today's build attempt.
+        version_code, _ = allocate_version_code(
+            repo, args.remote, ns, date, tip, info["fingerprint"],
+            {"purpose": "daily", "repository": args.repository, "run_id": args.run_id,
+             "run_attempt": args.run_attempt, "event": args.event},
+            now, max_slot=DAILY_MAX_SLOT, quota_remote=quota_remote)
+
     payload = {
         "schema": SCHEMA, "kind": "quota", "repository": args.repository, "quota_date": date,
         "claimed_at": utc_iso(now), "clock_source": clock, "branch": branch, "source_sha": tip,
@@ -475,6 +539,8 @@ def cmd_gate(args: argparse.Namespace) -> int:
         "run_id": args.run_id, "run_attempt": args.run_attempt, "event": args.event,
         "workflow": args.workflow, "daily_quota": args.daily_quota,
     }
+    if version_code is not None:
+        payload["version_code"] = version_code
     test_sync()
     taken = {int(r.rsplit("/", 1)[1]) for r in used if r.rsplit("/", 1)[1].isdigit()}
     for slot in range(1, args.daily_quota + 1):
@@ -487,7 +553,8 @@ def cmd_gate(args: argparse.Namespace) -> int:
             compact = date.replace("-", "")
             result.update(
                 build=True, reason="claimed", quota_slot=slot, claim_ref=ref, claim_record=record,
-                claim_run_attempt=args.run_attempt, version_code=int(compact) * 100 + slot,
+                claim_run_attempt=args.run_attempt,
+                version_code=version_code if version_code is not None else int(compact) * 100 + slot,
                 release_tag=f"daily-{compact}.{slot}-{tip[:12]}",
                 detail=f"claimed {ref}; this attempt counts for {date} UTC whether it succeeds or fails")
             emit(result, args.github_output, args.summary)
@@ -612,6 +679,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-skew", type=int, default=MAX_SKEW_DEFAULT)
     p.add_argument("--now", default="", help="override the clock (tests)")
     p.add_argument("--require-env", action="append", default=[])
+    p.add_argument("--version-allocator", action="store_true",
+                   help="allocate version_code from the shared <ns>/version-code counter (Android)")
     p.add_argument("--github-output", default=os.environ.get("GITHUB_OUTPUT", ""))
     p.add_argument("--summary", default=os.environ.get("GITHUB_STEP_SUMMARY", ""))
     p.set_defaults(func=cmd_gate)

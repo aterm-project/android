@@ -16,7 +16,12 @@ rules this CI design depends on:
   jobs.<id>.env / jobs.<id>.if; step references point to existing step ids;
 * the daily workflow runs on cron "0 0 * * *" + workflow_dispatch only, with a
   non-cancelling concurrency group, and build/publish jobs are guarded by the
-  gate's build flag and claim attempt.
+  gate's build flag and claim attempt;
+* release-trigger.yml (release published) has one checkout-free job with
+  actions: write only that skips daily-* tags; release-build.yml is the only
+  workflow with dispatch inputs (release_tag, release_id), every job is
+  main-only, contents: write only on prepare/publish, the untrusted inputs reach
+  only the prepare step's env, and secrets only the sign job.
 
   python3 -I .github/daily-build/tests/lint_workflows.py [--root REPO]
 """
@@ -37,6 +42,9 @@ PINS = {
     "actions/cache": {"5a3ec84eff668545956fd18022155c47e93e2684"},
 }
 WRITE_JOBS = {"gate", "publish"}
+RELEASE_JOBS = {"prepare", "build", "sign", "publish"}
+RELEASE_INPUTS = {"release_tag": True, "release_id": False}  # name -> required
+MAIN_ONLY = "github.ref == 'refs/heads/main'"
 EXPR = re.compile(r"\$\{\{(.*?)\}\}", re.S)
 
 
@@ -54,8 +62,42 @@ def lint_file(path: Path) -> list[str]:
     for bad in ("pull_request_target", "workflow_run"):
         if bad in events:
             errors.append(f"{name}: trigger {bad} is not allowed")
+    release_build = name == "release-build.yml"
+    release_trigger = name == "release-trigger.yml"
     if isinstance(on, dict) and isinstance(on.get("workflow_dispatch"), dict) and on["workflow_dispatch"].get("inputs"):
-        errors.append(f"{name}: workflow_dispatch must not take inputs")
+        inputs = on["workflow_dispatch"]["inputs"]
+        if not release_build or set(on) != {"workflow_dispatch"} or not isinstance(inputs, dict) \
+                or set(inputs) != set(RELEASE_INPUTS) or any(
+                    (inputs[k] or {}).get("type") != "string" or bool((inputs[k] or {}).get("required")) != req
+                    for k, req in RELEASE_INPUTS.items()):
+            errors.append(f"{name}: workflow_dispatch must not take inputs "
+                          "(only release-build.yml: string release_tag (required), release_id)")
+    if release_build:
+        if not isinstance(on, dict) or set(on) != {"workflow_dispatch"}:
+            errors.append(f"{name}: release build must be started only by workflow_dispatch")
+        conc = doc.get("concurrency") or {}
+        if not conc.get("group") or conc.get("cancel-in-progress") is not False:
+            errors.append(f"{name}: needs a non-cancelling concurrency group")
+        jobs = set(doc.get("jobs") or {})
+        if not {"prepare", "build", "publish"} <= jobs or not jobs <= RELEASE_JOBS:
+            errors.append(f"{name}: jobs must be prepare, build, [sign,] publish")
+        for job_id, job in (doc.get("jobs") or {}).items():
+            text = yaml.safe_dump({k: v for k, v in job.items() if k != "steps"}) + "".join(
+                yaml.safe_dump({k: v for k, v in step.items() if k != "env" or job_id != "prepare"})
+                for step in job.get("steps") or [])
+            if re.search(r"\binputs\.|github\.event", text):
+                errors.append(f"{name}:{job_id}: dispatch inputs may only reach the prepare step env")
+            if "secrets." in yaml.safe_dump(job) and job_id != "sign":
+                errors.append(f"{name}:{job_id}: secrets are only for the sign job")
+    if release_trigger:
+        jobs = doc.get("jobs") or {}
+        job = jobs.get("dispatch") or {}
+        if on != {"release": {"types": ["published"]}} or set(jobs) != {"dispatch"}:
+            errors.append(f"{name}: must run only on release published with one dispatch job")
+        if job.get("permissions") != {"actions": "write"} or any(s.get("uses") for s in job.get("steps") or []) \
+                or "!startsWith(github.event.release.tag_name, 'daily-')" not in str(job.get("if", "")) \
+                or "secrets." in yaml.safe_dump(job):
+            errors.append(f"{name}: dispatch job needs the daily-* skip, actions: write only, no actions/secrets")
     top = doc.get("permissions")
     if top not in ({}, "read-all") and not (isinstance(top, dict) and set(top.values()) <= {"read", "none"}):
         errors.append(f"{name}: workflow-level permissions must be empty or read-only")
@@ -81,7 +123,13 @@ def lint_file(path: Path) -> list[str]:
             errors.append(f"{where}: timeout-minutes missing")
         perms = job.get("permissions", top)
         writes = sorted(k for k, v in (perms or {}).items() if v == "write") if isinstance(perms, dict) else []
-        if perms == "write-all" or (writes and not ((daily and job_id in WRITE_JOBS) or (recovery and job_id == "publish"))):
+        release_writer = (release_build and job_id in {"prepare", "publish"} and writes == ["contents"]) or \
+            (release_trigger and job_id == "dispatch" and writes == ["actions"])
+        if release_build and (MAIN_ONLY not in str(job.get("if", "")) or (
+                job_id != "prepare" and "needs.prepare.outputs.build == 'true'" not in str(job.get("if", "")))):
+            errors.append(f"{where}: must be main-only and guarded by the prepare build flag")
+        if perms == "write-all" or (writes and not ((daily and job_id in WRITE_JOBS) or (recovery and job_id == "publish")
+                                                    or release_writer)):
             errors.append(f"{where}: write permission {writes or perms} not allowed on this job")
         if daily and job_id in WRITE_JOBS and writes not in ([], ["contents"]):
             errors.append(f"{where}: only contents: write is allowed, got {writes}")
@@ -103,7 +151,7 @@ def lint_file(path: Path) -> list[str]:
                 if re.search(r"\b(runner|steps|env|job)\.", expr):
                     errors.append(f"{where}: {key} uses a context unavailable at job level: {expr.strip()}")
         step_ids = set()
-        compiles = daily and job_id not in WRITE_JOBS
+        compiles = (daily and job_id not in WRITE_JOBS) or (release_build and job_id != "prepare")
         for index, step in enumerate(job.get("steps") or []):
             label = f"{where}:step{index + 1}"
             run = step.get("run")

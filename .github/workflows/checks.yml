@@ -20,6 +20,7 @@ jobs:
       - run: python3 -I .github/daily-build/tests/test_android_toolchain.py
       - run: python3 -I .github/daily-build/tests/test_resume_publication.py
       - run: python3 -I .github/daily-build/tests/test_release_tool.py
+      - run: python3 -I .github/daily-build/tests/test_release_build.py
       - run: bash tools/install_flutter_linux.sh
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/client

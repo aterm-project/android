@@ -204,6 +204,8 @@ def assemble(args: argparse.Namespace) -> dict:
         data = json.loads(path.read_text(encoding="utf-8"))
         checks = {"schema": SCHEMA, "source_sha": args.source_sha, "quota_date": args.quota_date,
                   "release_tag": args.release_tag, "run_id": args.run_id, "run_attempt": args.run_attempt}
+        if args.run_attempt == "*":  # release builds: re-running failed jobs reuses earlier attempts' packages
+            del checks["run_attempt"]
         wrong = [k for k, v in checks.items() if str(data.get(k)) != str(v)]
         if wrong or data.get("status") != "built":
             raise ToolError(f"{path.name} does not belong to this claim/run ({', '.join(wrong) or 'status'})")
@@ -228,13 +230,17 @@ def assemble(args: argparse.Namespace) -> dict:
     Path(args.sums_out).write_text(sums, encoding="utf-8")
     Path(args.artifacts_out).write_text(json.dumps(sorted(listed.values(), key=lambda x: x["name"]), indent=2) + "\n",
                                         encoding="utf-8")
-    lines = [
-        f"Automated daily build of `{args.source_sha}` ({args.repository}), quota day {args.quota_date} UTC.",
-        "", f"Workflow run: {args.run_url}", "",
-        "Built only because product/packaging inputs changed since the previous published daily build. "
-        "Every file below is listed in `SHA256SUMS`; `evidence-*.json` records the toolchain, runner image and "
-        "checks for each platform.", "",
-    ]
+    if getattr(args, "kind", "daily") == "release":
+        lines = [f"Packages of release `{args.release_tag}`, built from `{args.source_sha}` ({args.repository}).",
+                 "", f"Workflow run: {args.run_url}", ""]
+    else:
+        lines = [
+            f"Automated daily build of `{args.source_sha}` ({args.repository}), quota day {args.quota_date} UTC.",
+            "", f"Workflow run: {args.run_url}", "",
+            "Built only because product/packaging inputs changed since the previous published daily build. "
+            "Every file below is listed in `SHA256SUMS`; `evidence-*.json` records the toolchain, runner image and "
+            "checks for each platform.", "",
+        ]
     for data in sections:
         lines.append(f"### {data['platform']}")
         for item in data["artifacts"]:

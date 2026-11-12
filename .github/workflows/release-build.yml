@@ -1,0 +1,247 @@
+# Installation package for a published (non-daily) GitHub Release.
+#
+# Started by release-trigger.yml when a release is published (or by hand:
+# Actions > Release build > Run workflow, with the release tag). It always runs
+# this definition from main; prepare treats the tag/id as untrusted strings,
+# resolves the tag (annotated tags are peeled) to one commit that must be on
+# main and carry this build recipe, and allocates the Android versionCode from
+# the counter shared with the daily build. Build and sign reuse the daily
+# recipe and the daily-release signing environment (main only, certificate
+# pin); publish adds the signed APK, evidence and SHA256SUMS to exactly that
+# existing release. Manual releases neither check nor use the daily quota.
+# Re-run failed jobs to resume: successful jobs and their packages are reused.
+# Details: .github/daily-build/README.md
+name: Release build
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Tag of the published release (not daily-*)
+        required: true
+        type: string
+      release_id:
+        description: Optional numeric release id (set by release-trigger.yml)
+        required: false
+        type: string
+        default: ""
+
+permissions: {}
+
+concurrency:
+  group: release-build-${{ github.repository }}-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+env:
+  ATERMIUS_RELEASE_BRANCH: main
+  ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build
+  CMAKE_BUILD_PARALLEL_LEVEL: "2"
+  CMAKE_BUILD_PARALLEL: "2"
+  MAKEFLAGS: "-j2"
+  FLUTTER_SUPPRESS_ANALYTICS: "true"
+
+jobs:
+  prepare:
+    name: Prepare (release, tag source on main, versionCode)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write # versionCode allocator refs; no build or third-party code runs here
+    outputs:
+      build: ${{ steps.prepare.outputs.build }}
+      release_id: ${{ steps.prepare.outputs.release_id }}
+      release_tag: ${{ steps.prepare.outputs.release_tag }}
+      source_sha: ${{ steps.prepare.outputs.source_sha }}
+      build_date: ${{ steps.prepare.outputs.build_date }}
+      version_code: ${{ steps.prepare.outputs.version_code }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0 # main ancestry of the tagged commit
+          filter: blob:none
+          persist-credentials: true # git push of refs/atermius-ci/daily-build/{version-code,release/*}
+      - name: Validate release and tag; allocate versionCode
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ATERMIUS_RELEASE_TAG: ${{ inputs.release_tag }}
+          ATERMIUS_RELEASE_ID: ${{ inputs.release_id }}
+          ATERMIUS_ANDROID_SIGNING_CERT_SHA256: ${{ vars.ATERMIUS_ANDROID_SIGNING_CERT_SHA256 }}
+        run: |
+          test -n "$ATERMIUS_ANDROID_SIGNING_CERT_SHA256" || {
+            echo "::error::ATERMIUS_ANDROID_SIGNING_CERT_SHA256 is not configured; nothing was allocated"; exit 1; }
+          for attempt in 1 2 3 4; do
+            status=0
+            python3 -I .github/daily-build/release_build.py prepare --platforms android --version-allocator \
+              --branch "$ATERMIUS_RELEASE_BRANCH" --namespace "$ATERMIUS_DAILY_NAMESPACE" || status=$?
+            [ "$status" -eq 3 ] || exit "$status"
+            sleep 30
+          done
+          echo "::error::no consistent GitHub server Date after 4 attempts; nothing was allocated"
+          exit 1
+
+  build:
+    name: Build APK (arm64-v8a + x86_64, RDP engine)
+    needs: prepare
+    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    env:
+      ATERMIUS_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+      ATERMIUS_QUOTA_DATE: ${{ needs.prepare.outputs.build_date }}
+      ATERMIUS_RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+      ATERMIUS_VERSION_CODE: ${{ needs.prepare.outputs.version_code }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Work paths and NDK pin (from build_engine.sh)
+        run: |
+          {
+            echo "ATERMIUS_OUT=$RUNNER_TEMP/out"
+            echo "ATERMIUS_ENGINE_DEPS=$RUNNER_TEMP/rdp-engine-deps"
+            echo "ATERMIUS_ENGINE_WORK=$RUNNER_TEMP/rdp-engine-work"
+            echo "PUB_CACHE=$RUNNER_TEMP/pub-cache"
+            sed -n 's/^NDK_PIN=\([0-9][0-9.]*\).*/ATERMIUS_NDK_PIN=\1/p' apps/client/native/desktop/android/build_engine.sh
+          } >> "$GITHUB_ENV"
+      - name: Reserve disk space for native and Gradle builds
+        run: |
+          # This cleanup is only for disposable GitHub-hosted Linux runners.
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          test "$RUNNER_OS" = Linux
+          df -h "$RUNNER_TEMP"
+          sudo rm -rf -- /usr/share/dotnet /opt/ghc /usr/local/.ghcup "${AGENT_TOOLSDIRECTORY:?}/CodeQL"
+          df -h "$RUNNER_TEMP"
+      - name: Shared NDK cache path
+        run: echo "ATERMIUS_NDK_PATH=$ANDROID_HOME/ndk/$ATERMIUS_NDK_PIN" >> "$GITHUB_ENV"
+      - name: Cache Android NDK
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ env.ATERMIUS_NDK_PATH }}
+          key: android-ndk-sdk-v2-${{ env.ATERMIUS_NDK_PIN }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Toolchain (JDK 17, pinned NDK, build-tools, Gradle limits)
+        run: bash .github/daily-build/recipe/android_toolchain.sh
+      - name: Cache Flutter SDK
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/aterminal-flutter-3.47.5
+          key: flutter-3.47.5-2132e990f236f8d2-${{ runner.os }}-${{ runner.arch }}-android
+      - name: Flutter SDK 3.47.5 (pinned archive digest)
+        run: bash tools/install_flutter_linux.sh
+      - name: Cache pub packages
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/pub-cache
+          key: pub-${{ runner.os }}-3.47.5-${{ hashFiles('apps/client/pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-3.47.5-
+      - name: Cache Gradle dependencies
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-3.47.5-${{ hashFiles('apps/client/android/**/*.gradle*', 'apps/client/android/gradle/wrapper/gradle-wrapper.properties', 'apps/client/pubspec.lock') }}
+          restore-keys: gradle-${{ runner.os }}-3.47.5-
+      - name: Cache official engine sources (deps.lock digests)
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/rdp-engine-deps
+          key: android-rdp-deps-${{ hashFiles('apps/client/native/desktop/android/deps.lock') }}
+      - name: Engine cache key (recipe, sources, ABIs, NDK, host tools)
+        id: engine-key
+        run: bash .github/daily-build/recipe/android_engine_key.sh
+      - name: Cache engine work directory (exact key only)
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/rdp-engine-work
+          key: ${{ steps.engine-key.outputs.key }}
+      - name: Build engine and release APK
+        run: bash .github/daily-build/recipe/android_build.sh
+      - name: Upload intermediate APK (not distributable)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-android-intermediate
+          path: ${{ runner.temp }}/out/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+
+  sign:
+    name: Sign APK with the stable project key
+    needs: [prepare, build]
+    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: daily-release # signing secrets live here; deployment branches: main only
+    permissions:
+      contents: read
+    env:
+      ATERMIUS_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+      ATERMIUS_QUOTA_DATE: ${{ needs.prepare.outputs.build_date }}
+      ATERMIUS_RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: .github/daily-build
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-android-intermediate
+          path: ${{ runner.temp }}/intermediate
+      - name: build-tools
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "build-tools;36.0.0" >/dev/null
+          echo "ATERMIUS_BUILD_TOOLS=$ANDROID_HOME/build-tools/36.0.0" >> "$GITHUB_ENV"
+      - name: Re-sign, verify certificate pin and alignment
+        env:
+          ATERMIUS_ANDROID_KEYSTORE_B64: ${{ secrets.ATERMIUS_ANDROID_KEYSTORE_B64 }}
+          ATERMIUS_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ATERMIUS_ANDROID_KEYSTORE_PASSWORD }}
+          ATERMIUS_ANDROID_KEY_ALIAS: ${{ secrets.ATERMIUS_ANDROID_KEY_ALIAS }}
+          ATERMIUS_ANDROID_KEY_PASSWORD: ${{ secrets.ATERMIUS_ANDROID_KEY_PASSWORD }}
+          ATERMIUS_ANDROID_SIGNING_CERT_SHA256: ${{ vars.ATERMIUS_ANDROID_SIGNING_CERT_SHA256 }}
+        run: bash .github/daily-build/recipe/android_sign.sh "$RUNNER_TEMP/intermediate" "$RUNNER_TEMP/release"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-android-signed
+          path: ${{ runner.temp }}/release/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+  publish:
+    name: Attach packages to the published release
+    needs: [prepare, sign]
+    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write # upload release assets; runs only the verified script below, no git push
+    env:
+      ATERMIUS_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+      ATERMIUS_BUILD_DATE: ${{ needs.prepare.outputs.build_date }}
+      ATERMIUS_RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+      ATERMIUS_RELEASE_ID: ${{ needs.prepare.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: .github/daily-build
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-android-signed
+          path: ${{ runner.temp }}/release
+      - name: Verify and attach to the exact existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 -I .github/daily-build/release_build.py publish --platforms android \
+            --dir "$RUNNER_TEMP/release" --work "$RUNNER_TEMP/publish"

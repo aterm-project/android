@@ -35,6 +35,8 @@ tag lists; `contents: write` of the gate/publish jobs only):
 | --- | --- | --- |
 | `quota/<YYYY-MM-DD>/<slot>` | gate, compare-and-swap "must not exist" | one build attempt of that UTC day; never moved; a failed build still counts |
 | `baseline` | publish, compare-and-swap on the value the gate saw | last build that compiled **and** published; chained to the previous baseline |
+| `version-code` | gate (Android) and release `prepare`, compare-and-swap | last allocated Android versionCode; chained (see Release builds) |
+| `release/<id>` | release `prepare`, compare-and-swap "must not exist" | versionCode and source commit of one published release |
 
 Each ref points at a record commit: tree = source tree (no file changes), parent 1 = source commit,
 parent 2 (baseline) = previous baseline, message = JSON (source SHA, input fingerprint, run id/attempt,
@@ -46,6 +48,60 @@ Inspect: `git fetch origin 'refs/atermius-ci/*:refs/atermius-ci/*'` then
 `python3 -I .github/daily-build/daily_gate.py status`.
 Force a rebuild at the next checkpoint: delete the `baseline` ref. Old `quota/*` refs may be deleted
 after a few days (only today's date is read).
+
+## Release builds (published GitHub Releases)
+
+Publishing a GitHub Release (or pre-release) whose tag is not `daily-*` attaches the signed APK,
+`evidence-android.json` and `SHA256SUMS` to **that** release. Manual releases are built immediately:
+they neither check nor consume the daily quota, and the once-a-day cron is unaffected.
+
+| Workflow | Runs | Permissions |
+| --- | --- | --- |
+| `release-trigger.yml` | `release: published`; skips `daily-*`; no checkout; validates tag/id, then `gh workflow run release-build.yml --ref main` | `actions: write` |
+| `release-build.yml` `prepare` | main only; `release_build.py prepare` | `contents: write` (versionCode refs) |
+| `release-build.yml` `build` | the daily `build` steps unchanged (`android_build.sh`, RDP engine, licenses) | `contents: read`, no persisted credentials |
+| `release-build.yml` `sign` | the daily `sign` steps unchanged (`daily-release` environment, certificate pin) | `contents: read` |
+| `release-build.yml` `publish` | `release_build.py publish` (REST API, no git push) | `contents: write` |
+
+Trust: a `release` event runs the workflow file **of the tagged commit**, which may be unreviewed
+(any writer can tag any commit, including a commit fetched from a fork's pull request: forks share
+the object store). That workflow therefore gets no secrets and no checkout and can only dispatch the
+main-branch definition. `prepare` (main definition) treats the tag and release id as untrusted strings
+(regex-checked, passed through env, never interpolated into scripts), requires a published non-draft
+release whose id matches, peels the tag (annotated or lightweight) to **one** commit, and refuses
+unless that commit is an ancestor of `main` and carries the same `recipe/` and `release_tool.py` as the
+running workflow. Every later job uses only that commit id. The signing environment keeps its
+deployment policy (`main` only): the dispatched run's ref is `main`, so no tag pattern is needed and
+a tag-triggered or fork workflow can never read the key. Forks cannot dispatch upstream workflows,
+and their own release events run in the fork without these secrets.
+
+Publication targets the release **id** from `prepare`: before and after uploading, the id must still
+own the tag, the release must be published, and the tag must still resolve to the built commit (a
+moved tag or a replacement release is refused). Existing assets: identical name+size+SHA-256 digest
+⇒ kept; same name in state `open` (interrupted upload) ⇒ that asset is deleted and re-uploaded;
+same name with other content ⇒ refused before any change; other names are never touched.
+`SHA256SUMS` is uploaded last; when it and `evidence-android.json` are attached, a new dispatch
+skips as `already-published`. To resume after a failure use **Re-run failed jobs**: successful jobs,
+their outputs and their packages are reused (artifact names carry no attempt number), so the
+upload is byte-identical. A full re-run or a new dispatch reuses the release's versionCode but
+rebuilds, and its bytes may differ from assets already attached.
+
+Manual start: Actions → Release build → Run workflow on `main` with the tag (needed for tags
+created at commits that predate `release-trigger.yml`). GitHub's "immutable releases" setting must
+stay off for the repository, otherwise assets cannot be added after publication.
+
+### versionCode allocator
+
+`refs/atermius-ci/daily-build/version-code` is a compare-and-swap counter shared by the daily gate
+(`gate --version-allocator`) and release builds:
+`code = max(last + 1, YYYYMMDD*100 + highest quota slot claimed today + 1, YYYYMMDD*100 + 1)`.
+Without manual releases the daily code stays `YYYYMMDD*100 + slot`; a manual release before or after
+the cron on the same day gets the next code, and the next day starts above all of them, so every
+build installs over every earlier one. Release builds stop at `YYYYMMDD*100 + 90`, leaving 91–99 for
+daily attempts; a refused allocation changes nothing. Each release id records its code once in
+`refs/atermius-ci/daily-build/release/<id>` (re-runs reuse it; a moved tag is refused). Each record
+commit is chained to the previous one. Do **not** delete `version-code` or `release/*` refs: the
+date floor would still exceed earlier days, but same-day codes could repeat.
 
 ## Inputs
 
@@ -95,6 +151,7 @@ checkpoint rebuilds (the extra release can be deleted by hand).
 python3 -I .github/daily-build/tests/test_daily_gate.py -v     # real git remotes, races, re-runs, UTC days
 python3 -I .github/daily-build/tests/test_release_tool.py -v   # packaging/evidence + policy lint
 python3 -I .github/daily-build/tests/test_android_toolchain.py -v # shared SDK NDK install/reuse and stale-cache refusal
+python3 -I .github/daily-build/tests/test_release_build.py -v  # release prepare/publish, versionCode allocator, workflow policy
 python3 -I .github/daily-build/tests/lint_workflows.py         # pin/permission/guard policy (actionlint still primary)
 actionlint -shellcheck= .github/workflows/*.yml
 ```
@@ -131,7 +188,8 @@ actionlint -shellcheck= .github/workflows/*.yml
 * The engine work directory is cached only under an exact key covering every file of
   `apps/client/native/desktop`, the ABIs, NDK revision, CMake/Ninja/Perl versions and runner image
   (no restore-keys), so a stale engine is never reused.
-* versionCode = `YYYYMMDD*100 + slot` (e.g. 2026111001), monotonic with one build per day.
+* versionCode from the shared allocator (above): `YYYYMMDD*100 + slot` (e.g. 2026111001) when no
+  manual release was built that day, otherwise the next free code; always monotonic.
 * Signing happens in a separate job without Gradle/plugin code: the Gradle output (runner debug
   key, never published) is re-signed by `apksigner` with the project's stable key, then
   `zipalign -c -P 16 4` and `apksigner verify --print-certs` must show exactly one signer equal to

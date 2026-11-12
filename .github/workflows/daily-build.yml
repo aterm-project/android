@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      contents: write # create the quota claim ref; no build or third-party code runs here
+      contents: write # quota claim + shared versionCode refs; no build or third-party code runs here
     outputs:
       build: ${{ steps.gate.outputs.build }}
       source_sha: ${{ steps.gate.outputs.source_sha }}
@@ -71,7 +71,7 @@ jobs:
                 --daily-quota "$ATERMIUS_DAILY_QUOTA" --ref "$GITHUB_REF" --run-sha "$GITHUB_SHA" \
                 --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" --event "$GITHUB_EVENT_NAME" \
                 --workflow "$GITHUB_WORKFLOW_REF" --repository "$GITHUB_REPOSITORY" \
-                --server-date "$server_date" \
+                --server-date "$server_date" --version-allocator \
                 --require-env ATERMIUS_ANDROID_SIGNING_CERT_SHA256 || status=$?
               [ "$status" -eq 3 ] || exit "$status"
             fi
