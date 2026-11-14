@@ -23,7 +23,9 @@ jobs:
   check:
     runs-on: ubuntu-latest
     container: rust:1.94.1-bookworm
-    timeout-minutes: 30
+    # The bundled SQLCipher build compiles vendored OpenSSL (perl and make are
+    # part of rust:bookworm), which adds several minutes to a cold build.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: cargo test --locked --jobs 2 -- --test-threads=2
