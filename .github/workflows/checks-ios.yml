@@ -59,7 +59,7 @@ jobs:
         working-directory: apps/client
       - run: flutter test --concurrency=2 test/apple_platform_engineering_test.dart test/terminal_touch_selection_test.dart test/fullscreen_tabs_peek_test.dart test/ssh_background_keepalive_test.dart
         working-directory: apps/client
-      - run: flutter test --concurrency=2 test/session_workspace_actions_test.dart test/workspace_tab_drag_test.dart test/terminal_tools_sidebar_test.dart test/cloud_access_client_test.dart test/cloud_access_interop_test.dart test/fullscreen_test.dart test/desktop_keyboard_mode_test.dart test/direct_desktop_test.dart test/desktop_resolution_test.dart test/desktop_mobile_controls_test.dart test/desktop_protocol_test.dart
+      - run: flutter test --concurrency=2 test/session_workspace_actions_test.dart test/workspace_tab_drag_test.dart test/terminal_tools_sidebar_test.dart test/cloud_access_client_test.dart test/cloud_access_interop_test.dart test/credential_escrow_crypto_test.dart test/credential_escrow_interop_test.dart test/credential_escrow_admin_test.dart test/credential_visibility_api_test.dart test/credential_visibility_service_test.dart test/credential_visibility_clipboard_test.dart test/credential_visibility_widget_test.dart test/fullscreen_test.dart test/desktop_keyboard_mode_test.dart test/direct_desktop_test.dart test/desktop_resolution_test.dart test/desktop_mobile_controls_test.dart test/desktop_protocol_test.dart
         working-directory: apps/client
       - run: flutter test --concurrency=2 test/session_recovery_test.dart test/desktop_reconnect_test.dart test/telnet_app_controller_test.dart test/terminal_tabs_controller_test.dart test/telnet_local_profile_widget_test.dart test/terminal_tabs_widget_test.dart
         working-directory: apps/client

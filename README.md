@@ -14,6 +14,7 @@ There is no published consumer installer matching the current main branch. Build
 - [Features and platform boundaries](docs/FEATURES.md)
 - [Sharing Hosts](docs/SHARING.en.md)
 - [Self-hosted server](docs/install/server.en.md)
+- [Credential visibility and administrator escrow](docs/CREDENTIAL-VISIBILITY.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.en.md)
 - [Developer checks](docs/DEVELOPMENT.md)
 - [All documentation](docs/README.md)
@@ -38,7 +39,9 @@ The server is a self-hosted encrypted workspace API, organization manager and te
 | Organizations and teams | Invitations, roles, desired grants and owner-confirmed key delivery |
 | Host sharing | A dedicated sharing Vault for selected Hosts and approved dependencies |
 | Temporary links | Custom addresses, start/expiry, limits, revocation and activity |
+| [Credential visibility](docs/CREDENTIAL-VISIBILITY.md) | Per-account `private` (zero knowledge) or `admin_visible` (client-side Vault-key escrow to an administrator-held key), user notices and a recorded view log; SQLite only |
 | Operations | SQLite, restricted PostgreSQL, backup/restore and optional monitoring |
+| Database encryption at rest | SQLCipher-encrypted SQLite database, snapshots and restore stages; key kept outside the data volume ([runbook](docs/runbooks/database-encryption.md)) |
 
 ## Platforms
 
@@ -72,6 +75,8 @@ For the server, Docker + Compose 2.24 or later:
 cd atermius
 cp deploy/.env.example deploy/.env
 # Configure deploy/.env, then follow docs/install/server.en.md.
+# Create the database encryption key once, before the first start:
+docker compose --env-file deploy/.env -f deploy/compose.yaml run --build --rm --no-deps server database-key-generate --out /keys/database.key
 docker compose --env-file deploy/.env -f deploy/compose.yaml -f deploy/compose.web.yaml up -d --build
 ```
 

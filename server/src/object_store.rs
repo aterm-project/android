@@ -8,7 +8,6 @@ use std::{
     ffi::OsString,
     fs,
     path::{Path, PathBuf},
-    str::FromStr,
     time::Duration,
 };
 
@@ -973,18 +972,18 @@ impl ObjectStore {
     /// Download and validate an external object into a SQLite backup snapshot.
     /// The archive therefore remains self-contained and restores as a local
     /// SQLite-backed instance even when the original object store is unavailable.
-    pub(crate) async fn hydrate_for_backup(&self, snapshot_url: &str) -> Result<(), ApiError> {
+    pub(crate) async fn hydrate_for_backup(
+        &self,
+        snapshot_url: &str,
+        database_key: Option<&crate::database::DatabaseKey>,
+    ) -> Result<(), ApiError> {
         if !self.is_external() {
             return Ok(());
         }
-        let options = sqlx::sqlite::SqliteConnectOptions::from_str(snapshot_url)
-            .map_err(ApiError::internal)?
-            .foreign_keys(true);
-        let pool = sqlx::sqlite::SqlitePoolOptions::new()
-            .max_connections(1)
-            .connect_with(options)
-            .await
-            .map_err(ApiError::internal)?;
+        // The snapshot is encrypted with the live database's key (if any).
+        let options =
+            crate::database::main_sqlite_options(snapshot_url, database_key)?.foreign_keys(true);
+        let pool = crate::database::connect_keyed_pool(options, database_key, 1).await?;
         // Objects already in the durable delete phase have no live reference;
         // exclude them from the logical backup snapshot. Their source outbox
         // must not be replayed by a restored copy.
@@ -2432,6 +2431,7 @@ mod tests {
             backup_key_file: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             data_dir: std::env::temp_dir().join("atermius-object-store-config-test"),
             registration_open: false,
@@ -2715,7 +2715,7 @@ mod tests {
         let digest = super::sha256_hex(bytes);
         let pool = SqlitePoolOptions::new()
             .max_connections(1)
-            .connect(&database_url)
+            .connect_with(crate::database::main_sqlite_options(&database_url, None).unwrap())
             .await
             .unwrap();
         sqlx::query(
@@ -2776,11 +2776,11 @@ mod tests {
         pool.close().await;
 
         fixture.overwrite(&key, bytes.to_vec(), &digest).await;
-        store.hydrate_for_backup(&database_url).await.unwrap();
+        store.hydrate_for_backup(&database_url, None).await.unwrap();
 
         let hydrated = SqlitePoolOptions::new()
             .max_connections(1)
-            .connect(&database_url)
+            .connect_with(crate::database::main_sqlite_options(&database_url, None).unwrap())
             .await
             .unwrap();
         let (stored_bytes, backend): (Vec<u8>, String) = sqlx::query_as(

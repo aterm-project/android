@@ -11,6 +11,7 @@ class WorkspaceStatusBar extends StatelessWidget {
     required this.sessionCount,
     this.onProperties,
     this.transfer,
+    this.badge,
     super.key,
   });
   final String status;
@@ -18,6 +19,10 @@ class WorkspaceStatusBar extends StatelessWidget {
   final int sessionCount;
   final VoidCallback? onProperties;
   final Widget? transfer;
+
+  /// Optional compact account badge before the session count (for example
+  /// the credential-visibility "admin-visible" chip). Null keeps the layout.
+  final Widget? badge;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -85,6 +90,10 @@ class WorkspaceStatusBar extends StatelessWidget {
                       ),
                     ),
                     if (transfer != null) Flexible(child: transfer!),
+                    if (badge != null) ...[
+                      SizedBox(width: narrow ? 6 : 10),
+                      Flexible(child: badge!),
+                    ],
                     SizedBox(width: narrow ? 6 : 10),
                     Text(
                       '$sessionCount SSH',

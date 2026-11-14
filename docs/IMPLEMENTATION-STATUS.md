@@ -9,7 +9,9 @@ This page describes the 2026-11-09 cloud integration baseline. Documentation upd
 | SQLite Vault sync | Existing signed membership/device and encrypted-record/object protocol |
 | Organizations and member Host sharing | Implemented; desired grants require owner-confirmed encrypted key delivery |
 | Temporary browser SSH/RDP | Implemented opt-in trusted gateway with schedule, slug, quotas, activity and revocation |
+| [Credential visibility](CREDENTIAL-VISIBILITY.md) | Server routes, escrow storage, view log and audit implemented for SQLite (2026-11-13); escrow tables are covered by database encryption at rest and kept by backup/restore (server tests, 2026-11-14); the client (`apps/client`) shows the mode notices, deposits automatically, warns owners before sharing with an `admin_visible` account, and gives administrators the viewer and the database-encryption status (widget tests and a real-server end-to-end test on plaintext and SQLCipher databases, 2026-11-14); PostgreSQL closed |
 | PostgreSQL | Restricted existing sync-core/allowlisted routes; cloud routes remain closed |
+| Database encryption at rest | SQLCipher for the SQLite database, WAL, backup snapshots and restore stages with an operator key outside the data volume; PostgreSQL relies on storage-level encryption ([runbook](runbooks/database-encryption.md)) |
 | Browser normal SSH/SFTP | Restricted Relay required; separate from the trusted guest gateway |
 | Native clients | Source owned by each platform repository; platform build/signing and device acceptance are separate |
 | Physical redirection/multiple monitors | Requires compatible hardware and separate acceptance; no new hardware pass is claimed |

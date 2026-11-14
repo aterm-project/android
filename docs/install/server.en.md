@@ -37,6 +37,18 @@ ATERMIUS_PUBLIC_ORIGIN=http://localhost:8081
 
 Use your intended administrator username. Registration stays closed by default; the first account uses a bootstrap token. Organization creation defaults to configured instance administrators. HTTP is only for loopback development; another computer or phone needs the HTTPS setup below.
 
+### Generate the database key before the first start
+
+`deploy/.env.example` turns on SQLCipher encryption at rest for new instances with `ATERMIUS_DATABASE_KEY_FILE=/keys/database.key`. The key lives on the separate `atermius-keys` volume mounted at `/keys`, never in `/data`, so a copied data volume, database file or backup snapshot reveals nothing on its own. Create the key once, before the first `up`; a configured but missing key stops startup:
+
+```sh
+docker compose --env-file deploy/.env \
+  -f deploy/compose.yaml -f deploy/compose.web.yaml \
+  run --build --rm --no-deps server database-key-generate --out /keys/database.key
+```
+
+The command writes a new random 32-byte file with mode `0600` and never overwrites an existing key. Back it up right away, separately from the data volume and from backup archives ([database encryption runbook](../runbooks/database-encryption.md#back-up-the-key)); without it the database cannot be opened. To run without encryption, set `ATERMIUS_DATABASE_KEY_FILE=` (empty) instead; the admin overview then reports `database_encryption: disabled` and the server logs a warning at startup.
+
 ```sh
 docker compose --env-file deploy/.env \
   -f deploy/compose.yaml -f deploy/compose.web.yaml config --quiet
@@ -129,6 +141,8 @@ This is separate from guest access. Enable `ATERMIUS_RELAY_ENABLED=true` only wi
 Record the exact environment file and **complete overlay list** you used. Reuse that list for `config --quiet`, `up`, `ps`, `logs` and `exec`; omitting an overlay can remove its configuration. `--quiet` validates configuration without printing resolved secrets.
 
 Keep the same data-volume name. Back up through the [instance backup/restore runbook](../runbooks/instance-backup-restore.md), including its separate key requirements. Before updating, stop new traffic as appropriate, update the repository with `git pull --ff-only` from its root, and rebuild/recreate the same stack. Do not overwrite `deploy/.env` or remove volumes as an upgrade procedure.
+
+**Upgrade note: database encryption.** This release adds the `/keys` volume (`ATERMIUS_KEYS_VOLUME_NAME`, default `atermius-keys`) and `ATERMIUS_DATABASE_KEY_FILE`. An existing instance keeps its plaintext database (the admin overview reports encryption as disabled and the server logs one warning) until you follow [enable encryption on an existing instance](../runbooks/database-encryption.md#enable-encryption-on-an-existing-instance): back up, generate the key, stop the server, run `database-encrypt --server-stopped`, start, and back up again. Do not just copy `ATERMIUS_DATABASE_KEY_FILE` from the new `.env.example` into an existing `deploy/.env`: the server refuses to start with `DATABASE_NOT_ENCRYPTED` until the database has been encrypted. Encryption is one-way, and older releases cannot open an encrypted database or its archives. Rebuilding now also compiles SQLCipher and OpenSSL, so the first build takes a few minutes longer. PostgreSQL sync-core data is not covered; use storage-level encryption for PostgreSQL.
 
 Use `ps`, `/health/ready`, the external Web page and sanitized server logs to separate API, proxy, policy and target failures. Copying files out of a running SQLite volume is not a complete instance-backup procedure. Optional MFA, object storage, provider push and monitoring remain in the [deployment reference](../../deploy/README.md).
 

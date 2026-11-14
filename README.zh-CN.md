@@ -14,6 +14,7 @@
 - [功能与平台边界](docs/FEATURES.md)
 - [分享主机](docs/SHARING.md)
 - [自托管服务端](docs/install/server.md)
+- [凭据可见性与管理员托管](docs/CREDENTIAL-VISIBILITY.zh-CN.md)
 - [常见问题](docs/TROUBLESHOOTING.md)
 - [开发与验证](docs/DEVELOPMENT.md)
 - [全部文档](docs/README.md)
@@ -38,7 +39,9 @@
 | 组织与团队 | 邀请、角色、访问授权与持有者确认后的密钥交付 |
 | 主机分享 | 仅复制所选主机及确认过的依赖到独立共享 Vault |
 | 临时链接 | 自定义地址、开始与到期时间、配额、撤销和活动管理 |
+| [凭据可见性](docs/CREDENTIAL-VISIBILITY.zh-CN.md) | 按账户设置“私密加密”（零知识）或“管理员可见”（客户端把保险库密钥托管给管理员持有的密钥），向用户明确提示并记录每次查看；仅 SQLite |
 | 运维 | SQLite、受限 PostgreSQL、备份恢复与可选监控 |
+| 数据库静态加密 | SQLite 数据库、备份快照与恢复暂存均由 SQLCipher 加密，密钥独立于数据卷保存（[运行手册](docs/runbooks/database-encryption.md)） |
 
 ## 支持的平台
 
@@ -72,6 +75,8 @@ flutter build apk --debug
 cd atermius
 cp deploy/.env.example deploy/.env
 # 先配置 deploy/.env，再按 docs/install/server.md 完成初始化。
+# 首次启动前生成一次数据库加密密钥：
+docker compose --env-file deploy/.env -f deploy/compose.yaml run --build --rm --no-deps server database-key-generate --out /keys/database.key
 docker compose --env-file deploy/.env -f deploy/compose.yaml -f deploy/compose.web.yaml up -d --build
 ```
 

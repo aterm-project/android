@@ -48,7 +48,18 @@ def test_admin_overview_requires_allowlisted_active_account_and_returns_aggregat
     )
     assert response.status == 200
     body = response.json()
-    assert set(body) == {"instance", "counts", "relay", "generated_at"}
+    assert set(body) == {
+        "instance",
+        "counts",
+        "relay",
+        "database_encryption",
+        "generated_at",
+    }
+    # Main SQLite database encryption at rest (ATERMIUS_DATABASE_KEY_FILE).
+    expected_encryption = (
+        "enabled" if api.admin_env.get("ATERMIUS_DATABASE_KEY_FILE") else "disabled"
+    )
+    assert body["database_encryption"] == expected_encryption
     assert set(body["instance"]) == {
         "instance_id",
         "server_space_id",

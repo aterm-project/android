@@ -514,9 +514,19 @@ pub(crate) async fn purge_due_account_deletions(
             .execute(&mut *tx)
             .await
             .map_err(ApiError::internal)?;
+        // Account-scope rows that name a Vault (credential-visibility admin
+        // views) would otherwise keep raw Vault IDs under the purged
+        // account's pseudonymous scope.
+        sqlx::query("UPDATE audit_events SET resource_id=NULL WHERE scope_type='account' AND scope_id=? AND resource_type='vault'")
+            .bind(crate::audit::account_scope_id(&state.cursor_key, &user_id)?)
+            .execute(&mut *tx)
+            .await
+            .map_err(ApiError::internal)?;
 
+        // Credential escrow deposits are checked against their depositor's
+        // device key, so a deposit counts as a reference like a signature.
         let archived_at = now_rfc3339();
-        sqlx::query("INSERT OR IGNORE INTO vault_device_archives(vault_id,user_id,device_id,signing_public_key,encryption_public_key,archived_at) SELECT DISTINCT vm.vault_id,d.user_id,d.device_id,d.signing_public_key,d.encryption_public_key,? FROM vault_members vm JOIN vaults v ON v.vault_id=vm.vault_id JOIN devices d ON d.user_id=vm.user_id WHERE vm.user_id=? AND v.owner_user_id<>? AND (EXISTS(SELECT 1 FROM record_versions rv WHERE rv.vault_id=vm.vault_id AND rv.device_id=d.device_id) OR EXISTS(SELECT 1 FROM conflicts c WHERE c.vault_id=vm.vault_id AND c.device_id=d.device_id) OR EXISTS(SELECT 1 FROM membership_manifests mm WHERE mm.vault_id=vm.vault_id AND mm.signer_device_id=d.device_id) OR EXISTS(SELECT 1 FROM vault_key_envelopes ke WHERE ke.vault_id=vm.vault_id AND (ke.signer_device_id=d.device_id OR ke.recipient_device_id=d.device_id)))")
+        sqlx::query("INSERT OR IGNORE INTO vault_device_archives(vault_id,user_id,device_id,signing_public_key,encryption_public_key,archived_at) SELECT DISTINCT vm.vault_id,d.user_id,d.device_id,d.signing_public_key,d.encryption_public_key,? FROM vault_members vm JOIN vaults v ON v.vault_id=vm.vault_id JOIN devices d ON d.user_id=vm.user_id WHERE vm.user_id=? AND v.owner_user_id<>? AND (EXISTS(SELECT 1 FROM record_versions rv WHERE rv.vault_id=vm.vault_id AND rv.device_id=d.device_id) OR EXISTS(SELECT 1 FROM conflicts c WHERE c.vault_id=vm.vault_id AND c.device_id=d.device_id) OR EXISTS(SELECT 1 FROM membership_manifests mm WHERE mm.vault_id=vm.vault_id AND mm.signer_device_id=d.device_id) OR EXISTS(SELECT 1 FROM vault_key_envelopes ke WHERE ke.vault_id=vm.vault_id AND (ke.signer_device_id=d.device_id OR ke.recipient_device_id=d.device_id)) OR EXISTS(SELECT 1 FROM credential_escrow_envelopes ce WHERE ce.vault_id=vm.vault_id AND ce.depositor_device_id=d.device_id))")
             .bind(&archived_at)
             .bind(&user_id)
             .bind(&user_id)
@@ -630,6 +640,8 @@ pub(crate) async fn purge_due_account_deletions(
                 "account deletion audit transition was not applied",
             ));
         }
+        let escrowed_vaults =
+            crate::credential_visibility::escrowed_vaults_of_account_tx(&mut tx, &user_id).await?;
         let deleted = sqlx::query("DELETE FROM users WHERE user_id=? AND status='deleting'")
             .bind(&user_id)
             .execute(&mut *tx)
@@ -639,6 +651,11 @@ pub(crate) async fn purge_due_account_deletions(
             return Err(ApiError::internal(
                 "due account deletion did not remove its account",
             ));
+        }
+        // The account's memberships are gone now; shared Vaults left without
+        // an admin_visible member lose their escrow deposits.
+        for vault_id in escrowed_vaults {
+            crate::credential_visibility::prune_orphaned_escrow_tx(&mut tx, &vault_id).await?;
         }
         tx.commit().await.map_err(ApiError::internal)?;
     }
@@ -667,6 +684,7 @@ mod tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir,

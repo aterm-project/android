@@ -4,6 +4,15 @@ This runbook covers the encrypted SQLite instance archive produced by the
 `atermius-server backup` command and the staged `restore` command. It is an
 operator recovery procedure, not a substitute for an isolated restore drill.
 
+When the instance database is SQLCipher-encrypted (`ATERMIUS_DATABASE_KEY_FILE`),
+the snapshot inside the archive stays encrypted and the archive's encrypted
+payload also carries the snapshot's database key, so archives remain
+self-contained under the backup key. Restoring such an archive requires the
+target to have its own `ATERMIUS_DATABASE_KEY_FILE` (the staged copy is
+rekeyed to it); a legacy plaintext archive restored into an encrypted target is
+encrypted during staging. See the
+[database encryption runbook](database-encryption.md#backups-and-restores).
+
 ## PostgreSQL runtime backup and restore
 
 > **Current release:** PostgreSQL shared schema marker 39 and migrations
@@ -601,15 +610,21 @@ After the server has stopped, checkpoint the source database so the durable
 ready-job record is in the main database. The server may leave WAL data when
 it stops; the installer does not checkpoint or modify the source. In an
 offline maintenance window, with the source volume temporarily writable and
-no server process running, run a SQLite checkpoint, for example:
+no server process running, run the offline checkpoint with the same
+configuration (including `ATERMIUS_DATABASE_KEY_FILE` when the database is
+encrypted):
 
 ```sh
-sqlite3 "$ATERMIUS_DATA_DIR/atermius.db" 'PRAGMA wal_checkpoint(TRUNCATE);'
+atermius-server database-checkpoint --server-stopped
 ```
 
-After the SQLite command exits, confirm the checkpoint reports `busy=0` and
-that all three paths `atermius.db-wal`, `atermius.db-shm`, and
-`atermius.db-journal` are absent. Even a zero-byte sidecar is rejected. Then
+It takes the runtime and maintenance locks, applies the configured database
+key, runs `PRAGMA wal_checkpoint(TRUNCATE)` and `integrity_check`, closes the
+database, and fails unless `atermius.db-wal`, `atermius.db-shm`, and
+`atermius.db-journal` are all absent afterwards. On a plaintext instance an
+equivalent `sqlite3 "$ATERMIUS_DATA_DIR/atermius.db" 'PRAGMA wal_checkpoint(TRUNCATE);'`
+also works (confirm it reports `busy=0`); the stock `sqlite3` tool cannot open
+a SQLCipher-encrypted database. Even a zero-byte sidecar is rejected. Then
 mount the source read-only for the installer. If any sidecar remains, do not
 run the install command; finish the offline database close/checkpoint and
 verify the sidecars are gone. After confirming no server or SQLite process has
@@ -690,7 +705,17 @@ preserves unrelated files already in the target volume. The coordinator
 resolves the exact local source volume mountpoint, verifies its owner-only
 layout and unlocked `server.lock`, runs `PRAGMA wal_checkpoint(TRUNCATE)` and
 `integrity_check`, then confirms all SQLite WAL, SHM, and rollback-journal
-sidecars are absent. It installs the ready stage, writes the target volume and
+sidecars are absent. It reads only the 16-byte file header on the host to
+tell the formats apart: a plaintext source is checkpointed with Python's
+`sqlite3` under the host lock, while a SQLCipher-encrypted source
+(`ATERMIUS_DATABASE_KEY_FILE`) is checkpointed by running
+`atermius-server database-checkpoint --server-stopped` in a one-off server
+container (`docker compose run --rm --no-deps`) with the deployment's keys
+volume and key setting, after which the host re-verifies under the lock that
+no sidecar remains. The database key is never read on the host. A failed
+server-side checkpoint (`source_checkpoint_failed`,
+`source_checkpoint_receipt_invalid`, `source_sidecar_remains`) restores the
+source service like any other pre-install failure. It installs the ready stage, writes the target volume and
 both data path settings to the env
 file, and starts the standard Compose service. It accepts the cutover only
 when `/health/ready` succeeds, the instance and server-space IDs match the

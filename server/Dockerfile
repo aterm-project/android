@@ -1,4 +1,6 @@
 # API/server image. Build and deploy the web frontend separately.
+# The build compiles bundled SQLCipher with vendored OpenSSL (needs the perl
+# and make shipped in the rust:bookworm image); the runtime needs no OpenSSL.
 FROM rust:1.94.1-bookworm AS server-build
 WORKDIR /src
 COPY server/Cargo.toml server/Cargo.lock ./server/
@@ -10,9 +12,9 @@ RUN cargo build --release --locked
 
 FROM debian:bookworm-slim AS runtime
 RUN groupadd --system --gid 10001 aterm && useradd --system --uid 10001 --gid aterm --home-dir /nonexistent --shell /usr/sbin/nologin aterm \
-    && mkdir -p /data /object-store /app/web /share-gateway \
-    && chmod 0700 /data /object-store /share-gateway \
-    && chown -R aterm:aterm /data /object-store /app /share-gateway
+    && mkdir -p /data /object-store /app/web /share-gateway /keys \
+    && chmod 0700 /data /object-store /share-gateway /keys \
+    && chown -R aterm:aterm /data /object-store /app /share-gateway /keys
 COPY --from=server-build /src/server/target/release/atermius-server /usr/local/bin/atermius-server
 ENV ATERMIUS_DATA_DIR=/data \
     ATERMIUS_DATABASE_URL=sqlite:///data/atermius.db?mode=rwc \

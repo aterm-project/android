@@ -5,6 +5,8 @@
 import 'dart:io';
 
 import 'package:aterm_client/cloud/cloud_access_service.dart';
+import 'package:aterm_client/credential_visibility/credential_visibility_api.dart';
+import 'package:aterm_client/credential_visibility/credential_visibility_models.dart';
 import 'package:aterm_client/domain/models.dart';
 import 'package:aterm_client/l10n/l10n.dart';
 import 'package:aterm_client/ui/app_theme.dart';
@@ -118,7 +120,11 @@ void main() {
     HttpOverrides.global = null;
     FlutterSecureStorage.setMockInitialValues({});
     sodium = await SodiumSumoInit.init();
-    server = await TestServer.start();
+    // The owner is also the instance administrator, so it can make a grantee
+    // admin_visible (credential visibility).
+    server = await TestServer.start(
+      extraEnv: const {'ATERMIUS_ADMIN_USERNAMES': 'owner@example.test'},
+    );
     owner = await party(
       sodium,
       server.baseUrl,
@@ -299,6 +305,139 @@ void main() {
       expect(back, 'viewer');
       expect(owner.app.activeVault?.id, sourceVaultId);
       await _drain(tester);
+    },
+  );
+
+  testWidgets(
+    'an admin-visible grantee is flagged and its key is delivered only after '
+    'explicit consent',
+    (tester) async {
+      tester.view.physicalSize = const Size(560, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+      const username = 'visible-grantee@example.test';
+      final grantee = await _real(
+        tester,
+        () => party(
+          sodium,
+          server.baseUrl,
+          username: username,
+          invitation: server.accountInvitation(username),
+          storagePrefix: 'visible-grantee.',
+        ),
+      );
+      final granteeId = grantee.app.account!.accountId;
+      // Delivery must not change the owner's selection, whatever it is now.
+      final selected = owner.app.activeVault?.id;
+      await _real(tester, () async {
+        expect(owner.app.isInstanceAdmin, isTrue);
+        await CredentialVisibilityApi(owner.app.api!).setAccountMode(
+          userId: granteeId,
+          mode: CredentialVisibilityMode.adminVisible,
+        );
+        final invite = await owner.service.api.createInvitation(
+          orgId,
+          role: 'member',
+          username: username,
+        );
+        await grantee.service.api.acceptInvitation(invite['token'] as String);
+        await grantee.service.publishDeviceCard();
+        await owner.service.api.attachVault(sourceVaultId, orgId);
+        final grants = await owner.service.api.grants(sourceVaultId);
+        await owner.service.api.setGrant(
+          sourceVaultId,
+          'user',
+          granteeId,
+          'viewer',
+          grants['grants_revision'] as int,
+        );
+      });
+
+      await tester.pumpWidget(
+        _host(
+          SingleChildScrollView(
+            child: VaultGrantsPanel(
+              service: owner.service,
+              vaultId: sourceVaultId,
+            ),
+          ),
+        ),
+      );
+      final warning = find.byKey(
+        ValueKey('cloud-access-admin-visible-$granteeId'),
+      );
+      await _until(tester, () => warning.evaluate().isNotEmpty);
+      final body = l10n.cvShareRecipientAdminVisibleBody(username);
+      expect(find.text(body), findsOneWidget);
+      final deliver = find.widgetWithText(
+        TextButton,
+        l10n.cloudAccessDeliverKey,
+      );
+      expect(deliver, findsOneWidget);
+
+      // Declining the warning delivers nothing and skips the fingerprint step.
+      await tester.tap(deliver);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(
+          const ValueKey('credential_visibility_share_confirm_dialog'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('credential_visibility_share_cancel')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.cloudAccessConfirmFingerprintTitle), findsNothing);
+      expect(
+        owner.client.sent(
+          'POST',
+          '/api/v1/vaults/$sourceVaultId/key-deliveries',
+        ),
+        isFalse,
+      );
+
+      // Explicit consent, then the usual fingerprint confirmation.
+      await tester.tap(deliver);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('credential_visibility_share_anyway')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(l10n.cloudAccessConfirmFingerprintTitle),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.widgetWithText(FilledButton, l10n.cloudAccessDeliverKey),
+      );
+      await _until(
+        tester,
+        () => find
+            .text(l10n.cloudAccessWaitingForRecipient)
+            .evaluate()
+            .isNotEmpty,
+      );
+      expect(
+        owner.client.sent(
+          'POST',
+          '/api/v1/vaults/$sourceVaultId/key-deliveries',
+        ),
+        isTrue,
+      );
+      expect(owner.app.activeVault?.id, selected);
+      // The UI-driven invitation restarted the controller's sync timers in
+      // the fake zone; locking and unlocking in the real zone re-homes them.
+      await tester.pumpWidget(const SizedBox());
+      await _realPumped(tester, () async {
+        await owner.app.lock();
+        await owner.app.unlockLockedWorkspace(password: realServerPassword);
+        await idle(owner.app);
+      });
+      expect(owner.app.activeVault?.id, selected);
+      await _drain(tester);
+      await _real(tester, () async => grantee.app.dispose());
     },
   );
 

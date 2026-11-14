@@ -22355,7 +22355,9 @@ def test_pg_http_admin_overview_is_shared_bounded_and_rechecks_allowlist(
     peer_body = peer.json()
     _require(
         isinstance(body, dict)
-        and set(body) == {"instance", "counts", "relay", "generated_at"}
+        and set(body)
+        == {"instance", "counts", "relay", "database_encryption", "generated_at"}
+        and body.get("database_encryption") in {"enabled", "disabled"}
         and isinstance(body.get("instance"), dict)
         and set(body["instance"])
         == {"instance_id", "server_space_id", "generation", "protocol_version"}

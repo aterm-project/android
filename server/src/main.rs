@@ -1,7 +1,9 @@
 use atermius_server::{
-    Config, activate_pg_restore_stage, create_account_invitation, create_bootstrap_token,
-    fence_pg_restore_stage_rollback, install_configured_admin_restore_stage, open_state,
-    recover_server_generation, restore_instance_with_runtime_policy_drift,
+    Config, activate_pg_restore_stage, checkpoint_database_offline,
+    create_account_invitation_with_credential_visibility, create_bootstrap_token,
+    encrypt_database_offline, fence_pg_restore_stage_rollback, generate_database_key_file,
+    import_database_key_file, install_configured_admin_restore_stage, open_state,
+    recover_server_generation, rekey_database_offline, restore_instance_with_runtime_policy_drift,
     rotate_instance_signing_key, rotate_mfa_seed_encryption_key_for_selected_backend,
     run_maintenance, run_object_store_migration, run_operator_backup, serve_from_config,
     verify_instance_backup,
@@ -54,6 +56,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         print_rotate_mfa_key_help();
         return Ok(());
     }
+    if command == "database-key-generate"
+        && std::env::args().nth(2).as_deref() == Some("--help")
+        && std::env::args().nth(3).is_none()
+    {
+        print_database_key_generate_help();
+        return Ok(());
+    }
+    if command == "database-key-import"
+        && std::env::args().nth(2).as_deref() == Some("--help")
+        && std::env::args().nth(3).is_none()
+    {
+        print_database_key_import_help();
+        return Ok(());
+    }
+    if command == "database-encrypt"
+        && std::env::args().nth(2).as_deref() == Some("--help")
+        && std::env::args().nth(3).is_none()
+    {
+        print_database_encrypt_help();
+        return Ok(());
+    }
+    if command == "database-rekey"
+        && std::env::args().nth(2).as_deref() == Some("--help")
+        && std::env::args().nth(3).is_none()
+    {
+        print_database_rekey_help();
+        return Ok(());
+    }
+    if command == "database-checkpoint"
+        && std::env::args().nth(2).as_deref() == Some("--help")
+        && std::env::args().nth(3).is_none()
+    {
+        print_database_checkpoint_help();
+        return Ok(());
+    }
     if command == "maintenance" {
         parse_maintenance_args(std::env::args().skip(2))?;
     }
@@ -70,12 +107,108 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 | "maintenance"
                 | "activate-pg-restore-stage"
                 | "fence-pg-restore-stage-rollback"
+                | "database-key-generate"
+                | "database-key-import"
+                | "database-encrypt"
+                | "database-rekey"
         )
     {
         return Err(
-            "the restricted PostgreSQL runtime supports only serve, bootstrap, create-account-invite, rotate-mfa-key, maintenance, activate-pg-restore-stage, and fence-pg-restore-stage-rollback commands"
+            "the restricted PostgreSQL runtime supports only serve, bootstrap, create-account-invite, rotate-mfa-key, maintenance, activate-pg-restore-stage, fence-pg-restore-stage-rollback, database-key-generate, database-key-import, database-encrypt, and database-rekey commands"
                 .into(),
         );
+    }
+    if command == "database-key-generate" {
+        let out = parse_database_key_generate_args(std::env::args().skip(2))?;
+        generate_database_key_file(&config.data_dir, &out)?;
+        println!(
+            "New database key written to {} (mode 0600). Set ATERMIUS_DATABASE_KEY_FILE to this path and back the key up separately from the data and backup volumes; without it the database cannot be opened.",
+            out.display()
+        );
+        return Ok(());
+    }
+    if command == "database-key-import" {
+        let out = parse_database_key_import_args(std::env::args().skip(2))?;
+        let mut encoded = zeroize::Zeroizing::new(String::new());
+        {
+            use std::io::Read as _;
+            // A base64 key is 44 characters; anything far larger is not one.
+            std::io::stdin()
+                .take(4096)
+                .read_to_string(&mut encoded)
+                .map_err(|_| "database-key-import could not read standard input")?;
+        }
+        import_database_key_file(&config.data_dir, &out, &encoded)?;
+        println!(
+            "Database key restored to {} (mode 0600). Set ATERMIUS_DATABASE_KEY_FILE to this path.",
+            out.display()
+        );
+        return Ok(());
+    }
+    if command == "database-encrypt" {
+        parse_offline_only_args("database-encrypt", std::env::args().skip(2))?;
+        let summary = encrypt_database_offline(&config, &database_url).await?;
+        if summary.removed_backup_snapshots > 0 {
+            println!(
+                "Removed {} leftover backup snapshot director{} of interrupted backup runs from the data directory.",
+                summary.removed_backup_snapshots,
+                if summary.removed_backup_snapshots == 1 {
+                    "y"
+                } else {
+                    "ies"
+                }
+            );
+        }
+        if summary.resumed {
+            println!(
+                "An interrupted database-encrypt was completed: the encrypted database verified and its plaintext copy was removed ({} tables, {} rows).",
+                summary.tables, summary.rows
+            );
+        } else {
+            println!(
+                "Database encrypted and verified ({} tables, {} rows). The plaintext file was replaced; keep ATERMIUS_DATABASE_KEY_FILE configured and create a fresh backup.",
+                summary.tables, summary.rows
+            );
+        }
+        return Ok(());
+    }
+    if command == "database-rekey" {
+        let new_key_file = parse_database_rekey_args(std::env::args().skip(2))?;
+        let summary = rekey_database_offline(&config, &database_url, &new_key_file).await?;
+        if summary.removed_backup_snapshots > 0 {
+            println!(
+                "Removed {} leftover backup snapshot director{} of interrupted backup runs from the data directory.",
+                summary.removed_backup_snapshots,
+                if summary.removed_backup_snapshots == 1 {
+                    "y"
+                } else {
+                    "ies"
+                }
+            );
+        }
+        println!(
+            "Database re-encrypted with the new key and verified ({} tables, {} rows). Point ATERMIUS_DATABASE_KEY_FILE at {} before restarting the server, then create a fresh backup. Existing backup archives carry their own database key and stay restorable with their backup key.",
+            summary.tables,
+            summary.rows,
+            new_key_file.display()
+        );
+        return Ok(());
+    }
+    if command == "database-checkpoint" {
+        parse_offline_only_args("database-checkpoint", std::env::args().skip(2))?;
+        let summary = checkpoint_database_offline(&config, &database_url).await?;
+        // The restore cutover coordinator matches this exact first sentence.
+        println!(
+            "Database checkpointed and verified offline ({} tables, {} rows; {}). No -wal, -shm or -journal sidecar remains.",
+            summary.tables,
+            summary.rows,
+            if summary.encrypted {
+                "encrypted"
+            } else {
+                "plaintext"
+            }
+        );
+        return Ok(());
     }
     if command == "install-restore-stage" {
         let (job_id, target) = parse_install_restore_stage_args(std::env::args().skip(2))?;
@@ -148,6 +281,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             target.display(),
             result.generation
         );
+        if result.removed_stale_restore_stages > 0 {
+            eprintln!(
+                "Removed {} stale restore stage director{} left by interrupted earlier restores next to the target.",
+                result.removed_stale_restore_stages,
+                if result.removed_stale_restore_stages == 1 {
+                    "y"
+                } else {
+                    "ies"
+                }
+            );
+        }
         if !result.accepted_runtime_policy_drift_fields.is_empty() {
             eprintln!(
                 "WARNING: explicitly accepted runtime policy drift in fields: {}",
@@ -182,6 +326,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let summary = rotate_mfa_seed_encryption_key_for_selected_backend(
             &config.data_dir,
             &database_url,
+            config.database_key_file.as_deref(),
             &old_key_file,
             &new_key_file,
         )
@@ -209,6 +354,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "create-account-invite" => {
             let mut username = None;
             let mut expires_in_seconds = None;
+            let mut credential_visibility: Option<String> = None;
             let mut args = std::env::args().skip(2);
             while let Some(arg) = args.next() {
                 match arg.as_str() {
@@ -231,14 +377,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .parse::<i64>()?;
                         expires_in_seconds = Some(value);
                     }
+                    "--credential-visibility" => {
+                        if credential_visibility.is_some() {
+                            return Err("--credential-visibility may only be provided once".into());
+                        }
+                        let value = args
+                            .next()
+                            .ok_or("--credential-visibility requires private or admin_visible")?;
+                        if value != "private" && value != "admin_visible" {
+                            return Err(
+                                "--credential-visibility must be private or admin_visible".into()
+                            );
+                        }
+                        credential_visibility = Some(value);
+                    }
                     _ => return Err(format!("unknown account-invite option {arg:?}").into()),
                 }
             }
             let username = username.ok_or("create-account-invite requires --username")?;
             let (token, normalized, expires_at) =
-                create_account_invitation(&state, &username, expires_in_seconds).await?;
+                create_account_invitation_with_credential_visibility(
+                    &state,
+                    &username,
+                    expires_in_seconds,
+                    credential_visibility.as_deref(),
+                )
+                .await?;
+            // Keep the established output unchanged unless a mode was set.
+            let visibility = credential_visibility
+                .as_deref()
+                .map(|mode| format!("; credential_visibility={mode}"))
+                .unwrap_or_default();
             println!(
-                "Atermius account invitation (one-time; username={normalized}; expires_at={expires_at}):\n{token}"
+                "Atermius account invitation (one-time; username={normalized}; expires_at={expires_at}{visibility}):\n{token}"
             );
             Ok(())
         }
@@ -283,7 +454,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
         _ => Err(format!(
-            "unknown command {command:?}; expected `bootstrap`, `serve`, `healthcheck`, `create-account-invite`, `recover-generation`, `rotate-instance-key`, `rotate-mfa-key`, `maintenance`, `backup`, `verify-backup`, `migrate-user-objects`, `restore`, `install-restore-stage`, `activate-pg-restore-stage` or `fence-pg-restore-stage-rollback`"
+            "unknown command {command:?}; expected `bootstrap`, `serve`, `healthcheck`, `create-account-invite`, `recover-generation`, `rotate-instance-key`, `rotate-mfa-key`, `maintenance`, `backup`, `verify-backup`, `migrate-user-objects`, `restore`, `install-restore-stage`, `activate-pg-restore-stage`, `fence-pg-restore-stage-rollback`, `database-key-generate`, `database-key-import`, `database-encrypt`, `database-rekey` or `database-checkpoint`"
         )
         .into()),
     }
@@ -410,7 +581,7 @@ where
 
 fn print_install_restore_stage_help() {
     println!(
-        "Usage: atermius-server install-restore-stage --restore-job-id UUID --target-data-dir <new-volume>/data --server-stopped\n\nInstalls a completed Web restore stage into a new, absent data directory.\nThe server must be stopped. The source data directory is opened read-only; an existing, unlocked server.lock is required.\nAfter an offline SQLite checkpoint and full close, source -wal, -shm and -journal sidecars must all be absent.\nThe stage must have been prepared under the current runtime policy. Legacy stages must be staged again.\nThis offline command does not call the API, modify the source volume, or switch a Compose/container volume."
+        "Usage: atermius-server install-restore-stage --restore-job-id UUID --target-data-dir <new-volume>/data --server-stopped\n\nInstalls a completed Web restore stage into a new, absent data directory.\nThe server must be stopped. The source data directory is opened read-only; an existing, unlocked server.lock is required.\nAfter an offline SQLite checkpoint and full close (run `atermius-server database-checkpoint --server-stopped` first; it also handles an encrypted database), source -wal, -shm and -journal sidecars must all be absent.\nThe stage must have been prepared under the current runtime policy. Legacy stages must be staged again.\nThis offline command does not call the API, modify the source volume, or switch a Compose/container volume."
     );
 }
 
@@ -492,6 +663,122 @@ fn print_rotate_mfa_key_help() {
     );
 }
 
+fn parse_database_key_generate_args<I>(
+    mut args: I,
+) -> Result<std::path::PathBuf, Box<dyn std::error::Error>>
+where
+    I: Iterator<Item = String>,
+{
+    if args.next().as_deref() != Some("--out") {
+        return Err(
+            "database-key-generate requires --out <new key file outside the data directory>".into(),
+        );
+    }
+    let out = args
+        .next()
+        .filter(|value| !value.is_empty())
+        .ok_or("database-key-generate --out requires a path")?;
+    if args.next().is_some() {
+        return Err("database-key-generate accepts only --out <path>".into());
+    }
+    Ok(std::path::PathBuf::from(out))
+}
+
+fn parse_database_key_import_args<I>(
+    mut args: I,
+) -> Result<std::path::PathBuf, Box<dyn std::error::Error>>
+where
+    I: Iterator<Item = String>,
+{
+    if args.next().as_deref() != Some("--out") {
+        return Err(
+            "database-key-import requires --out <new key file outside the data directory>".into(),
+        );
+    }
+    let out = args
+        .next()
+        .filter(|value| !value.is_empty())
+        .ok_or("database-key-import --out requires a path")?;
+    if args.next().is_some() {
+        return Err("database-key-import accepts only --out <path>".into());
+    }
+    Ok(std::path::PathBuf::from(out))
+}
+
+fn parse_offline_only_args<I>(command: &str, mut args: I) -> Result<(), Box<dyn std::error::Error>>
+where
+    I: Iterator<Item = String>,
+{
+    if args.next().as_deref() != Some("--server-stopped") || args.next().is_some() {
+        return Err(
+            format!("{command} requires only --server-stopped; stop the server first").into(),
+        );
+    }
+    Ok(())
+}
+
+fn parse_database_rekey_args<I>(args: I) -> Result<std::path::PathBuf, Box<dyn std::error::Error>>
+where
+    I: Iterator<Item = String>,
+{
+    let mut new_key_file = None;
+    let mut server_stopped = false;
+    let mut args = args;
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--new-key-file" => {
+                if new_key_file.is_some() {
+                    return Err("--new-key-file may only be provided once".into());
+                }
+                new_key_file = Some(std::path::PathBuf::from(
+                    args.next()
+                        .filter(|value| !value.is_empty())
+                        .ok_or("--new-key-file requires a path")?,
+                ));
+            }
+            "--server-stopped" if !server_stopped => server_stopped = true,
+            "--server-stopped" => {
+                return Err("--server-stopped may only be provided once".into());
+            }
+            _ => return Err(format!("unknown database-rekey option {arg:?}").into()),
+        }
+    }
+    if !server_stopped {
+        return Err("database-rekey requires --server-stopped; stop the server first".into());
+    }
+    new_key_file.ok_or_else(|| "database-rekey requires --new-key-file".into())
+}
+
+fn print_database_key_generate_help() {
+    println!(
+        "Usage: atermius-server database-key-generate --out <path>\n\nCreates a new random 32-byte SQLCipher key file with mode 0600 for ATERMIUS_DATABASE_KEY_FILE. The path must be outside ATERMIUS_DATA_DIR (for Docker Compose: /keys/database.key) in an existing directory that is not group/world-writable (shared directories such as /tmp are refused, sticky bit or not). An existing file is never overwritten. Back the key up separately from data and backup volumes: without it the database cannot be opened."
+    );
+}
+
+fn print_database_key_import_help() {
+    println!(
+        "Usage: atermius-server database-key-import --out <path> < key.b64\n\nRestores a backed-up SQLCipher key: reads the standard base64 of the 32 raw key bytes from standard input (as `base64 /keys/database.key` prints it) and creates a new key file with mode 0600 for ATERMIUS_DATABASE_KEY_FILE. The same path rules as database-key-generate apply: outside ATERMIUS_DATA_DIR, in an existing directory that is not group/world-writable. An existing file is never overwritten or removed (DATABASE_KEY_FILE_EXISTS); input that is not exactly 32 bytes is refused (INVALID_DATABASE_KEY) and creates nothing."
+    );
+}
+
+fn print_database_encrypt_help() {
+    println!(
+        "Usage: atermius-server database-encrypt --server-stopped\n\nEncrypts an existing plaintext ATERMIUS_DATA_DIR/atermius.db with the key in ATERMIUS_DATABASE_KEY_FILE. The server must be stopped (the runtime lock is required). Leftover .backup-snapshot-* directories of killed backup runs (possibly plaintext) are removed first. The database is checkpointed and integrity-checked, exported into a private SQLCipher copy with ATTACH ... KEY and sqlcipher_export, verified (integrity_check, per-table row counts, user_version), fsynced, and atomically installed; stale -wal/-shm sidecars and the plaintext file are then removed. If interrupted, run the command again."
+    );
+}
+
+fn print_database_rekey_help() {
+    println!(
+        "Usage: atermius-server database-rekey --new-key-file <path> --server-stopped\n\nRe-encrypts the encrypted ATERMIUS_DATA_DIR/atermius.db from the key in ATERMIUS_DATABASE_KEY_FILE to the new key file (create it with database-key-generate). The server must be stopped. A private copy is rekeyed with PRAGMA rekey and verified (the new key opens it with identical content and the old key no longer does) before it atomically replaces the database; leftover .backup-snapshot-* directories (old key) are removed. If the final re-verification after the replacement fails, the command reports DATABASE_REKEY_INSTALLED_UNVERIFIED: the database is then already under the new key. Point ATERMIUS_DATABASE_KEY_FILE at the new key before restarting the server."
+    );
+}
+
+fn print_database_checkpoint_help() {
+    println!(
+        "Usage: atermius-server database-checkpoint --server-stopped\n\nOpens ATERMIUS_DATA_DIR/atermius.db offline with the key in ATERMIUS_DATABASE_KEY_FILE (none for a plaintext instance), runs PRAGMA wal_checkpoint(TRUNCATE) and PRAGMA integrity_check, closes it, and verifies that no -wal, -shm or -journal sidecar remains. The server must be stopped (the runtime and maintenance locks are required). Run it before install-restore-stage; the stock sqlite3 tool cannot open an encrypted database. It changes no logical records."
+    );
+}
+
 fn database_url(config: &Config) -> String {
     std::env::var("ATERMIUS_DATABASE_URL").unwrap_or_else(|_| {
         format!(
@@ -530,10 +817,133 @@ mod tests {
     use uuid::Uuid;
 
     use super::{
-        parse_activate_pg_restore_stage_args, parse_fence_pg_restore_stage_rollback_args,
-        parse_install_restore_stage_args, parse_maintenance_args, parse_rotate_mfa_key_args,
+        parse_activate_pg_restore_stage_args, parse_database_key_generate_args,
+        parse_database_key_import_args, parse_database_rekey_args,
+        parse_fence_pg_restore_stage_rollback_args, parse_install_restore_stage_args,
+        parse_maintenance_args, parse_offline_only_args, parse_rotate_mfa_key_args,
         require_default_database_url,
     };
+
+    fn args(values: &[&str]) -> std::vec::IntoIter<String> {
+        values
+            .iter()
+            .map(|value| (*value).to_owned())
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+
+    #[test]
+    fn database_key_generate_cli_requires_exactly_one_output_path() {
+        assert_eq!(
+            parse_database_key_generate_args(args(&["--out", "/keys/database.key"])).unwrap(),
+            PathBuf::from("/keys/database.key")
+        );
+        for invalid in [
+            &[][..],
+            &["--out"][..],
+            &["--out", ""][..],
+            &["/keys/database.key"][..],
+            &["--out", "/keys/a.key", "--out", "/keys/b.key"][..],
+            &["--out", "/keys/a.key", "--force"][..],
+        ] {
+            assert!(parse_database_key_generate_args(args(invalid)).is_err());
+        }
+    }
+
+    #[test]
+    fn database_key_import_cli_requires_exactly_one_output_path() {
+        assert_eq!(
+            parse_database_key_import_args(args(&["--out", "/keys/database.key"])).unwrap(),
+            PathBuf::from("/keys/database.key")
+        );
+        for invalid in [
+            &[][..],
+            &["--out"][..],
+            &["--out", ""][..],
+            &["/keys/database.key"][..],
+            &["--out", "/keys/a.key", "--out", "/keys/b.key"][..],
+            &["--out", "/keys/a.key", "--force"][..],
+        ] {
+            assert!(parse_database_key_import_args(args(invalid)).is_err());
+        }
+    }
+
+    #[test]
+    fn database_encrypt_cli_requires_only_the_offline_attestation() {
+        assert!(parse_offline_only_args("database-encrypt", args(&["--server-stopped"])).is_ok());
+        for invalid in [
+            &[][..],
+            &["--force"][..],
+            &["--server-stopped", "--server-stopped"][..],
+            &["--server-stopped", "--key", "x"][..],
+        ] {
+            assert!(parse_offline_only_args("database-encrypt", args(invalid)).is_err());
+        }
+    }
+
+    #[test]
+    fn database_checkpoint_cli_requires_only_the_offline_attestation() {
+        assert!(
+            parse_offline_only_args("database-checkpoint", args(&["--server-stopped"])).is_ok()
+        );
+        for invalid in [
+            &[][..],
+            &["--force"][..],
+            &["--server-stopped", "--server-stopped"][..],
+            &["--server-stopped", "--key", "x"][..],
+        ] {
+            assert!(parse_offline_only_args("database-checkpoint", args(invalid)).is_err());
+        }
+    }
+
+    #[test]
+    fn database_rekey_cli_requires_new_key_file_and_offline_attestation() {
+        assert_eq!(
+            parse_database_rekey_args(args(&[
+                "--new-key-file",
+                "/keys/database.next.key",
+                "--server-stopped"
+            ]))
+            .unwrap(),
+            PathBuf::from("/keys/database.next.key")
+        );
+        assert_eq!(
+            parse_database_rekey_args(args(&[
+                "--server-stopped",
+                "--new-key-file",
+                "/keys/database.next.key"
+            ]))
+            .unwrap(),
+            PathBuf::from("/keys/database.next.key")
+        );
+        for invalid in [
+            &["--new-key-file", "/keys/n.key"][..],
+            &["--server-stopped"][..],
+            &["--new-key-file", "", "--server-stopped"][..],
+            &[
+                "--new-key-file",
+                "/a",
+                "--new-key-file",
+                "/b",
+                "--server-stopped",
+            ][..],
+            &[
+                "--new-key-file",
+                "/a",
+                "--server-stopped",
+                "--server-stopped",
+            ][..],
+            &[
+                "--new-key-file",
+                "/a",
+                "--server-stopped",
+                "--old-key-file",
+                "/b",
+            ][..],
+        ] {
+            assert!(parse_database_rekey_args(args(invalid)).is_err());
+        }
+    }
 
     fn temp_dir() -> PathBuf {
         let path = std::env::temp_dir().join(format!("atermius-main-db-{}", Uuid::new_v4()));

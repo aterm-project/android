@@ -41,6 +41,18 @@ class SettingsScaffold extends StatefulWidget {
     return true;
   }
 
+  /// A category requested from outside any settings page (for example the
+  /// workspace credential-visibility indicator, which then opens Settings).
+  /// The settings page showing now, or the next one built, selects it and
+  /// clears the request; a page that does not offer it just clears it.
+  static final ValueNotifier<String?> requestedSection = ValueNotifier(null);
+
+  static void requestSection(String id) {
+    // Reset first so requesting the same category again still notifies.
+    requestedSection.value = null;
+    requestedSection.value = id;
+  }
+
   @override
   State<SettingsScaffold> createState() => _SettingsScaffoldState();
 }
@@ -49,6 +61,31 @@ class _SettingsScaffoldState extends State<SettingsScaffold> {
   final _contentKey = GlobalKey();
   final _visited = <String>{};
   String? _selectedId;
+
+  @override
+  void initState() {
+    super.initState();
+    _takeRequestedSection(initial: true);
+    SettingsScaffold.requestedSection.addListener(_takeRequestedSection);
+  }
+
+  @override
+  void dispose() {
+    SettingsScaffold.requestedSection.removeListener(_takeRequestedSection);
+    super.dispose();
+  }
+
+  void _takeRequestedSection({bool initial = false}) {
+    final id = SettingsScaffold.requestedSection.value;
+    if (id == null || !mounted) return;
+    SettingsScaffold.requestedSection.value = null;
+    if (!widget.sections.any((section) => section.id == id)) return;
+    if (initial) {
+      _selectedId = id;
+    } else {
+      _select(id);
+    }
+  }
 
   void _select(String id) {
     if (_selectedId == id) return;

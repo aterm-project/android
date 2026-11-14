@@ -238,15 +238,43 @@ pub(crate) fn read_private_key_if_exists(path: &Path) -> Result<Option<[u8; 32]>
 /// The key becomes visible only after all 32 bytes have been written and
 /// fsynced. Used by the offline instance-key rotation journal.
 pub(crate) fn write_new_private_key(path: &Path, key: &[u8; 32]) -> Result<(), ApiError> {
-    let mut file = create_private_file(path).map_err(ApiError::internal)?;
-    set_private_mode(&file)?;
+    create_new_private_key(path, key).map_err(|error| match error {
+        NewPrivateKeyError::AlreadyExists(error) => ApiError::internal(error),
+        NewPrivateKeyError::Failed(error) => error,
+    })
+}
+
+/// Why [`create_new_private_key`] did not create a key file.
+pub(crate) enum NewPrivateKeyError {
+    /// The path already existed; it was not changed.
+    AlreadyExists(std::io::Error),
+    /// Any other creation, permission, write or durability failure (for
+    /// example a read-only, full or unwritable key directory). A file this
+    /// call created is removed again when the write itself failed.
+    Failed(ApiError),
+}
+
+/// Like [`write_new_private_key`], but tells an existing path apart from
+/// every other failure so operator commands can report them separately.
+pub(crate) fn create_new_private_key(
+    path: &Path,
+    key: &[u8; 32],
+) -> Result<(), NewPrivateKeyError> {
+    let mut file = create_private_file(path).map_err(|error| {
+        if error.kind() == std::io::ErrorKind::AlreadyExists {
+            NewPrivateKeyError::AlreadyExists(error)
+        } else {
+            NewPrivateKeyError::Failed(ApiError::internal(error))
+        }
+    })?;
+    set_private_mode(&file).map_err(NewPrivateKeyError::Failed)?;
     if let Err(error) = file.write_all(key).and_then(|()| file.sync_all()) {
         drop(file);
         let _ = fs::remove_file(path);
-        return Err(ApiError::internal(error));
+        return Err(NewPrivateKeyError::Failed(ApiError::internal(error)));
     }
     drop(file);
-    sync_parent(path)?;
+    sync_parent(path).map_err(NewPrivateKeyError::Failed)?;
     Ok(())
 }
 

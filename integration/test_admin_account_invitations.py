@@ -158,7 +158,10 @@ def test_account_invitation_admin_api_lifecycle_is_private_and_audited(api, acco
         "created_at",
         "expires_at",
         "token",
+        "credential_visibility",
     }
+    # No explicit mode: the instance default applies at registration.
+    assert first_invitation["credential_visibility"] is None
     assert first_invitation["username"] == normalized_username
     assert len(first_invitation["token"]) == 43
     assert round(
@@ -191,7 +194,19 @@ def test_account_invitation_admin_api_lifecycle_is_private_and_audited(api, acco
         for item in page_body["invitations"]
     )
     assert all(
-        set(item) == {"invitation_id", "username", "created_at", "expires_at", "status"}
+        set(item)
+        == {
+            "invitation_id",
+            "username",
+            "created_at",
+            "expires_at",
+            "status",
+            "credential_visibility",
+        }
+        for item in page_body["invitations"]
+    )
+    assert all(
+        item["credential_visibility"] in {None, "private", "admin_visible"}
         for item in page_body["invitations"]
     )
     next_page = api.request(

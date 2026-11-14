@@ -37,9 +37,11 @@ Daily builds, release tags and moving from the old repositories are covered in t
 
 - [Advanced deployment reference / 高级部署配置](../deploy/README.md)
 - [Cloud organizations, member sharing and guest gateway / 云端与分享](CLOUD-SHARING.md)
+- [Credential visibility: private and administrator-visible accounts / 凭据可见性：私密加密与管理员可见](CREDENTIAL-VISIBILITY.md) · [中文](CREDENTIAL-VISIBILITY.zh-CN.md)
 - [HTTPS edge and proxy](runbooks/https-edge-proxy.md)
 - [Instance backup and restore](runbooks/instance-backup-restore.md)
 - [MFA seed key rotation](runbooks/mfa-seed-key-rotation.md)
+- [Database encryption at rest (SQLCipher) / 数据库静态加密](runbooks/database-encryption.md)
 - [PostgreSQL maintenance](runbooks/postgres-maintenance.md)
 - [PostgreSQL schema/runtime upgrade](runbooks/postgres-runtime-upgrade.md)
 - [Attachment object-store migration](OBJECT-STORE-MIGRATION.md)

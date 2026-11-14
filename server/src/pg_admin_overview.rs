@@ -73,6 +73,9 @@ pub(crate) async fn overview(state: &AppState, user: &AuthUser) -> Result<Json<V
             "vault_quota_bytes": counts.get::<i64, _>("vault_quota_bytes"),
         },
         "relay": relay,
+        // Node-local SQLite store only; PostgreSQL relies on storage-level
+        // encryption (see docs/runbooks/database-encryption.md).
+        "database_encryption": state.database_encryption.as_str(),
         "generated_at": generated_at.to_rfc3339_opts(SecondsFormat::Millis, true),
     });
     tx.commit().await.map_err(ApiError::internal)?;

@@ -7,8 +7,10 @@ import 'package:aterm_client/api/api_client.dart';
 import 'package:aterm_client/app_controller.dart';
 import 'package:aterm_client/storage/client_database.dart';
 import 'package:aterm_client/storage/secure_store.dart';
+import 'package:aterm_client/l10n/l10n.dart';
 import 'package:aterm_client/ui/app_shell.dart';
 import 'package:aterm_client/ui/app_theme.dart';
+import 'package:aterm_client/ui/credential_visibility/database_encryption_status.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -102,10 +104,87 @@ void main() {
       expect(find.text('Load overview'), findsNothing);
       expect(find.text('Refresh overview'), findsOneWidget);
       expect(harness.api.calls, 1);
+      // An older server reports no database_encryption: nothing is shown.
+      expect(find.byKey(_encryptionWarning), findsNothing);
+      expect(find.byKey(_encryptionEnabled), findsNothing);
     } finally {
       if (!pending.isCompleted) pending.completeError(StateError('disposed'));
       await _dispose(tester, harness);
     }
+  });
+
+  for (final (value, warning) in [('disabled', true), ('enabled', false)]) {
+    testWidgets('overview shows database encryption at rest: $value', (
+      tester,
+    ) async {
+      final harness = await _Harness.create(isAdmin: true);
+      harness.api.response = Future.value(
+        InstanceAdminOverview.fromJson({
+          ..._overviewJson,
+          'database_encryption': value,
+        }),
+      );
+      try {
+        await _pumpSettings(tester, harness.app);
+        await tester.ensureVisible(find.text('Load overview'));
+        await tester.tap(find.text('Load overview'));
+        await tester.pumpAndSettle();
+        final l10n = currentL10n;
+        expect(find.text('instance-123'), findsOneWidget);
+        if (warning) {
+          expect(find.byKey(_encryptionWarning), findsOneWidget);
+          expect(find.byKey(_encryptionEnabled), findsNothing);
+          expect(find.text(l10n.cvDatabaseNotEncryptedTitle), findsOneWidget);
+          expect(find.text(l10n.cvDatabaseNotEncryptedBody), findsOneWidget);
+          expect(find.text(databaseEncryptCommand), findsOneWidget);
+          expect(
+            find.text(
+              l10n.cvDatabaseEncryptionGuide(databaseEncryptionRunbookPath),
+            ),
+            findsOneWidget,
+          );
+        } else {
+          expect(find.byKey(_encryptionEnabled), findsOneWidget);
+          expect(find.text(l10n.cvDatabaseEncryptedAtRest), findsOneWidget);
+          expect(find.byKey(_encryptionWarning), findsNothing);
+          expect(find.text(l10n.cvDatabaseNotEncryptedTitle), findsNothing);
+        }
+        expect(tester.takeException(), isNull);
+      } finally {
+        await _dispose(tester, harness);
+      }
+    });
+  }
+
+  test('overview parses database_encryption and rejects unknown values', () {
+    expect(InstanceAdminOverview.fromJson(_overviewJson).databaseEncryption, isNull);
+    for (final value in ['enabled', 'disabled']) {
+      expect(
+        InstanceAdminOverview.fromJson({
+          ..._overviewJson,
+          'database_encryption': value,
+        }).databaseEncryption,
+        value,
+      );
+    }
+    for (final value in ['on', '', true, 1]) {
+      expect(
+        () => InstanceAdminOverview.fromJson({
+          ..._overviewJson,
+          'database_encryption': value,
+        }),
+        throwsFormatException,
+      );
+    }
+    expect(
+      databaseEncryptionNoticeFor('disabled'),
+      DatabaseEncryptionNotice.warning,
+    );
+    expect(
+      databaseEncryptionNoticeFor('enabled'),
+      DatabaseEncryptionNotice.encrypted,
+    );
+    expect(databaseEncryptionNoticeFor(null), DatabaseEncryptionNotice.none);
   });
 
   testWidgets('admin endpoint access error is shown with a retry action', (
@@ -221,6 +300,9 @@ class _WidgetAdminApi extends ApiClient {
     return InstanceAdminOverview.fromJson(_overviewJson);
   }
 }
+
+const _encryptionWarning = ValueKey('database_encryption_disabled_warning');
+const _encryptionEnabled = ValueKey('database_encryption_enabled');
 
 final _overviewJson = <String, dynamic>{
   'instance': {

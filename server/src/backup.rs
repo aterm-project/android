@@ -20,12 +20,15 @@ use sha2::{Digest, Sha256};
 use sqlx::{
     Connection, PgConnection, PgPool, Postgres, Row, SqlitePool, Transaction,
     postgres::{PgConnectOptions, PgPoolOptions},
-    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
 };
 use uuid::Uuid;
 use zeroize::Zeroizing;
 
-use crate::{ApiError, AppState, AuthRateLimits, Config, acquire_runtime_lock, secure_file};
+use crate::{
+    ApiError, AppState, AuthRateLimits, Config, acquire_runtime_lock,
+    database::{self, DatabaseFileFormat, DatabaseKey},
+    secure_file,
+};
 
 const MAGIC: &[u8; 16] = b"ATERMIUS-BACKUP\0";
 const FORMAT_VERSION: u16 = 1;
@@ -42,6 +45,17 @@ const ALLOWED_FILES: [&str; 3] = [
     "database.sqlite",
     "instance-ed25519.key",
 ];
+/// A SQLCipher instance archives its still-encrypted snapshot together with
+/// the snapshot's raw database key. The key exists only inside the
+/// authenticated, encrypted archive payload and in memory; it is never
+/// extracted to disk.
+const ENCRYPTED_SQLITE_FILES: [&str; 4] = [
+    "auth-rate-limit.key",
+    DATABASE_KEY_ARCHIVE_FILE,
+    "database.sqlite",
+    "instance-ed25519.key",
+];
+const DATABASE_KEY_ARCHIVE_FILE: &str = "database.key";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -54,6 +68,11 @@ struct BackupManifest {
     migration_version: i64,
     runtime_policy: RuntimePolicySummary,
     files: Vec<BackupFile>,
+    /// Absent for plaintext SQLite snapshots (the legacy format, unchanged)
+    /// and PostgreSQL archives; `sqlcipher4-raw-key-v1` when the snapshot is
+    /// SQLCipher-encrypted and `database.key` carries its key.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    database_encryption: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -137,6 +156,9 @@ struct BackupFile {
 struct SourceFile {
     name: String,
     path: PathBuf,
+    /// Archive input that must never be written to disk (the SQLCipher key).
+    /// When present, `path` is unused.
+    memory: Option<Zeroizing<Vec<u8>>>,
 }
 
 pub(crate) const PG_BACKUP_SCHEMA_VERSION: i64 = 39;
@@ -280,6 +302,9 @@ impl Drop for TempFile {
 pub struct RestoreResult {
     pub generation: String,
     pub accepted_runtime_policy_drift_fields: Vec<String>,
+    /// Stale private stages of earlier interrupted offline restores that were
+    /// removed from the target's parent directory before this restore.
+    pub removed_stale_restore_stages: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1435,8 +1460,9 @@ pub async fn verify_instance_backup(
         &temp_parent.join(".atermius-backup-verify-staging"),
     )?;
     let stage = create_private_temp_dir(&temp_parent, "atermius-backup-verify")?;
-    let manifest =
-        read_encrypted_archive(archive, &backup_key, &stage.0).map_err(ApiError::internal)?;
+    let (manifest, archived_database_key) =
+        read_encrypted_archive_with_database_key(archive, &backup_key, &stage.0)
+            .map_err(ApiError::internal)?;
 
     for file_name in ["auth-rate-limit.key", "instance-ed25519.key"] {
         let _key = Zeroizing::new(secure_file::read_private_key(&stage.0.join(file_name))?);
@@ -1461,8 +1487,11 @@ pub async fn verify_instance_backup(
         ));
     }
     let database = stage.0.join("atermius.db");
-    validate_sqlite_file(&database).await?;
-    if sqlite_schema_version(&database).await? != manifest.migration_version {
+    validate_archived_database_format(&database, archived_database_key.as_ref())?;
+    validate_sqlite_file(&database, archived_database_key.as_ref()).await?;
+    if sqlite_schema_version(&database, archived_database_key.as_ref()).await?
+        != manifest.migration_version
+    {
         return Err(ApiError::bad_request(
             "BACKUP_MANIFEST_INVALID",
             "backup migration version does not match its database",
@@ -1606,16 +1635,17 @@ pub async fn backup_instance(
             "the configured instance database is missing or is not a regular file",
         ));
     }
-    let options = SqliteConnectOptions::from_str(database_url)
-        .map_err(ApiError::internal)?
+    let database_key = DatabaseKey::configured(config)?;
+    database::startup_database_encryption(
+        database::detect_database_file(&db_path)?,
+        database_key.as_ref(),
+    )?;
+    let options = database::main_sqlite_options(database_url, database_key.as_ref())?
         .create_if_missing(false)
         .foreign_keys(true)
         .busy_timeout(std::time::Duration::from_secs(10));
-    let pool = SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect_with(options)
-        .await
-        .map_err(ApiError::internal)?;
+    let pool = database::connect_keyed_pool(options, database_key.as_ref(), 1).await?;
+    drop(database_key);
     let result = backup_instance_from_pool(&pool, config, archive_path, backup_key_path).await;
     pool.close().await;
     result
@@ -1914,6 +1944,7 @@ async fn create_postgres_instance_backup_inner(
         sources.push(SourceFile {
             name: archive_file,
             path,
+            memory: None,
         });
     }
     *phase = "release_object_pins";
@@ -1962,18 +1993,22 @@ async fn create_postgres_instance_backup_inner(
         SourceFile {
             name: "auth-rate-limit.key".to_owned(),
             path: rate_key_path,
+            memory: None,
         },
         SourceFile {
             name: "postgres-metadata.json".to_owned(),
             path: metadata_path,
+            memory: None,
         },
         SourceFile {
             name: "postgres.dump".to_owned(),
             path: dump_path,
+            memory: None,
         },
         SourceFile {
             name: "instance-ed25519.key".to_owned(),
             path: signing_key_path,
+            memory: None,
         },
     ]);
     sources.sort_by(|left, right| left.name.cmp(&right.name));
@@ -3616,6 +3651,9 @@ async fn backup_instance_from_pool_with_object_store(
     ensure_path_outside_data_dir(data_dir, backup_key_path)?;
     ensure_path_outside_data_dir(data_dir, archive_path)?;
     let backup_key = Zeroizing::new(secure_file::read_private_key(backup_key_path)?);
+    // The snapshot keeps the live database's SQLCipher key: the pool below
+    // was opened with this configured key.
+    let database_key = DatabaseKey::configured(config)?;
     let db_path = data_dir.join("atermius.db");
     if !fs::symlink_metadata(&db_path)
         .map(|metadata| metadata.file_type().is_file())
@@ -3626,12 +3664,14 @@ async fn backup_instance_from_pool_with_object_store(
         ));
     }
 
-    let snapshot_dir = create_private_temp_dir(data_dir, "backup-snapshot")?;
+    let snapshot_dir = create_private_temp_dir(data_dir, BACKUP_SNAPSHOT_DIR_PREFIX)?;
     let snapshot = snapshot_dir.0.join("database.sqlite");
     let snapshot_name = snapshot.to_string_lossy().to_string();
     {
         // VACUUM INTO reads one SQLite snapshot. In WAL mode it includes all
         // committed WAL pages and does not copy a live .db file out of band.
+        // Under SQLCipher the output is encrypted with the connection's key
+        // (pinned by database::tests), so no plaintext snapshot is written.
         let mut connection = pool.acquire().await.map_err(ApiError::internal)?;
         sqlx::query("VACUUM INTO ?")
             .bind(snapshot_name)
@@ -3640,11 +3680,18 @@ async fn backup_instance_from_pool_with_object_store(
             .map_err(ApiError::internal)?;
     }
     set_private_file_mode(&snapshot).map_err(ApiError::internal)?;
+    if database_key.is_some()
+        && database::detect_database_file(&snapshot)? != DatabaseFileFormat::Encrypted
+    {
+        return Err(ApiError::internal(
+            "encrypted instance produced a plaintext backup snapshot",
+        ));
+    }
     object_store.validate_catalogue(pool).await?;
     object_store
-        .hydrate_for_backup(&sqlite_url(&snapshot))
+        .hydrate_for_backup(&sqlite_url(&snapshot), database_key.as_ref())
         .await?;
-    validate_sqlite_file(&snapshot).await?;
+    validate_sqlite_file(&snapshot, database_key.as_ref()).await?;
 
     let signing_key = Zeroizing::new(secure_file::read_private_key(
         &data_dir.join("instance-ed25519.key"),
@@ -3663,14 +3710,28 @@ async fn backup_instance_from_pool_with_object_store(
     let migration_version = migration_version
         .ok_or_else(|| ApiError::internal("instance migration version is missing"))?;
 
-    let source_files = ALLOWED_FILES
+    let mut source_files = ALLOWED_FILES
         .iter()
         .map(|name| SourceFile {
             name: (*name).to_owned(),
             path: snapshot_dir.0.join(name),
+            memory: None,
         })
         .collect::<Vec<_>>();
-    let manifest = build_manifest(&source_files, migration_version, config)?;
+    if let Some(database_key) = database_key.as_ref() {
+        // The archive stays self-contained: its encrypted payload carries the
+        // snapshot's key, which is never written to the data directory.
+        source_files.push(SourceFile {
+            name: DATABASE_KEY_ARCHIVE_FILE.to_owned(),
+            path: PathBuf::new(),
+            memory: Some(Zeroizing::new(database_key.as_bytes().to_vec())),
+        });
+        source_files.sort_by(|left, right| left.name.cmp(&right.name));
+    }
+    let mut manifest = build_manifest(&source_files, migration_version, config)?;
+    manifest.database_encryption = database_key
+        .as_ref()
+        .map(|_| database::SQLCIPHER_RAW_KEY_SCHEME.to_owned());
     let (output, mut archive_file) = create_private_archive_temp(archive_path)?;
     write_encrypted_archive(&mut archive_file, &backup_key, &manifest, &source_files)
         .map_err(ApiError::internal)?;
@@ -3741,12 +3802,17 @@ pub async fn restore_instance_with_runtime_policy_drift(
     let backup_key = Zeroizing::new(secure_file::read_private_key(backup_key_path)?);
     let archive = open_private_archive(archive_path).map_err(ApiError::internal)?;
     let target = prepare_new_target_path(target_data_dir, &source_dir)?;
-    let stage_path = target
-        .parent()
-        .unwrap()
-        .join(format!(".atermius-restore-{}.staging", Uuid::new_v4()));
+    let target_parent = target.parent().unwrap();
+    // A restore killed before it finished can have left a complete database
+    // (plaintext for a legacy archive) in its private stage.
+    let removed_stale_restore_stages = remove_stale_offline_restore_stages(target_parent)?;
+    let stage_path = target_parent.join(offline_restore_stage_name(Uuid::new_v4()));
+    create_private_dir(&stage_path).map_err(ApiError::internal)?;
     let stage = TempDirectory(stage_path.clone());
-    let (generation, runtime_policy_drift_fields) = restore_archive_into_private_stage(
+    // Held until the stage is published, so a concurrent restore into the
+    // same parent never removes this stage as stale.
+    let stage_lock = lock_offline_restore_stage(&stage_path)?;
+    let (generation, runtime_policy_drift_fields) = restore_archive_into_created_stage(
         config,
         archive,
         &backup_key,
@@ -3757,23 +3823,118 @@ pub async fn restore_instance_with_runtime_policy_drift(
 
     publish_directory_noreplace(&stage_path, &target).map_err(ApiError::internal)?;
     std::mem::forget(stage);
+    drop(stage_lock);
     sync_directory(target.parent().unwrap()).map_err(ApiError::internal)?;
     Ok(RestoreResult {
         generation,
         accepted_runtime_policy_drift_fields: runtime_policy_drift_fields,
+        removed_stale_restore_stages,
     })
 }
 
+/// Prefix and suffix of the private stage an offline `restore` extracts an
+/// archive into, next to the new target directory.
+const OFFLINE_RESTORE_STAGE_PREFIX: &str = ".atermius-restore-";
+const OFFLINE_RESTORE_STAGE_SUFFIX: &str = ".staging";
+
+fn offline_restore_stage_name(id: Uuid) -> String {
+    format!("{OFFLINE_RESTORE_STAGE_PREFIX}{id}{OFFLINE_RESTORE_STAGE_SUFFIX}")
+}
+
+fn is_offline_restore_stage_name(name: &str) -> bool {
+    name.strip_prefix(OFFLINE_RESTORE_STAGE_PREFIX)
+        .and_then(|rest| rest.strip_suffix(OFFLINE_RESTORE_STAGE_SUFFIX))
+        .is_some_and(is_canonical_uuid)
+}
+
+/// Takes an exclusive advisory lock on a restore stage directory for the
+/// lifetime of the returned handle.
+fn lock_offline_restore_stage(stage: &Path) -> Result<File, ApiError> {
+    let handle = File::open(stage).map_err(ApiError::internal)?;
+    handle
+        .try_lock()
+        .map_err(|_| ApiError::internal("restore stage is locked by another process"))?;
+    Ok(handle)
+}
+
+/// Removes `.atermius-restore-<uuid>.staging` directories that an offline
+/// `restore` killed before publishing (kill, OOM, power loss) left next to
+/// its target. Such a stage can hold a complete extracted database, and for
+/// a legacy plaintext archive restored into an encrypted target it is
+/// plaintext until the stage was re-encrypted.
+///
+/// Only private directories owned by this service user are removed (what
+/// `restore` creates), and only when their stage lock is free: a stage of a
+/// restore that is still running in another process is locked and kept.
+/// Returns how many stages were removed.
+pub(crate) fn remove_stale_offline_restore_stages(parent: &Path) -> Result<usize, ApiError> {
+    let mut removed = 0;
+    for entry in fs::read_dir(parent).map_err(ApiError::internal)? {
+        let entry = entry.map_err(ApiError::internal)?;
+        let Ok(name) = entry.file_name().into_string() else {
+            continue;
+        };
+        if !is_offline_restore_stage_name(&name) {
+            continue;
+        }
+        let path = entry.path();
+        let metadata = fs::symlink_metadata(&path).map_err(ApiError::internal)?;
+        if !metadata.file_type().is_dir() {
+            continue;
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::{MetadataExt, PermissionsExt};
+            if metadata.uid() != unsafe { libc::geteuid() }
+                || metadata.permissions().mode() & 0o077 != 0
+            {
+                continue;
+            }
+        }
+        let Ok(lock) = lock_offline_restore_stage(&path) else {
+            continue;
+        };
+        // `remove_dir_all` never follows symlinks inside the tree.
+        fs::remove_dir_all(&path).map_err(ApiError::internal)?;
+        drop(lock);
+        removed += 1;
+    }
+    if removed > 0 {
+        sync_directory(parent).map_err(ApiError::internal)?;
+    }
+    Ok(removed)
+}
+
 async fn restore_archive_into_private_stage(
-    mut config: Config,
+    config: Config,
     archive: File,
     backup_key: &[u8; 32],
     stage_path: &Path,
     accept_runtime_policy_drift: bool,
 ) -> Result<(String, Vec<String>), ApiError> {
     create_private_dir(stage_path).map_err(ApiError::internal)?;
-    let manifest =
-        read_encrypted_archive(archive, backup_key, stage_path).map_err(ApiError::internal)?;
+    restore_archive_into_created_stage(
+        config,
+        archive,
+        backup_key,
+        stage_path,
+        accept_runtime_policy_drift,
+    )
+    .await
+}
+
+/// [`restore_archive_into_private_stage`] for a stage directory the caller
+/// already created as a private directory.
+async fn restore_archive_into_created_stage(
+    mut config: Config,
+    archive: File,
+    backup_key: &[u8; 32],
+    stage_path: &Path,
+    accept_runtime_policy_drift: bool,
+) -> Result<(String, Vec<String>), ApiError> {
+    let (manifest, archived_database_key) =
+        read_encrypted_archive_with_database_key(archive, backup_key, stage_path)
+            .map_err(ApiError::internal)?;
     let runtime_policy_drift_fields =
         runtime_policy_drift_fields(&manifest.runtime_policy, &config)?;
     if !runtime_policy_drift_fields.is_empty() && !accept_runtime_policy_drift {
@@ -3786,13 +3947,39 @@ async fn restore_archive_into_private_stage(
         ));
     }
     let database_path = stage_path.join("atermius.db");
-    validate_sqlite_file(&database_path).await?;
-    if sqlite_schema_version(&database_path).await? != manifest.migration_version {
+    // The restore target's configured key (if any) must be usable before the
+    // archived database is touched.
+    let target_database_key = DatabaseKey::configured(&config)?;
+    if archived_database_key.is_some() && target_database_key.is_none() {
+        return Err(ApiError::conflict(
+            "DATABASE_KEY_REQUIRED",
+            "the backup contains an encrypted database; configure ATERMIUS_DATABASE_KEY_FILE for the restore target",
+        ));
+    }
+    validate_archived_database_format(&database_path, archived_database_key.as_ref())?;
+    validate_sqlite_file(&database_path, archived_database_key.as_ref()).await?;
+    if sqlite_schema_version(&database_path, archived_database_key.as_ref()).await?
+        != manifest.migration_version
+    {
         return Err(ApiError::bad_request(
             "BACKUP_MANIFEST_INVALID",
             "backup migration version does not match its database",
         ));
     }
+    match (archived_database_key.as_ref(), target_database_key.as_ref()) {
+        // (a) Encrypted archive: re-encrypt the private stage copy from the
+        // archived key to the target key (unchanged when they match).
+        (Some(archived), Some(target)) if archived != target => {
+            database::rekey_database_file(&database_path, archived, target).await?;
+        }
+        // (b) Legacy plaintext archive into an encrypted target.
+        (None, Some(target)) => {
+            encrypt_restore_stage_database(stage_path, &database_path, target).await?;
+        }
+        // (c) Plaintext into plaintext, or an already matching key.
+        _ => {}
+    }
+    drop(archived_database_key);
 
     config.data_dir = stage_path.to_path_buf();
     let state = crate::open_state_with_restore_policy(
@@ -3860,9 +4047,66 @@ async fn restore_archive_into_private_stage(
     state.db.close().await;
     drop(state);
     remove_sqlite_sidecars(&database_path).map_err(ApiError::internal)?;
-    validate_sqlite_file(&database_path).await?;
+    validate_sqlite_file(&database_path, target_database_key.as_ref()).await?;
     sync_directory(stage_path).map_err(ApiError::internal)?;
     Ok((generation, runtime_policy_drift_fields))
+}
+
+/// Online stage reconciliation and discard open a stage with the server's
+/// key, except a plaintext stage prepared before encryption was enabled,
+/// which stays discardable. (Installation still requires the deployment key.)
+fn online_stage_database_key<'a>(
+    database_path: &Path,
+    state: &'a AppState,
+) -> Result<Option<&'a DatabaseKey>, ApiError> {
+    Ok(match database::detect_database_file(database_path)? {
+        DatabaseFileFormat::Plaintext => None,
+        _ => state.database_key.as_deref(),
+    })
+}
+
+/// An archive's database must match its manifest: SQLCipher archives carry
+/// an encrypted snapshot, legacy archives a plaintext one.
+fn validate_archived_database_format(
+    database_path: &Path,
+    archived_database_key: Option<&DatabaseKey>,
+) -> Result<(), ApiError> {
+    let format = database::detect_database_file(database_path)?;
+    let expected = if archived_database_key.is_some() {
+        DatabaseFileFormat::Encrypted
+    } else {
+        DatabaseFileFormat::Plaintext
+    };
+    if format != expected {
+        return Err(ApiError::bad_request(
+            "BACKUP_DATABASE_INVALID",
+            "backup database encryption does not match its manifest",
+        ));
+    }
+    Ok(())
+}
+
+/// Encrypts a legacy plaintext archive's database inside the private restore
+/// stage before the stage is opened as a data directory. The transient
+/// plaintext extraction never leaves the private stage and is replaced
+/// atomically by the verified SQLCipher copy.
+async fn encrypt_restore_stage_database(
+    stage_path: &Path,
+    database_path: &Path,
+    key: &DatabaseKey,
+) -> Result<(), ApiError> {
+    let encrypted = stage_path.join(".atermius.db.encrypting");
+    database::export_plaintext_to_encrypted(database_path, &encrypted, key).await?;
+    remove_sqlite_sidecars(database_path).map_err(ApiError::internal)?;
+    remove_sqlite_sidecars(&encrypted).map_err(ApiError::internal)?;
+    fs::rename(&encrypted, database_path).map_err(ApiError::internal)?;
+    sync_directory(stage_path).map_err(ApiError::internal)?;
+    if database::detect_database_file(database_path)? != DatabaseFileFormat::Encrypted {
+        return Err(ApiError::internal(
+            "restore stage database was not encrypted",
+        ));
+    }
+    Ok(())
 }
 
 /// Restores a verified generated archive into its fixed Web-requested staging
@@ -4005,9 +4249,19 @@ pub async fn install_configured_admin_restore_stage(
     secure_file::secure_existing_data_dir(&config.data_dir)?;
     let source_dir = fs::canonicalize(&config.data_dir).map_err(ApiError::internal)?;
     let _runtime_lock = acquire_existing_runtime_lock_read_only(&source_dir)?;
+    // The active database, the Web-prepared stage, and the installed target
+    // all use the deployment's configured database key.
+    let database_key = DatabaseKey::configured(&config)?;
     reject_uncheckpointed_source_sidecars(&source_dir)?;
     let source_database = source_dir.join("atermius.db");
     validate_source_database_metadata(&source_database)?;
+    // Classify the source file before SQLite opens it, so a key/format
+    // mismatch reports DATABASE_KEY_REQUIRED / DATABASE_NOT_ENCRYPTED (the
+    // same decision table as startup) instead of an opaque read failure.
+    database::startup_database_encryption(
+        database::detect_database_file(&source_database)?,
+        database_key.as_ref(),
+    )?;
 
     let settings = configured_backup_paths(&config)?;
     let staging_dir =
@@ -4020,14 +4274,17 @@ pub async fn install_configured_admin_restore_stage(
     // The source-volume database is inspected through SQLite's immutable,
     // read-only mode. Its sidecars are checked above so this view cannot omit
     // committed job state held only in a WAL file.
-    validate_sqlite_file(&source_database).await?;
-    if sqlite_schema_version(&source_database).await? != current_migration_version() {
+    validate_sqlite_file(&source_database, database_key.as_ref()).await?;
+    if sqlite_schema_version(&source_database, database_key.as_ref()).await?
+        != current_migration_version()
+    {
         return Err(ApiError::conflict(
             "RESTORE_SOURCE_SCHEMA_UNSUPPORTED",
             "the active database schema is not compatible with this installer",
         ));
     }
-    let source_pool = open_immutable_read_only_database(&source_database).await?;
+    let source_pool =
+        open_immutable_read_only_database(&source_database, database_key.as_ref()).await?;
     let job = sqlx::query(
         "SELECT j.archive_id,j.archive_source,j.archive_sha256,j.status,j.result_code, \
                 s.generation,s.status AS stage_status \
@@ -4079,6 +4336,7 @@ pub async fn install_configured_admin_restore_stage(
         &archive_sha256,
         &generation,
         &policy_sha256,
+        database_key.as_ref(),
     )
     .await?;
 
@@ -4099,7 +4357,7 @@ pub async fn install_configured_admin_restore_stage(
         copy_private_restore_stage_file(&stage_dir.join(name), &temporary.0.join(name))?;
     }
     sync_directory(&temporary.0).map_err(ApiError::internal)?;
-    validate_installed_restore_payload(&temporary.0, &generation).await?;
+    validate_installed_restore_payload(&temporary.0, &generation, database_key.as_ref()).await?;
 
     // No-replace publication is the commit point. The temporary directory is
     // on the target volume, so publication does not cross filesystem/device
@@ -4119,17 +4377,15 @@ fn map_published_parent_sync(sync_result: io::Result<()>) -> Result<(), ApiError
     })
 }
 
-async fn open_immutable_read_only_database(path: &Path) -> Result<SqlitePool, ApiError> {
-    let options = SqliteConnectOptions::new()
-        .filename(path)
+async fn open_immutable_read_only_database(
+    path: &Path,
+    key: Option<&DatabaseKey>,
+) -> Result<SqlitePool, ApiError> {
+    let options = database::sqlite_file_options(path, key)
         .read_only(true)
         .immutable(true)
         .foreign_keys(true);
-    SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect_with(options)
-        .await
-        .map_err(ApiError::internal)
+    database::connect_keyed_pool(options, key, 1).await
 }
 
 fn acquire_existing_runtime_lock_read_only(data_dir: &Path) -> Result<File, ApiError> {
@@ -4218,6 +4474,7 @@ async fn validate_admin_restore_stage_for_install(
     archive_sha256: &str,
     expected_generation: &str,
     expected_policy_sha256: &str,
+    database_key: Option<&DatabaseKey>,
 ) -> Result<(), ApiError> {
     let metadata = fs::symlink_metadata(stage_dir).map_err(ApiError::internal)?;
     validate_private_directory_metadata(&metadata)?;
@@ -4285,14 +4542,14 @@ async fn validate_admin_restore_stage_for_install(
     }
     let database = stage_dir.join("atermius.db");
     validate_private_restore_database(&database)?;
-    validate_sqlite_file(&database).await?;
-    if sqlite_schema_version(&database).await? != current_migration_version() {
+    validate_sqlite_file(&database, database_key).await?;
+    if sqlite_schema_version(&database, database_key).await? != current_migration_version() {
         return Err(ApiError::conflict(
             "RESTORE_STAGE_SCHEMA_UNSUPPORTED",
             "restore stage schema differs from the installer schema; prepare a new stage",
         ));
     }
-    if sqlite_instance_generation(&database).await? != expected_generation {
+    if sqlite_instance_generation(&database, database_key).await? != expected_generation {
         return Err(ApiError::conflict(
             "RESTORE_STAGE_UNAVAILABLE",
             "restore stage generation does not match its receipt",
@@ -4326,6 +4583,7 @@ fn copy_private_restore_stage_file(source: &Path, target: &Path) -> Result<(), A
 async fn validate_installed_restore_payload(
     target_dir: &Path,
     expected_generation: &str,
+    database_key: Option<&DatabaseKey>,
 ) -> Result<(), ApiError> {
     validate_private_directory_metadata(
         &fs::symlink_metadata(target_dir).map_err(ApiError::internal)?,
@@ -4358,9 +4616,9 @@ async fn validate_installed_restore_payload(
         }
     }
     let database = target_dir.join("atermius.db");
-    validate_sqlite_file(&database).await?;
-    if sqlite_schema_version(&database).await? != current_migration_version()
-        || sqlite_instance_generation(&database).await? != expected_generation
+    validate_sqlite_file(&database, database_key).await?;
+    if sqlite_schema_version(&database, database_key).await? != current_migration_version()
+        || sqlite_instance_generation(&database, database_key).await? != expected_generation
     {
         return Err(ApiError::internal(
             "installed restore database does not match its stage",
@@ -4425,8 +4683,9 @@ pub(crate) async fn reconcile_admin_restore_stage(
             }
             let database_path = target.join("atermius.db");
             validate_private_restore_database(&database_path)?;
-            validate_sqlite_file(&database_path).await?;
-            let generation = sqlite_instance_generation(&database_path).await?;
+            let stage_key = online_stage_database_key(&database_path, state)?;
+            validate_sqlite_file(&database_path, stage_key).await?;
+            let generation = sqlite_instance_generation(&database_path, stage_key).await?;
             if generation != receipt.generation {
                 return Err(ApiError::internal(
                     "restore stage receipt generation does not match its database",
@@ -5001,8 +5260,9 @@ pub(crate) async fn validate_admin_restore_stage_for_discard(
                 validate_private_restore_file_metadata(&metadata)?;
                 if name == "atermius.db" {
                     validate_private_restore_database(&path)?;
-                    validate_sqlite_file(&path).await?;
-                    let generation = sqlite_instance_generation(&path).await?;
+                    let stage_key = online_stage_database_key(&path, state)?;
+                    validate_sqlite_file(&path, stage_key).await?;
+                    let generation = sqlite_instance_generation(&path, stage_key).await?;
                     let expected = receipt
                         .as_ref()
                         .map(|receipt| receipt.generation.as_str())
@@ -6768,17 +7028,11 @@ fn validate_private_restore_database(path: &Path) -> Result<(), ApiError> {
     validate_private_restore_file_metadata(&metadata)
 }
 
-async fn sqlite_instance_generation(path: &Path) -> Result<String, ApiError> {
-    let options = SqliteConnectOptions::new()
-        .filename(path)
-        .read_only(true)
-        .immutable(true)
-        .foreign_keys(true);
-    let pool = SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect_with(options)
-        .await
-        .map_err(ApiError::internal)?;
+async fn sqlite_instance_generation(
+    path: &Path,
+    key: Option<&DatabaseKey>,
+) -> Result<String, ApiError> {
+    let pool = open_immutable_read_only_database(path, key).await?;
     let result = sqlx::query_scalar("SELECT generation FROM instance_meta WHERE id=1")
         .fetch_one(&pool)
         .await
@@ -6823,7 +7077,13 @@ fn build_manifest(
 ) -> Result<BackupManifest, ApiError> {
     let mut entries = Vec::with_capacity(files.len());
     for file in files {
-        let (size, sha256) = hash_file(&file.path).map_err(ApiError::internal)?;
+        let (size, sha256) = match file.memory.as_ref() {
+            Some(bytes) => (
+                bytes.len() as u64,
+                hex::encode(Sha256::digest(bytes.as_slice())),
+            ),
+            None => hash_file(&file.path).map_err(ApiError::internal)?,
+        };
         entries.push(BackupFile {
             name: file.name.to_owned(),
             size,
@@ -6839,6 +7099,7 @@ fn build_manifest(
         migration_version,
         runtime_policy: runtime_policy_summary(config),
         files: entries,
+        database_encryption: None,
     })
 }
 
@@ -7006,7 +7267,10 @@ fn write_encrypted_archive(
 
     let mut sequence = 1_u64;
     for (file_index, source) in files.iter().enumerate() {
-        let mut input = open_regular_file(&source.path, false)?;
+        let mut input: Box<dyn Read + '_> = match source.memory.as_ref() {
+            Some(bytes) => Box::new(io::Cursor::new(bytes.as_slice())),
+            None => Box::new(open_regular_file(&source.path, false)?),
+        };
         let file_size = manifest.files[file_index].size;
         let mut remaining = file_size;
         let mut chunk_index = 0_u64;
@@ -7045,10 +7309,21 @@ fn write_encrypted_archive(
 }
 
 fn read_encrypted_archive(
-    mut input: File,
+    input: File,
     key: &[u8; 32],
     stage_dir: &Path,
 ) -> io::Result<BackupManifest> {
+    read_encrypted_archive_with_database_key(input, key, stage_dir).map(|(manifest, _)| manifest)
+}
+
+/// Authenticates and extracts an archive. A SQLCipher snapshot's archived
+/// database key is returned in memory and never written into `stage_dir`
+/// (which becomes a data directory on restore).
+fn read_encrypted_archive_with_database_key(
+    mut input: File,
+    key: &[u8; 32],
+    stage_dir: &Path,
+) -> io::Result<(BackupManifest, Option<DatabaseKey>)> {
     let metadata = input.metadata()?;
     let mut magic = [0_u8; 16];
     input.read_exact(&mut magic)?;
@@ -7092,9 +7367,20 @@ fn read_encrypted_archive(
     let manifest_hash: [u8; 32] = Sha256::digest(&encrypted_manifest).into();
 
     let mut sequence = 1_u64;
+    let mut database_key = None;
     for (file_index, entry) in manifest.files.iter().enumerate() {
-        let output_path = stage_dir.join(target_file_name(&entry.name)?);
-        let mut output = create_private_file(&output_path)?;
+        // validate_manifest bounded the key entry to exactly 32 bytes, so the
+        // preallocated buffer never reallocates (no stray key copies).
+        let mut key_buffer = Zeroizing::new(Vec::with_capacity(32));
+        let mut file_output = None;
+        if entry.name != DATABASE_KEY_ARCHIVE_FILE {
+            let output_path = stage_dir.join(target_file_name(&entry.name)?);
+            file_output = Some(create_private_file(&output_path)?);
+        }
+        let output: &mut dyn Write = match file_output.as_mut() {
+            Some(file) => file,
+            None => &mut *key_buffer,
+        };
         let mut remaining = entry.size;
         let mut chunk_index = 0_u64;
         let mut hasher = Sha256::new();
@@ -7123,16 +7409,25 @@ fn read_encrypted_archive(
             chunk_index += 1;
             remaining -= chunk_len as u64;
         }
-        output.sync_all()?;
+        output.flush()?;
         if hex::encode(hasher.finalize()) != entry.sha256 {
             return Err(invalid_data("backup file SHA-256 does not match manifest"));
+        }
+        match file_output {
+            Some(file) => file.sync_all()?,
+            None => {
+                database_key = Some(
+                    DatabaseKey::from_slice(&key_buffer)
+                        .map_err(|_| invalid_data("archived database key is invalid"))?,
+                );
+            }
         }
     }
     let mut trailing = [0_u8; 1];
     if input.read(&mut trailing)? != 0 {
         return Err(invalid_data("backup archive has trailing data"));
     }
-    Ok(manifest)
+    Ok((manifest, database_key))
 }
 
 fn validate_manifest(manifest: &BackupManifest) -> io::Result<()> {
@@ -7148,8 +7443,21 @@ fn validate_manifest(manifest: &BackupManifest) -> io::Result<()> {
         manifest.database_engine.as_str(),
         manifest.journal_mode.as_str(),
     ) {
-        ("sqlite", "wal") if names == ALLOWED_FILES => {}
-        ("postgresql", "consistent-snapshot") => {
+        ("sqlite", "wal") if manifest.database_encryption.is_none() && names == ALLOWED_FILES => {}
+        ("sqlite", "wal")
+            if manifest.database_encryption.as_deref()
+                == Some(database::SQLCIPHER_RAW_KEY_SCHEME)
+                && names == ENCRYPTED_SQLITE_FILES =>
+        {
+            if manifest
+                .files
+                .iter()
+                .any(|entry| entry.name == DATABASE_KEY_ARCHIVE_FILE && entry.size != 32)
+            {
+                return Err(invalid_data("backup database key metadata is invalid"));
+            }
+        }
+        ("postgresql", "consistent-snapshot") if manifest.database_encryption.is_none() => {
             let required = [
                 "auth-rate-limit.key",
                 "postgres-metadata.json",
@@ -7327,6 +7635,47 @@ fn create_private_dir(path: &Path) -> io::Result<()> {
     {
         fs::create_dir(path)
     }
+}
+
+/// Name prefix (after the leading dot) of the private snapshot directory a
+/// SQLite backup creates inside the data directory.
+const BACKUP_SNAPSHOT_DIR_PREFIX: &str = "backup-snapshot";
+
+/// Removes `.backup-snapshot-*` entries left in the data directory by a
+/// backup process that was killed before its cleanup ran. Such a directory
+/// can hold a complete database snapshot (plaintext if the backup ran before
+/// encryption at rest was enabled) and copies of the instance keys.
+///
+/// Callers must hold the runtime lock and the maintenance lock: online
+/// backups run only inside the server process (runtime lock) and the operator
+/// backup command holds the maintenance lock, so no running backup can own
+/// one of these entries. Returns how many entries were removed.
+pub(crate) fn remove_stale_backup_snapshots(data_dir: &Path) -> Result<usize, ApiError> {
+    let prefix = format!(".{BACKUP_SNAPSHOT_DIR_PREFIX}-");
+    let mut removed = 0;
+    for entry in fs::read_dir(data_dir).map_err(ApiError::internal)? {
+        let entry = entry.map_err(ApiError::internal)?;
+        let Ok(name) = entry.file_name().into_string() else {
+            continue;
+        };
+        if !name.starts_with(&prefix) {
+            continue;
+        }
+        let path = entry.path();
+        let metadata = fs::symlink_metadata(&path).map_err(ApiError::internal)?;
+        if metadata.file_type().is_dir() {
+            // `remove_dir_all` never follows symlinks inside the tree.
+            fs::remove_dir_all(&path).map_err(ApiError::internal)?;
+        } else {
+            // Not created by a backup; unlink only the entry itself.
+            fs::remove_file(&path).map_err(ApiError::internal)?;
+        }
+        removed += 1;
+    }
+    if removed > 0 {
+        sync_directory(data_dir).map_err(ApiError::internal)?;
+    }
+    Ok(removed)
 }
 
 fn create_private_temp_dir(parent: &Path, prefix: &str) -> Result<TempDirectory, ApiError> {
@@ -7561,18 +7910,13 @@ async fn validate_pool(state: &AppState) -> Result<(), ApiError> {
     Ok(())
 }
 
-async fn validate_sqlite_file(path: &Path) -> Result<(), ApiError> {
-    let options = SqliteConnectOptions::new()
-        .filename(path)
+async fn validate_sqlite_file(path: &Path, key: Option<&DatabaseKey>) -> Result<(), ApiError> {
+    let options = database::sqlite_file_options(path, key)
         .read_only(true)
         .immutable(true)
         .foreign_keys(true)
         .busy_timeout(std::time::Duration::from_secs(5));
-    let pool = SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect_with(options)
-        .await
-        .map_err(ApiError::internal)?;
+    let pool = database::connect_keyed_pool(options, key, 1).await?;
     let result = async {
         let integrity: String = sqlx::query_scalar("PRAGMA integrity_check")
             .fetch_one(&pool)
@@ -7613,17 +7957,8 @@ async fn validate_sqlite_file(path: &Path) -> Result<(), ApiError> {
     result
 }
 
-async fn sqlite_schema_version(path: &Path) -> Result<i64, ApiError> {
-    let options = SqliteConnectOptions::new()
-        .filename(path)
-        .read_only(true)
-        .immutable(true)
-        .foreign_keys(true);
-    let pool = SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect_with(options)
-        .await
-        .map_err(ApiError::internal)?;
+async fn sqlite_schema_version(path: &Path, key: Option<&DatabaseKey>) -> Result<i64, ApiError> {
+    let pool = open_immutable_read_only_database(path, key).await?;
     let version = sqlx::query_scalar("SELECT MAX(version) FROM _sqlx_migrations WHERE success=1")
         .fetch_one(&pool)
         .await
@@ -8429,22 +8764,27 @@ mod tests {
             SourceFile {
                 name: "auth-rate-limit.key".to_owned(),
                 path: rate_key_path,
+                memory: None,
             },
             SourceFile {
                 name: "postgres-metadata.json".to_owned(),
                 path: metadata_path,
+                memory: None,
             },
             SourceFile {
                 name: "postgres.dump".to_owned(),
                 path: dump_path,
+                memory: None,
             },
             SourceFile {
                 name: "instance-ed25519.key".to_owned(),
                 path: signing_key_path,
+                memory: None,
             },
             SourceFile {
                 name: "object-00000000.blob".to_owned(),
                 path: object_path,
+                memory: None,
             },
         ];
         source_files.sort_by(|left, right| left.name.cmp(&right.name));
@@ -8990,6 +9330,7 @@ mod tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir,
@@ -9239,8 +9580,8 @@ mod tests {
     }
 
     async fn sqlite_pool_readonly(path: &Path) -> sqlx::SqlitePool {
-        let options = SqliteConnectOptions::new()
-            .filename(path)
+        // Plaintext fixture database, opened through the central helper.
+        let options = database::sqlite_file_options(path, None)
             .read_only(true)
             .immutable(true)
             .foreign_keys(true);
@@ -9281,6 +9622,23 @@ mod tests {
         key_path: &Path,
         retention_count: Option<&str>,
     ) -> AppState {
+        state_with_backup_retention_and_database_key(
+            data_dir,
+            archive_dir,
+            key_path,
+            retention_count,
+            None,
+        )
+        .await
+    }
+
+    async fn state_with_backup_retention_and_database_key(
+        data_dir: &Path,
+        archive_dir: &Path,
+        key_path: &Path,
+        retention_count: Option<&str>,
+        database_key_file: Option<&Path>,
+    ) -> AppState {
         secure_file::create_private_data_dir(data_dir).unwrap();
         fs::create_dir(archive_dir).unwrap();
         fs::set_permissions(archive_dir, fs::Permissions::from_mode(0o700)).unwrap();
@@ -9289,6 +9647,7 @@ mod tests {
         config.backup_archive_dir = Some(archive_dir.to_owned());
         config.backup_key_file = Some(key_path.to_owned());
         config.backup_retention_count = retention_count.map(Into::into);
+        config.database_key_file = database_key_file.map(Path::to_path_buf);
         open_state(&sqlite_url(&data_dir.join("atermius.db")), config)
             .await
             .unwrap()
@@ -9504,11 +9863,29 @@ mod tests {
     }
 
     async fn ready_restore_install_fixture() -> ReadyRestoreInstallFixture {
+        ready_restore_install_fixture_with_database_key(None).await
+    }
+
+    async fn ready_restore_install_fixture_with_database_key(
+        database_key_byte: Option<u8>,
+    ) -> ReadyRestoreInstallFixture {
         let root = temp_root();
         let data_dir = root.join("active");
         let archive_dir = root.join("archives");
         let key_path = root.join("operator.key");
-        let state = state_with_backup_retention(&data_dir, &archive_dir, &key_path, None).await;
+        let database_key_path = database_key_byte.map(|byte| {
+            let path = root.join("database.key");
+            write_private_file(&path, &[byte; 32]).unwrap();
+            path
+        });
+        let state = state_with_backup_retention_and_database_key(
+            &data_dir,
+            &archive_dir,
+            &key_path,
+            None,
+            database_key_path.as_deref(),
+        )
+        .await;
         let _server_lock = crate::acquire_runtime_lock(&data_dir).unwrap();
 
         let archive_id = Uuid::new_v4().to_string();
@@ -9962,7 +10339,7 @@ mod tests {
             fs::metadata(&target).unwrap().permissions().mode() & 0o777,
             0o700
         );
-        validate_installed_restore_payload(&target, &fixture.generation)
+        validate_installed_restore_payload(&target, &fixture.generation, None)
             .await
             .unwrap();
 
@@ -11341,6 +11718,7 @@ mod tests {
             migration_version,
             runtime_policy,
             files: manifest_files,
+            database_encryption: None,
         };
         let manifest_bytes = serde_jcs::to_vec(&manifest).unwrap();
         let manifest_hash: [u8; 32] = Sha256::digest(&manifest_bytes).into();
@@ -12040,9 +12418,7 @@ mod tests {
         .unwrap();
         assert_eq!(manifest.files.len(), ALLOWED_FILES.len());
         let snapshot = snapshot_dir.0.join("atermius.db");
-        let options = SqliteConnectOptions::new()
-            .filename(snapshot)
-            .read_only(true);
+        let options = database::sqlite_file_options(&snapshot, None).read_only(true);
         let pool = SqlitePoolOptions::new()
             .max_connections(1)
             .connect_with(options)
@@ -12357,5 +12733,644 @@ mod tests {
         drop(_external_lock);
         state.db.close().await;
         fs::remove_dir_all(root).unwrap();
+    }
+
+    // ---- SQLCipher encryption at rest: backup/restore matrix ----
+
+    const ENCRYPTION_CANARY: &str = "backup-canary-4b1d7e@example.test";
+
+    fn write_database_key(path: &Path, byte: u8) -> [u8; 32] {
+        write_private_file(path, &[byte; 32]).unwrap();
+        [byte; 32]
+    }
+
+    fn keyed_config(data_dir: &Path, database_key_file: Option<&Path>) -> Config {
+        let mut config = test_config(data_dir.to_owned());
+        config.database_key_file = database_key_file.map(Path::to_path_buf);
+        config
+    }
+
+    async fn keyed_state_at(directory: &Path, database_key_file: Option<&Path>) -> AppState {
+        secure_file::create_private_data_dir(directory).unwrap();
+        open_state(
+            &sqlite_url(&directory.join("atermius.db")),
+            keyed_config(directory, database_key_file),
+        )
+        .await
+        .unwrap()
+    }
+
+    async fn insert_canary(state: &AppState) {
+        sqlx::query("INSERT INTO users(user_id,username,created_at) VALUES(?,?,?)")
+            .bind(Uuid::new_v4().to_string())
+            .bind(ENCRYPTION_CANARY)
+            .bind(crate::now_rfc3339())
+            .execute(&state.db)
+            .await
+            .unwrap();
+    }
+
+    async fn canary_present(state: &AppState) -> bool {
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users WHERE username=?")
+            .bind(ENCRYPTION_CANARY)
+            .fetch_one(&state.db)
+            .await
+            .unwrap()
+            == 1
+    }
+
+    fn tree_contains(path: &Path, needle: &[u8]) -> bool {
+        let metadata = fs::symlink_metadata(path).unwrap();
+        if metadata.is_dir() {
+            return fs::read_dir(path)
+                .unwrap()
+                .any(|entry| tree_contains(&entry.unwrap().path(), needle));
+        }
+        metadata.is_file()
+            && fs::read(path)
+                .unwrap()
+                .windows(needle.len())
+                .any(|window| window == needle)
+    }
+
+    fn directory_names(path: &Path) -> Vec<String> {
+        let mut names = fs::read_dir(path)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+            .collect::<Vec<_>>();
+        names.sort();
+        names
+    }
+
+    fn extract_archive(
+        archive: &Path,
+        backup_key: &[u8; 32],
+        directory: &Path,
+    ) -> (BackupManifest, Option<DatabaseKey>) {
+        create_private_dir(directory).unwrap();
+        read_encrypted_archive_with_database_key(
+            open_private_archive(archive).unwrap(),
+            backup_key,
+            directory,
+        )
+        .unwrap()
+    }
+
+    #[tokio::test]
+    async fn encrypted_instance_backup_keeps_snapshot_encrypted_and_key_only_in_archive() {
+        let root = temp_root();
+        let source = root.join("active");
+        let database_key_path = root.join("database.key");
+        let database_key = write_database_key(&database_key_path, 0x3c);
+        let backup_key_path = root.join("backup.key");
+        let backup_key = write_backup_key(&backup_key_path);
+        let state = keyed_state_at(&source, Some(&database_key_path)).await;
+        seed_instance(&state).await;
+        insert_canary(&state).await;
+
+        let archive = root.join("instance.atb");
+        backup_instance_from_pool(&state.db, &state.config, &archive, &backup_key_path)
+            .await
+            .unwrap();
+        // The private snapshot directory inside the data directory is gone,
+        // and nothing in the data directory or archive holds the canary or the
+        // raw database key.
+        assert!(
+            directory_names(&source)
+                .iter()
+                .all(|name| !name.starts_with(".backup-snapshot"))
+        );
+        assert!(!tree_contains(&source, ENCRYPTION_CANARY.as_bytes()));
+        assert!(!tree_contains(&source, &database_key));
+        assert!(!tree_contains(&archive, ENCRYPTION_CANARY.as_bytes()));
+        assert!(!tree_contains(&archive, &database_key));
+
+        let extracted = root.join("extracted");
+        let (manifest, archived_key) = extract_archive(&archive, &backup_key, &extracted);
+        assert_eq!(
+            manifest.database_encryption.as_deref(),
+            Some(database::SQLCIPHER_RAW_KEY_SCHEME)
+        );
+        assert_eq!(
+            manifest
+                .files
+                .iter()
+                .map(|file| file.name.as_str())
+                .collect::<Vec<_>>(),
+            ENCRYPTED_SQLITE_FILES
+        );
+        assert_eq!(
+            archived_key.unwrap(),
+            DatabaseKey::from_slice(&database_key).unwrap()
+        );
+        // The archived key is returned in memory and never extracted.
+        assert_eq!(
+            directory_names(&extracted),
+            vec![
+                "atermius.db".to_owned(),
+                "auth-rate-limit.key".to_owned(),
+                "instance-ed25519.key".to_owned()
+            ]
+        );
+        assert_eq!(
+            database::detect_database_file(&extracted.join("atermius.db")).unwrap(),
+            DatabaseFileFormat::Encrypted
+        );
+        assert!(!tree_contains(&extracted, ENCRYPTION_CANARY.as_bytes()));
+        let verification = verify_instance_backup(&source, &archive, &backup_key_path)
+            .await
+            .unwrap();
+        assert_eq!(verification.file_count, ENCRYPTED_SQLITE_FILES.len());
+
+        // The CLI path opens the live database with the configured key.
+        let cli_archive = root.join("cli.atb");
+        backup_instance(
+            &state.config,
+            &sqlite_url(&source.join("atermius.db")),
+            &cli_archive,
+            &backup_key_path,
+        )
+        .await
+        .unwrap();
+        verify_instance_backup(&source, &cli_archive, &backup_key_path)
+            .await
+            .unwrap();
+        // A key/format mismatch on the live database is reported explicitly.
+        let mismatch = backup_instance(
+            &keyed_config(&source, None),
+            &sqlite_url(&source.join("atermius.db")),
+            &root.join("mismatch.atb"),
+            &backup_key_path,
+        )
+        .await
+        .unwrap_err();
+        assert_eq!(mismatch.body.code, "DATABASE_KEY_REQUIRED");
+        assert!(!root.join("mismatch.atb").exists());
+
+        // A legacy plaintext instance still writes the unchanged legacy format.
+        let plain_source = root.join("plain");
+        let plain = state_at(&plain_source).await;
+        let plain_archive = root.join("plain.atb");
+        backup_instance_from_pool(&plain.db, &plain.config, &plain_archive, &backup_key_path)
+            .await
+            .unwrap();
+        let (plain_manifest, plain_key) =
+            extract_archive(&plain_archive, &backup_key, &root.join("plain-extracted"));
+        assert!(plain_manifest.database_encryption.is_none());
+        assert!(plain_key.is_none());
+        assert_eq!(
+            plain_manifest
+                .files
+                .iter()
+                .map(|file| file.name.as_str())
+                .collect::<Vec<_>>(),
+            ALLOWED_FILES
+        );
+        let plain_manifest_json = serde_json::to_value(&plain_manifest).unwrap();
+        assert!(plain_manifest_json.get("database_encryption").is_none());
+
+        plain.db.close().await;
+        state.db.close().await;
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn encrypted_archive_manifest_requires_exact_files_and_a_32_byte_key_entry() {
+        let file = |name: &str, size: u64| BackupFile {
+            name: name.to_owned(),
+            size,
+            sha256: "00".repeat(32),
+        };
+        let mut manifest = BackupManifest {
+            format_version: FORMAT_VERSION,
+            app_version: "test".to_owned(),
+            created_at: "2026-01-01T00:00:00Z".to_owned(),
+            database_engine: "sqlite".to_owned(),
+            journal_mode: "wal".to_owned(),
+            migration_version: 1,
+            runtime_policy: runtime_policy_summary(&test_config(PathBuf::new())),
+            files: ENCRYPTED_SQLITE_FILES
+                .iter()
+                .map(|name| file(name, 32))
+                .collect(),
+            database_encryption: Some(database::SQLCIPHER_RAW_KEY_SCHEME.to_owned()),
+        };
+        assert!(validate_manifest(&manifest).is_ok());
+        // Key entry of the wrong size.
+        manifest.files[1].size = 33;
+        assert!(validate_manifest(&manifest).is_err());
+        manifest.files[1].size = 32;
+        // Unknown scheme.
+        manifest.database_encryption = Some("sqlcipher3".to_owned());
+        assert!(validate_manifest(&manifest).is_err());
+        // Encrypted file list without the scheme, or the scheme without a key.
+        manifest.database_encryption = None;
+        assert!(validate_manifest(&manifest).is_err());
+        manifest.database_encryption = Some(database::SQLCIPHER_RAW_KEY_SCHEME.to_owned());
+        manifest.files = ALLOWED_FILES.iter().map(|name| file(name, 32)).collect();
+        assert!(validate_manifest(&manifest).is_err());
+        // PostgreSQL archives never carry a SQLite database key.
+        manifest.database_engine = "postgresql".to_owned();
+        manifest.journal_mode = "consistent-snapshot".to_owned();
+        manifest.files = [
+            "auth-rate-limit.key",
+            "instance-ed25519.key",
+            "postgres-metadata.json",
+            "postgres.dump",
+        ]
+        .iter()
+        .map(|name| file(name, 32))
+        .collect();
+        assert!(validate_manifest(&manifest).is_err());
+        manifest.database_encryption = None;
+        assert!(validate_manifest(&manifest).is_ok());
+        assert!(target_file_name("database.key").is_err());
+    }
+
+    async fn assert_restored_database(
+        target: &Path,
+        generation: &str,
+        database_key_file: Option<&Path>,
+    ) {
+        assert_eq!(
+            directory_names(target),
+            RESTORE_STAGE_DATA_FILES
+                .iter()
+                .map(|name| (*name).to_owned())
+                .collect::<Vec<_>>()
+        );
+        let expected_format = if database_key_file.is_some() {
+            DatabaseFileFormat::Encrypted
+        } else {
+            DatabaseFileFormat::Plaintext
+        };
+        assert_eq!(
+            database::detect_database_file(&target.join("atermius.db")).unwrap(),
+            expected_format
+        );
+        assert_eq!(
+            tree_contains(target, ENCRYPTION_CANARY.as_bytes()),
+            database_key_file.is_none()
+        );
+        let restored = keyed_state_at(target, database_key_file).await;
+        assert_eq!(restored.instance.generation, generation);
+        assert!(canary_present(&restored).await);
+        restored.db.close().await;
+    }
+
+    #[tokio::test]
+    async fn restore_matrix_rekeys_encrypts_and_keeps_plaintext() {
+        let root = temp_root();
+        let backup_key_path = root.join("backup.key");
+        write_backup_key(&backup_key_path);
+        let key_a = root.join("database-a.key");
+        let key_b = root.join("database-b.key");
+        let key_a_bytes = write_database_key(&key_a, 0x0a);
+        write_database_key(&key_b, 0x0b);
+
+        let encrypted_source = root.join("encrypted-source");
+        let encrypted = keyed_state_at(&encrypted_source, Some(&key_a)).await;
+        insert_canary(&encrypted).await;
+        let encrypted_archive = root.join("encrypted.atb");
+        backup_instance_from_pool(
+            &encrypted.db,
+            &encrypted.config,
+            &encrypted_archive,
+            &backup_key_path,
+        )
+        .await
+        .unwrap();
+
+        let plain_source = root.join("plain-source");
+        let plain = state_at(&plain_source).await;
+        insert_canary(&plain).await;
+        let plain_archive = root.join("plain.atb");
+        backup_instance_from_pool(&plain.db, &plain.config, &plain_archive, &backup_key_path)
+            .await
+            .unwrap();
+
+        // (a) Encrypted archive into a target with a different key: the stage
+        // copy is rekeyed; the archived key no longer opens the result.
+        let rekeyed = root.join("restored-rekeyed");
+        let result = restore_instance_with_runtime_policy_drift(
+            keyed_config(&encrypted_source, Some(&key_b)),
+            &encrypted_archive,
+            &backup_key_path,
+            &rekeyed,
+            false,
+        )
+        .await
+        .unwrap();
+        assert!(result.accepted_runtime_policy_drift_fields.is_empty());
+        assert_restored_database(&rekeyed, &result.generation, Some(&key_b)).await;
+        assert!(!tree_contains(&rekeyed, &key_a_bytes));
+        let old_key = open_state(
+            &sqlite_url(&rekeyed.join("atermius.db")),
+            keyed_config(&rekeyed, Some(&key_a)),
+        )
+        .await;
+        assert_eq!(old_key.err().unwrap().body.code, "DATABASE_KEY_INVALID");
+
+        // (a) Same key: restored as-is.
+        let same_key = root.join("restored-same-key");
+        let result = restore_instance_with_runtime_policy_drift(
+            keyed_config(&encrypted_source, Some(&key_a)),
+            &encrypted_archive,
+            &backup_key_path,
+            &same_key,
+            false,
+        )
+        .await
+        .unwrap();
+        assert_restored_database(&same_key, &result.generation, Some(&key_a)).await;
+
+        // (a) Encrypted archive into a target without a key fails closed and
+        // publishes nothing.
+        let keyless = root.join("restored-keyless");
+        let error = restore_instance_with_runtime_policy_drift(
+            keyed_config(&encrypted_source, None),
+            &encrypted_archive,
+            &backup_key_path,
+            &keyless,
+            false,
+        )
+        .await
+        .unwrap_err();
+        assert_eq!(error.body.code, "DATABASE_KEY_REQUIRED");
+        assert!(!keyless.exists());
+        assert!(
+            directory_names(&root)
+                .iter()
+                .all(|name| !name.starts_with(".atermius-restore-"))
+        );
+
+        // (b) Legacy plaintext archive into an encrypted target: encrypted
+        // during staging, no plaintext or staging leftovers.
+        let encrypted_target = root.join("restored-encrypted");
+        let result = restore_instance_with_runtime_policy_drift(
+            keyed_config(&plain_source, Some(&key_b)),
+            &plain_archive,
+            &backup_key_path,
+            &encrypted_target,
+            false,
+        )
+        .await
+        .unwrap();
+        assert_restored_database(&encrypted_target, &result.generation, Some(&key_b)).await;
+
+        // (c) Plaintext into plaintext is unchanged.
+        let plain_target = root.join("restored-plain");
+        let result = restore_instance_with_runtime_policy_drift(
+            keyed_config(&plain_source, None),
+            &plain_archive,
+            &backup_key_path,
+            &plain_target,
+            false,
+        )
+        .await
+        .unwrap();
+        assert_restored_database(&plain_target, &result.generation, None).await;
+
+        encrypted.db.close().await;
+        plain.db.close().await;
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    /// Review finding: an offline restore of a legacy plaintext archive into
+    /// an encrypted target that is killed before its stage was re-encrypted
+    /// leaves a complete plaintext database in
+    /// `<target parent>/.atermius-restore-<uuid>.staging`. The next restore
+    /// into that parent removes such stale stages; a stage another restore
+    /// still holds, and anything that is not a private stage directory of
+    /// this user, are left alone.
+    #[tokio::test]
+    async fn offline_restore_removes_stale_plaintext_stages_of_interrupted_runs() {
+        let root = temp_root();
+        let backup_key_path = root.join("backup.key");
+        write_backup_key(&backup_key_path);
+        let database_key = root.join("database.key");
+        write_database_key(&database_key, 0x3c);
+        let plain_source = root.join("plain-source");
+        let plain = state_at(&plain_source).await;
+        insert_canary(&plain).await;
+        let plain_archive = root.join("plain.atb");
+        backup_instance_from_pool(&plain.db, &plain.config, &plain_archive, &backup_key_path)
+            .await
+            .unwrap();
+        plain.db.close().await;
+
+        let targets = root.join("targets");
+        fs::create_dir(&targets).unwrap();
+        fs::set_permissions(&targets, fs::Permissions::from_mode(0o700)).unwrap();
+        let stage = |id: Uuid| targets.join(format!(".atermius-restore-{id}.staging"));
+        // What a killed run leaves: the plaintext extraction (and a partial
+        // encrypted export) in a private stage.
+        let stale = stage(Uuid::new_v4());
+        create_private_dir(&stale).unwrap();
+        fs::copy(plain_source.join("atermius.db"), stale.join("atermius.db")).unwrap();
+        fs::write(stale.join(".atermius.db.encrypting"), b"partial").unwrap();
+        assert!(tree_contains(&stale, ENCRYPTION_CANARY.as_bytes()));
+        // A stage still locked by a concurrent restore.
+        let busy = stage(Uuid::new_v4());
+        create_private_dir(&busy).unwrap();
+        fs::write(busy.join("atermius.db"), b"in use").unwrap();
+        let busy_lock = File::open(&busy).unwrap();
+        busy_lock.try_lock().unwrap();
+        // Not something `restore` creates: wrong mode, a symlink, a
+        // non-matching name.
+        let shared = stage(Uuid::new_v4());
+        fs::create_dir(&shared).unwrap();
+        fs::set_permissions(&shared, fs::Permissions::from_mode(0o755)).unwrap();
+        let outside = root.join("outside");
+        create_private_dir(&outside).unwrap();
+        fs::write(outside.join("keep"), b"keep").unwrap();
+        let link = stage(Uuid::new_v4());
+        std::os::unix::fs::symlink(&outside, &link).unwrap();
+        let unrelated = targets.join(".atermius-restore-not-a-uuid.staging");
+        create_private_dir(&unrelated).unwrap();
+
+        let encrypted_target = targets.join("restored-encrypted");
+        let result = restore_instance_with_runtime_policy_drift(
+            keyed_config(&plain_source, Some(&database_key)),
+            &plain_archive,
+            &backup_key_path,
+            &encrypted_target,
+            false,
+        )
+        .await
+        .unwrap();
+        assert_restored_database(&encrypted_target, &result.generation, Some(&database_key)).await;
+        assert_eq!(result.removed_stale_restore_stages, 1);
+        assert!(!stale.exists(), "the stale plaintext stage is gone");
+        assert!(busy.join("atermius.db").exists(), "a locked stage is kept");
+        assert!(shared.exists());
+        assert!(
+            fs::symlink_metadata(&link)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+        assert!(outside.join("keep").exists(), "never followed");
+        assert!(unrelated.exists());
+        // Nothing under the targets' parent holds the plaintext canary now.
+        drop(busy_lock);
+        fs::remove_dir_all(&busy).unwrap();
+        fs::remove_file(&link).unwrap();
+        assert!(!tree_contains(&targets, ENCRYPTION_CANARY.as_bytes()));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[tokio::test]
+    async fn scheduled_backup_of_encrypted_instance_archives_encrypted_snapshot() {
+        let root = temp_root();
+        let data_dir = root.join("active");
+        let archive_dir = root.join("archives");
+        let key_path = root.join("operator.key");
+        let database_key_path = root.join("database.key");
+        let database_key = write_database_key(&database_key_path, 0x5c);
+        let state = state_with_backup_retention_and_database_key(
+            &data_dir,
+            &archive_dir,
+            &key_path,
+            None,
+            Some(&database_key_path),
+        )
+        .await;
+        insert_canary(&state).await;
+        sqlx::query(
+            "UPDATE instance_backup_schedule SET interval_hours=1,next_run_at=? WHERE schedule_id=1",
+        )
+        .bind(chrono::Utc::now().timestamp() - 1)
+        .execute(&state.db)
+        .await
+        .unwrap();
+        assert!(run_due_scheduled_backup(&state).await.unwrap());
+        let archives = directory_names(&archive_dir)
+            .into_iter()
+            .filter(|name| name.starts_with("atermius-backup-") && name.ends_with(".atb"))
+            .collect::<Vec<_>>();
+        assert_eq!(archives.len(), 1);
+        let archive = archive_dir.join(&archives[0]);
+        assert!(!tree_contains(&archive, ENCRYPTION_CANARY.as_bytes()));
+        assert!(!tree_contains(&archive, &database_key));
+        let backup_key = Zeroizing::new(secure_file::read_private_key(&key_path).unwrap());
+        let (manifest, archived_key) =
+            extract_archive(&archive, &backup_key, &root.join("extracted"));
+        assert_eq!(
+            manifest.database_encryption.as_deref(),
+            Some(database::SQLCIPHER_RAW_KEY_SCHEME)
+        );
+        assert!(archived_key.is_some());
+        verify_instance_backup(&data_dir, &archive, &key_path)
+            .await
+            .unwrap();
+        state.db.close().await;
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn web_restore_stage_and_offline_install_keep_the_database_encrypted() {
+        let fixture = ready_restore_install_fixture_with_database_key(Some(0x6d)).await;
+        let stage_dir = fixture
+            .archive_dir
+            .join("restore-staging")
+            .join(format!("atermius-restore-{}", fixture.job_id));
+        assert_eq!(
+            database::detect_database_file(&stage_dir.join("atermius.db")).unwrap(),
+            DatabaseFileFormat::Encrypted
+        );
+        assert!(!stage_dir.join("database.key").exists());
+        assert!(!tree_contains(&fixture.archive_dir, &[0x6d; 32]));
+
+        let target_parent = fixture.root.join("new-volume");
+        fs::create_dir(&target_parent).unwrap();
+        // Without the deployment key the installer cannot read the encrypted
+        // source or stage and publishes nothing.
+        let mut keyless = fixture.config.clone();
+        keyless.database_key_file = None;
+        let keyless_target = target_parent.join("keyless");
+        let keyless_error =
+            install_configured_admin_restore_stage(keyless, &fixture.job_id, &keyless_target)
+                .await
+                .err()
+                .expect("keyless install of an encrypted deployment must fail");
+        assert_eq!(keyless_error.body.code, "DATABASE_KEY_REQUIRED");
+        assert!(!keyless_target.exists());
+
+        let target = target_parent.join("data");
+        let generation = install_configured_admin_restore_stage(
+            fixture.config.clone(),
+            &fixture.job_id,
+            &target,
+        )
+        .await
+        .unwrap();
+        assert_eq!(generation, fixture.generation);
+        assert_eq!(
+            database::detect_database_file(&target.join("atermius.db")).unwrap(),
+            DatabaseFileFormat::Encrypted
+        );
+        assert!(!target.join("database.key").exists());
+        let mut target_config = fixture.config.clone();
+        target_config.data_dir = target.clone();
+        let restored = open_state(&sqlite_url(&target.join("atermius.db")), target_config)
+            .await
+            .unwrap();
+        assert_eq!(restored.instance.generation, fixture.generation);
+        restored.db.close().await;
+        fs::remove_dir_all(fixture.root).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn plaintext_stage_from_before_encryption_stays_discardable_but_not_installable() {
+        let fixture = ready_restore_install_fixture().await;
+        let database_key_path = fixture.root.join("database.key");
+        write_database_key(&database_key_path, 0x7e);
+        let mut config = fixture.config.clone();
+        config.database_key_file = Some(database_key_path.clone());
+        crate::encrypt_database_offline(
+            &config,
+            &sqlite_url(&fixture.data_dir.join("atermius.db")),
+        )
+        .await
+        .unwrap();
+
+        // Installing the old plaintext stage into the encrypted deployment
+        // would produce a plaintext target; it is refused explicitly.
+        let target = fixture.root.join("new-volume-data");
+        let error =
+            install_configured_admin_restore_stage(config.clone(), &fixture.job_id, &target)
+                .await
+                .unwrap_err();
+        assert_eq!(error.body.code, "DATABASE_NOT_ENCRYPTED");
+        assert!(!target.exists());
+
+        // The encrypted server can still validate that stage for discard.
+        let state = open_state(&sqlite_url(&fixture.data_dir.join("atermius.db")), config)
+            .await
+            .unwrap();
+        let (archive_id, archive_sha256): (String, String) = sqlx::query_as(
+            "SELECT archive_id,archive_sha256 FROM instance_admin_jobs WHERE job_id=?",
+        )
+        .bind(&fixture.job_id)
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+        let generation = validate_admin_restore_stage_for_discard(
+            &state,
+            &fixture.job_id,
+            &archive_id,
+            crate::backup_replication::ArchiveSource::Local,
+            &archive_sha256,
+            Some(&fixture.generation),
+            false,
+        )
+        .await
+        .unwrap();
+        assert_eq!(generation, fixture.generation);
+        state.db.close().await;
+        fs::remove_dir_all(fixture.root).unwrap();
     }
 }

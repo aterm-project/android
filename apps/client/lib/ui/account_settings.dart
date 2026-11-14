@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../app_controller.dart';
 import '../l10n/l10n.dart';
+import 'credential_visibility/credential_visibility_widgets.dart';
 import '../storage/workspace_mode.dart';
 import 'app_motion.dart';
 import 'settings_scaffold.dart';
@@ -76,6 +77,8 @@ class AccountSettingsPanel extends StatelessWidget {
       describeError: app.friendlyError,
       syncControls: SyncSettingsPanel(app: app),
       cloudAccessControls: cloudAccessControls,
+      // credential-visibility: mode, escrow status and admin views.
+      credentialVisibilityControls: credentialVisibilityAccountControls(app),
     ),
   );
 }
@@ -89,6 +92,7 @@ class AccountSettingsView extends StatefulWidget {
     this.busy = false,
     this.syncControls,
     this.cloudAccessControls,
+    this.credentialVisibilityControls,
     super.key,
   });
 
@@ -104,6 +108,9 @@ class AccountSettingsView extends StatefulWidget {
 
   /// Optional capability card before the existing session actions.
   final Widget? cloudAccessControls;
+
+  /// credential-visibility: capability-gated card after the identity card.
+  final Widget? credentialVisibilityControls;
 
   @override
   State<AccountSettingsView> createState() => _AccountSettingsViewState();
@@ -242,6 +249,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             ],
           ),
         ),
+        ?widget.credentialVisibilityControls,
         ?widget.syncControls,
         ?widget.cloudAccessControls,
         SettingsCard(

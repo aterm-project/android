@@ -64,6 +64,7 @@ impl TestServer {
             backup_key_file: None,
             backup_replication_env: BackupReplicationEnv::default(),
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             registration_open: false,
             guacd_address: None,

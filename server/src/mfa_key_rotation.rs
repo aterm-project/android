@@ -2,13 +2,11 @@
 
 use std::{path::Path, str::FromStr, time::Duration};
 
-use sqlx::{
-    Connection, PgConnection, Postgres, Row, SqlitePool,
-    postgres::PgConnectOptions,
-    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
-};
+use sqlx::{Connection, PgConnection, Postgres, Row, SqlitePool, postgres::PgConnectOptions};
 
-use crate::{ApiError, acquire_maintenance_run_lock, acquire_runtime_lock, mfa, secure_file};
+use crate::{
+    ApiError, acquire_maintenance_run_lock, acquire_runtime_lock, database, mfa, secure_file,
+};
 
 static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
 
@@ -21,9 +19,31 @@ pub struct MfaKeyRotationSummary {
 /// Re-encrypts all current and pending TOTP seeds for this single SQLite
 /// instance. Both process locks are held from before SQLite is opened through
 /// commit. No schema, recovery-code, replay, or other MFA state is modified.
+/// This entry point opens a plaintext (unencrypted) instance database; use
+/// [`rotate_mfa_seed_encryption_key_with_database_key`] when
+/// `ATERMIUS_DATABASE_KEY_FILE` is configured.
 pub async fn rotate_mfa_seed_encryption_key(
     data_dir: &Path,
     database_url: &str,
+    old_key_file: &Path,
+    new_key_file: &Path,
+) -> Result<MfaKeyRotationSummary, ApiError> {
+    rotate_mfa_seed_encryption_key_with_database_key(
+        data_dir,
+        database_url,
+        None,
+        old_key_file,
+        new_key_file,
+    )
+    .await
+}
+
+/// Same as [`rotate_mfa_seed_encryption_key`] for an instance database that
+/// may be SQLCipher-encrypted with the key in `database_key_file`.
+pub async fn rotate_mfa_seed_encryption_key_with_database_key(
+    data_dir: &Path,
+    database_url: &str,
+    database_key_file: Option<&Path>,
     old_key_file: &Path,
     new_key_file: &Path,
 ) -> Result<MfaKeyRotationSummary, ApiError> {
@@ -62,16 +82,18 @@ pub async fn rotate_mfa_seed_encryption_key(
         ));
     }
 
-    let options = SqliteConnectOptions::from_str(database_url)
-        .map_err(ApiError::internal)?
+    let database_key = database_key_file
+        .map(|path| database::DatabaseKey::read_file(path, data_dir))
+        .transpose()?;
+    let options = database::main_sqlite_options(database_url, database_key.as_ref())?
         .create_if_missing(false)
         .foreign_keys(true)
         .busy_timeout(Duration::from_secs(10));
-    let db = SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect_with(options)
-        .await
-        .map_err(ApiError::internal)?;
+    database::startup_database_encryption(
+        database::detect_database_file(&database_path)?,
+        database_key.as_ref(),
+    )?;
+    let db = database::connect_keyed_pool(options, database_key.as_ref(), 1).await?;
 
     verify_database_scope(&db).await?;
     verify_current_schema(&db).await?;
@@ -103,6 +125,7 @@ pub async fn rotate_mfa_seed_encryption_key(
 pub async fn rotate_mfa_seed_encryption_key_for_selected_backend(
     data_dir: &Path,
     sqlite_database_url: &str,
+    sqlite_database_key_file: Option<&Path>,
     old_key_file: &Path,
     new_key_file: &Path,
 ) -> Result<MfaKeyRotationSummary, ApiError> {
@@ -111,9 +134,10 @@ pub async fn rotate_mfa_seed_encryption_key_for_selected_backend(
             rotate_pg_mfa_seed_encryption_key(&config, old_key_file, new_key_file).await
         }
         None => {
-            rotate_mfa_seed_encryption_key(
+            rotate_mfa_seed_encryption_key_with_database_key(
                 data_dir,
                 sqlite_database_url,
+                sqlite_database_key_file,
                 old_key_file,
                 new_key_file,
             )
@@ -283,10 +307,7 @@ async fn verify_current_schema(db: &SqlitePool) -> Result<(), ApiError> {
 mod tests {
     use std::{fs, os::unix::fs::PermissionsExt, path::PathBuf};
 
-    use sqlx::{
-        Row,
-        sqlite::{SqliteConnectOptions, SqlitePoolOptions},
-    };
+    use sqlx::{Row, sqlite::SqlitePoolOptions};
     use uuid::Uuid;
 
     use super::*;
@@ -308,8 +329,8 @@ mod tests {
             fs::create_dir(&data_dir).unwrap();
             fs::set_permissions(&data_dir, fs::Permissions::from_mode(0o700)).unwrap();
             let database_path = data_dir.join("atermius.db");
-            let options = SqliteConnectOptions::new()
-                .filename(&database_path)
+            // Same central helper as production opens (no key: plaintext).
+            let options = crate::database::sqlite_file_options(&database_path, None)
                 .create_if_missing(true)
                 .foreign_keys(true)
                 .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal);

@@ -756,9 +756,10 @@ pub async fn list_vaults(
     if let Some(repository) = state.pg_account_reads.as_ref() {
         return Ok(Json(repository.list_vaults(&user).await?));
     }
-    let rows = sqlx::query(
-        "SELECT v.vault_id,CASE WHEN vm.role='editor' AND EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='viewer') THEN 'viewer' ELSE vm.role END AS role,v.active_epoch,v.membership_version,v.required_record_schema,v.name_envelope,v.state,dr.requested_at,dr.purge_after FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id LEFT JOIN vault_deletion_requests dr ON dr.vault_id=v.vault_id AND dr.cancelled_at IS NULL AND dr.purged_at IS NULL WHERE vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND v.state IN ('active','deleting') ORDER BY v.created_at",
-    )
+    let rows = sqlx::query(&format!(
+        "SELECT v.vault_id,CASE WHEN vm.role='editor' AND EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='viewer') THEN 'viewer' ELSE vm.role END AS role,v.active_epoch,v.membership_version,v.required_record_schema,v.name_envelope,v.state,dr.requested_at,dr.purge_after,{} AS admin_visible FROM vaults v JOIN vault_members vm ON vm.vault_id=v.vault_id LEFT JOIN vault_deletion_requests dr ON dr.vault_id=v.vault_id AND dr.cancelled_at IS NULL AND dr.purged_at IS NULL WHERE vm.user_id=? AND vm.state='active' AND NOT EXISTS(SELECT 1 FROM cloud_member_restrictions cr WHERE cr.vault_id=vm.vault_id AND cr.user_id=vm.user_id AND cr.max_role='none') AND v.state IN ('active','deleting') ORDER BY v.created_at",
+        crate::credential_visibility::vault_admin_visible_sql("v.vault_id")
+    ))
     .bind(&user.user_id)
     .fetch_all(&state.db)
     .await
@@ -775,6 +776,9 @@ pub async fn list_vaults(
         entry["active_key_epoch"] = json!(r.get::<i64, _>("active_epoch"));
         entry["membership_version"] = json!(r.get::<i64, _>("membership_version"));
         entry["required_record_schema"] = json!(r.get::<i64, _>("required_record_schema"));
+        // Credential visibility v1: true when an escrow key exists and an
+        // active member of this Vault is administrator visible.
+        entry["admin_visible"] = json!(r.get::<i64, _>("admin_visible") != 0);
         entry["name_envelope"] = r
             .get::<Option<String>, _>("name_envelope")
             .and_then(|value| serde_json::from_str::<Value>(&value).ok())
@@ -1834,6 +1838,9 @@ async fn rotate_key_request(
             .await
             .map_err(ApiError::internal)?;
     }
+    // Credential visibility: a revocation may remove the Vault's last
+    // admin_visible member; its escrow deposits must not outlive that.
+    crate::credential_visibility::prune_orphaned_escrow_tx(&mut tx, &vault).await?;
     if let Some(new_owner_id) = transfer_to.as_deref() {
         let changed = sqlx::query(
             "UPDATE vaults SET active_epoch=?,owner_user_id=? WHERE vault_id=? AND owner_user_id=?",
@@ -2320,6 +2327,7 @@ mod tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir,

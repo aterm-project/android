@@ -11,6 +11,7 @@ import '../../cloud/host_share_plan.dart';
 import '../../domain/models.dart';
 import '../../l10n/l10n.dart';
 import '../app_theme.dart';
+import '../credential_visibility/credential_visibility_widgets.dart';
 import 'cloud_access_common.dart';
 import 'organizations_page.dart';
 
@@ -1041,6 +1042,11 @@ class _MembersTabState extends State<_MembersTab> {
           l10n.cloudAccessMembersExplainer,
           style: TextStyle(color: context.palette.muted, fontSize: 12.5),
         ),
+        // credential-visibility: shared-Vault admin notice.
+        CredentialVisibilitySharedVaultNotice(
+          app: service.app,
+          vaultId: vaultId,
+        ),
         if (vaultId != null)
           VaultGrantsPanel(service: service, vaultId: vaultId)
         else ...[
@@ -1460,6 +1466,8 @@ class _PendingAddition extends StatelessWidget {
     final l10n = context.l10n;
     final status = pending['status'] as String;
     final cards = (pending['device_cards'] as List).cast<Map>();
+    // credential-visibility: the server marks admin-visible grantees.
+    final adminVisible = pending['admin_visible'] == true;
     return Card(
       margin: const EdgeInsets.only(top: 6),
       child: Padding(
@@ -1477,6 +1485,13 @@ class _PendingAddition extends StatelessWidget {
               'role_differs' => l10n.cloudAccessRoleDiffers,
               _ => l10n.cloudAccessWaitingForOwner,
             }, style: TextStyle(color: context.palette.orange, fontSize: 12.5)),
+            if (adminVisible)
+              CredentialVisibilityGranteeWarning(
+                key: ValueKey(
+                  'cloud-access-admin-visible-${pending['user_id']}',
+                ),
+                recipientName: '${pending['username']}',
+              ),
             if (status == 'role_differs')
               Align(
                 alignment: AlignmentDirectional.centerEnd,
@@ -1532,6 +1547,15 @@ class _PendingAddition extends StatelessWidget {
                       onPressed: busy
                           ? null
                           : () async {
+                              // credential-visibility: explicit consent first.
+                              if (adminVisible &&
+                                  !await confirmCredentialVisibilityRecipient(
+                                    context,
+                                    recipientName: '${pending['username']}',
+                                  )) {
+                                return;
+                              }
+                              if (!context.mounted) return;
                               final ok = await confirmCloudAction(
                                 context,
                                 title: l10n.cloudAccessConfirmFingerprintTitle,

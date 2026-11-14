@@ -1259,6 +1259,7 @@ mod upload_init_tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir,

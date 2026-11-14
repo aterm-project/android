@@ -15,7 +15,14 @@ mod cloud_orgs;
 mod cloud_tests;
 mod collaboration;
 mod control;
+// Per-account credential visibility and client-side Vault-key escrow (SQLite only).
+mod credential_visibility;
+#[cfg(test)]
+mod credential_visibility_tests;
 mod database;
+mod database_encryption;
+#[cfg(test)]
+mod database_encryption_tests;
 mod device_capabilities;
 mod error;
 mod instance_identity;
@@ -175,7 +182,7 @@ use tokio::sync::Semaphore;
 use tower_http::{cors::CorsLayer, limit::RequestBodyLimitLayer, trace::TraceLayer};
 use uuid::Uuid;
 
-pub use auth::create_account_invitation;
+pub use auth::{create_account_invitation, create_account_invitation_with_credential_visibility};
 pub use backup::{
     BackupSummary, BackupVerification, PgRestoreStageActivationResult,
     PgRestoreStageRollbackFenceResult, RestoreResult, activate_pg_restore_stage, backup_instance,
@@ -184,11 +191,17 @@ pub use backup::{
     verify_instance_backup,
 };
 pub use backup_status::{record_backup_failure, record_backup_success};
+pub use database_encryption::{
+    DatabaseCheckpointSummary, DatabaseEncryptSummary, DatabaseRekeySummary,
+    checkpoint_database_offline, encrypt_database_offline, generate_database_key_file,
+    import_database_key_file, rekey_database_offline,
+};
 pub use error::{ApiError, ErrorBody};
 pub use instance_identity::rotate_instance_signing_key;
 pub use mfa_key_rotation::{
     MfaKeyRotationSummary, rotate_mfa_seed_encryption_key,
     rotate_mfa_seed_encryption_key_for_selected_backend,
+    rotate_mfa_seed_encryption_key_with_database_key,
 };
 pub use object_store_migration::run_object_store_migration;
 
@@ -223,6 +236,10 @@ pub struct AppState {
     /// Optional operator-held key used only to encrypt TOTP seeds at rest.
     /// It is intentionally not derived from or stored in the instance DB.
     pub mfa_encryption_key: Option<Arc<[u8; 32]>>,
+    /// Operator-held SQLCipher key of the main database, when encryption at
+    /// rest is enabled. Used to open restore stages prepared by this server.
+    pub(crate) database_key: Option<Arc<database::DatabaseKey>>,
+    pub(crate) database_encryption: database::DatabaseEncryption,
     pub(crate) object_store: object_store::ObjectStore,
     pub relay_connections: Arc<Mutex<HashMap<String, usize>>>,
     pub relay_connection_slots: Arc<Semaphore>,
@@ -310,6 +327,10 @@ pub struct Config {
     pub backup_replication_env: BackupReplicationEnv,
     /// Optional external 32-byte owner-only key file for TOTP seed encryption.
     pub mfa_encryption_key_file: Option<PathBuf>,
+    /// Optional external 32-byte owner-only SQLCipher key for the main
+    /// SQLite database (`ATERMIUS_DATABASE_KEY_FILE`). It must live outside
+    /// `data_dir`. Unset keeps a plaintext database and is reported to admins.
+    pub database_key_file: Option<PathBuf>,
     /// The raw optional value is retained so malformed and non-Unicode values
     /// fail closed instead of silently disabling archive retention.
     pub backup_retention_count: Option<std::ffi::OsString>,
@@ -606,6 +627,9 @@ impl Config {
         let mfa_encryption_key_file = std::env::var_os("ATERMIUS_MFA_ENCRYPTION_KEY_FILE")
             .filter(|value| !value.is_empty())
             .map(PathBuf::from);
+        let database_key_file = std::env::var_os("ATERMIUS_DATABASE_KEY_FILE")
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from);
         let backup_retention_count = std::env::var_os("ATERMIUS_BACKUP_RETENTION_COUNT");
         let backup_replication_env = BackupReplicationEnv::from_env();
         let relay_allow_cidrs =
@@ -646,6 +670,7 @@ impl Config {
             backup_key_file,
             backup_replication_env,
             mfa_encryption_key_file,
+            database_key_file,
             backup_retention_count,
             // Public signup stays disabled; an operator-issued one-time token is required.
             registration_open: false,
@@ -714,6 +739,10 @@ pub struct InstanceResponse {
     pub setup_required: bool,
     pub restore_retention_days: i64,
     pub capabilities: Vec<&'static str>,
+    /// Pre-login notice for the registration screen. Present only when the
+    /// `credential_visibility` capability is advertised (SQLite runtime).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub credential_visibility_default: Option<&'static str>,
     pub limits: InstanceLimits,
 }
 
@@ -744,8 +773,18 @@ pub(crate) async fn open_state_with_restore_policy(
         ));
     }
     let pg_sync_config = pg_sync_runtime::PgSyncRuntimeConfig::from_env()?;
-    let options = database::parse_sqlite_database_url(database_url)?;
+    database::parse_sqlite_database_url(database_url)?;
     secure_file::create_private_data_dir(&config.data_dir)?;
+    // A configured key must be valid before anything opens SQLite.
+    let database_key = database::DatabaseKey::configured(&config)?;
+    let options = database::main_sqlite_options(database_url, database_key.as_ref())?;
+    // Detect the on-disk format before SQLite opens the file and before
+    // migrations run, so a key/format mismatch never touches the file.
+    database::reject_incomplete_encryption(options.get_filename())?;
+    let database_encryption = database::startup_database_encryption(
+        database::detect_database_file(options.get_filename())?,
+        database_key.as_ref(),
+    )?;
     // User attachment storage is opt-in and independent from the S3 archive
     // replica. Validate all static settings and credentials before opening the
     // service to requests.
@@ -760,7 +799,11 @@ pub(crate) async fn open_state_with_restore_policy(
                 .busy_timeout(std::time::Duration::from_secs(10)),
         )
         .await
-        .map_err(ApiError::internal)?;
+        .map_err(|error| database::map_keyed_error(error, database_key.as_ref()))?;
+    // Fail closed if this build cannot encrypt, and surface a wrong key as
+    // DATABASE_KEY_INVALID before migrations run.
+    database::require_cipher_support_pool(&db).await?;
+    database::verify_keyed_pool(&db, database_key.as_ref()).await?;
     sqlx::migrate!("./migrations")
         .run(&db)
         .await
@@ -921,6 +964,8 @@ pub(crate) async fn open_state_with_restore_policy(
         auth_rate_key: Arc::new(auth_rate_key),
         dummy_login_verifier_hash: Arc::new(dummy_login_verifier_hash),
         mfa_encryption_key,
+        database_key: database_key.map(Arc::new),
+        database_encryption,
         object_store,
         relay_connections: Arc::new(Mutex::new(HashMap::new())),
         relay_connection_slots: Arc::new(Semaphore::new(relay::MAX_GLOBAL_RELAY_CONNECTIONS)),
@@ -1508,6 +1553,7 @@ pub async fn router(state: AppState) -> Router {
             .route("/api/v1/relay/tickets", post(relay::create_ticket));
     } else {
         app = cloud_routes(app);
+        app = credential_visibility::routes(app);
         app = app
             .route(
                 "/api/v1/admin/relay-policy",
@@ -2589,6 +2635,11 @@ async fn serve_with_runtime_lock(
     address: SocketAddr,
     _runtime_lock: File,
 ) -> Result<(), ApiError> {
+    if state.database_encryption == database::DatabaseEncryption::Disabled {
+        tracing::warn!(
+            "instance database encryption at rest is disabled; configure ATERMIUS_DATABASE_KEY_FILE and run `atermius-server database-encrypt` (see docs/runbooks/database-encryption.md)"
+        );
+    }
     if state.pg_sync_only {
         // PG backup creation and replication use shared PostgreSQL job/outbox
         // state. Validate the provider settings and private credentials here;
@@ -2884,6 +2935,8 @@ async fn instance_info(
     } else {
         count == 0
     };
+    let credential_visibility_default =
+        credential_visibility::public_instance_default(&state).await?;
     Ok(axum::Json(InstanceResponse {
         instance_id: state.instance.instance_id.clone(),
         server_space_id: state.instance.server_space_id.clone(),
@@ -2938,6 +2991,9 @@ async fn instance_info(
             {
                 c.push("terminal_collaboration");
             }
+            if credential_visibility_default.is_some() {
+                c.push("credential_visibility");
+            }
             if cloud::organizations_ready(&state) {
                 c.push("organizations");
             }
@@ -2960,6 +3016,7 @@ async fn instance_info(
             }
             c
         },
+        credential_visibility_default,
         limits: InstanceLimits {
             max_object_bytes: state.config.max_object_bytes,
             max_upload_chunk_bytes: objects::CHUNK_SIZE_BYTES,

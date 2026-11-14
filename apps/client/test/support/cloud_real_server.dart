@@ -88,13 +88,35 @@ class RecordingClient extends http.BaseClient {
 }
 
 class TestServer {
-  TestServer._(this.process, this.baseUrl, this.env, this.dir);
+  TestServer._(
+    this.process,
+    this.baseUrl,
+    this.env,
+    this.dir, {
+    this.databaseKeyGenerateOutput,
+  });
   final Process process;
   final String baseUrl;
   final Map<String, String> env;
   final Directory dir;
 
-  static Future<TestServer> start() async {
+  /// stdout + stderr of `database-key-generate` when [start] was asked for an
+  /// encrypted database.
+  final String? databaseKeyGenerateOutput;
+
+  String get dataDir => env['ATERMIUS_DATA_DIR']!;
+
+  /// The SQLCipher key file, or null for a plaintext database.
+  String? get databaseKeyFile => env['ATERMIUS_DATABASE_KEY_FILE'];
+
+  /// [encryptedDatabase]: the binary generates a SQLCipher key file with
+  /// `database-key-generate --out` in a private directory next to (outside)
+  /// the data directory, and the server starts with
+  /// `ATERMIUS_DATABASE_KEY_FILE` pointing at it.
+  static Future<TestServer> start({
+    Map<String, String> extraEnv = const {},
+    bool encryptedDatabase = false,
+  }) async {
     final socket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
     final port = socket.port;
     await socket.close();
@@ -116,7 +138,24 @@ class TestServer {
       'ATERMIUS_SHARE_ALLOW_CIDRS': '10.0.0.0/8',
       'ATERMIUS_SHARE_ALLOW_PORTS': '22,3389',
       'ATERMIUS_ORG_CREATION': 'any',
+      ...extraEnv,
     };
+    String? keyGenerateOutput;
+    if (encryptedDatabase) {
+      final keys = Directory('${dir.path}/keys')..createSync();
+      Process.runSync('chmod', ['700', keys.path]);
+      final keyFile = '${keys.path}/database.key';
+      final generated = Process.runSync(realServerBinary!, [
+        'database-key-generate',
+        '--out',
+        keyFile,
+      ], environment: env);
+      keyGenerateOutput = '${generated.stdout}${generated.stderr}';
+      if (generated.exitCode != 0 || !File(keyFile).existsSync()) {
+        throw StateError('database-key-generate failed: $keyGenerateOutput');
+      }
+      env['ATERMIUS_DATABASE_KEY_FILE'] = keyFile;
+    }
     final process = await Process.start(realServerBinary!, ['serve'], environment: env);
     final logPath = Platform.environment['ATERMIUS_TEST_SERVER_LOG'];
     if (logPath == null) {
@@ -138,7 +177,13 @@ class TestServer {
         throw StateError('server did not start');
       await Future<void>.delayed(const Duration(milliseconds: 200));
     }
-    return TestServer._(process, baseUrl, env, dir);
+    return TestServer._(
+      process,
+      baseUrl,
+      env,
+      dir,
+      databaseKeyGenerateOutput: keyGenerateOutput,
+    );
   }
 
   String _token(ProcessResult result) {

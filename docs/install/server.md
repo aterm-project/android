@@ -37,6 +37,18 @@ ATERMIUS_PUBLIC_ORIGIN=http://localhost:8081
 
 将管理员用户名改为自己的值。默认不开放公共注册，第一个账户使用 bootstrap 令牌；创建组织默认要求实例管理员。HTTP 仅用于回环开发，其他电脑/手机访问应使用下节 HTTPS。
 
+### 首次启动前生成数据库密钥
+
+`deploy/.env.example` 为新实例默认开启 SQLCipher 静态加密：`ATERMIUS_DATABASE_KEY_FILE=/keys/database.key`。密钥位于独立的 `atermius-keys` 卷（挂载到 `/keys`），绝不放在 `/data` 中，因此单独被拷走的数据卷、数据库文件或备份快照无法读出任何内容。请在第一次 `up` 之前生成一次密钥；已配置但缺失的密钥会使服务拒绝启动：
+
+```sh
+docker compose --env-file deploy/.env \
+  -f deploy/compose.yaml -f deploy/compose.web.yaml \
+  run --build --rm --no-deps server database-key-generate --out /keys/database.key
+```
+
+该命令写入新的 32 字节随机文件（权限 `0600`），不会覆盖已有密钥。请立即把它与数据卷、备份归档分开备份（见[数据库加密运行手册](../runbooks/database-encryption.md#back-up-the-key)）；丢失密钥后数据库无法打开。如确需不加密运行，请改为 `ATERMIUS_DATABASE_KEY_FILE=`（留空）；此时管理员概览显示 `database_encryption: disabled`，服务启动时也会记录一条警告。
+
 ```sh
 docker compose --env-file deploy/.env \
   -f deploy/compose.yaml -f deploy/compose.web.yaml config --quiet
@@ -129,6 +141,8 @@ PostgreSQL 云端路由仍保持关闭。PostgreSQL 同步核心另有密钥、�
 记录实际环境文件及**全部覆盖文件列表**，后续 `config --quiet`、`up`、`ps`、`logs`、`exec` 均使用同一列表，遗漏覆盖文件会移除相应配置。`--quiet` 只验证，不打印解析后的秘密。
 
 保留同一数据卷名称，按[实例备份/恢复手册](../runbooks/instance-backup-restore.md)备份并保管独立密钥。更新前按需停止新流量，在仓库根目录以 `git pull --ff-only` 更新源码，再重建同一栈；不要把覆盖 `.env` 或删除持久卷作为升级步骤。
+
+**升级提示：数据库加密。** 本版本新增 `/keys` 卷（`ATERMIUS_KEYS_VOLUME_NAME`，默认 `atermius-keys`）和 `ATERMIUS_DATABASE_KEY_FILE`。已有实例在完成[为已有实例启用加密](../runbooks/database-encryption.md#enable-encryption-on-an-existing-instance)之前仍使用明文数据库（管理员概览显示未加密，服务启动时记录一条警告）：先备份，生成密钥，停止服务，执行 `database-encrypt --server-stopped`，再启动并重新备份。不要直接把新 `.env.example` 中的 `ATERMIUS_DATABASE_KEY_FILE` 复制到已有的 `deploy/.env`：数据库加密完成前，服务会以 `DATABASE_NOT_ENCRYPTED` 拒绝启动。加密是单向操作，旧版本无法打开加密后的数据库及其备份归档。重新构建时还会编译 SQLCipher 与 OpenSSL，首次构建会多花几分钟。PostgreSQL 同步核心数据不在此范围内，请为 PostgreSQL 使用存储层加密。
 
 用 `ps`、`/health/ready`、外部 Web 页面与脱敏日志区分 API、代理、策略及目标问题。直接复制运行中 SQLite 卷不是完整实例备份。MFA、对象存储、推送和监控等高级选项见[部署参考](../../deploy/README.md)。
 

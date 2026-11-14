@@ -94,6 +94,38 @@ pub(crate) async fn record_account_event_tx(
     .await
 }
 
+/// Records an account-scoped event caused by another authenticated principal,
+/// such as an instance administrator changing or reading this account's
+/// escrowed credentials. The affected account sees the event in its own
+/// audit feed with the acting account ID; the actor's device ID is not
+/// exposed to the affected account.
+pub(crate) async fn record_account_event_by_actor_tx(
+    tx: &mut sqlx::Transaction<'_, Sqlite>,
+    state: &AppState,
+    account_id: &str,
+    actor_user_id: &str,
+    action: &str,
+    resource_type: &str,
+    resource_id: Option<&str>,
+    occurred_at: i64,
+) -> Result<(), ApiError> {
+    let scope_id = account_scope_id(&state.cursor_key, account_id)?;
+    record_event_tx(
+        tx,
+        "account",
+        &scope_id,
+        Some(actor_user_id),
+        None,
+        action,
+        resource_type,
+        resource_id,
+        AuditSource::Api,
+        occurred_at,
+        AuditResult::Success,
+    )
+    .await
+}
+
 pub(crate) async fn record_account_failure_event_tx(
     tx: &mut sqlx::Transaction<'_, Sqlite>,
     state: &AppState,
@@ -769,6 +801,7 @@ mod tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir,

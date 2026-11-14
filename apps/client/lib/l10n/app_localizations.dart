@@ -29607,6 +29607,660 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some Termius hosts need attention before import (for example a missing username). Nothing was guessed or imported yet: review the findings below, enter a default username or exclude rows, then import.'**
   String get termiusLocalReviewNeeded;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential visibility'**
+  String get cvSectionTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get cvModePrivateShort;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin-visible'**
+  String get cvModeAdminVisibleShort;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Private: your saved host passwords, private keys and other credentials are decrypted only on your devices. Server administrators can\'t view them. If you forget your master password, administrators can\'t recover this data for you either.'**
+  String get cvModePrivateBody;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin-visible: administrators of this server can view the host passwords, private keys and passphrases you save. Your account master password is never sent to the server, so administrators can\'t see it. Every time an administrator views your credentials it is recorded and shown here.'**
+  String get cvModeAdminVisibleBody;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an instance administrator can change this setting.'**
+  String get cvModeSetByAdmin;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Mode changed {time}'**
+  String cvChangedAt(String time);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Escrow status'**
+  String get cvEscrowStatusLabel;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Not required'**
+  String get cvEscrowNotRequired;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'No escrow key'**
+  String get cvEscrowNoKey;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get cvEscrowPending;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get cvEscrowComplete;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for an administrator to set up the escrow key.'**
+  String get cvEscrowNoKeyDetail;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Some Vault keys aren\'t available to administrators yet. Your devices send them automatically when they hold them.'**
+  String get cvEscrowPendingDetail;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrators can open every Vault you have access to.'**
+  String get cvEscrowCompleteDetail;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'The escrow key from the server failed signature verification, so nothing was shared. Contact your administrator.'**
+  String get cvEscrowKeyRejected;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh the credential visibility status. It\'s retried automatically.'**
+  String get cvRefreshFailed;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent administrator views'**
+  String get cvAdminViewsTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'No administrator has viewed your credentials.'**
+  String get cvAdminViewsEmpty;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'{admin} viewed your credentials at {time}'**
+  String cvAdminViewEntry(String admin, String time);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'A deleted administrator'**
+  String get cvAdminViewDeletedAdmin;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault: {name}'**
+  String cvAdminViewVault(String name);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrators of this server can view your saved credentials. Open settings for details.'**
+  String get cvIndicatorTooltip;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'An instance administrator can view the credentials in this Vault.'**
+  String get cvVaultBadgeTooltip;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Some members of this shared Vault are in admin-visible mode, so administrators can view its credentials.'**
+  String get cvSharedVaultNotice;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrators can view your saved credentials'**
+  String get cvNoticeAdminVisibleTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is now admin-visible'**
+  String get cvNoticeSwitchedAdminVisibleTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Your devices will share your Vault keys with the administrator escrow key when they next sync.'**
+  String get cvNoticeAdminVisibleDeposit;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Your saved credentials are private'**
+  String get cvNoticePrivateTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is now private'**
+  String get cvNoticeSwitchedPrivateTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'The escrowed Vault keys were deleted from the server, so administrators can no longer open your credentials. A shared Vault stays visible while another member is still admin-visible; such Vaults are marked in the Vault list. An administrator may already have viewed or copied credentials while your account was admin-visible, so consider changing important passwords and keys.'**
+  String get cvNoticeSwitchedPrivateBody;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand'**
+  String get cvNoticeAcknowledge;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get cvNoticeOpenSettings;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrators can view saved credentials on this server'**
+  String get cvRegistrationNoticeTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'New accounts on this server are admin-visible by default: administrators can view the host passwords, private keys and passphrases you save. Your master password is never sent to the server. Your invitation may set a different mode; you\'ll be told after you sign in.'**
+  String get cvRegistrationNoticeBody;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose whether new accounts are private or admin-visible, manage the escrow key, and view escrowed credentials. Every view is recorded and shown to the user.'**
+  String get cvAdminDescription;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Load credential visibility'**
+  String get cvAdminLoad;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Default for new accounts'**
+  String get cvAdminDefaultMode;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'{adminVisible} admin-visible · {privateCount} private · {pending} pending'**
+  String cvAdminCounts(int adminVisible, int privateCount, int pending);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Escrow key'**
+  String get cvAdminKeyTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'No escrow key yet. Admin-visible accounts can\'t share credentials until one is created.'**
+  String get cvAdminKeyMissing;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Key {keyId} · created {time}'**
+  String cvAdminKeyReady(String keyId, String time);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'The escrow key from the server failed signature verification. Don\'t use it; reset it.'**
+  String get cvAdminKeyInvalid;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account can\'t open the escrow key yet. Unlock it with the recovery code.'**
+  String get cvAdminKeyNoWrap;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Create escrow key'**
+  String get cvAdminCreateKey;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with recovery code'**
+  String get cvAdminUnlockWithRecovery;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset escrow key'**
+  String get cvAdminResetKey;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your master password'**
+  String get cvAdminPasswordTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Your master password unlocks the escrow key on this device only. It is never sent to the server.'**
+  String get cvAdminPasswordBody;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Master password'**
+  String get cvMasterPassword;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Store the escrow recovery code'**
+  String get cvAdminRecoveryTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'This code is shown only once. With it, an administrator can open the escrow key even if no administrator account can. Store it offline, separately from the server.'**
+  String get cvAdminRecoveryBody;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery code copied'**
+  String get cvAdminRecoveryCopied;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'I have stored the recovery code'**
+  String get cvAdminRecoveryStored;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery code'**
+  String get cvAdminRecoveryCodeLabel;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Escrow key created. Admin-visible accounts share their Vault keys when they next sync.'**
+  String get cvAdminKeyCreated;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account can now open the escrow key.'**
+  String get cvAdminUnlocked;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset the escrow key?'**
+  String get cvAdminResetTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes the escrow key, every administrator\'s copy and all escrowed Vault keys. Admin-visible accounts share again after a new key is created. Credentials that were already viewed can\'t be un-viewed. Type {word} to confirm.'**
+  String cvAdminResetBody(String word);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Escrow key reset.'**
+  String get cvAdminResetDone;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Credential visibility for {username} is now {mode}.'**
+  String cvAdminModeChanged(String username, String mode);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Make {username} admin-visible?'**
+  String cvAdminConfirmAdminVisibleTitle(String username);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Their devices share Vault keys with the escrow key on the next sync, and they are told that administrators can view their credentials.'**
+  String get cvAdminConfirmAdminVisibleBody;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Make {username} private?'**
+  String cvAdminConfirmPrivateTitle(String username);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Escrowed keys of their Vaults are deleted unless another member is still admin-visible. Credentials that were already viewed can\'t be un-viewed.'**
+  String get cvAdminConfirmPrivateBody;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'View credentials'**
+  String get cvAdminViewCredentials;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance default'**
+  String get cvInstanceDefaultOption;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials of {username}'**
+  String cvViewerTitle(String username);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'This viewing is recorded and the user will be notified.'**
+  String get cvViewerBanner;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaults'**
+  String get cvViewerVaults;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault {id}'**
+  String cvViewerVaultUnnamed(String id);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'No escrowed key — can\'t be opened'**
+  String get cvViewerVaultNotEscrowed;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has no Vaults.'**
+  String get cvViewerNoVaults;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get cvViewerOpenVault;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosts'**
+  String get cvViewerHosts;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Keychain'**
+  String get cvViewerKeychain;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'No hosts or keychain items.'**
+  String get cvViewerNoItems;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items couldn\'t be decrypted (their key epoch wasn\'t escrowed or failed verification).'**
+  String cvViewerUndecryptable(int count);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get cvViewerAddress;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get cvViewerUsername;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get cvViewerPassword;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Private key'**
+  String get cvViewerPrivateKey;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase'**
+  String get cvViewerPassphrase;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses keychain item {name}'**
+  String cvViewerUsesKeychain(String name);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get cvViewerReveal;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get cvViewerHide;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get cvViewerCopied;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'It is removed from the clipboard after one minute or when this window closes.'**
+  String get cvClipboardAutoClear;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only'**
+  String get cvViewerReadOnly;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'The master password is not correct.'**
+  String get cvErrorWrongPassword;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'The recovery code is not correct.'**
+  String get cvErrorWrongRecoveryCode;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'No escrow key exists.'**
+  String get cvErrorNoKey;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Another administrator created an escrow key first. Reload, then unlock it with the recovery code.'**
+  String get cvErrorKeyExists;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account can\'t open the escrow key (it was set up for a different account key). Unlock it with the recovery code.'**
+  String get cvErrorWrapInvalid;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in changed. Open this again.'**
+  String get cvErrorScopeChanged;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'These credentials aren\'t available: the user is private, or the Vault has no escrowed key.'**
+  String get cvErrorNotAvailable;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'This account isn\'t an instance administrator.'**
+  String get cvErrorNotAdmin;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to continue.'**
+  String get cvErrorSignedOut;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Private: your saved host passwords, private keys and other credentials are decrypted only on your devices, and server administrators can\'t view them, except in shared Vaults marked admin-visible. Another member of those Vaults is in admin-visible mode, so administrators can view everything in them, including what you saved there. If you forget your master password, administrators can\'t recover your private data for you either.'**
+  String get cvModePrivateBodySharedException;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the recipient\'s credential visibility…'**
+  String get cvShareRecipientChecking;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'The recipient is admin-visible'**
+  String get cvShareRecipientAdminVisibleTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'{user} is in admin-visible mode. Once they join, administrators of this server will be able to read everything in this Vault, including the passwords and keys you saved.'**
+  String cvShareRecipientAdminVisibleBody(String user);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand that administrators will be able to read this Vault'**
+  String get cvShareRecipientConfirm;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check whether the recipient is in admin-visible mode. If they are, administrators will be able to read everything in this Vault once they join.'**
+  String get cvShareRecipientCheckFailed;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Share anyway'**
+  String get cvShareAnyway;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Database not encrypted at rest'**
+  String get cvDatabaseNotEncryptedTitle;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'The server stores its database unencrypted. Anyone who copies the database file or a backup snapshot can read account metadata and try to guess administrators\' master passwords offline; one correct guess opens every admin-visible account. Stop the server, configure a database key and encrypt the database offline:'**
+  String get cvDatabaseNotEncryptedBody;
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps, key backup and limits: {path}'**
+  String cvDatabaseEncryptionGuide(String path);
+
+  /// Credential visibility v1 (admin escrow): settings, notices and admin tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Database encrypted at rest (SQLCipher)'**
+  String get cvDatabaseEncryptedAtRest;
 }
 
 class _AppLocalizationsDelegate

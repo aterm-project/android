@@ -8,7 +8,7 @@ From `apps/client` / 在 `apps/client` 执行:
 
 ```sh
 flutter pub get --enforce-lockfile
-flutter test --concurrency=2 test/session_workspace_actions_test.dart test/workspace_tab_drag_test.dart test/terminal_tools_sidebar_test.dart test/cloud_access_client_test.dart test/cloud_access_interop_test.dart
+flutter test --concurrency=2 test/session_workspace_actions_test.dart test/workspace_tab_drag_test.dart test/terminal_tools_sidebar_test.dart test/cloud_access_client_test.dart test/cloud_access_interop_test.dart test/credential_escrow_crypto_test.dart test/credential_escrow_interop_test.dart test/credential_escrow_admin_test.dart test/credential_visibility_api_test.dart test/credential_visibility_service_test.dart test/credential_visibility_clipboard_test.dart test/credential_visibility_widget_test.dart
 ```
 
 These are the repository's focused source-CI checks, not the entire suite. Full Flutter baseline failures remain disclosed. Real-server owner/widget tests require the explicit isolated `ATERMIUS_TEST_SERVER_BINARY` fixture; a skipped env-gated case is not a live pass. / 上述为针对性源码 CI，不能代表全套通过；真实服务端用例必须明确提供隔离 fixture，环境跳过不算真实通过。
