@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:aterm_client/app_controller.dart';
+import 'package:aterm_client/credential_visibility/credential_visibility_service.dart';
 import 'package:aterm_client/l10n/l10n.dart';
 import 'package:aterm_client/ui/account_settings.dart';
 import 'package:aterm_client/ui/app_shell.dart';
@@ -54,6 +55,22 @@ void main() {
     await owner.app.saveHost(host);
     await owner.app.synchronize();
     await idle(owner.app);
+    // Credential visibility v1: the first sign-in on a device shows a
+    // one-time modal mode notice over the shell until it is acknowledged
+    // (credential_visibility_real_server_test.dart and
+    // credential_visibility_widget_test.dart cover the notice). Acknowledge
+    // the owner's private-mode notice up front so the merge regression below
+    // drives the Account and Host menus unobstructed.
+    final visibility = credentialVisibilityFor(owner.app);
+    await visibility.refresh();
+    final deadline = DateTime.now().add(const Duration(seconds: 30));
+    while (visibility.pendingNotice == null &&
+        DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 25));
+    }
+    expect(visibility.pendingNotice, CredentialVisibilityNotice.private);
+    await visibility.acknowledge();
+    expect(visibility.pendingNotice, isNull);
   });
   tearDownAll(() async {
     owner.app.dispose();

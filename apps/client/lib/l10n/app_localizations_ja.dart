@@ -17550,4 +17550,385 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get termiusLocalReviewNeeded =>
       '取り込む前に確認が必要な Termius ホストがあります（ユーザー名が未設定など）。まだ何も推測・取り込みしていません。下の指摘を確認し、既定のユーザー名を入力するか行を除外してから取り込んでください。';
+
+  @override
+  String get cvSectionTitle => '認証情報の可視性';
+
+  @override
+  String get cvModePrivateShort => 'プライベート';
+
+  @override
+  String get cvModeAdminVisibleShort => '管理者に表示';
+
+  @override
+  String get cvModePrivateBody =>
+      'プライベート：保存したホストのパスワードや秘密鍵などの認証情報は、あなたのデバイス上でのみ復号されます。サーバー管理者は閲覧できません。マスターパスワードを忘れた場合、管理者もこのデータを復元できません。';
+
+  @override
+  String get cvModeAdminVisibleBody =>
+      '管理者に表示：このサーバーの管理者は、あなたが保存したホストのパスワード、秘密鍵、パスフレーズを閲覧できます。アカウントのマスターパスワードはサーバーに送信されないため、管理者には見えません。管理者が閲覧するたびに記録され、ここに表示されます。';
+
+  @override
+  String get cvModeSetByAdmin => 'この設定はインスタンス管理者のみが変更できます。';
+
+  @override
+  String cvChangedAt(String time) {
+    return 'モード変更日時：$time';
+  }
+
+  @override
+  String get cvEscrowStatusLabel => 'エスクローの状態';
+
+  @override
+  String get cvEscrowNotRequired => '不要';
+
+  @override
+  String get cvEscrowNoKey => 'エスクロー鍵なし';
+
+  @override
+  String get cvEscrowPending => '保留中';
+
+  @override
+  String get cvEscrowComplete => '完了';
+
+  @override
+  String get cvEscrowNoKeyDetail => '管理者がエスクロー鍵を設定するのを待っています。';
+
+  @override
+  String get cvEscrowPendingDetail =>
+      '一部の Vault 鍵はまだ管理者に提供されていません。デバイスが鍵を保持していれば自動的に送信されます。';
+
+  @override
+  String get cvEscrowCompleteDetail => '管理者は、あなたがアクセスできるすべての Vault を開くことができます。';
+
+  @override
+  String get cvEscrowKeyRejected =>
+      'サーバーから受け取ったエスクロー鍵が署名検証に失敗したため、何も共有されていません。管理者に連絡してください。';
+
+  @override
+  String get cvRefreshFailed => '認証情報の可視性の状態を更新できませんでした。自動的に再試行されます。';
+
+  @override
+  String get cvAdminViewsTitle => '最近の管理者による閲覧';
+
+  @override
+  String get cvAdminViewsEmpty => '管理者による認証情報の閲覧はありません。';
+
+  @override
+  String cvAdminViewEntry(String admin, String time) {
+    return '$admin が $time にあなたの認証情報を閲覧しました';
+  }
+
+  @override
+  String get cvAdminViewDeletedAdmin => '削除された管理者';
+
+  @override
+  String cvAdminViewVault(String name) {
+    return 'Vault：$name';
+  }
+
+  @override
+  String get cvIndicatorTooltip =>
+      'このサーバーの管理者は、保存された認証情報を閲覧できます。詳細は設定を開いてください。';
+
+  @override
+  String get cvVaultBadgeTooltip => 'インスタンス管理者はこの Vault 内の認証情報を閲覧できます。';
+
+  @override
+  String get cvSharedVaultNotice =>
+      'この共有 Vault には「管理者に表示」モードのメンバーがいるため、管理者は中の認証情報を閲覧できます。';
+
+  @override
+  String get cvNoticeAdminVisibleTitle => '管理者は保存された認証情報を閲覧できます';
+
+  @override
+  String get cvNoticeSwitchedAdminVisibleTitle => 'アカウントが「管理者に表示」に切り替わりました';
+
+  @override
+  String get cvNoticeAdminVisibleDeposit =>
+      '次回の同期時に、デバイスは Vault 鍵を管理者のエスクロー鍵に預けます。';
+
+  @override
+  String get cvNoticePrivateTitle => '保存された認証情報はプライベートです';
+
+  @override
+  String get cvNoticeSwitchedPrivateTitle => 'アカウントがプライベートに切り替わりました';
+
+  @override
+  String get cvNoticeSwitchedPrivateBody =>
+      'エスクローされた Vault 鍵はサーバーから削除され、管理者はあなたの認証情報を開けなくなりました。共有 Vault は、他のメンバーが「管理者に表示」のままの間は閲覧可能で、Vault 一覧に表示されます。「管理者に表示」だった期間に管理者がすでに認証情報を閲覧またはコピーした可能性があるため、重要なパスワードや鍵の変更を検討してください。';
+
+  @override
+  String get cvNoticeAcknowledge => '了解しました';
+
+  @override
+  String get cvNoticeOpenSettings => '詳細を表示';
+
+  @override
+  String get cvRegistrationNoticeTitle => 'このサーバーでは管理者が保存された認証情報を閲覧できます';
+
+  @override
+  String get cvRegistrationNoticeBody =>
+      'このサーバーの新規アカウントは既定で「管理者に表示」です。管理者は、保存したホストのパスワード、秘密鍵、パスフレーズを閲覧できます。マスターパスワードはサーバーに送信されません。招待で別のモードが指定されている場合は、サインイン後に通知されます。';
+
+  @override
+  String get cvAdminDescription =>
+      '新規アカウントをプライベートにするか「管理者に表示」にするかを選び、エスクロー鍵を管理し、エスクローされた認証情報を閲覧します。閲覧はすべて記録され、ユーザーに表示されます。';
+
+  @override
+  String get cvAdminLoad => '認証情報の可視性を読み込む';
+
+  @override
+  String get cvAdminDefaultMode => '新規アカウントの既定';
+
+  @override
+  String cvAdminCounts(int adminVisible, int privateCount, int pending) {
+    return '管理者に表示 $adminVisible 件 · プライベート $privateCount 件 · 保留中 $pending 件';
+  }
+
+  @override
+  String get cvAdminKeyTitle => 'エスクロー鍵';
+
+  @override
+  String get cvAdminKeyMissing =>
+      'エスクロー鍵はまだありません。作成されるまで「管理者に表示」のアカウントは認証情報を共有できません。';
+
+  @override
+  String cvAdminKeyReady(String keyId, String time) {
+    return '鍵 $keyId · 作成日時 $time';
+  }
+
+  @override
+  String get cvAdminKeyInvalid =>
+      'サーバーから受け取ったエスクロー鍵が署名検証に失敗しました。使用せずにリセットしてください。';
+
+  @override
+  String get cvAdminKeyNoWrap =>
+      'あなたのアカウントはまだエスクロー鍵を開けません。リカバリーコードでロック解除してください。';
+
+  @override
+  String get cvAdminCreateKey => 'エスクロー鍵を作成';
+
+  @override
+  String get cvAdminUnlockWithRecovery => 'リカバリーコードでロック解除';
+
+  @override
+  String get cvAdminResetKey => 'エスクロー鍵をリセット';
+
+  @override
+  String get cvAdminPasswordTitle => 'マスターパスワードの確認';
+
+  @override
+  String get cvAdminPasswordBody =>
+      'マスターパスワードはこのデバイス上でエスクロー鍵のロックを解除するためだけに使われ、サーバーには送信されません。';
+
+  @override
+  String get cvMasterPassword => 'マスターパスワード';
+
+  @override
+  String get cvAdminRecoveryTitle => 'エスクローのリカバリーコードを保管';
+
+  @override
+  String get cvAdminRecoveryBody =>
+      'このコードは一度だけ表示されます。どの管理者アカウントもエスクロー鍵を開けなくなった場合でも、このコードで開くことができます。サーバーとは別にオフラインで保管してください。';
+
+  @override
+  String get cvAdminRecoveryCopied => 'リカバリーコードをコピーしました';
+
+  @override
+  String get cvAdminRecoveryStored => 'リカバリーコードを保管しました';
+
+  @override
+  String get cvAdminRecoveryCodeLabel => 'リカバリーコード';
+
+  @override
+  String get cvAdminKeyCreated =>
+      'エスクロー鍵を作成しました。「管理者に表示」のアカウントは次回の同期時に Vault 鍵を共有します。';
+
+  @override
+  String get cvAdminUnlocked => 'あなたのアカウントでエスクロー鍵を開けるようになりました。';
+
+  @override
+  String get cvAdminResetTitle => 'エスクロー鍵をリセットしますか？';
+
+  @override
+  String cvAdminResetBody(String word) {
+    return 'エスクロー鍵、すべての管理者のコピー、エスクローされたすべての Vault 鍵が削除されます。新しい鍵を作成すると「管理者に表示」のアカウントは再び共有します。すでに閲覧された認証情報は取り消せません。確認のため $word と入力してください。';
+  }
+
+  @override
+  String get cvAdminResetDone => 'エスクロー鍵をリセットしました。';
+
+  @override
+  String cvAdminModeChanged(String username, String mode) {
+    return '$username の認証情報の可視性を「$mode」にしました。';
+  }
+
+  @override
+  String cvAdminConfirmAdminVisibleTitle(String username) {
+    return '$username を「管理者に表示」にしますか？';
+  }
+
+  @override
+  String get cvAdminConfirmAdminVisibleBody =>
+      'このユーザーのデバイスは次回の同期時に Vault 鍵をエスクロー鍵に預け、管理者が認証情報を閲覧できることが通知されます。';
+
+  @override
+  String cvAdminConfirmPrivateTitle(String username) {
+    return '$username をプライベートにしますか？';
+  }
+
+  @override
+  String get cvAdminConfirmPrivateBody =>
+      '他のメンバーが「管理者に表示」のままでない限り、このユーザーの Vault のエスクロー鍵は削除されます。すでに閲覧された認証情報は取り消せません。';
+
+  @override
+  String get cvAdminViewCredentials => '認証情報を閲覧';
+
+  @override
+  String get cvInstanceDefaultOption => 'インスタンスの既定';
+
+  @override
+  String cvViewerTitle(String username) {
+    return '$username の認証情報';
+  }
+
+  @override
+  String get cvViewerBanner => 'この閲覧は記録され、ユーザーに通知されます。';
+
+  @override
+  String get cvViewerVaults => 'Vault';
+
+  @override
+  String cvViewerVaultUnnamed(String id) {
+    return 'Vault $id';
+  }
+
+  @override
+  String get cvViewerVaultNotEscrowed => 'エスクローされた鍵がないため開けません';
+
+  @override
+  String get cvViewerNoVaults => 'このアカウントには Vault がありません。';
+
+  @override
+  String get cvViewerOpenVault => '開く';
+
+  @override
+  String get cvViewerHosts => 'ホスト';
+
+  @override
+  String get cvViewerKeychain => 'キーチェーン';
+
+  @override
+  String get cvViewerNoItems => 'ホストやキーチェーン項目はありません。';
+
+  @override
+  String cvViewerUndecryptable(int count) {
+    return '$count 件の項目を復号できませんでした（鍵エポックがエスクローされていないか、検証に失敗しました）。';
+  }
+
+  @override
+  String get cvViewerAddress => 'アドレス';
+
+  @override
+  String get cvViewerUsername => 'ユーザー名';
+
+  @override
+  String get cvViewerPassword => 'パスワード';
+
+  @override
+  String get cvViewerPrivateKey => '秘密鍵';
+
+  @override
+  String get cvViewerPassphrase => 'パスフレーズ';
+
+  @override
+  String cvViewerUsesKeychain(String name) {
+    return 'キーチェーン項目 $name を使用';
+  }
+
+  @override
+  String get cvViewerReveal => '表示';
+
+  @override
+  String get cvViewerHide => '隠す';
+
+  @override
+  String get cvViewerCopied => 'コピーしました';
+
+  @override
+  String get cvClipboardAutoClear => '1分後、またはこのウィンドウを閉じると、クリップボードから消去されます。';
+
+  @override
+  String get cvViewerReadOnly => '読み取り専用';
+
+  @override
+  String get cvErrorWrongPassword => 'マスターパスワードが正しくありません。';
+
+  @override
+  String get cvErrorWrongRecoveryCode => 'リカバリーコードが正しくありません。';
+
+  @override
+  String get cvErrorNoKey => 'エスクロー鍵が存在しません。';
+
+  @override
+  String get cvErrorKeyExists =>
+      '別の管理者が先にエスクロー鍵を作成しました。再読み込みしてから、リカバリーコードでロック解除してください。';
+
+  @override
+  String get cvErrorWrapInvalid =>
+      'あなたのアカウントではエスクロー鍵を開けません（別のアカウント鍵用に設定されています）。リカバリーコードでロック解除してください。';
+
+  @override
+  String get cvErrorScopeChanged => 'サインイン状態が変わりました。もう一度開いてください。';
+
+  @override
+  String get cvErrorNotAvailable =>
+      'この認証情報は閲覧できません。ユーザーがプライベートであるか、Vault にエスクローされた鍵がありません。';
+
+  @override
+  String get cvErrorNotAdmin => 'このアカウントはインスタンス管理者ではありません。';
+
+  @override
+  String get cvErrorSignedOut => '続行するには再度サインインしてください。';
+
+  @override
+  String get cvModePrivateBodySharedException =>
+      'プライベート：保存したホストのパスワードや秘密鍵などの認証情報は、あなたのデバイス上でのみ復号され、サーバー管理者は閲覧できません。ただし「管理者に表示」と表示された共有 Vault は例外です。これらの Vault には「管理者に表示」モードの他のメンバーがいるため、管理者はあなたが保存したものを含むすべての内容を閲覧できます。マスターパスワードを忘れた場合、管理者もプライベートなデータを復元できません。';
+
+  @override
+  String get cvShareRecipientChecking => '共有先の認証情報の可視性を確認しています…';
+
+  @override
+  String get cvShareRecipientAdminVisibleTitle => '共有先は「管理者に表示」モードです';
+
+  @override
+  String cvShareRecipientAdminVisibleBody(String user) {
+    return '$user は「管理者に表示」モードです。参加すると、このサーバーの管理者は、あなたが保存したパスワードや鍵を含め、この Vault のすべての内容を閲覧できるようになります。';
+  }
+
+  @override
+  String get cvShareRecipientConfirm => '管理者がこの Vault を閲覧できるようになることを理解しました';
+
+  @override
+  String get cvShareRecipientCheckFailed =>
+      '共有先が「管理者に表示」モードかどうかを確認できませんでした。そうであれば、参加後に管理者はこの Vault のすべての内容を閲覧できるようになります。';
+
+  @override
+  String get cvShareAnyway => '共有する';
+
+  @override
+  String get cvDatabaseNotEncryptedTitle => 'データベースは保存時に暗号化されていません';
+
+  @override
+  String get cvDatabaseNotEncryptedBody =>
+      'サーバーはデータベースを暗号化せずに保存しています。データベースファイルやバックアップのスナップショットをコピーした人は、アカウントのメタデータを読み取り、管理者のマスターパスワードをオフラインで推測できます。1 回でも当たれば、「管理者に表示」のすべてのアカウントが開かれます。サーバーを停止し、データベース鍵を設定してから、オフラインでデータベースを暗号化してください：';
+
+  @override
+  String cvDatabaseEncryptionGuide(String path) {
+    return '手順・鍵のバックアップ・制限：$path';
+  }
+
+  @override
+  String get cvDatabaseEncryptedAtRest => 'データベースは保存時に暗号化されています（SQLCipher）';
 }

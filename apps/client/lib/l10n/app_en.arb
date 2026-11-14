@@ -15222,5 +15222,531 @@
   "termiusLocalFailEmpty": "The local Termius data contains no hosts to import.",
   "termiusLocalFailReadFailed": "Couldn’t read the local Termius data, so nothing was imported. If Termius is syncing, wait a moment and retry.",
   "termiusLocalFailTooLarge": "The local Termius data exceeds the import safety limits, so nothing was imported. Use a Termius CSV export instead.",
-  "termiusLocalReviewNeeded": "Some Termius hosts need attention before import (for example a missing username). Nothing was guessed or imported yet: review the findings below, enter a default username or exclude rows, then import."
+  "termiusLocalReviewNeeded": "Some Termius hosts need attention before import (for example a missing username). Nothing was guessed or imported yet: review the findings below, enter a default username or exclude rows, then import.",
+  "cvSectionTitle": "Credential visibility",
+  "@cvSectionTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvModePrivateShort": "Private",
+  "@cvModePrivateShort": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvModeAdminVisibleShort": "Admin-visible",
+  "@cvModeAdminVisibleShort": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvModePrivateBody": "Private: your saved host passwords, private keys and other credentials are decrypted only on your devices. Server administrators can't view them. If you forget your master password, administrators can't recover this data for you either.",
+  "@cvModePrivateBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvModeAdminVisibleBody": "Admin-visible: administrators of this server can view the host passwords, private keys and passphrases you save. Your account master password is never sent to the server, so administrators can't see it. Every time an administrator views your credentials it is recorded and shown here.",
+  "@cvModeAdminVisibleBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvModeSetByAdmin": "Only an instance administrator can change this setting.",
+  "@cvModeSetByAdmin": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvChangedAt": "Mode changed {time}",
+  "@cvChangedAt": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cvEscrowStatusLabel": "Escrow status",
+  "@cvEscrowStatusLabel": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvEscrowNotRequired": "Not required",
+  "@cvEscrowNotRequired": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvEscrowNoKey": "No escrow key",
+  "@cvEscrowNoKey": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvEscrowPending": "Pending",
+  "@cvEscrowPending": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvEscrowComplete": "Complete",
+  "@cvEscrowComplete": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvEscrowNoKeyDetail": "Waiting for an administrator to set up the escrow key.",
+  "@cvEscrowNoKeyDetail": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvEscrowPendingDetail": "Some Vault keys aren't available to administrators yet. Your devices send them automatically when they hold them.",
+  "@cvEscrowPendingDetail": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvEscrowCompleteDetail": "Administrators can open every Vault you have access to.",
+  "@cvEscrowCompleteDetail": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvEscrowKeyRejected": "The escrow key from the server failed signature verification, so nothing was shared. Contact your administrator.",
+  "@cvEscrowKeyRejected": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvRefreshFailed": "Couldn't refresh the credential visibility status. It's retried automatically.",
+  "@cvRefreshFailed": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminViewsTitle": "Recent administrator views",
+  "@cvAdminViewsTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminViewsEmpty": "No administrator has viewed your credentials.",
+  "@cvAdminViewsEmpty": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminViewEntry": "{admin} viewed your credentials at {time}",
+  "@cvAdminViewEntry": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "admin": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cvAdminViewDeletedAdmin": "A deleted administrator",
+  "@cvAdminViewDeletedAdmin": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminViewVault": "Vault: {name}",
+  "@cvAdminViewVault": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cvIndicatorTooltip": "Administrators of this server can view your saved credentials. Open settings for details.",
+  "@cvIndicatorTooltip": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvVaultBadgeTooltip": "An instance administrator can view the credentials in this Vault.",
+  "@cvVaultBadgeTooltip": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvSharedVaultNotice": "Some members of this shared Vault are in admin-visible mode, so administrators can view its credentials.",
+  "@cvSharedVaultNotice": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvNoticeAdminVisibleTitle": "Administrators can view your saved credentials",
+  "@cvNoticeAdminVisibleTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvNoticeSwitchedAdminVisibleTitle": "Your account is now admin-visible",
+  "@cvNoticeSwitchedAdminVisibleTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvNoticeAdminVisibleDeposit": "Your devices will share your Vault keys with the administrator escrow key when they next sync.",
+  "@cvNoticeAdminVisibleDeposit": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvNoticePrivateTitle": "Your saved credentials are private",
+  "@cvNoticePrivateTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvNoticeSwitchedPrivateTitle": "Your account is now private",
+  "@cvNoticeSwitchedPrivateTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvNoticeSwitchedPrivateBody": "The escrowed Vault keys were deleted from the server, so administrators can no longer open your credentials. A shared Vault stays visible while another member is still admin-visible; such Vaults are marked in the Vault list. An administrator may already have viewed or copied credentials while your account was admin-visible, so consider changing important passwords and keys.",
+  "@cvNoticeSwitchedPrivateBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvNoticeAcknowledge": "I understand",
+  "@cvNoticeAcknowledge": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvNoticeOpenSettings": "View details",
+  "@cvNoticeOpenSettings": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvRegistrationNoticeTitle": "Administrators can view saved credentials on this server",
+  "@cvRegistrationNoticeTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvRegistrationNoticeBody": "New accounts on this server are admin-visible by default: administrators can view the host passwords, private keys and passphrases you save. Your master password is never sent to the server. Your invitation may set a different mode; you'll be told after you sign in.",
+  "@cvRegistrationNoticeBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminDescription": "Choose whether new accounts are private or admin-visible, manage the escrow key, and view escrowed credentials. Every view is recorded and shown to the user.",
+  "@cvAdminDescription": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminLoad": "Load credential visibility",
+  "@cvAdminLoad": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminDefaultMode": "Default for new accounts",
+  "@cvAdminDefaultMode": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminCounts": "{adminVisible} admin-visible · {privateCount} private · {pending} pending",
+  "@cvAdminCounts": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "adminVisible": {
+        "type": "int"
+      },
+      "privateCount": {
+        "type": "int"
+      },
+      "pending": {
+        "type": "int"
+      }
+    }
+  },
+  "cvAdminKeyTitle": "Escrow key",
+  "@cvAdminKeyTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminKeyMissing": "No escrow key yet. Admin-visible accounts can't share credentials until one is created.",
+  "@cvAdminKeyMissing": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminKeyReady": "Key {keyId} · created {time}",
+  "@cvAdminKeyReady": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "keyId": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cvAdminKeyInvalid": "The escrow key from the server failed signature verification. Don't use it; reset it.",
+  "@cvAdminKeyInvalid": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminKeyNoWrap": "Your account can't open the escrow key yet. Unlock it with the recovery code.",
+  "@cvAdminKeyNoWrap": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminCreateKey": "Create escrow key",
+  "@cvAdminCreateKey": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminUnlockWithRecovery": "Unlock with recovery code",
+  "@cvAdminUnlockWithRecovery": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminResetKey": "Reset escrow key",
+  "@cvAdminResetKey": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminPasswordTitle": "Confirm your master password",
+  "@cvAdminPasswordTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminPasswordBody": "Your master password unlocks the escrow key on this device only. It is never sent to the server.",
+  "@cvAdminPasswordBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvMasterPassword": "Master password",
+  "@cvMasterPassword": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminRecoveryTitle": "Store the escrow recovery code",
+  "@cvAdminRecoveryTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminRecoveryBody": "This code is shown only once. With it, an administrator can open the escrow key even if no administrator account can. Store it offline, separately from the server.",
+  "@cvAdminRecoveryBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminRecoveryCopied": "Recovery code copied",
+  "@cvAdminRecoveryCopied": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminRecoveryStored": "I have stored the recovery code",
+  "@cvAdminRecoveryStored": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminRecoveryCodeLabel": "Recovery code",
+  "@cvAdminRecoveryCodeLabel": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminKeyCreated": "Escrow key created. Admin-visible accounts share their Vault keys when they next sync.",
+  "@cvAdminKeyCreated": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminUnlocked": "Your account can now open the escrow key.",
+  "@cvAdminUnlocked": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminResetTitle": "Reset the escrow key?",
+  "@cvAdminResetTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminResetBody": "This deletes the escrow key, every administrator's copy and all escrowed Vault keys. Admin-visible accounts share again after a new key is created. Credentials that were already viewed can't be un-viewed. Type {word} to confirm.",
+  "@cvAdminResetBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "cvAdminResetDone": "Escrow key reset.",
+  "@cvAdminResetDone": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminModeChanged": "Credential visibility for {username} is now {mode}.",
+  "@cvAdminModeChanged": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "cvAdminConfirmAdminVisibleTitle": "Make {username} admin-visible?",
+  "@cvAdminConfirmAdminVisibleTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "cvAdminConfirmAdminVisibleBody": "Their devices share Vault keys with the escrow key on the next sync, and they are told that administrators can view their credentials.",
+  "@cvAdminConfirmAdminVisibleBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminConfirmPrivateTitle": "Make {username} private?",
+  "@cvAdminConfirmPrivateTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "cvAdminConfirmPrivateBody": "Escrowed keys of their Vaults are deleted unless another member is still admin-visible. Credentials that were already viewed can't be un-viewed.",
+  "@cvAdminConfirmPrivateBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvAdminViewCredentials": "View credentials",
+  "@cvAdminViewCredentials": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvInstanceDefaultOption": "Instance default",
+  "@cvInstanceDefaultOption": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerTitle": "Credentials of {username}",
+  "@cvViewerTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "cvViewerBanner": "This viewing is recorded and the user will be notified.",
+  "@cvViewerBanner": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerVaults": "Vaults",
+  "@cvViewerVaults": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerVaultUnnamed": "Vault {id}",
+  "@cvViewerVaultUnnamed": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "cvViewerVaultNotEscrowed": "No escrowed key — can't be opened",
+  "@cvViewerVaultNotEscrowed": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerNoVaults": "This account has no Vaults.",
+  "@cvViewerNoVaults": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerOpenVault": "Open",
+  "@cvViewerOpenVault": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerHosts": "Hosts",
+  "@cvViewerHosts": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerKeychain": "Keychain",
+  "@cvViewerKeychain": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerNoItems": "No hosts or keychain items.",
+  "@cvViewerNoItems": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerUndecryptable": "{count} items couldn't be decrypted (their key epoch wasn't escrowed or failed verification).",
+  "@cvViewerUndecryptable": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cvViewerAddress": "Address",
+  "@cvViewerAddress": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerUsername": "Username",
+  "@cvViewerUsername": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerPassword": "Password",
+  "@cvViewerPassword": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerPrivateKey": "Private key",
+  "@cvViewerPrivateKey": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerPassphrase": "Passphrase",
+  "@cvViewerPassphrase": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerUsesKeychain": "Uses keychain item {name}",
+  "@cvViewerUsesKeychain": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cvViewerReveal": "Show",
+  "@cvViewerReveal": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerHide": "Hide",
+  "@cvViewerHide": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerCopied": "Copied",
+  "@cvViewerCopied": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvClipboardAutoClear": "It is removed from the clipboard after one minute or when this window closes.",
+  "@cvClipboardAutoClear": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvViewerReadOnly": "Read-only",
+  "@cvViewerReadOnly": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvErrorWrongPassword": "The master password is not correct.",
+  "@cvErrorWrongPassword": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvErrorWrongRecoveryCode": "The recovery code is not correct.",
+  "@cvErrorWrongRecoveryCode": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvErrorNoKey": "No escrow key exists.",
+  "@cvErrorNoKey": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvErrorKeyExists": "Another administrator created an escrow key first. Reload, then unlock it with the recovery code.",
+  "@cvErrorKeyExists": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvErrorWrapInvalid": "Your account can't open the escrow key (it was set up for a different account key). Unlock it with the recovery code.",
+  "@cvErrorWrapInvalid": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvErrorScopeChanged": "The sign-in changed. Open this again.",
+  "@cvErrorScopeChanged": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvErrorNotAvailable": "These credentials aren't available: the user is private, or the Vault has no escrowed key.",
+  "@cvErrorNotAvailable": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvErrorNotAdmin": "This account isn't an instance administrator.",
+  "@cvErrorNotAdmin": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvErrorSignedOut": "Sign in again to continue.",
+  "@cvErrorSignedOut": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvModePrivateBodySharedException": "Private: your saved host passwords, private keys and other credentials are decrypted only on your devices, and server administrators can't view them, except in shared Vaults marked admin-visible. Another member of those Vaults is in admin-visible mode, so administrators can view everything in them, including what you saved there. If you forget your master password, administrators can't recover your private data for you either.",
+  "@cvModePrivateBodySharedException": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvShareRecipientChecking": "Checking the recipient's credential visibility…",
+  "@cvShareRecipientChecking": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvShareRecipientAdminVisibleTitle": "The recipient is admin-visible",
+  "@cvShareRecipientAdminVisibleTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvShareRecipientAdminVisibleBody": "{user} is in admin-visible mode. Once they join, administrators of this server will be able to read everything in this Vault, including the passwords and keys you saved.",
+  "@cvShareRecipientAdminVisibleBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "user": {
+        "type": "String"
+      }
+    }
+  },
+  "cvShareRecipientConfirm": "I understand that administrators will be able to read this Vault",
+  "@cvShareRecipientConfirm": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvShareRecipientCheckFailed": "Couldn't check whether the recipient is in admin-visible mode. If they are, administrators will be able to read everything in this Vault once they join.",
+  "@cvShareRecipientCheckFailed": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvShareAnyway": "Share anyway",
+  "@cvShareAnyway": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvDatabaseNotEncryptedTitle": "Database not encrypted at rest",
+  "@cvDatabaseNotEncryptedTitle": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvDatabaseNotEncryptedBody": "The server stores its database unencrypted. Anyone who copies the database file or a backup snapshot can read account metadata and try to guess administrators' master passwords offline; one correct guess opens every admin-visible account. Stop the server, configure a database key and encrypt the database offline:",
+  "@cvDatabaseNotEncryptedBody": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  },
+  "cvDatabaseEncryptionGuide": "Steps, key backup and limits: {path}",
+  "@cvDatabaseEncryptionGuide": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools.",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "cvDatabaseEncryptedAtRest": "Database encrypted at rest (SQLCipher)",
+  "@cvDatabaseEncryptedAtRest": {
+    "description": "Credential visibility v1 (admin escrow): settings, notices and admin tools."
+  }
 }

@@ -107,6 +107,12 @@ import '../web_update/web_app_update_monitor.dart';
 import '../l10n/l10n.dart';
 import 'app_language_settings.dart';
 import 'account_settings.dart';
+// credential-visibility
+import 'credential_visibility/credential_visibility_admin_ui.dart';
+import 'credential_visibility/credential_visibility_widgets.dart';
+import 'credential_visibility/database_encryption_status.dart';
+import '../credential_visibility/credential_visibility_models.dart';
+import '../credential_visibility/credential_visibility_service.dart';
 import 'app_theme_mode.dart';
 import 'wallpaper.dart';
 import 'wallpaper_settings.dart';
@@ -1628,10 +1634,17 @@ _snack(context, context.l10n.theNewWindowWasntReadyThe, error: true);
       '${_statusLabel(app.syncStatus)} · ${context.l10n.pendingCountShort(app.pendingCount)}',
     ].join(' · ');
     return ListenableBuilder(
-      listenable: sshTransferActivity,
+      // credential-visibility: also rebuild when the account mode changes.
+      listenable: Listenable.merge([
+        sshTransferActivity,
+        credentialVisibilityFor(app),
+      ]),
       builder: (_, _) => WorkspaceStatusBar(
         status: status,
         detail: detail,
+        badge: credentialVisibilityShowsAdminVisible(app)
+            ? CredentialVisibilityIndicator(app: app)
+            : null,
         sessionCount: app.terminalTabs
             .where((tab) => tab.connection != null && tab.state == 'connected')
             .length,
@@ -1922,6 +1935,8 @@ _snack(context, context.l10n.couldntOpenANewWindow, error: true);
                   }
                 },
               ),
+              // credential-visibility: one-time mode notice (zero size).
+              CredentialVisibilityNoticeHost(app: app),
               if (app.databaseRecoveryRequired)
                 Container(
                   key: const ValueKey('database_recovery_required'),
@@ -2471,7 +2486,12 @@ class _SideNavigation extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _Pill(label: context.l10n.private),
+                  // credential-visibility: never claim "private" while the
+                  // account is admin-visible.
+                  CredentialVisibilityPrivacyBadge(
+                    app: app,
+                    fallback: _Pill(label: context.l10n.private),
+                  ),
                 ],
               ],
             ),
@@ -2647,6 +2667,12 @@ class _SideNavigation extends StatelessWidget {
                 ),
               ),
             ),
+          // credential-visibility: persistent admin-visible indicator.
+          CredentialVisibilityIndicator(
+            app: app,
+            compact: !wide,
+            padding: EdgeInsets.fromLTRB(wide ? 14 : 0, 6, wide ? 14 : 0, 0),
+          ),
           if (wide)
             Container(
               margin: const EdgeInsets.all(14),
@@ -2854,7 +2880,12 @@ List<WorkspaceAction> _cloudFunctionsActions(
   for (final vault in app.vaults)
     WorkspaceAction(
       'cloud-vault-${vault.id}',
-      currentL10n.vaultVaultname(app.vaultNameFor(vault.id)),
+      // credential-visibility: mark admin-visible Vaults in the switcher.
+      credentialVisibilityVaultMenuLabel(
+        currentL10n,
+        vault,
+        currentL10n.vaultVaultname(app.vaultNameFor(vault.id)),
+      ),
       Icons.folder_outlined,
       () => app.selectVault(vault.id),
     ),
@@ -15323,6 +15354,8 @@ class VaultLifecycleTile extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               spacing: 4,
               children: [
+                if (vault.adminVisible) // credential-visibility
+                  const CredentialVisibilityVaultBadge(),
                 _StatusDot(label: statusLabel, color: statusColor),
                 if (onOpen != null)
                   IconButton(
@@ -15841,6 +15874,9 @@ class _SettingsPage extends StatelessWidget {
             builder: (_) => SettingsCards(
               children: [
                 _InstanceAdminRelayPolicyCard(app: app),
+                // credential-visibility: default mode, escrow key, viewer.
+                if (credentialVisibilitySupported(app))
+                  CredentialVisibilityAdminCard(app: app),
                 _AdminAccountsCard(app: app),
                 _AdminRelayGroupsCard(app: app),
                 _AdminAccountInvitationsCard(app: app),
@@ -16174,6 +16210,10 @@ class _InstanceAdminOverviewCard extends StatelessWidget {
             ],
             if (overview case final value?) ...[
               const SizedBox(height: 10),
+              // Database encryption at rest (absent on older servers).
+              DatabaseEncryptionStatus(
+                databaseEncryption: value.databaseEncryption,
+              ),
               _DetailLine(label: context.l10n.instanceId, value: value.instanceId),
               _DetailLine(label: context.l10n.serverSpaceId, value: value.serverSpaceId),
               _DetailLine(label: context.l10n.generation, value: value.generation),
@@ -19507,6 +19547,7 @@ class _AdminAccountInvitationIssueDialogState
     extends State<_AdminAccountInvitationIssueDialog> {
   late final TextEditingController _usernameController;
   var _expiresInDays = 7;
+  CredentialVisibilityMode? _credentialVisibility; // credential-visibility
   var _submitting = false;
   String? _error;
 
@@ -19527,6 +19568,7 @@ class _AdminAccountInvitationIssueDialogState
     final success = await app.issueAdminAccountInvitation(
       username: _usernameController.text,
       expiresInDays: _expiresInDays,
+      credentialVisibility: _credentialVisibility,
     );
     if (!mounted) return;
     if (success) {
@@ -19589,6 +19631,13 @@ class _AdminAccountInvitationIssueDialogState
                         setState(() => _expiresInDays = value);
                       }
                     },
+            ),
+            CredentialVisibilityInvitationField(
+              app: app,
+              value: _credentialVisibility,
+              onChanged: _submitting
+                  ? null
+                  : (value) => setState(() => _credentialVisibility = value),
             ),
             if (_error case final error?)
               Padding(
@@ -20053,6 +20102,15 @@ class _AdminAccountInvitationTile extends StatelessWidget {
                 invitation.expiresAt.toLocal(),
               ),
             ),
+            // credential-visibility: the invitation's explicit mode.
+            if (CredentialVisibilityMode.tryParse(
+                  invitation.credentialVisibility,
+                )
+                case final mode?)
+              _DetailLine(
+                label: context.l10n.cvSectionTitle,
+                value: credentialVisibilityModeLabel(context.l10n, mode),
+              ),
             if (onRevoke != null)
               Align(
                 alignment: Alignment.centerLeft,
@@ -20128,6 +20186,8 @@ class _AdminAccountTile extends StatelessWidget {
                 account.createdAt.toLocal(),
               ),
             ),
+            // credential-visibility: mode, escrow status, view credentials.
+            CredentialVisibilityAdminAccountRow(app: app, account: account),
             if (isCurrentAccount)
               Text(
                 context.l10n.currentSignedInAccountAdministrativeActions,
@@ -24507,6 +24567,8 @@ Future<void> _inviteVaultMember(BuildContext context, AppController app) async {
   PublicDeviceCard? recipient;
   String role = 'editor';
   String? formError;
+  // credential-visibility: an admin-visible recipient needs explicit consent.
+  var shareAllowed = !credentialVisibilityShareCheckRequired(app);
   final result = await showAppDialog<Map<String, dynamic>>(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
@@ -24522,6 +24584,11 @@ Future<void> _inviteVaultMember(BuildContext context, AppController app) async {
                 Text(
                   context.l10n.pasteTheRecipientsSignedPublicDevice,
                   style: TextStyle(color: context.palette.muted, height: 1.45),
+                ),
+                // credential-visibility: shared-Vault admin notice.
+                CredentialVisibilitySharedVaultNotice(
+                  app: app,
+                  vaultId: app.activeVault?.id,
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -24595,6 +24662,15 @@ Future<void> _inviteVaultMember(BuildContext context, AppController app) async {
                     text:
                         context.l10n.thisGrantsRoleAccessToAll(role),
                   ),
+                  // credential-visibility: recipient admin-visible warning.
+                  CredentialVisibilityShareRecipientGate(
+                    app: app,
+                    vaultId: app.activeVault?.id,
+                    recipientDeviceId: recipient!.deviceId,
+                    recipientName: recipient!.name,
+                    onChanged: (allowed) =>
+                        setDialogState(() => shareAllowed = allowed),
+                  ),
                 ],
               ],
             ),
@@ -24613,6 +24689,9 @@ Future<void> _inviteVaultMember(BuildContext context, AppController app) async {
                   setDialogState(() {
                     recipient = verified;
                     formError = null;
+                    shareAllowed = !credentialVisibilityShareCheckRequired(
+                      app,
+                    );
                   });
                 } catch (error) {
                   setDialogState(() => formError = app.friendlyError(error));
@@ -24630,21 +24709,26 @@ Future<void> _inviteVaultMember(BuildContext context, AppController app) async {
               child: Text(context.l10n.back),
             ),
             FilledButton.icon(
-              onPressed: () async {
-                try {
-                  final created = await app.createVaultInvitation(
-                    recipient: recipient!,
-                    role: role,
-                  );
-                  if (dialogContext.mounted) {
-                    Navigator.pop(dialogContext, created);
-                  }
-                } catch (error) {
-                  if (dialogContext.mounted) {
-                    setDialogState(() => formError = app.friendlyError(error));
-                  }
-                }
-              },
+              key: const ValueKey('vault_invite_sign'),
+              onPressed: !shareAllowed
+                  ? null
+                  : () async {
+                      try {
+                        final created = await app.createVaultInvitation(
+                          recipient: recipient!,
+                          role: role,
+                        );
+                        if (dialogContext.mounted) {
+                          Navigator.pop(dialogContext, created);
+                        }
+                      } catch (error) {
+                        if (dialogContext.mounted) {
+                          setDialogState(
+                            () => formError = app.friendlyError(error),
+                          );
+                        }
+                      }
+                    },
               icon: const Icon(Icons.key_outlined),
               label: Text(context.l10n.signAndCreateInvitation),
             ),

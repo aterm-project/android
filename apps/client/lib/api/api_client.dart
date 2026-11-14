@@ -76,6 +76,7 @@ class InstanceInfo {
     this.limits = const {},
     this.signingPublicKey = '',
     this.signingKeyTransitions = const [],
+    this.credentialVisibilityDefault,
   });
 
   final String instanceId;
@@ -91,6 +92,10 @@ class InstanceInfo {
   final Map<String, dynamic> limits;
   final String signingPublicKey;
   final List<Map<String, dynamic>> signingKeyTransitions;
+
+  /// credential-visibility: instance default mode for new accounts
+  /// (`private` | `admin_visible`), present only with that capability.
+  final String? credentialVisibilityDefault;
 
   factory InstanceInfo.fromJson(Map<String, dynamic> json) {
     final rawTransitions = json['signing_key_transitions'] ?? const <dynamic>[];
@@ -109,6 +114,11 @@ class InstanceInfo {
             rawRestoreRetentionDays > 36500)) {
       throw const FormatException('Instance restore retention is invalid.');
     }
+    final credentialVisibilityDefault = json['credential_visibility_default'];
+    if (credentialVisibilityDefault != null &&
+        !_credentialVisibilityModes.contains(credentialVisibilityDefault)) {
+      throw const FormatException('Instance credential visibility is invalid.');
+    }
     return InstanceInfo(
       instanceId: json['instance_id'] as String,
       serverSpaceId: json['server_space_id'] as String,
@@ -123,9 +133,19 @@ class InstanceInfo {
       signingKeyTransitions: rawTransitions
           .map((transition) => Map<String, dynamic>.from(transition as Map))
           .toList(growable: false),
+      credentialVisibilityDefault: credentialVisibilityDefault as String?,
     );
   }
 }
+
+// credential-visibility: wire values shared by the account/invitation models.
+const _credentialVisibilityModes = {'private', 'admin_visible'};
+const _credentialEscrowStatuses = {
+  'not_required',
+  'no_key',
+  'pending',
+  'complete',
+};
 
 class NotificationTicket {
   const NotificationTicket({
@@ -488,6 +508,7 @@ class VaultDescriptor {
     this.purgeAfter,
     this.canCancel = false,
     this.canWrite = true,
+    this.adminVisible = false,
   });
 
   final String id;
@@ -501,6 +522,10 @@ class VaultDescriptor {
   final String? purgeAfter;
   final bool canCancel;
   final bool canWrite;
+
+  /// credential-visibility: an instance admin can read this Vault's escrowed
+  /// credentials (some active member is in `admin_visible` mode).
+  final bool adminVisible;
 
   factory VaultDescriptor.fromJson(
     Map<String, dynamic> json,
@@ -527,6 +552,7 @@ class VaultDescriptor {
     canWrite:
         json['can_write'] as bool? ??
         (json['status'] == null || json['status'] == 'active'),
+    adminVisible: json['admin_visible'] as bool? ?? false,
   );
 
   VaultDescriptor withLifecycleFrom(VaultDescriptor remote) => VaultDescriptor(
@@ -541,6 +567,24 @@ class VaultDescriptor {
     purgeAfter: remote.purgeAfter,
     canCancel: remote.canCancel,
     canWrite: remote.canWrite,
+    adminVisible: remote.adminVisible,
+  );
+
+  /// credential-visibility: the same descriptor with only [adminVisible]
+  /// replaced (badge refresh from a later `GET /vaults`).
+  VaultDescriptor withAdminVisible(bool value) => VaultDescriptor(
+    id: id,
+    role: role,
+    activeKeyEpoch: activeKeyEpoch,
+    membershipVersion: membershipVersion,
+    encryptedDisplayNameEnvelope: encryptedDisplayNameEnvelope,
+    keyEnvelopes: keyEnvelopes,
+    status: status,
+    requestedAt: requestedAt,
+    purgeAfter: purgeAfter,
+    canCancel: canCancel,
+    canWrite: canWrite,
+    adminVisible: value,
   );
 
   VaultDescriptor withLifecycleResponse(Map<String, dynamic> json) {
@@ -572,6 +616,7 @@ class VaultDescriptor {
       purgeAfter: json['purge_after'] as String?,
       canCancel: remoteCanCancel,
       canWrite: remoteCanWrite,
+      adminVisible: adminVisible,
     );
   }
 }
@@ -988,6 +1033,7 @@ class InstanceAdminOverview {
     required this.relayAllowPorts,
     required this.relayMaxConnectionsPerUser,
     required this.generatedAt,
+    this.databaseEncryption,
   });
 
   final String instanceId;
@@ -1009,6 +1055,10 @@ class InstanceAdminOverview {
   final List<int> relayAllowPorts;
   final int relayMaxConnectionsPerUser;
   final DateTime generatedAt;
+
+  /// SQLCipher encryption at rest of the server database: `enabled` or
+  /// `disabled`; null on servers that do not report it.
+  final String? databaseEncryption;
 
   factory InstanceAdminOverview.fromJson(Map<String, dynamic> json) {
     final instance = json['instance'];
@@ -1044,6 +1094,14 @@ class InstanceAdminOverview {
     final generatedAt = generatedAtValue is String
         ? DateTime.tryParse(generatedAtValue)
         : null;
+    final databaseEncryption = json['database_encryption'];
+    if (databaseEncryption != null &&
+        databaseEncryption != 'enabled' &&
+        databaseEncryption != 'disabled') {
+      throw const FormatException(
+        'Instance admin overview has invalid database_encryption.',
+      );
+    }
     if (protocolVersion < 1 ||
         relayEnabled is! bool ||
         rawCidrs is! List ||
@@ -1076,6 +1134,7 @@ class InstanceAdminOverview {
         'max_connections_per_user',
       ),
       generatedAt: generatedAt.toUtc(),
+      databaseEncryption: databaseEncryption as String?,
     );
   }
 }
@@ -3038,6 +3097,8 @@ class AdminAccountMetadata {
     required this.createdAt,
     required this.activeDeviceCount,
     required this.activeSessionCount,
+    this.credentialVisibility,
+    this.escrowStatus,
   });
 
   final String userId;
@@ -3046,6 +3107,11 @@ class AdminAccountMetadata {
   final DateTime createdAt;
   final int activeDeviceCount;
   final int activeSessionCount;
+
+  /// credential-visibility: `private` | `admin_visible`, and the computed
+  /// escrow status; null on servers without the capability.
+  final String? credentialVisibility;
+  final String? escrowStatus;
 
   factory AdminAccountMetadata.fromJson(Map<String, dynamic> json) {
     final userId = json['user_id'];
@@ -3057,6 +3123,14 @@ class AdminAccountMetadata {
         : null;
     final activeDeviceCount = json['active_device_count'];
     final activeSessionCount = json['active_session_count'];
+    final credentialVisibility = json['credential_visibility'];
+    final escrowStatus = json['escrow_status'];
+    if ((credentialVisibility != null &&
+            !_credentialVisibilityModes.contains(credentialVisibility)) ||
+        (escrowStatus != null &&
+            !_credentialEscrowStatuses.contains(escrowStatus))) {
+      throw const FormatException('Invalid admin account metadata response.');
+    }
     if (userId is! String ||
         !_isCanonicalLowercaseUuid(userId) ||
         username is! String ||
@@ -3079,6 +3153,8 @@ class AdminAccountMetadata {
       createdAt: createdAt.toUtc(),
       activeDeviceCount: activeDeviceCount,
       activeSessionCount: activeSessionCount,
+      credentialVisibility: credentialVisibility as String?,
+      escrowStatus: escrowStatus as String?,
     );
   }
 }
@@ -3141,6 +3217,7 @@ class AdminAccountInvitationMetadata {
     required this.createdAt,
     required this.expiresAt,
     required this.status,
+    this.credentialVisibility,
   });
 
   final String invitationId;
@@ -3149,13 +3226,19 @@ class AdminAccountInvitationMetadata {
   final DateTime expiresAt;
   final String status;
 
+  /// credential-visibility: the invitation's mode; null = instance default.
+  final String? credentialVisibility;
+
   factory AdminAccountInvitationMetadata.fromJson(Map<String, dynamic> json) {
-    const expectedKeys = {
+    final credentialVisibility = json['credential_visibility'];
+    final expectedKeys = {
       'invitation_id',
       'username',
       'created_at',
       'expires_at',
       'status',
+      // credential-visibility: optional key on servers with the capability.
+      if (json.containsKey('credential_visibility')) 'credential_visibility',
     };
     final invitationId = json['invitation_id'];
     final username = json['username'];
@@ -3170,7 +3253,9 @@ class AdminAccountInvitationMetadata {
         username.isEmpty ||
         createdAt == null ||
         expiresAt == null ||
-        !const {'pending', 'expired', 'consumed', 'revoked'}.contains(status)) {
+        !const {'pending', 'expired', 'consumed', 'revoked'}.contains(status) ||
+        (credentialVisibility != null &&
+            !_credentialVisibilityModes.contains(credentialVisibility))) {
       throw const FormatException('Invalid admin account invitation response.');
     }
     return AdminAccountInvitationMetadata(
@@ -3179,6 +3264,7 @@ class AdminAccountInvitationMetadata {
       createdAt: createdAt,
       expiresAt: expiresAt,
       status: status as String,
+      credentialVisibility: credentialVisibility as String?,
     );
   }
 }
@@ -3259,6 +3345,7 @@ class AdminAccountInvitationIssueReceipt {
     required this.createdAt,
     required this.expiresAt,
     required this.token,
+    this.credentialVisibility,
   });
 
   final String invitationId;
@@ -3266,6 +3353,9 @@ class AdminAccountInvitationIssueReceipt {
   final DateTime createdAt;
   final DateTime expiresAt;
   final String token;
+
+  /// credential-visibility: the invitation's mode; null = instance default.
+  final String? credentialVisibility;
 
   factory AdminAccountInvitationIssueReceipt.fromJson(
     Map<String, dynamic> json,
@@ -3279,12 +3369,16 @@ class AdminAccountInvitationIssueReceipt {
       );
     }
     final invitation = Map<String, dynamic>.from(json['invitation'] as Map);
-    const expectedKeys = {
+    final credentialVisibility = invitation['credential_visibility'];
+    final expectedKeys = {
       'invitation_id',
       'username',
       'created_at',
       'expires_at',
       'token',
+      // credential-visibility: optional key on servers with the capability.
+      if (invitation.containsKey('credential_visibility'))
+        'credential_visibility',
     };
     final invitationId = invitation['invitation_id'];
     final username = invitation['username'];
@@ -3300,7 +3394,9 @@ class AdminAccountInvitationIssueReceipt {
         createdAt == null ||
         expiresAt == null ||
         token is! String ||
-        !_isCanonicalBase64Url32(token)) {
+        !_isCanonicalBase64Url32(token) ||
+        (credentialVisibility != null &&
+            !_credentialVisibilityModes.contains(credentialVisibility))) {
       throw const FormatException(
         'Invalid admin account invitation issue receipt.',
       );
@@ -3311,6 +3407,7 @@ class AdminAccountInvitationIssueReceipt {
       createdAt: createdAt,
       expiresAt: expiresAt,
       token: token,
+      credentialVisibility: credentialVisibility as String?,
     );
   }
 }

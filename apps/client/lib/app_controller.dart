@@ -76,6 +76,11 @@ import 'sync/device_redaction_capability_publisher.dart';
 import 'sync/sync_repository.dart';
 import 'sync/sync_repository_e2e_hook.dart';
 import 'l10n/l10n.dart';
+// credential-visibility
+import 'credential_visibility/credential_escrow_crypto.dart'
+    show selectEscrowVaultKey;
+import 'credential_visibility/credential_visibility_api.dart';
+import 'credential_visibility/credential_visibility_models.dart';
 
 const _uuid = Uuid();
 const _emitSafeTeamLifecycleTrace = bool.fromEnvironment(
@@ -5091,6 +5096,7 @@ class AppController extends ChangeNotifier {
             purgeAfter: vault.purgeAfter,
             canCancel: vault.canCancel,
             canWrite: vault.canWrite,
+            adminVisible: vault.adminVisible, // credential-visibility
           ),
         );
       }
@@ -5490,6 +5496,36 @@ class AppController extends ChangeNotifier {
     }
     return difference == 0;
   }
+
+  // >>> credential-visibility: escrow deposit hook
+  /// A private copy of this device's Vault key for [vaultId] at [keyEpoch]
+  /// (lib/credential_visibility), or null unless exactly one key value is
+  /// held for that epoch. The caller must zero the returned buffer.
+  Uint8List? copyVaultKeyForCredentialEscrow(String vaultId, int keyEpoch) =>
+      selectEscrowVaultKey(_vaultEpochKeys[vaultId] ?? const {}, keyEpoch);
+
+  /// Updates only the `adminVisible` flag of the cached Vault descriptors
+  /// (and of [activeVault]) from a later `GET /vaults` answer keyed by Vault
+  /// ID, so badges follow mode and membership changes made elsewhere. Vaults
+  /// missing from [flags] keep their flag. Notifies only when a flag changed.
+  void applyCredentialVisibilityVaultFlags(Map<String, bool> flags) {
+    var changed = false;
+    VaultDescriptor apply(VaultDescriptor vault) {
+      final flag = flags[vault.id];
+      if (flag == null || flag == vault.adminVisible) return vault;
+      changed = true;
+      return vault.withAdminVisible(flag);
+    }
+
+    final descriptors = _vaultDescriptors.map(apply).toList(growable: false);
+    final active = activeVault;
+    final updatedActive = active == null ? null : apply(active);
+    if (!changed) return;
+    _vaultDescriptors = descriptors;
+    activeVault = updatedActive;
+    notifyListeners();
+  }
+  // <<< credential-visibility
 
   Future<void> _buildRepository({
     bool waitForPreviousRepositoryDrain = true,
@@ -12501,6 +12537,8 @@ class AppController extends ChangeNotifier {
   Future<bool> issueAdminAccountInvitation({
     required String username,
     required int expiresInDays,
+    // credential-visibility: optional per-invitation mode (null = default).
+    CredentialVisibilityMode? credentialVisibility,
   }) async {
     if (!isInstanceAdmin) {
       adminAccountInvitationActionError =
@@ -12532,10 +12570,16 @@ class AppController extends ChangeNotifier {
     adminAccountInvitationTokenExpiresAt = null;
     notifyListeners();
     try {
-      final receipt = await client.createAdminAccountInvitation(
-        username: normalizedUsername,
-        expiresInSeconds: Duration(days: expiresInDays).inSeconds,
-      );
+      final receipt = credentialVisibility == null
+          ? await client.createAdminAccountInvitation(
+              username: normalizedUsername,
+              expiresInSeconds: Duration(days: expiresInDays).inSeconds,
+            )
+          : await CredentialVisibilityApi(client).createAccountInvitation(
+              username: normalizedUsername,
+              expiresInSeconds: Duration(days: expiresInDays).inSeconds,
+              mode: credentialVisibility,
+            );
       if (!isInstanceAdmin) return false;
       adminAccountInvitationToken = receipt.token;
       adminAccountInvitationTokenUsername = receipt.username;
@@ -16126,6 +16170,9 @@ class AppController extends ChangeNotifier {
           capabilities: currentInstance.capabilities,
           signingPublicKey: currentInstance.signingPublicKey,
           signingKeyTransitions: currentInstance.signingKeyTransitions,
+          // credential-visibility
+          credentialVisibilityDefault:
+              currentInstance.credentialVisibilityDefault,
         );
       }
       syncStatus = result.status;
@@ -16949,6 +16996,7 @@ class AppController extends ChangeNotifier {
         purgeAfter: vault.purgeAfter,
         canCancel: vault.canCancel,
         canWrite: vault.canWrite,
+        adminVisible: vault.adminVisible, // credential-visibility
       );
       _vaultDescriptors = _vaultDescriptors
           .map((item) => item.id == updated.id ? updated : item)

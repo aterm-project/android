@@ -18687,4 +18687,406 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get termiusLocalReviewNeeded =>
       'Некоторые хосты Termius требуют внимания перед импортом (например, не указано имя пользователя). Ничего не угадывалось и не импортировано: проверьте замечания ниже, укажите имя пользователя по умолчанию или исключите строки, затем импортируйте.';
+
+  @override
+  String get cvSectionTitle => 'Видимость учётных данных';
+
+  @override
+  String get cvModePrivateShort => 'Приватный';
+
+  @override
+  String get cvModeAdminVisibleShort => 'Видно администраторам';
+
+  @override
+  String get cvModePrivateBody =>
+      'Приватный режим: сохранённые пароли хостов, закрытые ключи и другие учётные данные расшифровываются только на ваших устройствах. Администраторы сервера не могут их просмотреть. Если вы забудете мастер-пароль, администраторы тоже не смогут восстановить эти данные.';
+
+  @override
+  String get cvModeAdminVisibleBody =>
+      'Видно администраторам: администраторы этого сервера могут просматривать сохранённые вами пароли хостов, закрытые ключи и парольные фразы. Мастер-пароль учётной записи никогда не отправляется на сервер, поэтому администраторы его не видят. Каждый просмотр администратором записывается и отображается здесь.';
+
+  @override
+  String get cvModeSetByAdmin =>
+      'Изменить этот параметр может только администратор экземпляра.';
+
+  @override
+  String cvChangedAt(String time) {
+    return 'Режим изменён $time';
+  }
+
+  @override
+  String get cvEscrowStatusLabel => 'Статус депонирования';
+
+  @override
+  String get cvEscrowNotRequired => 'Не требуется';
+
+  @override
+  String get cvEscrowNoKey => 'Нет ключа депонирования';
+
+  @override
+  String get cvEscrowPending => 'Ожидается';
+
+  @override
+  String get cvEscrowComplete => 'Завершено';
+
+  @override
+  String get cvEscrowNoKeyDetail =>
+      'Ожидается, пока администратор настроит ключ депонирования.';
+
+  @override
+  String get cvEscrowPendingDetail =>
+      'Некоторые ключи хранилищ ещё не переданы администраторам. Ваши устройства отправят их автоматически, когда ключи будут доступны.';
+
+  @override
+  String get cvEscrowCompleteDetail =>
+      'Администраторы могут открыть все хранилища, к которым у вас есть доступ.';
+
+  @override
+  String get cvEscrowKeyRejected =>
+      'Ключ депонирования с сервера не прошёл проверку подписи, поэтому ничего не передано. Обратитесь к администратору.';
+
+  @override
+  String get cvRefreshFailed =>
+      'Не удалось обновить статус видимости учётных данных. Повтор будет выполнен автоматически.';
+
+  @override
+  String get cvAdminViewsTitle => 'Последние просмотры администраторами';
+
+  @override
+  String get cvAdminViewsEmpty =>
+      'Администраторы ещё не просматривали ваши учётные данные.';
+
+  @override
+  String cvAdminViewEntry(String admin, String time) {
+    return '$admin просмотрел(а) ваши учётные данные $time';
+  }
+
+  @override
+  String get cvAdminViewDeletedAdmin => 'Удалённый администратор';
+
+  @override
+  String cvAdminViewVault(String name) {
+    return 'Хранилище: $name';
+  }
+
+  @override
+  String get cvIndicatorTooltip =>
+      'Администраторы этого сервера могут просматривать ваши сохранённые учётные данные. Подробности — в настройках.';
+
+  @override
+  String get cvVaultBadgeTooltip =>
+      'Администратор экземпляра может просматривать учётные данные в этом хранилище.';
+
+  @override
+  String get cvSharedVaultNotice =>
+      'Некоторые участники этого общего хранилища находятся в режиме «видно администраторам», поэтому администраторы могут просматривать его учётные данные.';
+
+  @override
+  String get cvNoticeAdminVisibleTitle =>
+      'Администраторы могут просматривать ваши учётные данные';
+
+  @override
+  String get cvNoticeSwitchedAdminVisibleTitle =>
+      'Ваша учётная запись переведена в режим «видно администраторам»';
+
+  @override
+  String get cvNoticeAdminVisibleDeposit =>
+      'При следующей синхронизации ваши устройства передадут ключи хранилищ на ключ депонирования администратора.';
+
+  @override
+  String get cvNoticePrivateTitle => 'Ваши сохранённые учётные данные приватны';
+
+  @override
+  String get cvNoticeSwitchedPrivateTitle =>
+      'Ваша учётная запись переведена в приватный режим';
+
+  @override
+  String get cvNoticeSwitchedPrivateBody =>
+      'Депонированные ключи хранилищ удалены с сервера, и администраторы больше не могут открыть ваши учётные данные. Общее хранилище остаётся видимым, пока другой участник находится в режиме «видно администраторам»; такие хранилища отмечены в списке. Пока учётная запись была видна администраторам, они могли просмотреть или скопировать учётные данные, поэтому рекомендуем сменить важные пароли и ключи.';
+
+  @override
+  String get cvNoticeAcknowledge => 'Понятно';
+
+  @override
+  String get cvNoticeOpenSettings => 'Подробнее';
+
+  @override
+  String get cvRegistrationNoticeTitle =>
+      'На этом сервере администраторы могут просматривать сохранённые учётные данные';
+
+  @override
+  String get cvRegistrationNoticeBody =>
+      'Новые учётные записи на этом сервере по умолчанию видны администраторам: они могут просматривать сохранённые вами пароли хостов, закрытые ключи и парольные фразы. Мастер-пароль никогда не отправляется на сервер. В приглашении может быть указан другой режим — вы узнаете об этом после входа.';
+
+  @override
+  String get cvAdminDescription =>
+      'Выберите, будут ли новые учётные записи приватными или видимыми администраторам, управляйте ключом депонирования и просматривайте депонированные учётные данные. Каждый просмотр записывается и показывается пользователю.';
+
+  @override
+  String get cvAdminLoad => 'Загрузить видимость учётных данных';
+
+  @override
+  String get cvAdminDefaultMode => 'По умолчанию для новых учётных записей';
+
+  @override
+  String cvAdminCounts(int adminVisible, int privateCount, int pending) {
+    return 'Видно админам: $adminVisible · приватных: $privateCount · ожидают: $pending';
+  }
+
+  @override
+  String get cvAdminKeyTitle => 'Ключ депонирования';
+
+  @override
+  String get cvAdminKeyMissing =>
+      'Ключ депонирования ещё не создан. До его создания учётные записи «видно администраторам» не могут передавать учётные данные.';
+
+  @override
+  String cvAdminKeyReady(String keyId, String time) {
+    return 'Ключ $keyId · создан $time';
+  }
+
+  @override
+  String get cvAdminKeyInvalid =>
+      'Ключ депонирования с сервера не прошёл проверку подписи. Не используйте его — сбросьте.';
+
+  @override
+  String get cvAdminKeyNoWrap =>
+      'Ваша учётная запись пока не может открыть ключ депонирования. Разблокируйте его кодом восстановления.';
+
+  @override
+  String get cvAdminCreateKey => 'Создать ключ депонирования';
+
+  @override
+  String get cvAdminUnlockWithRecovery => 'Разблокировать кодом восстановления';
+
+  @override
+  String get cvAdminResetKey => 'Сбросить ключ депонирования';
+
+  @override
+  String get cvAdminPasswordTitle => 'Подтвердите мастер-пароль';
+
+  @override
+  String get cvAdminPasswordBody =>
+      'Мастер-пароль разблокирует ключ депонирования только на этом устройстве и никогда не отправляется на сервер.';
+
+  @override
+  String get cvMasterPassword => 'Мастер-пароль';
+
+  @override
+  String get cvAdminRecoveryTitle => 'Сохраните код восстановления';
+
+  @override
+  String get cvAdminRecoveryBody =>
+      'Этот код показывается только один раз. С ним администратор сможет открыть ключ депонирования, даже если ни одна учётная запись администратора не может. Храните его офлайн, отдельно от сервера.';
+
+  @override
+  String get cvAdminRecoveryCopied => 'Код восстановления скопирован';
+
+  @override
+  String get cvAdminRecoveryStored => 'Я сохранил(а) код восстановления';
+
+  @override
+  String get cvAdminRecoveryCodeLabel => 'Код восстановления';
+
+  @override
+  String get cvAdminKeyCreated =>
+      'Ключ депонирования создан. Учётные записи «видно администраторам» передадут ключи хранилищ при следующей синхронизации.';
+
+  @override
+  String get cvAdminUnlocked =>
+      'Теперь ваша учётная запись может открыть ключ депонирования.';
+
+  @override
+  String get cvAdminResetTitle => 'Сбросить ключ депонирования?';
+
+  @override
+  String cvAdminResetBody(String word) {
+    return 'Будут удалены ключ депонирования, копии всех администраторов и все депонированные ключи хранилищ. После создания нового ключа учётные записи «видно администраторам» передадут ключи снова. Уже просмотренные учётные данные нельзя «отменить». Введите $word для подтверждения.';
+  }
+
+  @override
+  String get cvAdminResetDone => 'Ключ депонирования сброшен.';
+
+  @override
+  String cvAdminModeChanged(String username, String mode) {
+    return 'Видимость учётных данных $username: $mode.';
+  }
+
+  @override
+  String cvAdminConfirmAdminVisibleTitle(String username) {
+    return 'Сделать $username видимым администраторам?';
+  }
+
+  @override
+  String get cvAdminConfirmAdminVisibleBody =>
+      'Устройства пользователя передадут ключи хранилищ на ключ депонирования при следующей синхронизации, а пользователь будет уведомлён, что администраторы видят его учётные данные.';
+
+  @override
+  String cvAdminConfirmPrivateTitle(String username) {
+    return 'Сделать $username приватным?';
+  }
+
+  @override
+  String get cvAdminConfirmPrivateBody =>
+      'Депонированные ключи его хранилищ будут удалены, если ни один другой участник не остаётся видимым администраторам. Уже просмотренные учётные данные нельзя «отменить».';
+
+  @override
+  String get cvAdminViewCredentials => 'Просмотреть учётные данные';
+
+  @override
+  String get cvInstanceDefaultOption => 'По умолчанию экземпляра';
+
+  @override
+  String cvViewerTitle(String username) {
+    return 'Учётные данные $username';
+  }
+
+  @override
+  String get cvViewerBanner =>
+      'Этот просмотр записывается, и пользователь будет уведомлён.';
+
+  @override
+  String get cvViewerVaults => 'Хранилища';
+
+  @override
+  String cvViewerVaultUnnamed(String id) {
+    return 'Хранилище $id';
+  }
+
+  @override
+  String get cvViewerVaultNotEscrowed =>
+      'Нет депонированного ключа — открыть нельзя';
+
+  @override
+  String get cvViewerNoVaults => 'У этой учётной записи нет хранилищ.';
+
+  @override
+  String get cvViewerOpenVault => 'Открыть';
+
+  @override
+  String get cvViewerHosts => 'Хосты';
+
+  @override
+  String get cvViewerKeychain => 'Связка ключей';
+
+  @override
+  String get cvViewerNoItems => 'Нет хостов и элементов связки ключей.';
+
+  @override
+  String cvViewerUndecryptable(int count) {
+    return 'Не удалось расшифровать элементов: $count (эпоха ключа не депонирована или не прошла проверку).';
+  }
+
+  @override
+  String get cvViewerAddress => 'Адрес';
+
+  @override
+  String get cvViewerUsername => 'Имя пользователя';
+
+  @override
+  String get cvViewerPassword => 'Пароль';
+
+  @override
+  String get cvViewerPrivateKey => 'Закрытый ключ';
+
+  @override
+  String get cvViewerPassphrase => 'Парольная фраза';
+
+  @override
+  String cvViewerUsesKeychain(String name) {
+    return 'Использует элемент связки ключей $name';
+  }
+
+  @override
+  String get cvViewerReveal => 'Показать';
+
+  @override
+  String get cvViewerHide => 'Скрыть';
+
+  @override
+  String get cvViewerCopied => 'Скопировано';
+
+  @override
+  String get cvClipboardAutoClear =>
+      'Через минуту или при закрытии этого окна оно будет удалено из буфера обмена.';
+
+  @override
+  String get cvViewerReadOnly => 'Только чтение';
+
+  @override
+  String get cvErrorWrongPassword => 'Неверный мастер-пароль.';
+
+  @override
+  String get cvErrorWrongRecoveryCode => 'Неверный код восстановления.';
+
+  @override
+  String get cvErrorNoKey => 'Ключ депонирования не существует.';
+
+  @override
+  String get cvErrorKeyExists =>
+      'Другой администратор уже создал ключ депонирования. Обновите данные и разблокируйте его кодом восстановления.';
+
+  @override
+  String get cvErrorWrapInvalid =>
+      'Ваша учётная запись не может открыть ключ депонирования (он настроен для другого ключа учётной записи). Разблокируйте его кодом восстановления.';
+
+  @override
+  String get cvErrorScopeChanged =>
+      'Состояние входа изменилось. Откройте это снова.';
+
+  @override
+  String get cvErrorNotAvailable =>
+      'Эти учётные данные недоступны: пользователь в приватном режиме или у хранилища нет депонированного ключа.';
+
+  @override
+  String get cvErrorNotAdmin =>
+      'Эта учётная запись не является администратором экземпляра.';
+
+  @override
+  String get cvErrorSignedOut => 'Чтобы продолжить, войдите снова.';
+
+  @override
+  String get cvModePrivateBodySharedException =>
+      'Приватный режим: сохранённые пароли хостов, закрытые ключи и другие учётные данные расшифровываются только на ваших устройствах, и администраторы сервера не могут их просмотреть — кроме общих хранилищ с отметкой «видно администраторам». В них есть другой участник в этом режиме, поэтому администраторы видят всё их содержимое, включая то, что сохранили там вы. Если вы забудете мастер-пароль, администраторы не смогут восстановить ваши приватные данные.';
+
+  @override
+  String get cvShareRecipientChecking =>
+      'Проверяем видимость учётных данных получателя…';
+
+  @override
+  String get cvShareRecipientAdminVisibleTitle =>
+      'Получатель в режиме «видно администраторам»';
+
+  @override
+  String cvShareRecipientAdminVisibleBody(String user) {
+    return '$user в режиме «видно администраторам». После присоединения администраторы этого сервера смогут читать всё содержимое этого хранилища, включая сохранённые вами пароли и ключи.';
+  }
+
+  @override
+  String get cvShareRecipientConfirm =>
+      'Я понимаю, что администраторы смогут читать это хранилище';
+
+  @override
+  String get cvShareRecipientCheckFailed =>
+      'Не удалось проверить, находится ли получатель в режиме «видно администраторам». Если да, после присоединения администраторы смогут читать всё содержимое этого хранилища.';
+
+  @override
+  String get cvShareAnyway => 'Всё равно поделиться';
+
+  @override
+  String get cvDatabaseNotEncryptedTitle =>
+      'База данных не зашифрована на диске';
+
+  @override
+  String get cvDatabaseNotEncryptedBody =>
+      'Сервер хранит базу данных в незашифрованном виде. Любой, кто скопирует файл базы данных или снимок резервной копии, сможет прочитать метаданные учётных записей и подбирать мастер-пароли администраторов офлайн; одна удачная попытка открывает все учётные записи в режиме «видно администраторам». Остановите сервер, настройте ключ базы данных и зашифруйте её офлайн:';
+
+  @override
+  String cvDatabaseEncryptionGuide(String path) {
+    return 'Порядок действий, резервная копия ключа и ограничения: $path';
+  }
+
+  @override
+  String get cvDatabaseEncryptedAtRest =>
+      'База данных зашифрована на диске (SQLCipher)';
 }

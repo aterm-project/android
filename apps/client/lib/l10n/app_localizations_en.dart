@@ -18641,4 +18641,401 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get termiusLocalReviewNeeded =>
       'Some Termius hosts need attention before import (for example a missing username). Nothing was guessed or imported yet: review the findings below, enter a default username or exclude rows, then import.';
+
+  @override
+  String get cvSectionTitle => 'Credential visibility';
+
+  @override
+  String get cvModePrivateShort => 'Private';
+
+  @override
+  String get cvModeAdminVisibleShort => 'Admin-visible';
+
+  @override
+  String get cvModePrivateBody =>
+      'Private: your saved host passwords, private keys and other credentials are decrypted only on your devices. Server administrators can\'t view them. If you forget your master password, administrators can\'t recover this data for you either.';
+
+  @override
+  String get cvModeAdminVisibleBody =>
+      'Admin-visible: administrators of this server can view the host passwords, private keys and passphrases you save. Your account master password is never sent to the server, so administrators can\'t see it. Every time an administrator views your credentials it is recorded and shown here.';
+
+  @override
+  String get cvModeSetByAdmin =>
+      'Only an instance administrator can change this setting.';
+
+  @override
+  String cvChangedAt(String time) {
+    return 'Mode changed $time';
+  }
+
+  @override
+  String get cvEscrowStatusLabel => 'Escrow status';
+
+  @override
+  String get cvEscrowNotRequired => 'Not required';
+
+  @override
+  String get cvEscrowNoKey => 'No escrow key';
+
+  @override
+  String get cvEscrowPending => 'Pending';
+
+  @override
+  String get cvEscrowComplete => 'Complete';
+
+  @override
+  String get cvEscrowNoKeyDetail =>
+      'Waiting for an administrator to set up the escrow key.';
+
+  @override
+  String get cvEscrowPendingDetail =>
+      'Some Vault keys aren\'t available to administrators yet. Your devices send them automatically when they hold them.';
+
+  @override
+  String get cvEscrowCompleteDetail =>
+      'Administrators can open every Vault you have access to.';
+
+  @override
+  String get cvEscrowKeyRejected =>
+      'The escrow key from the server failed signature verification, so nothing was shared. Contact your administrator.';
+
+  @override
+  String get cvRefreshFailed =>
+      'Couldn\'t refresh the credential visibility status. It\'s retried automatically.';
+
+  @override
+  String get cvAdminViewsTitle => 'Recent administrator views';
+
+  @override
+  String get cvAdminViewsEmpty =>
+      'No administrator has viewed your credentials.';
+
+  @override
+  String cvAdminViewEntry(String admin, String time) {
+    return '$admin viewed your credentials at $time';
+  }
+
+  @override
+  String get cvAdminViewDeletedAdmin => 'A deleted administrator';
+
+  @override
+  String cvAdminViewVault(String name) {
+    return 'Vault: $name';
+  }
+
+  @override
+  String get cvIndicatorTooltip =>
+      'Administrators of this server can view your saved credentials. Open settings for details.';
+
+  @override
+  String get cvVaultBadgeTooltip =>
+      'An instance administrator can view the credentials in this Vault.';
+
+  @override
+  String get cvSharedVaultNotice =>
+      'Some members of this shared Vault are in admin-visible mode, so administrators can view its credentials.';
+
+  @override
+  String get cvNoticeAdminVisibleTitle =>
+      'Administrators can view your saved credentials';
+
+  @override
+  String get cvNoticeSwitchedAdminVisibleTitle =>
+      'Your account is now admin-visible';
+
+  @override
+  String get cvNoticeAdminVisibleDeposit =>
+      'Your devices will share your Vault keys with the administrator escrow key when they next sync.';
+
+  @override
+  String get cvNoticePrivateTitle => 'Your saved credentials are private';
+
+  @override
+  String get cvNoticeSwitchedPrivateTitle => 'Your account is now private';
+
+  @override
+  String get cvNoticeSwitchedPrivateBody =>
+      'The escrowed Vault keys were deleted from the server, so administrators can no longer open your credentials. A shared Vault stays visible while another member is still admin-visible; such Vaults are marked in the Vault list. An administrator may already have viewed or copied credentials while your account was admin-visible, so consider changing important passwords and keys.';
+
+  @override
+  String get cvNoticeAcknowledge => 'I understand';
+
+  @override
+  String get cvNoticeOpenSettings => 'View details';
+
+  @override
+  String get cvRegistrationNoticeTitle =>
+      'Administrators can view saved credentials on this server';
+
+  @override
+  String get cvRegistrationNoticeBody =>
+      'New accounts on this server are admin-visible by default: administrators can view the host passwords, private keys and passphrases you save. Your master password is never sent to the server. Your invitation may set a different mode; you\'ll be told after you sign in.';
+
+  @override
+  String get cvAdminDescription =>
+      'Choose whether new accounts are private or admin-visible, manage the escrow key, and view escrowed credentials. Every view is recorded and shown to the user.';
+
+  @override
+  String get cvAdminLoad => 'Load credential visibility';
+
+  @override
+  String get cvAdminDefaultMode => 'Default for new accounts';
+
+  @override
+  String cvAdminCounts(int adminVisible, int privateCount, int pending) {
+    return '$adminVisible admin-visible · $privateCount private · $pending pending';
+  }
+
+  @override
+  String get cvAdminKeyTitle => 'Escrow key';
+
+  @override
+  String get cvAdminKeyMissing =>
+      'No escrow key yet. Admin-visible accounts can\'t share credentials until one is created.';
+
+  @override
+  String cvAdminKeyReady(String keyId, String time) {
+    return 'Key $keyId · created $time';
+  }
+
+  @override
+  String get cvAdminKeyInvalid =>
+      'The escrow key from the server failed signature verification. Don\'t use it; reset it.';
+
+  @override
+  String get cvAdminKeyNoWrap =>
+      'Your account can\'t open the escrow key yet. Unlock it with the recovery code.';
+
+  @override
+  String get cvAdminCreateKey => 'Create escrow key';
+
+  @override
+  String get cvAdminUnlockWithRecovery => 'Unlock with recovery code';
+
+  @override
+  String get cvAdminResetKey => 'Reset escrow key';
+
+  @override
+  String get cvAdminPasswordTitle => 'Confirm your master password';
+
+  @override
+  String get cvAdminPasswordBody =>
+      'Your master password unlocks the escrow key on this device only. It is never sent to the server.';
+
+  @override
+  String get cvMasterPassword => 'Master password';
+
+  @override
+  String get cvAdminRecoveryTitle => 'Store the escrow recovery code';
+
+  @override
+  String get cvAdminRecoveryBody =>
+      'This code is shown only once. With it, an administrator can open the escrow key even if no administrator account can. Store it offline, separately from the server.';
+
+  @override
+  String get cvAdminRecoveryCopied => 'Recovery code copied';
+
+  @override
+  String get cvAdminRecoveryStored => 'I have stored the recovery code';
+
+  @override
+  String get cvAdminRecoveryCodeLabel => 'Recovery code';
+
+  @override
+  String get cvAdminKeyCreated =>
+      'Escrow key created. Admin-visible accounts share their Vault keys when they next sync.';
+
+  @override
+  String get cvAdminUnlocked => 'Your account can now open the escrow key.';
+
+  @override
+  String get cvAdminResetTitle => 'Reset the escrow key?';
+
+  @override
+  String cvAdminResetBody(String word) {
+    return 'This deletes the escrow key, every administrator\'s copy and all escrowed Vault keys. Admin-visible accounts share again after a new key is created. Credentials that were already viewed can\'t be un-viewed. Type $word to confirm.';
+  }
+
+  @override
+  String get cvAdminResetDone => 'Escrow key reset.';
+
+  @override
+  String cvAdminModeChanged(String username, String mode) {
+    return 'Credential visibility for $username is now $mode.';
+  }
+
+  @override
+  String cvAdminConfirmAdminVisibleTitle(String username) {
+    return 'Make $username admin-visible?';
+  }
+
+  @override
+  String get cvAdminConfirmAdminVisibleBody =>
+      'Their devices share Vault keys with the escrow key on the next sync, and they are told that administrators can view their credentials.';
+
+  @override
+  String cvAdminConfirmPrivateTitle(String username) {
+    return 'Make $username private?';
+  }
+
+  @override
+  String get cvAdminConfirmPrivateBody =>
+      'Escrowed keys of their Vaults are deleted unless another member is still admin-visible. Credentials that were already viewed can\'t be un-viewed.';
+
+  @override
+  String get cvAdminViewCredentials => 'View credentials';
+
+  @override
+  String get cvInstanceDefaultOption => 'Instance default';
+
+  @override
+  String cvViewerTitle(String username) {
+    return 'Credentials of $username';
+  }
+
+  @override
+  String get cvViewerBanner =>
+      'This viewing is recorded and the user will be notified.';
+
+  @override
+  String get cvViewerVaults => 'Vaults';
+
+  @override
+  String cvViewerVaultUnnamed(String id) {
+    return 'Vault $id';
+  }
+
+  @override
+  String get cvViewerVaultNotEscrowed => 'No escrowed key — can\'t be opened';
+
+  @override
+  String get cvViewerNoVaults => 'This account has no Vaults.';
+
+  @override
+  String get cvViewerOpenVault => 'Open';
+
+  @override
+  String get cvViewerHosts => 'Hosts';
+
+  @override
+  String get cvViewerKeychain => 'Keychain';
+
+  @override
+  String get cvViewerNoItems => 'No hosts or keychain items.';
+
+  @override
+  String cvViewerUndecryptable(int count) {
+    return '$count items couldn\'t be decrypted (their key epoch wasn\'t escrowed or failed verification).';
+  }
+
+  @override
+  String get cvViewerAddress => 'Address';
+
+  @override
+  String get cvViewerUsername => 'Username';
+
+  @override
+  String get cvViewerPassword => 'Password';
+
+  @override
+  String get cvViewerPrivateKey => 'Private key';
+
+  @override
+  String get cvViewerPassphrase => 'Passphrase';
+
+  @override
+  String cvViewerUsesKeychain(String name) {
+    return 'Uses keychain item $name';
+  }
+
+  @override
+  String get cvViewerReveal => 'Show';
+
+  @override
+  String get cvViewerHide => 'Hide';
+
+  @override
+  String get cvViewerCopied => 'Copied';
+
+  @override
+  String get cvClipboardAutoClear =>
+      'It is removed from the clipboard after one minute or when this window closes.';
+
+  @override
+  String get cvViewerReadOnly => 'Read-only';
+
+  @override
+  String get cvErrorWrongPassword => 'The master password is not correct.';
+
+  @override
+  String get cvErrorWrongRecoveryCode => 'The recovery code is not correct.';
+
+  @override
+  String get cvErrorNoKey => 'No escrow key exists.';
+
+  @override
+  String get cvErrorKeyExists =>
+      'Another administrator created an escrow key first. Reload, then unlock it with the recovery code.';
+
+  @override
+  String get cvErrorWrapInvalid =>
+      'Your account can\'t open the escrow key (it was set up for a different account key). Unlock it with the recovery code.';
+
+  @override
+  String get cvErrorScopeChanged => 'The sign-in changed. Open this again.';
+
+  @override
+  String get cvErrorNotAvailable =>
+      'These credentials aren\'t available: the user is private, or the Vault has no escrowed key.';
+
+  @override
+  String get cvErrorNotAdmin =>
+      'This account isn\'t an instance administrator.';
+
+  @override
+  String get cvErrorSignedOut => 'Sign in again to continue.';
+
+  @override
+  String get cvModePrivateBodySharedException =>
+      'Private: your saved host passwords, private keys and other credentials are decrypted only on your devices, and server administrators can\'t view them, except in shared Vaults marked admin-visible. Another member of those Vaults is in admin-visible mode, so administrators can view everything in them, including what you saved there. If you forget your master password, administrators can\'t recover your private data for you either.';
+
+  @override
+  String get cvShareRecipientChecking =>
+      'Checking the recipient\'s credential visibility…';
+
+  @override
+  String get cvShareRecipientAdminVisibleTitle =>
+      'The recipient is admin-visible';
+
+  @override
+  String cvShareRecipientAdminVisibleBody(String user) {
+    return '$user is in admin-visible mode. Once they join, administrators of this server will be able to read everything in this Vault, including the passwords and keys you saved.';
+  }
+
+  @override
+  String get cvShareRecipientConfirm =>
+      'I understand that administrators will be able to read this Vault';
+
+  @override
+  String get cvShareRecipientCheckFailed =>
+      'Couldn\'t check whether the recipient is in admin-visible mode. If they are, administrators will be able to read everything in this Vault once they join.';
+
+  @override
+  String get cvShareAnyway => 'Share anyway';
+
+  @override
+  String get cvDatabaseNotEncryptedTitle => 'Database not encrypted at rest';
+
+  @override
+  String get cvDatabaseNotEncryptedBody =>
+      'The server stores its database unencrypted. Anyone who copies the database file or a backup snapshot can read account metadata and try to guess administrators\' master passwords offline; one correct guess opens every admin-visible account. Stop the server, configure a database key and encrypt the database offline:';
+
+  @override
+  String cvDatabaseEncryptionGuide(String path) {
+    return 'Steps, key backup and limits: $path';
+  }
+
+  @override
+  String get cvDatabaseEncryptedAtRest =>
+      'Database encrypted at rest (SQLCipher)';
 }

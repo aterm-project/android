@@ -8,6 +8,7 @@ import 'app_theme.dart';
 import '../l10n/l10n.dart';
 import 'app_language_settings.dart';
 import 'app_density.dart';
+import 'credential_visibility/credential_visibility_widgets.dart';
 
 class _RecoveryInput {
   const _RecoveryInput({
@@ -585,6 +586,8 @@ class _AuthFlowState extends State<AuthFlow> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // credential-visibility: instance default is admin-visible.
+        CredentialVisibilityRegistrationNotice(instance: app.instance),
         _text(
           _username,
           isBootstrap
