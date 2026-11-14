@@ -77,6 +77,10 @@ pub struct CreateAdminAccountInvitationRequest {
     username: String,
     #[serde(default, deserialize_with = "deserialize_account_invitation_ttl")]
     expires_in_seconds: Option<i64>,
+    /// Optional explicit credential-visibility mode for the invited account;
+    /// null or absent uses the instance default at registration.
+    #[serde(default)]
+    credential_visibility: Option<crate::credential_visibility::CredentialVisibility>,
 }
 
 fn deserialize_account_invitation_ttl<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
@@ -507,6 +511,7 @@ pub async fn overview(
             "allow_ports": relay.allow_ports,
             "max_connections_per_user": state.config.relay_max_connections_per_user,
         },
+        "database_encryption": state.database_encryption.as_str(),
         "generated_at": now,
     });
     tx.commit().await.map_err(ApiError::internal)?;
@@ -2951,13 +2956,15 @@ pub async fn list_accounts(
         .await
         .map_err(ApiError::internal)?;
     let now = now_rfc3339();
-    let rows = sqlx::query(
-        "SELECT u.user_id,u.username,u.status,u.created_at,\
+    let rows = sqlx::query(&format!(
+        "SELECT u.user_id,u.username,u.status,u.created_at,u.credential_visibility,\
+         ({}) AS escrow_status,\
          (SELECT COUNT(*) FROM devices d WHERE d.user_id=u.user_id AND d.status='active') AS active_device_count,\
          (SELECT COUNT(*) FROM sessions s WHERE s.user_id=u.user_id AND s.revoked_at IS NULL AND s.refresh_expires_at>? \
           AND u.status='active' AND EXISTS(SELECT 1 FROM devices sd WHERE sd.device_id=s.device_id AND sd.status='active')) AS active_session_count \
          FROM users u ORDER BY u.created_at DESC,u.user_id ASC LIMIT ? OFFSET ?",
-    )
+        crate::credential_visibility::escrow_status_sql("u")
+    ))
     .bind(&now)
     .bind(i64::from(limit))
     .bind(i64::from(offset))
@@ -2974,6 +2981,8 @@ pub async fn list_accounts(
                 "created_at": row.get::<String, _>("created_at"),
                 "active_device_count": row.get::<i64, _>("active_device_count"),
                 "active_session_count": row.get::<i64, _>("active_session_count"),
+                "credential_visibility": row.get::<String, _>("credential_visibility"),
+                "escrow_status": row.get::<String, _>("escrow_status"),
             })
         })
         .collect();
@@ -3027,7 +3036,7 @@ pub async fn list_account_invitations(
         .await
         .map_err(ApiError::internal)?;
     let rows = sqlx::query(
-        "SELECT invitation_id,username,created_at,expires_at,consumed_at,revoked_at \
+        "SELECT invitation_id,username,created_at,expires_at,consumed_at,revoked_at,credential_visibility \
          FROM account_invitations \
          ORDER BY created_at DESC,invitation_id DESC LIMIT ? OFFSET ?",
     )
@@ -3045,6 +3054,7 @@ pub async fn list_account_invitations(
         let expires_at: String = row.get("expires_at");
         let consumed_at: Option<String> = row.get("consumed_at");
         let revoked_at: Option<String> = row.get("revoked_at");
+        let credential_visibility: Option<String> = row.get("credential_visibility");
         let status = account_invitation_status(
             &expires_at,
             consumed_at.as_deref(),
@@ -3057,6 +3067,7 @@ pub async fn list_account_invitations(
             "created_at": created_at,
             "expires_at": expires_at,
             "status": status,
+            "credential_visibility": credential_visibility,
         }));
     }
     tx.commit().await.map_err(ApiError::internal)?;
@@ -3077,7 +3088,8 @@ pub async fn create_account_invitation(
     let Json(request) = request.map_err(|_| {
         ApiError::bad_request(
             "INVALID_ACCOUNT_INVITATION",
-            "request body must contain username and an optional integer expires_in_seconds",
+            "request body must contain username, an optional integer expires_in_seconds and an \
+             optional credential_visibility of private, admin_visible or null",
         )
     })?;
     let username = auth::normalized_username(&request.username)?;
@@ -3094,6 +3106,9 @@ pub async fn create_account_invitation(
     }
 
     if state.pg_sync_only {
+        if request.credential_visibility.is_some() {
+            return Err(crate::credential_visibility::pg_unsupported());
+        }
         let body = crate::pg_admin_invitations::create_account_invitation(
             &state,
             &user,
@@ -3174,15 +3189,19 @@ pub async fn create_account_invitation(
     let token = auth::random_token();
     let token_hash = crate::sha256_hex(token.as_bytes());
     let invitation_id = Uuid::new_v4().to_string();
+    let credential_visibility = request
+        .credential_visibility
+        .map(crate::credential_visibility::CredentialVisibility::as_str);
     sqlx::query(
-        "INSERT INTO account_invitations(invitation_id,token_hash,username,created_at,expires_at) \
-         VALUES(?,?,?,?,?)",
+        "INSERT INTO account_invitations(invitation_id,token_hash,username,created_at,expires_at,\
+         credential_visibility) VALUES(?,?,?,?,?,?)",
     )
     .bind(&invitation_id)
     .bind(token_hash)
     .bind(&username)
     .bind(&created_at)
     .bind(&expires_at)
+    .bind(credential_visibility)
     .execute(&mut *tx)
     .await
     .map_err(ApiError::internal)?;
@@ -3207,6 +3226,7 @@ pub async fn create_account_invitation(
                 "created_at": created_at,
                 "expires_at": expires_at,
                 "token": token,
+                "credential_visibility": credential_visibility,
             }
         })),
     ))
@@ -3894,6 +3914,7 @@ mod job_tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir,

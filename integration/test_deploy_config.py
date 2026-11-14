@@ -80,6 +80,20 @@ def test_compose_default_security_and_auth_limit_configuration() -> None:
     assert not any(volume.get("target") in {"/backups", "/backup-key", "/mfa-key/atermius-mfa.key"} for volume in service["volumes"])
     assert any(port.get("host_ip") == "127.0.0.1" and port.get("target") == 8080 for port in service["ports"])
     assert rendered["volumes"]["server-data"]["name"] == "atermius-data"
+    # New instances get SQLCipher encryption at rest with the key on a separate
+    # owner-only volume outside /data.
+    assert config["ATERMIUS_DATABASE_KEY_FILE"] == "/keys/database.key"
+    key_mounts = [volume for volume in service["volumes"] if volume.get("target") == "/keys"]
+    assert len(key_mounts) == 1
+    assert key_mounts[0]["type"] == "volume"
+    assert key_mounts[0]["source"] == "server-keys"
+    # A fresh named keys volume inherits the image's owner-only /keys.
+    dockerfile = (ROOT / "server" / "Dockerfile").read_text(encoding="utf-8")
+    assert "/share-gateway /keys" in dockerfile
+    assert "chmod 0700 /data /object-store /share-gateway /keys" in dockerfile
+    assert "chown -R aterm:aterm /data /object-store /app /share-gateway /keys" in dockerfile
+    assert rendered["volumes"]["server-keys"]["name"] == "atermius-keys"
+    assert rendered["volumes"]["server-keys"]["name"] != rendered["volumes"]["server-data"]["name"]
     healthcheck_command = [str(part) for part in service["healthcheck"]["test"]]
     assert any("atermius-server" in part for part in healthcheck_command)
     assert any("healthcheck" in part for part in healthcheck_command)
@@ -114,6 +128,91 @@ def test_compose_default_security_and_auth_limit_configuration() -> None:
     assert override_config["ATERMIUS_MAX_VAULTS_PER_USER"] == "77"
     assert override_config["ATERMIUS_MAX_MEMBERS_PER_VAULT"] == "333"
     assert override_config["ATERMIUS_MAX_ACTIVE_RECOVERY_CHALLENGES"] == "777"
+
+
+def test_compose_database_key_is_disabled_unless_configured(tmp_path: Path) -> None:
+    """An existing .env without the new setting keeps a plaintext database."""
+    docker = shutil.which("docker")
+    if not docker:
+        pytest.skip("Docker Compose is required to validate the rendered deployment configuration")
+
+    env = {key: value for key, value in os.environ.items() if not key.startswith("ATERMIUS_")}
+    env_file = tmp_path / "existing.env"
+    env_file.write_text("ATERMIUS_HOST_PORT=8080\n", encoding="utf-8")
+    result = subprocess.run(
+        [
+            docker,
+            "compose",
+            "--env-file",
+            str(env_file),
+            "-f",
+            "deploy/compose.yaml",
+            "config",
+            "--format",
+            "json",
+        ],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=20,
+        check=False,
+    )
+    if result.returncode != 0 and ("unknown flag" in result.stderr.lower() or "unknown shorthand" in result.stderr.lower()):
+        pytest.skip("installed Docker Compose does not support `config --format json`")
+    assert result.returncode == 0, f"docker compose config failed: {result.stderr[-2000:]}"
+    rendered = json.loads(result.stdout)
+    service = rendered["services"]["server"]
+    assert service["environment"]["ATERMIUS_DATABASE_KEY_FILE"] == ""
+    assert any(volume.get("target") == "/keys" for volume in service["volumes"])
+
+
+DOCS_STARTING_FROM_ENV_EXAMPLE = (
+    "README.md",
+    "README.zh-CN.md",
+    "deploy/README.md",
+    "docs/install/server.md",
+    "docs/install/server.en.md",
+)
+
+
+def test_docs_create_the_database_key_before_the_first_start() -> None:
+    """`.env.example` enables SQLCipher with /keys/database.key, so every
+    documented start from it must create the key before the first `up`, or the
+    server refuses to start with DATABASE_KEY_FILE_INVALID."""
+    example = (ROOT / "deploy" / ".env.example").read_text(encoding="utf-8")
+    assert "\nATERMIUS_DATABASE_KEY_FILE=/keys/database.key\n" in example
+    checked = 0
+    for relative in DOCS_STARTING_FROM_ENV_EXAMPLE:
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        start = 0
+        while (copy := text.find("cp deploy/.env.example", start)) != -1:
+            first_up = text.find(" up -d", copy)
+            assert first_up != -1, f"{relative}: no start command after copying .env.example"
+            assert "database-key-generate --out /keys/database.key" in text[copy:first_up], (
+                f"{relative}: the first `up` after `cp deploy/.env.example` "
+                "comes before `database-key-generate`"
+            )
+            checked += 1
+            start = copy + 1
+    assert checked >= len(DOCS_STARTING_FROM_ENV_EXAMPLE)
+
+    # The PostgreSQL runtime section starts from the same `.env.example`
+    # values without a `cp` line of its own.
+    deploy = (ROOT / "deploy" / "README.md").read_text(encoding="utf-8")
+    section = deploy[deploy.index("## PostgreSQL runtime"):]
+    assert "database-key-generate --out /keys/database.key" in section[: section.index(" up -d")]
+
+
+def test_database_key_restore_never_uses_a_clobbering_shell_snippet() -> None:
+    """The key-restore procedure uses `database-key-import`, which never
+    removes an existing key, instead of a shell `rm -f` cleanup."""
+    runbook = (ROOT / "docs" / "runbooks" / "database-encryption.md").read_text(encoding="utf-8")
+    section = runbook[runbook.index("## Back up the key"):]
+    section = section[: section.index("\n## ", 1)]
+    assert "database-key-import --out /keys/database.key" in section
+    assert "rm -f /keys/database.key" not in runbook
+    assert "set -C" not in section
 
 
 def test_compose_mfa_overlay_mounts_only_the_owner_key_read_only() -> None:

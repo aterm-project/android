@@ -8,10 +8,21 @@ From the repository root:
 
 ```sh
 cp deploy/.env.example deploy/.env
+# deploy/.env.example sets ATERMIUS_DATABASE_KEY_FILE=/keys/database.key:
+# create the database key once, before the first start.
+docker compose --env-file deploy/.env -f deploy/compose.yaml \
+  run --build --rm --no-deps server database-key-generate --out /keys/database.key
 docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --build
 docker compose --env-file deploy/.env -f deploy/compose.yaml exec -T server \
   /usr/local/bin/atermius-server bootstrap
 ```
+
+The new instance encrypts its database at rest with that key (see
+[Database encryption at rest](#database-encryption-at-rest)); back the key
+up separately right away. Without the key-generation step the server refuses
+to start with `DATABASE_KEY_FILE_INVALID`. To run without encryption instead,
+set `ATERMIUS_DATABASE_KEY_FILE=` (empty) in `deploy/.env` before the first
+`up`; the admin overview then warns that the database is not encrypted.
 
 Store the one-time bootstrap token printed by `bootstrap` securely, then enter
 it in the first-account setup screen. The token is consumed by the first
@@ -52,6 +63,22 @@ to confirm it has no application schema or user relations in `public`, and
 that the service role can create the required schema and objects. The
 coordinator checks that the URLs differ; it does not connect to or prove that
 the next target is empty.
+
+`deploy/.env.example` also sets `ATERMIUS_DATABASE_KEY_FILE=/keys/database.key`,
+which encrypts the node-local SQLite store with SQLCipher (PostgreSQL itself
+needs storage-level encryption). Create that key once before the first start,
+with the same Compose files, or set `ATERMIUS_DATABASE_KEY_FILE=` (empty) to
+keep the node-local store unencrypted; with the setting but no key file the
+server refuses to start (`DATABASE_KEY_FILE_INVALID`):
+
+```sh
+docker compose --env-file deploy/.env \
+  -f deploy/compose.yaml \
+  -f deploy/compose.backup.yaml \
+  -f deploy/compose.object-store-filesystem.yaml \
+  -f deploy/compose.postgres.yaml \
+  run --build --rm --no-deps server database-key-generate --out /keys/database.key
+```
 
 Apply exactly these Compose files in this order for the supported runtime:
 
@@ -602,6 +629,13 @@ consumed by that account's successful registration. The account invitation
 grants only a personal vault; sharing an existing team vault requires a
 separate owner-issued vault invitation.
 
+Add `--credential-visibility private` or `--credential-visibility admin_visible`
+to fix the new account's credential-visibility mode (SQLite only). Without it
+the account receives the instance default when it registers. Read
+[docs/CREDENTIAL-VISIBILITY.md](../docs/CREDENTIAL-VISIBILITY.md) before using
+`admin_visible`: administrators can then read that account's saved Host
+credentials.
+
 ## Store encrypted attachment objects on a dedicated filesystem volume
 
 The optional `compose.object-store-filesystem.yaml` overlay stores new
@@ -752,8 +786,10 @@ current active authenticated session. A missing, invalid, expired, or revoked
 session receives HTTP 401, while an authenticated account outside the
 allowlist receives HTTP 403 `INSTANCE_ADMIN_REQUIRED`.
 
-`GET /api/v1/admin/overview` returns instance-wide aggregate counters and the
-effective Relay policy. Counters do not identify accounts or Vaults, and the
+`GET /api/v1/admin/overview` returns instance-wide aggregate counters, the
+effective Relay policy, and `database_encryption` (`enabled` or `disabled`,
+see [Database encryption at rest](#database-encryption-at-rest)). Counters do
+not identify accounts or Vaults, and the
 response never includes Vault names, record contents, SSH data, ciphertext, or
 other client payloads. This endpoint is read-only.
 
@@ -795,6 +831,41 @@ target their own account/session, and accounts already in deletion grace stay
 under the account-deletion lifecycle. The UI and API omit token hashes, source
 addresses, password material, and client payloads; successful changes enter
 the instance-scope audit feed with an HMACed account resource ID.
+
+## Database encryption at rest
+
+The main SQLite database is encrypted with SQLCipher when
+`ATERMIUS_DATABASE_KEY_FILE` names an owner-only, single-linked, regular
+32-byte key file outside `ATERMIUS_DATA_DIR`. `compose.yaml` mounts the
+separate `server-keys` volume (`ATERMIUS_KEYS_VOLUME_NAME`, default
+`atermius-keys`) at `/keys` and passes the setting through; an empty value
+keeps a plaintext database, which `GET /api/v1/admin/overview` reports as
+`"database_encryption": "disabled"`. `deploy/.env.example` uses
+`/keys/database.key` for new instances. Create it once before the first start:
+
+```sh
+docker compose --env-file deploy/.env -f deploy/compose.yaml \
+  run --build --rm --no-deps server database-key-generate --out /keys/database.key
+```
+
+The key directory must not be group/world-writable (a shared directory such
+as `/tmp` is refused). To restore a backed-up key onto a fresh keys volume,
+pipe its base64 into `database-key-import --out /keys/database.key`, which
+never replaces or removes an existing key file (see the runbook's
+[Back up the key](../docs/runbooks/database-encryption.md#back-up-the-key)).
+
+A configured but invalid key, a wrong key, an encrypted database without a
+key, or a plaintext database with a key all stop startup with a specific error
+code before migrations run. Existing plaintext instances are migrated offline
+with `database-encrypt --server-stopped`; keys are rotated offline with
+`database-rekey --new-key-file <path> --server-stopped`; `database-checkpoint
+--server-stopped` checkpoints and verifies the (encrypted) database offline,
+which `deploy/restore_cutover.py` uses for an encrypted source. Encrypted backups keep
+the snapshot encrypted and carry its key inside the encrypted archive. Back up
+the database key separately from the data and backup volumes. See the
+[database encryption runbook](../docs/runbooks/database-encryption.md) for the
+procedures, the restore matrix and what is and is not protected. PostgreSQL
+sync-core data needs storage-level encryption instead.
 
 ## Optional TOTP MFA key
 

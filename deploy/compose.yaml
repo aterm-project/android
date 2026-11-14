@@ -8,6 +8,10 @@ services:
       ATERMIUS_BIND: "0.0.0.0:8080"
       ATERMIUS_DATA_DIR: "${ATERMIUS_DATA_DIR:-/data}"
       ATERMIUS_DATABASE_URL: "${ATERMIUS_DATABASE_URL:-sqlite:///data/atermius.db?mode=rwc}"
+      # SQLCipher key for the main database, kept on the separate keys volume
+      # outside /data. Empty keeps a plaintext database (reported to admins as
+      # database_encryption=disabled). See docs/runbooks/database-encryption.md.
+      ATERMIUS_DATABASE_KEY_FILE: "${ATERMIUS_DATABASE_KEY_FILE:-}"
       ATERMIUS_REGISTRATION_OPEN: "false"
       ATERMIUS_HISTORY_RETENTION_DAYS: "${ATERMIUS_HISTORY_RETENTION_DAYS:-90}"
       ATERMIUS_VAULT_DELETION_GRACE_SECONDS: "${ATERMIUS_VAULT_DELETION_GRACE_SECONDS:-604800}"
@@ -37,6 +41,9 @@ services:
       - "127.0.0.1:${ATERMIUS_HOST_PORT:-8080}:8080"
     volumes:
       - server-data:/data
+      # Owner-only (0700, UID 10001) volume for the database key. Back it up
+      # separately from the data volume; the server only reads it.
+      - server-keys:/keys
     healthcheck:
       test: ["CMD", "/usr/local/bin/atermius-server", "healthcheck"]
       interval: 30s
@@ -49,3 +56,5 @@ services:
 volumes:
   server-data:
     name: "${ATERMIUS_DATA_VOLUME_NAME:-atermius-data}"
+  server-keys:
+    name: "${ATERMIUS_KEYS_VOLUME_NAME:-atermius-keys}"

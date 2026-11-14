@@ -117,7 +117,11 @@ def test_instance_admin_account_and_session_controls_are_scoped_and_audited(
         "created_at",
         "active_device_count",
         "active_session_count",
+        "credential_visibility",
+        "escrow_status",
     }
+    assert listed["credential_visibility"] == "private"
+    assert listed["escrow_status"] == "not_required"
     assert listed["username"] == target["username"]
     assert listed["status"] == "active"
     assert listed["active_device_count"] == 1

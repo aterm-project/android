@@ -51,6 +51,7 @@ fn test_config(data_dir: std::path::PathBuf) -> Config {
         backup_archive_dir: None,
         backup_key_file: None,
         mfa_encryption_key_file: None,
+        database_key_file: None,
         backup_retention_count: None,
         backup_replication_env: crate::BackupReplicationEnv::default(),
         data_dir,
@@ -94,6 +95,53 @@ impl World {
         cloud_state.resolver = resolver.clone();
         state.cloud = Arc::new(cloud_state);
         Self { state, resolver }
+    }
+
+    /// A world over the main database in `data_dir`, opened through the
+    /// production `open_state` path. With `database_key_file` the database is
+    /// SQLCipher-encrypted at rest. Opening an existing directory (for example
+    /// a restored one) keeps its data; no share-gateway key is registered.
+    pub(crate) async fn at(
+        data_dir: std::path::PathBuf,
+        database_key_file: Option<std::path::PathBuf>,
+    ) -> Self {
+        crate::secure_file::create_private_data_dir(&data_dir).unwrap();
+        let database = format!("sqlite://{}/atermius.db?mode=rwc", data_dir.display());
+        let mut config = test_config(data_dir);
+        config.database_key_file = database_key_file;
+        let state = crate::open_state(&database, config).await.unwrap();
+        let resolver = Arc::new(FakeResolver(Mutex::new(vec!["10.1.2.3".parse().unwrap()])));
+        Self { state, resolver }
+    }
+
+    /// A new session for an existing account and device, for example after a
+    /// restore revoked every session.
+    pub(crate) async fn sign_in(
+        &self,
+        user_id: &str,
+        device_id: &str,
+        signing: SigningKey,
+    ) -> Account {
+        let access = format!("cloud-access-{}", Uuid::new_v4());
+        let now = chrono::Utc::now();
+        sqlx::query("INSERT INTO sessions(session_id,user_id,device_id,family_id,access_hash,refresh_hash,access_expires_at,refresh_expires_at,created_at) VALUES(?,?,?,'cloud-family',?,?,?,?,?)")
+            .bind(Uuid::new_v4().to_string())
+            .bind(user_id)
+            .bind(device_id)
+            .bind(crate::sha256_hex(access.as_bytes()))
+            .bind(format!("cloud-refresh-{}", Uuid::new_v4()))
+            .bind((now + chrono::Duration::minutes(30)).to_rfc3339())
+            .bind((now + chrono::Duration::days(30)).to_rfc3339())
+            .bind(now.to_rfc3339())
+            .execute(&self.state.db)
+            .await
+            .unwrap();
+        Account {
+            user_id: user_id.to_owned(),
+            device_id: device_id.to_owned(),
+            access,
+            signing,
+        }
     }
 
     pub(crate) fn set_dns(&self, answers: &[&str]) {

@@ -5,14 +5,11 @@
 //! old copy is retained, so operators can resume forward or restore the
 //! pre-migration archive without needing an in-place reverse migration.
 
-use std::{str::FromStr, time::Duration};
+use std::time::Duration;
 
 use chrono::Utc;
 use sha2::Digest;
-use sqlx::{
-    Row, SqlitePool,
-    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
-};
+use sqlx::{Row, SqlitePool};
 
 use crate::{
     ApiError, Config, acquire_maintenance_run_lock, acquire_runtime_lock,
@@ -79,17 +76,17 @@ pub async fn run_object_store_migration(
     let _runtime_lock = acquire_runtime_lock(&config.data_dir)?;
     let _maintenance_lock = acquire_maintenance_run_lock(&config.data_dir)?;
 
-    let options = SqliteConnectOptions::from_str(database_url)
-        .map_err(ApiError::internal)?
+    let database_key = crate::database::DatabaseKey::configured(config)?;
+    let options = crate::database::main_sqlite_options(database_url, database_key.as_ref())?
         .create_if_missing(false)
         .foreign_keys(true)
         .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
         .busy_timeout(Duration::from_secs(10));
-    let db = SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect_with(options)
-        .await
-        .map_err(ApiError::internal)?;
+    crate::database::startup_database_encryption(
+        crate::database::detect_database_file(options.get_filename())?,
+        database_key.as_ref(),
+    )?;
+    let db = crate::database::connect_keyed_pool(options, database_key.as_ref(), 1).await?;
     // Do not let SQLx migration DDL touch a corrupt or foreign-key-inconsistent
     // instance. Check again after applying the current schema for the journal.
     verify_sqlite_integrity(&db).await?;

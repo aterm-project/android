@@ -245,7 +245,27 @@ pub async fn create_account_invitation(
     raw_username: &str,
     expires_in_seconds: Option<i64>,
 ) -> Result<(String, String, String), ApiError> {
+    create_account_invitation_with_credential_visibility(
+        state,
+        raw_username,
+        expires_in_seconds,
+        None,
+    )
+    .await
+}
+
+/// Operator CLI invitation with an optional credential-visibility mode
+/// (`private` or `admin_visible`). None uses the instance default when the
+/// account registers. A mode is supported only by the SQLite runtime.
+pub async fn create_account_invitation_with_credential_visibility(
+    state: &AppState,
+    raw_username: &str,
+    expires_in_seconds: Option<i64>,
+    credential_visibility: Option<&str>,
+) -> Result<(String, String, String), ApiError> {
     let username = normalized_username(raw_username)?;
+    let credential_visibility =
+        crate::credential_visibility::parse_invitation_mode(credential_visibility)?;
     let lifetime = expires_in_seconds.unwrap_or(ACCOUNT_INVITATION_DEFAULT_SECONDS);
     if !(ACCOUNT_INVITATION_MIN_SECONDS..=ACCOUNT_INVITATION_MAX_SECONDS).contains(&lifetime) {
         return Err(ApiError::bad_request(
@@ -254,6 +274,9 @@ pub async fn create_account_invitation(
         ));
     }
     if let Some(repository) = state.pg_account_onboarding.as_ref() {
+        if credential_visibility.is_some() {
+            return Err(crate::credential_visibility::pg_unsupported());
+        }
         return repository.issue_invitation(&username, lifetime).await;
     }
     let mut tx = state.db.begin().await.map_err(ApiError::internal)?;
@@ -316,12 +339,13 @@ pub async fn create_account_invitation(
     let token = random_token();
     let token_hash = sha256_hex(token.as_bytes());
     let invitation_id = Uuid::new_v4().to_string();
-    sqlx::query("INSERT INTO account_invitations(invitation_id,token_hash,username,created_at,expires_at) VALUES(?,?,?,?,?)")
+    sqlx::query("INSERT INTO account_invitations(invitation_id,token_hash,username,created_at,expires_at,credential_visibility) VALUES(?,?,?,?,?,?)")
         .bind(&invitation_id)
         .bind(token_hash)
         .bind(&username)
         .bind(&created_at)
         .bind(&expires_at)
+        .bind(credential_visibility.map(|mode| mode.as_str()))
         .execute(&mut *tx)
         .await
         .map_err(ApiError::internal)?;
@@ -863,6 +887,7 @@ pub async fn register(
         .await
         .map_err(ApiError::internal)?;
     let account_invitation_id: Option<String>;
+    let mut invitation_credential_visibility: Option<String> = None;
     let mut bootstrap_token_hash: Option<String> = None;
     if user_count == 0 {
         if request.instance_invitation_token.is_some() {
@@ -900,7 +925,7 @@ pub async fn register(
             ));
         };
         let token_hash = sha256_hex(token.as_bytes());
-        let invite = sqlx::query("SELECT invitation_id,username,expires_at,consumed_at,revoked_at FROM account_invitations WHERE token_hash=?")
+        let invite = sqlx::query("SELECT invitation_id,username,expires_at,consumed_at,revoked_at,credential_visibility FROM account_invitations WHERE token_hash=?")
             .bind(token_hash)
             .fetch_optional(&mut *tx)
             .await
@@ -923,6 +948,7 @@ pub async fn register(
             return Err(account_invitation_invalid());
         }
         account_invitation_id = Some(invite.get("invitation_id"));
+        invitation_credential_visibility = invite.get("credential_visibility");
     }
     let exists: Option<i64> = sqlx::query_scalar("SELECT 1 FROM users WHERE username=?")
         .bind(&username)
@@ -973,13 +999,23 @@ pub async fn register(
     // account creation remain one atomic operation.
     let (verifier_hash, verifier_salt) = password_hash(&request.login_verifier)?;
     let now = now_rfc3339();
-    sqlx::query("INSERT INTO users(user_id,username,created_at) VALUES(?,?,?)")
-        .bind(&user_id)
-        .bind(&username)
-        .bind(&now)
-        .execute(&mut *tx)
-        .await
-        .map_err(ApiError::internal)?;
+    // The invitation's explicit credential-visibility mode wins; otherwise
+    // (including bootstrap) the current instance default applies.
+    let credential_visibility = crate::credential_visibility::mode_for_new_account_tx(
+        &mut tx,
+        invitation_credential_visibility.as_deref(),
+    )
+    .await?;
+    sqlx::query(
+        "INSERT INTO users(user_id,username,created_at,credential_visibility) VALUES(?,?,?,?)",
+    )
+    .bind(&user_id)
+    .bind(&username)
+    .bind(&now)
+    .bind(credential_visibility.as_str())
+    .execute(&mut *tx)
+    .await
+    .map_err(ApiError::internal)?;
     sqlx::query("INSERT INTO auth_credentials(user_id,login_verifier_hash,verifier_salt,kdf_json,account_key_envelope) VALUES(?,?,?,?,?)")
         .bind(&user_id).bind(&verifier_hash).bind(&verifier_salt).bind(&kdf_json).bind(account_envelope).execute(&mut *tx).await.map_err(ApiError::internal)?;
     insert_device(&mut tx, &request.device, &user_id, &now).await?;
@@ -2050,16 +2086,20 @@ pub async fn me(
         } else {
             "disabled"
         };
-        return Ok(Json(
-            repository
-                .me(
-                    &user,
-                    instance_admin,
-                    state.config.registration_open,
-                    recovery_status,
-                )
-                .await?,
-        ));
+        let mut response = repository
+            .me(
+                &user,
+                instance_admin,
+                state.config.registration_open,
+                recovery_status,
+            )
+            .await?;
+        // Credential visibility is SQLite-only; the restricted PostgreSQL
+        // runtime reports it as unavailable.
+        if let Some(policy) = response.get_mut("policy").and_then(Value::as_object_mut) {
+            policy.insert("credential_visibility".to_owned(), Value::Null);
+        }
+        return Ok(Json(response));
     }
     let username: String = sqlx::query_scalar("SELECT username FROM users WHERE user_id=?")
         .bind(&user.user_id)
@@ -2075,8 +2115,10 @@ pub async fn me(
     .map_err(ApiError::internal)?;
     let recovery_status = crate::recovery::profile_status(&state, &user.user_id).await?;
     let instance_admin = state.config.is_instance_admin(&username);
+    let credential_visibility =
+        crate::credential_visibility::me_policy(&state, &user.user_id).await?;
     Ok(Json(
-        json!({"account_id":user.user_id,"username":username,"device_id":user.device_id,"account_key_envelope":serde_json::from_str::<Value>(&account_key_envelope).unwrap_or(Value::Null),"account_key_envelope_version":version,"recovery_status":recovery_status,"policy":{"registration_open":state.config.registration_open,"instance_admin":instance_admin}}),
+        json!({"account_id":user.user_id,"username":username,"device_id":user.device_id,"account_key_envelope":serde_json::from_str::<Value>(&account_key_envelope).unwrap_or(Value::Null),"account_key_envelope_version":version,"recovery_status":recovery_status,"policy":{"registration_open":state.config.registration_open,"instance_admin":instance_admin,"credential_visibility":credential_visibility}}),
     ))
 }
 
@@ -2564,6 +2606,7 @@ mod tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir: data_dir.clone(),
@@ -3109,6 +3152,7 @@ mod tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir: data_dir.clone(),
@@ -3460,6 +3504,7 @@ mod tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir: data_dir.clone(),
@@ -3651,6 +3696,7 @@ mod tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir: data_dir.clone(),
@@ -3816,6 +3862,7 @@ mod tests {
             backup_archive_dir: None,
             backup_key_file: None,
             mfa_encryption_key_file: None,
+            database_key_file: None,
             backup_retention_count: None,
             backup_replication_env: crate::BackupReplicationEnv::default(),
             data_dir: data_dir.clone(),

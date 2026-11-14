@@ -50,6 +50,12 @@ HEALTH_TIMEOUT_MAX = 600
 HTTP_TIMEOUT_SECONDS = 5
 SERVICE_DATA_UID = 10001
 INSTALL_OUTPUT_RE = re.compile(r"\bwith generation ([0-9a-f-]{36})\b")
+# Receipt printed by `atermius-server database-checkpoint --server-stopped` for
+# a SQLCipher-encrypted source database.
+CHECKPOINT_OUTPUT_RE = re.compile(
+    r"^Database checkpointed and verified offline \(\d+ tables, \d+ rows; encrypted\)\.", re.MULTILINE
+)
+SQLITE_PLAINTEXT_HEADER = b"SQLite format 3\x00"
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 VOLUME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
 PROJECT_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,62}$")
@@ -664,10 +670,26 @@ def _compose_start_source(record: dict[str, Any], env_file: Path, compose_files:
 
 
 def _check_source_quiescence(record: dict[str, Any], env_file: Path, compose_files: tuple[Path, ...]) -> None:
-    # Clean shutdown can leave empty SQLite WAL sidecars. Checkpoint through
-    # SQLite's API on a host-visible local volume while holding the same
-    # advisory server.lock used by the runtime. Unknown drivers/metadata fail
-    # closed; the source is never deleted or otherwise rewritten.
+    # Clean shutdown can leave empty SQLite WAL sidecars. A plaintext source
+    # is checkpointed through SQLite's API on a host-visible local volume while
+    # holding the same advisory server.lock used by the runtime. A
+    # SQLCipher-encrypted source cannot be opened by Python's sqlite3 and its
+    # key must not be read on the host, so it is checkpointed inside the server
+    # image with the deployment's configured key instead. Unknown drivers or
+    # metadata fail closed; the source is never deleted or otherwise rewritten.
+    mountpoint = _source_mountpoint(record)
+    if _inspect_source_under_lock(mountpoint, checkpoint_plaintext=True):
+        record["source_checkpointed_at"] = _utc_now()
+        return
+    _run_server_checkpoint(record, env_file, compose_files)
+    # Re-verify on the host, under the runtime lock, that the server-side
+    # checkpoint left no sidecar and the file is still the encrypted database.
+    if _inspect_source_under_lock(mountpoint, checkpoint_plaintext=False):
+        raise CutoverError("source_database_changed")
+    record["source_checkpointed_at"] = _utc_now()
+
+
+def _source_mountpoint(record: dict[str, Any]) -> Path:
     result = _run(
         ["docker", "volume", "inspect", "--format", "{{.Name}}|{{.Driver}}|{{.Mountpoint}}", record["source_volume"]],
         env=_base_env(), timeout=60,
@@ -696,7 +718,38 @@ def _check_source_quiescence(record: dict[str, Any], env_file: Path, compose_fil
     if (not stat.S_ISDIR(directory_metadata.st_mode) or directory_metadata.st_uid != SERVICE_DATA_UID
             or stat.S_IMODE(directory_metadata.st_mode) != 0o700):
         raise CutoverError("source_directory_unsafe")
+    return mountpoint
 
+
+def _read_database_header(database_path: Path, expected: os.stat_result) -> bytes:
+    """Read the 16-byte file header without SQLite (no key, no recovery)."""
+    descriptor = os.open(
+        database_path,
+        os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0),
+    )
+    try:
+        opened = os.fstat(descriptor)
+        if (not stat.S_ISREG(opened.st_mode)
+                or (opened.st_dev, opened.st_ino) != (expected.st_dev, expected.st_ino)):
+            raise CutoverError("source_database_changed")
+        header = b""
+        while len(header) < len(SQLITE_PLAINTEXT_HEADER):
+            chunk = os.read(descriptor, len(SQLITE_PLAINTEXT_HEADER) - len(header))
+            if not chunk:
+                break
+            header += chunk
+        return header
+    finally:
+        os.close(descriptor)
+
+
+def _inspect_source_under_lock(mountpoint: Path, *, checkpoint_plaintext: bool) -> bool:
+    """Check the stopped source under server.lock; return True if plaintext.
+
+    A plaintext database is checkpointed here when `checkpoint_plaintext` is
+    set. Sidecars must be absent afterwards, except before the server-side
+    checkpoint of an encrypted database (first pass), which they may precede.
+    """
     lock_path = mountpoint / "server.lock"
     database_path = mountpoint / "atermius.db"
     lock_fd = -1
@@ -726,31 +779,34 @@ def _check_source_quiescence(record: dict[str, Any], env_file: Path, compose_fil
             if (not stat.S_ISREG(sidecar_metadata.st_mode) or sidecar_metadata.st_uid != SERVICE_DATA_UID
                     or sidecar_metadata.st_nlink != 1):
                 raise CutoverError("source_sidecar_unsafe")
-        try:
-            connection = sqlite3.connect(f"{database_path.as_uri()}?mode=rw", uri=True, timeout=10, isolation_level=None)
+        plaintext = _read_database_header(database_path, database_metadata) == SQLITE_PLAINTEXT_HEADER
+        if plaintext and checkpoint_plaintext:
             try:
-                checkpoint = connection.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
-                if not checkpoint or checkpoint[0] != 0 or (checkpoint[1] >= 0 and checkpoint[2] < checkpoint[1]):
-                    raise CutoverError("source_checkpoint_incomplete")
-                if connection.execute("PRAGMA integrity_check").fetchall() != [("ok",)]:
-                    raise CutoverError("source_database_integrity_failed")
-            finally:
-                connection.close()
-        except CutoverError:
-            raise
-        except sqlite3.Error as exc:
-            raise CutoverError("source_checkpoint_failed") from exc
-        for suffix in ("-wal", "-shm", "-journal"):
-            try:
-                Path(str(database_path) + suffix).lstat()
-            except FileNotFoundError:
-                continue
-            raise CutoverError("source_sidecar_remains")
+                connection = sqlite3.connect(f"{database_path.as_uri()}?mode=rw", uri=True, timeout=10, isolation_level=None)
+                try:
+                    checkpoint = connection.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+                    if not checkpoint or checkpoint[0] != 0 or (checkpoint[1] >= 0 and checkpoint[2] < checkpoint[1]):
+                        raise CutoverError("source_checkpoint_incomplete")
+                    if connection.execute("PRAGMA integrity_check").fetchall() != [("ok",)]:
+                        raise CutoverError("source_database_integrity_failed")
+                finally:
+                    connection.close()
+            except CutoverError:
+                raise
+            except sqlite3.Error as exc:
+                raise CutoverError("source_checkpoint_failed") from exc
+        if plaintext or not checkpoint_plaintext:
+            for suffix in ("-wal", "-shm", "-journal"):
+                try:
+                    Path(str(database_path) + suffix).lstat()
+                except FileNotFoundError:
+                    continue
+                raise CutoverError("source_sidecar_remains")
         final_database = database_path.lstat()
         if (not stat.S_ISREG(final_database.st_mode) or final_database.st_uid != SERVICE_DATA_UID
                 or final_database.st_nlink != 1):
             raise CutoverError("source_database_unsafe")
-        record["source_checkpointed_at"] = _utc_now()
+        return plaintext
     except CutoverError:
         raise
     except OSError as exc:
@@ -759,6 +815,23 @@ def _check_source_quiescence(record: dict[str, Any], env_file: Path, compose_fil
         if lock_fd >= 0:
             fcntl.flock(lock_fd, fcntl.LOCK_UN)
             os.close(lock_fd)
+
+
+def _run_server_checkpoint(record: dict[str, Any], env_file: Path, compose_files: tuple[Path, ...]) -> None:
+    # The server command takes the runtime and maintenance locks itself, so
+    # the host lock is not held here. It opens the source with the configured
+    # ATERMIUS_DATABASE_KEY_FILE from the keys volume, runs
+    # wal_checkpoint(TRUNCATE) and integrity_check, closes it, and requires
+    # every sidecar to be gone. Its output is never stored or echoed.
+    script = "/usr/local/bin/atermius-server database-checkpoint --server-stopped"
+    result = _compose_call(record, env_file, compose_files, "run", "--rm", "--no-deps",
+                           "--entrypoint", "/bin/sh", SERVICE, "-ec", script,
+                           overrides={DATA_VOLUME_KEY: record["source_volume"], **record["original_settings"]},
+                           timeout=600)
+    if result.returncode != 0:
+        raise CutoverError("source_checkpoint_failed")
+    if not CHECKPOINT_OUTPUT_RE.search(result.stdout):
+        raise CutoverError("source_checkpoint_receipt_invalid")
 
 
 def _verify_source(record: dict[str, Any]) -> None:

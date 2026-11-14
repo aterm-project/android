@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+import fcntl
 import json
 import os
 import sqlite3
@@ -47,6 +49,15 @@ class FakeDocker:
         self.fail_target_health = False
         self.last_install_command: list[str] | None = None
         self.last_target_up_command: list[str] | None = None
+        self.checkpoint_calls = 0
+        self.fail_checkpoint = False
+        self.checkpoint_leaves_wal = False
+        self.checkpoint_output = (
+            "Database checkpointed and verified offline (93 tables, 1204 rows; encrypted). "
+            "No -wal, -shm or -journal sidecar remains.\n"
+        )
+        self.last_checkpoint_command: list[str] | None = None
+        self.last_checkpoint_env: dict[str, str] | None = None
 
     def _env_values(self) -> dict[str, str]:
         values: dict[str, str] = {}
@@ -102,6 +113,8 @@ class FakeDocker:
             return subprocess_result(0, "", "")
         if "run" in command:
             script = command[-1]
+            if "database-checkpoint" in script:
+                return self._server_checkpoint(command, env)
             if "/target/restored" in script and "install-restore-stage" not in script:
                 # Target path presence is the only mutable data in the target volume.
                 return subprocess_result(1 if self.installed else 0, "", "")
@@ -132,6 +145,36 @@ class FakeDocker:
                 raise AssertionError(f"unexpected selected volume {volume_name!r}")
             return subprocess_result(0, "", "")
         raise AssertionError(f"unhandled command: {command!r}")
+
+
+def _fake_server_checkpoint(runtime: "FakeDocker", command: list[str], env: dict[str, str]) -> "subprocess_result":
+    """Emulate `atermius-server database-checkpoint --server-stopped`."""
+    runtime.checkpoint_calls += 1
+    runtime.last_checkpoint_command = command
+    runtime.last_checkpoint_env = {key: env[key] for key in cutover.ENV_KEYS if key in env}
+    if runtime.running is not None:
+        return subprocess_result(1, "", "SERVER_RUNNING")
+    # Like the server, take the runtime lock exclusively: the coordinator
+    # must not hold it while the containerized command runs.
+    descriptor = os.open(runtime.source_mountpoint / "server.lock", os.O_RDWR)
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return subprocess_result(1, "", "SERVER_RUNNING: sensitive lock diagnostic")
+        if runtime.fail_checkpoint:
+            return subprocess_result(1, "", "DATABASE_KEY_INVALID: sensitive checkpoint diagnostic")
+        if not runtime.checkpoint_leaves_wal:
+            for suffix in ("-wal", "-shm"):
+                with contextlib.suppress(FileNotFoundError):
+                    (runtime.source_mountpoint / f"atermius.db{suffix}").unlink()
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+    finally:
+        os.close(descriptor)
+    return subprocess_result(0, runtime.checkpoint_output, "")
+
+
+FakeDocker._server_checkpoint = _fake_server_checkpoint  # type: ignore[attr-defined]
 
 
 class subprocess_result:
@@ -490,3 +533,115 @@ def test_environment_duplicate_managed_setting_is_rejected_without_write(harness
         )
     assert harness.env_file.read_bytes() == changed
     assert before != changed
+
+
+ENCRYPTED_HEADER = bytes(range(16))  # SQLCipher files start with a random salt
+
+
+def _make_source_encrypted(harness, monkeypatch: pytest.MonkeyPatch, *, with_wal: bool = True) -> bytes:
+    """Replace the fixture database with an opaque SQLCipher-like file.
+
+    Python's sqlite3 has no SQLCipher: the coordinator must never open this
+    file with it, so any attempt fails the test.
+    """
+    source = harness.runtime.source_mountpoint
+    database = source / "atermius.db"
+    for suffix in ("-wal", "-shm"):
+        with contextlib.suppress(FileNotFoundError):
+            (source / f"atermius.db{suffix}").unlink()
+    payload = ENCRYPTED_HEADER + os.urandom(4096 - len(ENCRYPTED_HEADER))
+    database.write_bytes(payload)
+    os.chmod(database, 0o600)
+    if with_wal:
+        for suffix in ("-wal", "-shm"):
+            sidecar = source / f"atermius.db{suffix}"
+            sidecar.write_bytes(os.urandom(512))
+            os.chmod(sidecar, 0o600)
+
+    def no_host_sqlite(*_args, **_kwargs):
+        raise AssertionError("the coordinator opened an encrypted database with host sqlite3")
+
+    monkeypatch.setattr(cutover.sqlite3, "connect", no_host_sqlite)
+    return payload
+
+
+def test_plaintext_source_is_checkpointed_on_the_host_without_a_server_command(harness):
+    result = cutover._apply(**harness.params)
+    assert result["state"] == "committed"
+    assert harness.runtime.checkpoint_calls == 0
+
+
+def test_encrypted_source_is_checkpointed_inside_the_server_image(harness, monkeypatch: pytest.MonkeyPatch):
+    payload = _make_source_encrypted(harness, monkeypatch)
+
+    result = cutover._apply(**harness.params)
+
+    assert result["state"] == "committed"
+    assert result["source_checkpointed_at"]
+    assert harness.runtime.checkpoint_calls == 1
+    assert harness.runtime.install_calls == 1
+    command = harness.runtime.last_checkpoint_command
+    assert command is not None
+    assert command[-1] == "/usr/local/bin/atermius-server database-checkpoint --server-stopped"
+    assert command[command.index("--entrypoint") + 1] == "/bin/sh"
+    assert "--no-deps" in command and "--rm" in command
+    # The command runs against the recorded source volume and data layout,
+    # with the deployment's own key configuration from the env file.
+    assert harness.runtime.last_checkpoint_env == {
+        cutover.DATA_VOLUME_KEY: SOURCE_VOLUME, **cutover.SOURCE_SETTINGS,
+    }
+    source = harness.runtime.source_mountpoint
+    assert not (source / "atermius.db-wal").exists()
+    assert not (source / "atermius.db-shm").exists()
+    # The host never rewrote the encrypted source file.
+    assert (source / "atermius.db").read_bytes() == payload
+    journal_raw = harness.journal.read_text()
+    assert "sensitive" not in journal_raw
+    assert "tables" not in journal_raw
+
+
+@pytest.mark.parametrize(
+    ("setting", "expected"),
+    [
+        ("fail_checkpoint", "source_checkpoint_failed"),
+        ("checkpoint_leaves_wal", "source_sidecar_remains"),
+        ("bad_receipt", "source_checkpoint_receipt_invalid"),
+    ],
+)
+def test_encrypted_source_checkpoint_failures_fail_closed_and_restart_source(
+    harness, monkeypatch: pytest.MonkeyPatch, setting: str, expected: str
+):
+    _make_source_encrypted(harness, monkeypatch)
+    if setting == "bad_receipt":
+        harness.runtime.checkpoint_output = "Database checkpointed and verified offline (1 tables, 1 rows; plaintext).\n"
+    else:
+        setattr(harness.runtime, setting, True)
+
+    with pytest.raises(cutover.CutoverError, match=expected):
+        cutover._apply(**harness.params)
+
+    record = json.loads(harness.journal.read_text())
+    assert record["state"] == "rolled_back"
+    assert record["last_error_code"] == expected
+    assert record["source_checkpointed_at"] is None
+    assert harness.runtime.checkpoint_calls == 1
+    assert harness.runtime.install_calls == 0
+    assert harness.runtime.running == "source"
+    assert f"{cutover.DATA_VOLUME_KEY}={SOURCE_VOLUME}" in harness.env_file.read_text()
+    assert "sensitive" not in harness.journal.read_text()
+
+
+def test_encrypted_source_with_unsafe_sidecar_is_rejected_before_the_server_command(
+    harness, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    _make_source_encrypted(harness, monkeypatch, with_wal=False)
+    sidecar_target = tmp_path / "untrusted-sidecar"
+    sidecar_target.write_bytes(b"not a sqlite sidecar")
+    (harness.runtime.source_mountpoint / "atermius.db-wal").symlink_to(sidecar_target)
+
+    with pytest.raises(cutover.CutoverError, match="source_sidecar_unsafe"):
+        cutover._apply(**harness.params)
+
+    assert harness.runtime.checkpoint_calls == 0
+    assert harness.runtime.install_calls == 0
+    assert harness.runtime.running == "source"

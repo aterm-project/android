@@ -222,6 +222,9 @@ pub(crate) async fn reconcile_vault_tx(
             }
         }
     }
+    // Credential visibility: a `none` restriction may hide the Vault's last
+    // admin_visible member; its escrow deposits must not outlive that.
+    crate::credential_visibility::prune_orphaned_escrow_tx(tx, vault_id).await?;
     cancel_uncovered_pending_tx(tx, vault_id, now).await
 }
 
@@ -1538,12 +1541,19 @@ pub async fn key_distribution(
     .collect();
     let mut additions = Vec::new();
     for (user_id, (role, via)) in &desired {
-        let username: Option<String> = sqlx::query_scalar("SELECT username FROM users WHERE user_id=? AND status='active'")
-            .bind(user_id)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(ApiError::internal)?;
-        let Some(username) = username else { continue };
+        // Credential visibility: the owner's client warns before delivering a
+        // key to an `admin_visible` account, because administrators can then
+        // read the whole Vault.
+        let account: Option<(String, String)> = sqlx::query_as(
+            "SELECT username,credential_visibility FROM users WHERE user_id=? AND status='active'",
+        )
+        .bind(user_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(ApiError::internal)?;
+        let Some((username, credential_visibility)) = account else {
+            continue;
+        };
         let current = members.get(user_id);
         let status = match current.map(|(_, state)| state.as_str()) {
             Some("active") => {
@@ -1581,6 +1591,7 @@ pub async fn key_distribution(
             "desired_role": role,
             "via": via,
             "status": status,
+            "admin_visible": credential_visibility == "admin_visible",
             "device_cards": cards.iter().map(|card| json!({
                 "device_id": card.get::<String, _>("device_id"),
                 "card": serde_json::from_str::<Value>(&card.get::<String, _>("card_json")).unwrap_or(Value::Null),

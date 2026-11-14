@@ -621,6 +621,337 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/MeResponse'}
         '401': {description: AUTH_REQUIRED}
+  /credential-visibility:
+    get:
+      summary: Current account credential-visibility mode, escrow status and administrator views
+      description: >-
+        SQLite runtime only (capability credential_visibility); not registered
+        in the restricted PostgreSQL runtime (503 PG_SYNC_SCOPE_LIMITED).
+        Requires the active session and device. The mode is set only by an
+        instance administrator. `missing` lists at most 500 (vault_id,
+        key_epoch) items the account's client must deposit; it is empty unless
+        the mode is admin_visible and an escrow key exists. Clients verify
+        `escrow_key` against the pinned instance signing key before depositing.
+        `admin_views` is the newest 20 recorded administrator reads of a Vault
+        the account was an active member of when it was read, including shared
+        Vaults read through another member and reads while the account was
+        private but a co-member was admin_visible, and of reads that served a
+        record the account authored (even after its membership was hidden or
+        revoked). `admin_visible_vaults` counts the Vaults GET /vaults lists
+        for the caller with admin_visible true; for a private account a
+        non-zero count means shared Vaults are readable through another member.
+      x-implementation-status: implemented
+      responses:
+        '200':
+          description: Credential visibility status
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CredentialVisibilityStatus'}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: DEVICE_REVOKED}
+        '503': {description: PG_SYNC_SCOPE_LIMITED in the restricted PostgreSQL runtime}
+  /credential-visibility/vaults/{vault_id}/recipients/{device_id}:
+    get:
+      summary: Before sharing, whether the recipient account is admin_visible
+      description: >-
+        SQLite only. For the owner of the active Vault, before inviting (or
+        delivering a key to) the account behind an active device. Sharing with
+        an admin_visible account makes the whole Vault, including the owner's
+        own entries, readable by administrators once that account joins and
+        deposits, so owner clients ask first and require explicit confirmation.
+        `recipient_admin_visible` is the recipient account's mode regardless of
+        whether an escrow key exists yet; `vault_admin_visible` is the Vault's
+        current flag as in GET /vaults. Non-members, inactive Vaults and
+        malformed, unknown or inactive devices all return the same 404.
+      x-implementation-status: implemented
+      parameters:
+        - {name: vault_id, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: device_id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Recipient and Vault visibility
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CredentialVisibilityShareRecipient'}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: DEVICE_REVOKED or VAULT_ROLE_REQUIRED (not the owner)}
+        '404': {description: NOT_FOUND}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
+  /credential-visibility/escrow/{vault_id}/{key_epoch}:
+    put:
+      summary: Deposit one sealed Vault key to the instance escrow key
+      description: >-
+        SQLite only. The caller must be admin_visible, an active member of the
+        active Vault, and the epoch must have been delivered to one of the
+        account's active devices. `sealed` is crypto_box_seal of the JCS
+        plaintext {format:"atermius-credential-escrow-v1",instance_id,key_id,
+        vault_id,key_epoch,vault_key} (49..1024 bytes decoded). `signature` is
+        the calling device's Ed25519 signature over JCS
+        {format:"atermius-credential-escrow-deposit-v1",instance_id,key_id,
+        vault_id,key_epoch,sealed_sha256}. An existing deposit for the Vault,
+        epoch and key is never overwritten. Malformed, unknown, foreign,
+        deleting and left Vaults all return the same 404.
+      x-implementation-status: implemented
+      parameters:
+        - {name: vault_id, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: key_epoch, in: path, required: true, schema: {type: string, pattern: '^[1-9][0-9]{0,17}$'}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CredentialEscrowDepositRequest'}
+      responses:
+        '200':
+          description: A deposit already exists for this Vault, epoch and key
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CredentialEscrowDepositResult'}
+        '201':
+          description: Deposit stored
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CredentialEscrowDepositResult'}
+        '400': {description: CREDENTIAL_ESCROW_INVALID (shape, size, signature, epoch or undelivered epoch)}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: DEVICE_REVOKED}
+        '404': {description: NOT_FOUND for any Vault the caller cannot deposit for}
+        '409': {description: CREDENTIAL_ESCROW_NOT_REQUIRED or CREDENTIAL_ESCROW_KEY_MISMATCH}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
+  /admin/credential-visibility:
+    get:
+      summary: Instance credential-visibility policy and escrow key for administrators
+      description: >-
+        SQLite only. Requires the active session/device and the instance-admin
+        allowlist. `caller_wrap` is only the calling administrator's own wrap
+        of the current escrow key; `recovery_wrap` is the recovery-code wrap.
+        The server holds no key that can open either wrap.
+      x-implementation-status: implemented
+      responses:
+        '200':
+          description: Policy, escrow key and counts
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AdminCredentialVisibilityPolicy'}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: INSTANCE_ADMIN_REQUIRED}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
+    put:
+      summary: Set the instance default mode for new accounts
+      description: >-
+        Changes only accounts registered later without an explicit invitation
+        mode. A change writes instance.credential_policy_changed; the same value
+        is an idempotent no-op.
+      x-implementation-status: implemented
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AdminCredentialVisibilityPolicyRequest'}
+      responses:
+        '200':
+          description: Updated policy
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AdminCredentialVisibilityPolicy'}
+        '400': {description: INVALID_CREDENTIAL_VISIBILITY}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: INSTANCE_ADMIN_REQUIRED}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
+  /admin/accounts/{user_id}/credential-visibility:
+    put:
+      summary: Set one account's credential-visibility mode
+      description: >-
+        SQLite only. Idempotent when unchanged (no audit, no changed_at bump).
+        Administrators may change their own account. A deleting account cannot
+        become admin_visible. Switching admin_visible to private deletes, in
+        the same transaction, the deposits of every Vault the account belongs
+        to or deposited for unless another active member is still
+        admin_visible (escrow invariant: a Vault without an active
+        admin_visible member holds no deposits; membership revocation by key
+        rotation or ownership transfer, an organization `none` restriction and
+        account purge enforce it the same way). Changes write instance.credential_visibility_changed
+        (HMACed account resource ID) and account-scope
+        account.credential_visibility_changed for the target.
+      x-implementation-status: implemented
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid, pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AdminAccountCredentialVisibilityRequest'}
+      responses:
+        '200':
+          description: Current mode and computed escrow status
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AdminAccountCredentialVisibilityResponse'}
+        '400': {description: INVALID_ACCOUNT_ID or INVALID_CREDENTIAL_VISIBILITY}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: INSTANCE_ADMIN_REQUIRED}
+        '404': {description: Account does not exist}
+        '409': {description: ACCOUNT_DELETING}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
+  /admin/credential-escrow/key:
+    post:
+      summary: Register the instance credential escrow key
+      description: >-
+        SQLite only. The administrator client generates the X25519 key pair and
+        recovery code, and uploads only the public key, its device-signed
+        creation statement, its own account wrap and the recovery wrap. The
+        server builds and instance-signs the descriptor. At most one key exists.
+        Writes instance.credential_escrow_key_created.
+      x-implementation-status: implemented
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AdminCredentialEscrowKeyCreateRequest'}
+      responses:
+        '201':
+          description: Escrow key registered
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [escrow_key]
+                properties:
+                  escrow_key: {$ref: '#/components/schemas/CredentialEscrowKeyDescriptor'}
+        '400': {description: CREDENTIAL_ESCROW_INVALID}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: INSTANCE_ADMIN_REQUIRED or DEVICE_REVOKED}
+        '409': {description: CREDENTIAL_ESCROW_KEY_EXISTS}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
+    delete:
+      summary: Reset the escrow key, every administrator wrap and every deposit
+      description: >-
+        Requires exactly {key_id, confirm:"reset"}. Afterwards admin_visible
+        accounts report no_key until a new key exists, then pending until their
+        clients deposit again. Writes instance.credential_escrow_key_reset.
+      x-implementation-status: implemented
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AdminCredentialEscrowKeyResetRequest'}
+      responses:
+        '200':
+          description: Reset
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status: {type: string, const: reset}
+        '400': {description: CREDENTIAL_ESCROW_INVALID}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: INSTANCE_ADMIN_REQUIRED}
+        '409': {description: CREDENTIAL_ESCROW_KEY_MISMATCH}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
+  /admin/credential-escrow/key/wrap:
+    put:
+      summary: Store or replace the calling administrator's own wrap of the escrow key
+      description: >-
+        Used after an administrator opens the key with the recovery code, or
+        after its account key changes. Writes
+        instance.credential_escrow_key_wrap_stored.
+      x-implementation-status: implemented
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AdminCredentialEscrowKeyWrapRequest'}
+      responses:
+        '200':
+          description: Stored
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status: {type: string, const: stored}
+        '400': {description: CREDENTIAL_ESCROW_INVALID}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: INSTANCE_ADMIN_REQUIRED}
+        '409': {description: CREDENTIAL_ESCROW_KEY_MISMATCH}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
+  /admin/credential-escrow/accounts/{user_id}/vaults:
+    get:
+      summary: List an account's active Vaults with sealed escrow deposits
+      description: >-
+        SQLite only. Only active Vaults where the account is an active member;
+        `escrow` holds only deposits under the current key and is empty for a
+        private account. `depositor_signing_public_key` falls back to the
+        Vault-scoped device archive after the depositor's account is purged.
+        Listing is not recorded as a view of anyone's credentials, but a
+        listing that returns at least one deposit writes
+        instance.credential_escrow_listed (HMACed account resource ID).
+      x-implementation-status: implemented
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid, pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'}
+      responses:
+        '200':
+          description: Account Vaults and sealed deposits
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AdminCredentialEscrowAccountVaults'}
+        '400': {description: INVALID_ACCOUNT_ID}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: INSTANCE_ADMIN_REQUIRED}
+        '404': {description: Account does not exist}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
+  /admin/credential-escrow/vaults/{vault_id}/records:
+    get:
+      summary: Read an admin_visible account's current Vault records (recorded view)
+      description: >-
+        SQLite only. Allowed only when the account is admin_visible, an active
+        member of the active Vault, and a deposit under the current key exists
+        for the Vault. Returns current non-deleted, non-redacted heads ordered by
+        record ID with envelopes exactly as stored, bounded by limit and the
+        4 MiB sync page budget. The ordinary read gates apply (redaction and
+        record-schema markers). Each successful page writes
+        instance.credential_escrow_viewed (never coalesced; HMACed target
+        account resource ID) and records a view for every active member of the
+        Vault, not only the named account, and for every still existing
+        account that authored a served record even if its membership is now
+        hidden or revoked: a credential_admin_views row and
+        account-scope account.credential_viewed_by_admin (resource_type vault),
+        coalesced per administrator, member and Vault for ten minutes, newest
+        200 rows kept per account. `author_signing_public_key` falls back to
+        the Vault-scoped device archive for purged authors. Baseline limit: 120
+        pages per administrator per minute.
+      x-implementation-status: implemented
+      parameters:
+        - {name: vault_id, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: user_id, in: query, required: true, schema: {type: string, format: uuid}}
+        - {name: after, in: query, required: false, schema: {type: string, format: uuid}, description: Exclusive record ID cursor from next_after}
+        - {name: limit, in: query, required: false, schema: {type: integer, minimum: 1, maximum: 500, default: 200}}
+      responses:
+        '200':
+          description: One page of record envelopes
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AdminCredentialEscrowRecordPage'}
+        '400': {description: INVALID_VAULT_ID, INVALID_ACCOUNT_ID, INVALID_CURSOR or INVALID_LIMIT}
+        '401': {description: AUTH_REQUIRED}
+        '403': {description: INSTANCE_ADMIN_REQUIRED}
+        '404': {description: CREDENTIAL_ESCROW_NOT_AVAILABLE}
+        '409': {description: VAULT_CLIENT_CAPABILITY_REQUIRED}
+        '413': {description: PAYLOAD_TOO_LARGE when one record exceeds the page budget}
+        '426': {description: CLIENT_REDACTION_CAPABILITY_REQUIRED}
+        '429': {description: RATE_LIMITED with Retry-After}
+        '503': {description: PG_SYNC_SCOPE_LIMITED}
   /admin/overview:
     get:
       summary: Read-only instance-wide administrative overview
@@ -2025,7 +2356,7 @@ paths:
   /vaults:
     get:
       summary: List accessible vaults and device key envelopes
-      description: Includes active and deleting vaults for current active members. Each item includes role, status, required_record_schema, requested_at, purge_after, can_cancel, and can_write. During deletion grace the encrypted vault is read-only and remains available for export. `required_record_schema` is raised atomically to 2 when a schema-2 record or conflict commits and never decreases.
+      description: Includes active and deleting vaults for current active members. Each item includes role, status, required_record_schema, requested_at, purge_after, can_cancel, and can_write. In the SQLite runtime each item also has admin_visible (true when a credential escrow key exists and an active member account is admin_visible; clients show an administrator-visible badge). During deletion grace the encrypted vault is read-only and remains available for export. `required_record_schema` is raised atomically to 2 when a schema-2 record or conflict commits and never decreases.
       responses: {'200': {description: Vault lifecycle state, required_record_schema, and key envelopes}}
     post:
       summary: Create a client-keyed vault
@@ -3229,7 +3560,7 @@ paths:
   /audit:
     get:
       summary: List authorized audit metadata
-      description: Account-scope rows are visible only to their account. Vault-scope rows are visible only to current active Owner and Editor members; viewers and nonmembers receive no such rows. Every page rechecks membership. The signed cursor binds requester, server generation, fixed high-water mark and last event ID. Rows contain only opaque IDs and fixed labels, never source IP, User-Agent, host/command data, usernames, login verifiers, request content, tokens, envelopes or ciphertext. Account scopes are stored as a domain-separated HMAC. Actor IDs, account/account-recovery/device/membership/session resource IDs, and session-family resource IDs are cleared when the owning account is permanently purged; actor IDs are also cleared on Vault purge. Committed events include password-change outcomes (`auth.password_changed` on success and attributable `auth.password_change_failed` on rejected current verifier) and successful Relay operations (`relay.ticket_issued`, `relay.connected`), along with account and device lifecycle, Recovery configuration/envelope changes (`auth.account_recovery_enabled`, `auth.account_recovery_rotated`, `auth.account_recovery_disabled`, `auth.account_recovery_key_envelopes_updated`) and completion (`auth.account_recovered`), optional TOTP MFA challenge/enrollment/recovery-code rotation/disable (`auth.mfa_login_challenge_created`, `auth.mfa_totp_enabled`, `auth.mfa_recovery_codes_rotated`, `auth.mfa_totp_disabled`) and full-Recovery reset (`auth.mfa_reset_by_recovery`) and restore-state invalidation (`auth.mfa_state_reset_by_restore`), self logout (`auth.logout_succeeded`), Vault invitation/member/key rotation, conflict resolution, and Vault deletion. The first successful conflict resolution writes one `vault.conflict_resolved` Vault-scope success event in the same transaction with the authenticated actor, `resource_type=conflict`, and only the opaque conflict UUID as resource_id; retries, stale/unauthorized attempts, and failed resolutions emit no event, while an audit insert failure rolls back resolution. No record ID, revision ID, envelope, ciphertext, or payload is included. Recovery actions use account scope, success result and account/device actors; configuration/envelope actions use `resource_type=account_recovery`, while completion uses `resource_type=account`. Their resource IDs contain only the account ID and are cleared on permanent account purge. Recovery audit writes share a transaction with the state and receipt changes, and include no recovery code, credential, key envelope, host data or request body. Logout writes its opaque session resource ID in the same transaction that revokes the authenticated session; audit failure rolls back both changes, while unauthenticated or invalid logout attempts are not recorded. Login success/failure use fixed `auth.login_succeeded`/`auth.login_failed` actions and `success`/`failure` results. A replayed consumed refresh token emits at most one `auth.refresh_reuse_detected` failure event when it revokes at least one session-family row whose revoked_at is null; the account-scoped event has null actor IDs and only a random family UUID, never the reused token, account/device identifier, or request metadata. Audit insertion for this event is best effort; if the audit INSERT fails but the transaction commits, family revocation remains and the replay returns 401; if the transaction commit fails, the endpoint returns 500 INTERNAL and the revocation outcome is unknown. Replays after revocation and unknown tokens are not recorded. Unknown and non-active account login attempts are not recorded and retain the same external AUTH_REQUIRED response as a wrong verifier. Signed membership changes use one fixed `vault.member_role_changed` event per changed role or `vault.member_revoked` event per newly revoked member, with the opaque target account ID as the membership resource. A sync push that commits at least one new operation emits at most one `vault.sync_batch_committed` Vault-scope event with the authenticated actor, `resource_type=sync_batch`, and null `resource_id`; it contains no operation or record identifiers, revision, operation type/count, ciphertext, or request payload. Empty, failed, and fully idempotent pushes emit no event. A mixed batch emits one event only when at least one operation is newly committed. The audit insert shares the push transaction, so an insert failure rolls back the push. Retention follows ATERMIUS_AUDIT_RETENTION_DAYS.
+      description: Account-scope rows are visible only to their account. Vault-scope rows are visible only to current active Owner and Editor members; viewers and nonmembers receive no such rows. Every page rechecks membership. The signed cursor binds requester, server generation, fixed high-water mark and last event ID. Rows contain only opaque IDs and fixed labels, never source IP, User-Agent, host/command data, usernames, login verifiers, request content, tokens, envelopes or ciphertext. Account scopes are stored as a domain-separated HMAC. Actor IDs, account/account-recovery/device/membership/session resource IDs, and session-family resource IDs are cleared when the owning account is permanently purged; actor IDs are also cleared on Vault purge. Vault resource IDs in the purged account's own account-scope rows (such as `account.credential_viewed_by_admin`) are cleared as well. Committed events include password-change outcomes (`auth.password_changed` on success and attributable `auth.password_change_failed` on rejected current verifier) and successful Relay operations (`relay.ticket_issued`, `relay.connected`), along with account and device lifecycle, Recovery configuration/envelope changes (`auth.account_recovery_enabled`, `auth.account_recovery_rotated`, `auth.account_recovery_disabled`, `auth.account_recovery_key_envelopes_updated`) and completion (`auth.account_recovered`), optional TOTP MFA challenge/enrollment/recovery-code rotation/disable (`auth.mfa_login_challenge_created`, `auth.mfa_totp_enabled`, `auth.mfa_recovery_codes_rotated`, `auth.mfa_totp_disabled`) and full-Recovery reset (`auth.mfa_reset_by_recovery`) and restore-state invalidation (`auth.mfa_state_reset_by_restore`), self logout (`auth.logout_succeeded`), Vault invitation/member/key rotation, conflict resolution, and Vault deletion. The first successful conflict resolution writes one `vault.conflict_resolved` Vault-scope success event in the same transaction with the authenticated actor, `resource_type=conflict`, and only the opaque conflict UUID as resource_id; retries, stale/unauthorized attempts, and failed resolutions emit no event, while an audit insert failure rolls back resolution. No record ID, revision ID, envelope, ciphertext, or payload is included. Recovery actions use account scope, success result and account/device actors; configuration/envelope actions use `resource_type=account_recovery`, while completion uses `resource_type=account`. Their resource IDs contain only the account ID and are cleared on permanent account purge. Recovery audit writes share a transaction with the state and receipt changes, and include no recovery code, credential, key envelope, host data or request body. Logout writes its opaque session resource ID in the same transaction that revokes the authenticated session; audit failure rolls back both changes, while unauthenticated or invalid logout attempts are not recorded. Login success/failure use fixed `auth.login_succeeded`/`auth.login_failed` actions and `success`/`failure` results. A replayed consumed refresh token emits at most one `auth.refresh_reuse_detected` failure event when it revokes at least one session-family row whose revoked_at is null; the account-scoped event has null actor IDs and only a random family UUID, never the reused token, account/device identifier, or request metadata. Audit insertion for this event is best effort; if the audit INSERT fails but the transaction commits, family revocation remains and the replay returns 401; if the transaction commit fails, the endpoint returns 500 INTERNAL and the revocation outcome is unknown. Replays after revocation and unknown tokens are not recorded. Unknown and non-active account login attempts are not recorded and retain the same external AUTH_REQUIRED response as a wrong verifier. Signed membership changes use one fixed `vault.member_role_changed` event per changed role or `vault.member_revoked` event per newly revoked member, with the opaque target account ID as the membership resource. A sync push that commits at least one new operation emits at most one `vault.sync_batch_committed` Vault-scope event with the authenticated actor, `resource_type=sync_batch`, and null `resource_id`; it contains no operation or record identifiers, revision, operation type/count, ciphertext, or request payload. Empty, failed, and fully idempotent pushes emit no event. A mixed batch emits one event only when at least one operation is newly committed. The audit insert shares the push transaction, so an insert failure rolls back the push. Retention follows ATERMIUS_AUDIT_RETENTION_DAYS.
       parameters:
         - name: cursor
           in: query
@@ -3705,15 +4036,20 @@ components:
           description: Server-computed account recovery coverage state; current means an opaque signed Recovery box exists for every required Vault context.
         policy:
           type: object
-          required: [registration_open, instance_admin]
+          required: [registration_open, instance_admin, credential_visibility]
           properties:
+            credential_visibility:
+              description: The account's credential-visibility mode; null in the restricted PostgreSQL runtime.
+              oneOf:
+                - {$ref: '#/components/schemas/CredentialVisibilityPolicy'}
+                - {type: 'null'}
             registration_open: {type: boolean}
             instance_admin:
               type: boolean
               description: True when this account's normalized username is in the instance-admin allowlist; informational only, each admin request independently checks the active session and current allowlist.
     AdminOverview:
       type: object
-      required: [instance, counts, relay, generated_at]
+      required: [instance, counts, relay, database_encryption, generated_at]
       properties:
         instance:
           type: object
@@ -3746,6 +4082,16 @@ components:
             allow_cidrs: {type: array, items: {type: string}, description: Current effective Relay destination CIDR allowlist; empty in restricted PostgreSQL mode.}
             allow_ports: {type: array, items: {type: integer, minimum: 1, maximum: 65535}, description: Current effective exact destination-port allowlist; empty in restricted PostgreSQL mode.}
             max_connections_per_user: {type: integer, minimum: 1, description: Current per-user Relay connection limit.}
+        database_encryption:
+          type: string
+          enum: [enabled, disabled]
+          description: >-
+            enabled when the main SQLite database is SQLCipher-encrypted at
+            rest with the operator key named by ATERMIUS_DATABASE_KEY_FILE;
+            disabled for a plaintext database, which admin clients should
+            flag. In restricted PostgreSQL mode this describes only the
+            responding node's local SQLite store; PostgreSQL data relies on
+            storage-level encryption. Never includes key material or paths.
         generated_at: {type: string, format: date-time, description: UTC RFC3339 time at which this overview was generated.}
     AdminPushHealth:
       type: object
@@ -4243,6 +4589,8 @@ components:
         created_at: {type: string, format: date-time}
         active_device_count: {type: integer, format: int64, minimum: 0}
         active_session_count: {type: integer, format: int64, minimum: 0, description: Unrevoked sessions whose refresh expiry is in the future.}
+        credential_visibility: {$ref: '#/components/schemas/CredentialVisibilityMode', description: SQLite runtime only.}
+        escrow_status: {$ref: '#/components/schemas/CredentialEscrowStatus', description: SQLite runtime only.}
     AdminAccountInvitationPage:
       type: object
       additionalProperties: false
@@ -4264,6 +4612,11 @@ components:
         created_at: {type: string, format: date-time}
         expires_at: {type: string, format: date-time}
         status: {type: string, enum: [pending, expired, consumed, revoked]}
+        credential_visibility:
+          description: Explicit mode for the invited account; null uses the instance default at registration. SQLite runtime only.
+          oneOf:
+            - {$ref: '#/components/schemas/CredentialVisibilityMode'}
+            - {type: 'null'}
     AdminAccountInvitationRequest:
       type: object
       additionalProperties: false
@@ -4271,6 +4624,11 @@ components:
       properties:
         username: {type: string, minLength: 1, maxLength: 320, x-maxUtf8Bytes: 320, description: Trimmed and lowercased before validation; the normalized UTF-8 encoding is limited to 320 bytes. maxLength counts Unicode characters and does not enforce this byte limit by itself.}
         expires_in_seconds: {type: integer, minimum: 60, maximum: 2592000, default: 604800}
+        credential_visibility:
+          description: Optional explicit mode for the invited account; absent or null uses the instance default at registration. A non-null value returns 503 PG_SYNC_SCOPE_LIMITED in the restricted PostgreSQL runtime.
+          oneOf:
+            - {$ref: '#/components/schemas/CredentialVisibilityMode'}
+            - {type: 'null'}
     AdminAccountInvitationCreated:
       type: object
       additionalProperties: false
@@ -4286,6 +4644,11 @@ components:
             created_at: {type: string, format: date-time}
             expires_at: {type: string, format: date-time}
             token: {type: string, minLength: 43, maxLength: 43, description: One-time enrollment token returned only at issuance.}
+            credential_visibility:
+              description: SQLite runtime only; null means the instance default applies at registration.
+              oneOf:
+                - {$ref: '#/components/schemas/CredentialVisibilityMode'}
+                - {type: 'null'}
     AdminAccountInvitationRevoked:
       type: object
       additionalProperties: false
@@ -4434,7 +4797,7 @@ components:
         actor_device_id: {type: [string, 'null'], format: uuid}
         action: {type: string}
         resource_type: {type: string, description: Fixed resource type label; sync batch events use sync_batch.}
-        resource_id: {type: [string, 'null'], description: "Opaque resource identifier. Sync batch events always use null. Session and session_family resources expose only random UUIDs, never access or refresh tokens; actor IDs and account, account-recovery, device, membership, session, and session-family resource IDs are cleared when the owning account is permanently purged."}
+        resource_id: {type: [string, 'null'], description: "Opaque resource identifier. Sync batch events always use null. Session and session_family resources expose only random UUIDs, never access or refresh tokens; actor IDs and account, account-recovery, device, membership, session, and session-family resource IDs, plus Vault resource IDs of the purged account's own account-scope rows, are cleared when the owning account is permanently purged."}
         result: {type: string, enum: [success, failure]}
         occurred_at: {type: string, format: date-time}
         source: {type: string, enum: [api, maintenance]}
@@ -4510,7 +4873,10 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: [ciphertext_sync, instance_signing_key, instance_key_transitions, snapshots, revision_history, conflict_history, encrypted_objects, signed_membership, device_capability_reports, notifications, relay, web_static]
+            enum: [ciphertext_sync, instance_signing_key, instance_key_transitions, snapshots, revision_history, conflict_history, encrypted_objects, signed_membership, device_capability_reports, notifications, relay, web_static, credential_visibility]
+        credential_visibility_default:
+          $ref: '#/components/schemas/CredentialVisibilityMode'
+          description: Present only with the credential_visibility capability (SQLite runtime); the mode new accounts receive unless their invitation names one. Clients show the admin_visible notice before registration.
         limits: {$ref: '#/components/schemas/InstanceLimits'}
     InstanceLimits:
       type: object
@@ -4901,6 +5267,238 @@ components:
         ciphertext: {type: string}
         signature: {type: string}
 
+    CredentialVisibilityMode:
+      type: string
+      enum: [private, admin_visible]
+      description: private keeps saved Host credentials zero-knowledge; admin_visible escrows the account's Vault keys to the instance escrow key so administrator clients can read them. The master password is never sent in either mode.
+    CredentialEscrowStatus:
+      type: string
+      enum: [not_required, no_key, pending, complete]
+    CredentialVisibilityPolicy:
+      type: object
+      additionalProperties: false
+      required: [mode, changed_at]
+      properties:
+        mode: {$ref: '#/components/schemas/CredentialVisibilityMode'}
+        changed_at: {type: [string, 'null'], format: date-time, description: Null until an administrator first changes the mode after creation.}
+    CredentialEscrowKeyDescriptor:
+      type: object
+      additionalProperties: false
+      required: [key_id, public_key, signed_payload, signature, created_at]
+      properties:
+        key_id: {type: string, format: uuid}
+        public_key: {type: string, pattern: '^[A-Za-z0-9_-]{43}$', description: base64url 32-byte X25519 public key}
+        signed_payload: {type: string, description: 'Exact JCS of {format:"atermius-credential-escrow-key-v1",instance_id,key_id,public_key,created_at}'}
+        signature: {type: string, pattern: '^[A-Za-z0-9_-]{86}$', description: Instance Ed25519 signature over the UTF-8 signed_payload; verify against the pinned instance key.}
+        created_at: {type: string, format: date-time}
+    CredentialEscrowAccountWrap:
+      type: object
+      additionalProperties: false
+      required: [version, nonce, ciphertext]
+      properties:
+        version: {type: integer, const: 1}
+        nonce: {type: string, pattern: '^[A-Za-z0-9_-]{32}$', description: 24-byte XChaCha20 nonce}
+        ciphertext: {type: string, pattern: '^[A-Za-z0-9_-]{64}$', description: 32-byte escrow secret key plus 16-byte tag}
+    CredentialEscrowRecoveryWrap:
+      type: object
+      additionalProperties: false
+      required: [version, kdf, nonce, ciphertext]
+      properties:
+        version: {type: integer, const: 1}
+        kdf:
+          type: object
+          additionalProperties: false
+          required: [id, salt, mem_kib, iterations, parallelism]
+          properties:
+            id: {type: string, const: argon2id13}
+            salt: {type: string, pattern: '^[A-Za-z0-9_-]{22}$', description: Non-zero 16-byte salt}
+            mem_kib: {type: integer, const: 65536}
+            iterations: {type: integer, const: 3}
+            parallelism: {type: integer, const: 1}
+        nonce: {type: string, pattern: '^[A-Za-z0-9_-]{32}$'}
+        ciphertext: {type: string, pattern: '^[A-Za-z0-9_-]{64}$'}
+    CredentialVisibilityShareRecipient:
+      type: object
+      additionalProperties: false
+      required: [recipient_admin_visible, vault_admin_visible]
+      properties:
+        recipient_admin_visible: {type: boolean, description: The recipient account is admin_visible (whether or not an escrow key exists yet).}
+        vault_admin_visible: {type: boolean, description: The Vault is administrator visible now (escrow key exists and an active member is admin_visible).}
+    CredentialVisibilityStatus:
+      type: object
+      additionalProperties: false
+      required: [mode, changed_at, escrow_status, escrow_key, missing, admin_views, admin_visible_vaults]
+      properties:
+        admin_visible_vaults: {type: integer, minimum: 0, description: 'Vaults GET /vaults lists for the caller with admin_visible true.'}
+        mode: {$ref: '#/components/schemas/CredentialVisibilityMode'}
+        changed_at: {type: [string, 'null'], format: date-time}
+        escrow_status: {$ref: '#/components/schemas/CredentialEscrowStatus'}
+        escrow_key:
+          oneOf:
+            - {$ref: '#/components/schemas/CredentialEscrowKeyDescriptor'}
+            - {type: 'null'}
+        missing:
+          type: array
+          maxItems: 500
+          items:
+            type: object
+            additionalProperties: false
+            required: [vault_id, key_epoch]
+            properties:
+              vault_id: {type: string, format: uuid}
+              key_epoch: {type: integer, minimum: 1}
+        admin_views:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            additionalProperties: false
+            required: [viewed_at, admin_username, vault_id]
+            properties:
+              viewed_at: {type: string, format: date-time}
+              admin_username: {type: [string, 'null'], description: Null when the administrator account was deleted.}
+              vault_id: {type: [string, 'null'], format: uuid}
+    CredentialEscrowDepositRequest:
+      type: object
+      additionalProperties: false
+      required: [key_id, sealed, signature]
+      properties:
+        key_id: {type: string, format: uuid}
+        sealed: {type: string, description: base64url crypto_box_seal output, 49..1024 bytes decoded}
+        signature: {type: string, pattern: '^[A-Za-z0-9_-]{86}$'}
+    CredentialEscrowDepositResult:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: {type: string, enum: [stored, already_present]}
+    AdminCredentialVisibilityPolicy:
+      type: object
+      additionalProperties: false
+      required: [default_mode, escrow_key, caller_wrap, recovery_wrap, counts]
+      properties:
+        default_mode: {$ref: '#/components/schemas/CredentialVisibilityMode'}
+        escrow_key:
+          oneOf:
+            - {$ref: '#/components/schemas/CredentialEscrowKeyDescriptor'}
+            - {type: 'null'}
+        caller_wrap:
+          oneOf:
+            - {$ref: '#/components/schemas/CredentialEscrowAccountWrap'}
+            - {type: 'null'}
+        recovery_wrap:
+          oneOf:
+            - {$ref: '#/components/schemas/CredentialEscrowRecoveryWrap'}
+            - {type: 'null'}
+        counts:
+          type: object
+          additionalProperties: false
+          required: [admin_visible, private, pending]
+          properties:
+            admin_visible: {type: integer, minimum: 0}
+            private: {type: integer, minimum: 0}
+            pending: {type: integer, minimum: 0}
+    AdminCredentialVisibilityPolicyRequest:
+      type: object
+      additionalProperties: false
+      required: [default_mode]
+      properties:
+        default_mode: {$ref: '#/components/schemas/CredentialVisibilityMode'}
+    AdminAccountCredentialVisibilityRequest:
+      type: object
+      additionalProperties: false
+      required: [mode]
+      properties:
+        mode: {$ref: '#/components/schemas/CredentialVisibilityMode'}
+    AdminAccountCredentialVisibilityResponse:
+      type: object
+      additionalProperties: false
+      required: [user_id, mode, changed_at, escrow_status]
+      properties:
+        user_id: {type: string, format: uuid}
+        mode: {$ref: '#/components/schemas/CredentialVisibilityMode'}
+        changed_at: {type: [string, 'null'], format: date-time}
+        escrow_status: {$ref: '#/components/schemas/CredentialEscrowStatus'}
+    AdminCredentialEscrowKeyCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [key_id, public_key, creator_signature, account_wrap, recovery_wrap]
+      properties:
+        key_id: {type: string, format: uuid}
+        public_key: {type: string, pattern: '^[A-Za-z0-9_-]{43}$'}
+        creator_signature: {type: string, pattern: '^[A-Za-z0-9_-]{86}$', description: 'Calling device Ed25519 over JCS {format:"atermius-credential-escrow-key-creation-v1",instance_id,key_id,public_key,account_id,device_id}'}
+        account_wrap: {$ref: '#/components/schemas/CredentialEscrowAccountWrap'}
+        recovery_wrap: {$ref: '#/components/schemas/CredentialEscrowRecoveryWrap'}
+    AdminCredentialEscrowKeyWrapRequest:
+      type: object
+      additionalProperties: false
+      required: [key_id, account_wrap]
+      properties:
+        key_id: {type: string, format: uuid}
+        account_wrap: {$ref: '#/components/schemas/CredentialEscrowAccountWrap'}
+    AdminCredentialEscrowKeyResetRequest:
+      type: object
+      additionalProperties: false
+      required: [key_id, confirm]
+      properties:
+        key_id: {type: string, format: uuid}
+        confirm: {type: string, const: reset}
+    AdminCredentialEscrowAccountVaults:
+      type: object
+      additionalProperties: false
+      required: [account, vaults]
+      properties:
+        account:
+          type: object
+          additionalProperties: false
+          required: [user_id, username, mode]
+          properties:
+            user_id: {type: string, format: uuid}
+            username: {type: string}
+            mode: {$ref: '#/components/schemas/CredentialVisibilityMode'}
+        vaults:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [vault_id, role, owner_user_id, name_envelope, active_epoch, escrow]
+            properties:
+              vault_id: {type: string, format: uuid}
+              role: {type: string, enum: [owner, editor, viewer]}
+              owner_user_id: {type: string, format: uuid}
+              name_envelope: {type: [object, 'null'], description: Opaque Vault name ciphertext}
+              active_epoch: {type: integer, minimum: 1}
+              escrow:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [key_epoch, sealed, signature, depositor_device_id, depositor_signing_public_key]
+                  properties:
+                    key_epoch: {type: integer, minimum: 1}
+                    sealed: {type: string}
+                    signature: {type: string}
+                    depositor_device_id: {type: [string, 'null'], format: uuid}
+                    depositor_signing_public_key: {type: [string, 'null'], description: Ed25519 key of the depositing device, from the device row or, after the depositor's account was purged, the Vault-scoped device archive; null only if neither exists.}
+    AdminCredentialEscrowRecordPage:
+      type: object
+      additionalProperties: false
+      required: [records, next_after]
+      properties:
+        records:
+          type: array
+          maxItems: 500
+          items:
+            type: object
+            additionalProperties: false
+            required: [record_id, revision_id, envelope, author_device_id, author_signing_public_key]
+            properties:
+              record_id: {type: string, format: uuid}
+              revision_id: {type: string, format: uuid}
+              envelope: {type: object, description: Record envelope exactly as stored by sync}
+              author_device_id: {type: string, format: uuid}
+              author_signing_public_key: {type: [string, 'null'], description: Ed25519 key of the authoring device, from the device row or the Vault-scoped device archive for a purged author; null only if neither exists.}
+        next_after: {type: [string, 'null'], format: uuid}
   parameters:
     ClientCapabilityMarker:
       name: X-Atermius-Capability-Marker
