@@ -12,7 +12,7 @@
 
 ## 临时浏览器链接
 
-运维需先启用 SQLite 云端能力、guacd、完整 HTTPS 来源地址、网关密钥和严格的目标 CIDR/端口规则，见服务端[部署指南](https://github.com/aterm-project/server/blob/main/docs/CLOUD-SHARING.md)。
+运维需先启用 SQLite 云端能力、guacd、完整 HTTPS 来源地址、网关密钥和严格的目标 CIDR/端口规则，见[云端分享部署说明](CLOUD-SHARING.md)。
 
 1. 先确认 SSH 主机公钥或 RDP 证书指纹。
 2. 在 **分享…** 选择临时访问，设置开始/到期时间、自定义地址、打开次数、连接与并发上限，以及只读/剪贴板策略。

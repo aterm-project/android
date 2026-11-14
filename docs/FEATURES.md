@@ -9,12 +9,12 @@
 | Encrypted sync / 加密同步 | Optional self-hosted account / 可选自托管账户 | Same Vault/device protocol / 同一 Vault 与设备协议 |
 | Local shell + serial Console / 本机终端与串口 | Desktop only; installed shell/device required / 桌面需已安装 Shell/设备 | Unavailable / 不支持 |
 | SSH forwarding / SSH 转发 | Native socket runtime; remote SSH policy also applies / 系统套接字与 SSH 服务端策略约束 | Rules can be represented; no OS TCP listener / 不创建系统 TCP 监听 |
-| Native RDP / 原生 RDP | Windows with matching bundled FreeRDP engine / Windows 需配套引擎 | Uses the optional server gateway / 使用可选服务端网关 |
+| Native RDP / 原生 RDP | Windows with matching bundled FreeRDP engine; Android with the engine packaged in the APK; macOS/iOS engine builds are in their [install guides](INSTALLATION.en.md) / Windows 需配套引擎，Android 使用 APK 内引擎，macOS/iOS 见[安装指南](INSTALLATION.md) | Uses the optional server gateway / 使用可选服务端网关 |
 | RDP/VNC display / 远程桌面画面 | Available transport depends on platform/build / 依平台与构建能力 | guacd, target policy and account prerequisites apply / 需网关、目标策略与账户 |
 | Split panes and saved sets / 分屏与窗口组合 | Workspace support; OS windows on desktop / 工作区支持，系统窗口限桌面 | Browser workspace panes / 浏览器工作区面板 |
 | Organizations and member Host sharing / 组织与成员分享 | Requires server capabilities / 需服务端能力 | Requires server capabilities / 需服务端能力 |
 | Temporary guest SSH/RDP / 临时访客访问 | Open its URL in a supported browser / 在支持的浏览器打开链接 | Separate account-free trusted-gateway flow / 独立免账户受信网关流程 |
-| External MCP / 外部 MCP | Desktop loopback service, explicit opt-in / 桌面回环服务，显式启用 | No OS listener / 不监听系统端口 |
+| External MCP / 外部 MCP | Desktop and Android loopback service, explicit opt-in; iOS has no listener / 桌面与 Android 回环服务，显式启用；iOS 不监听 | No OS listener / 不监听系统端口 |
 
 Chinese, Japanese, English and Russian UI catalogs are included. Application accents and terminal palettes are separate settings. / 界面包含中、日、英、俄四种语言；应用强调色与终端配色分开设置。
 

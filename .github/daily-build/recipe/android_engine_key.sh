@@ -11,7 +11,9 @@ key="$(
   {
     echo "recipe=atermius-android-rdp-engine/1"
     echo "abis=arm64-v8a,x86_64"
-    git ls-files -s -- apps/client/native/desktop
+    # The Apple engine recipe (macOS/iOS) shares this directory in the monorepo but is not
+    # part of the Android engine build.
+    git ls-files -s -- apps/client/native/desktop ':(exclude)apps/client/native/desktop/apple'
     sed -n 's/^Pkg.Revision *= *//p' "$ANDROID_NDK_ROOT/source.properties"
     cmake --version | head -1
     echo "ninja $(ninja --version)"

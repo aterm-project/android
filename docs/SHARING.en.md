@@ -12,7 +12,7 @@
 
 ## Temporary browser links
 
-The operator must first enable SQLite cloud access, guacd, an exact HTTPS public origin, a gateway key and narrow target CIDR/port rules. See the server's [deployment guide](https://github.com/aterm-project/server/blob/main/docs/CLOUD-SHARING.md).
+The operator must first enable SQLite cloud access, guacd, an exact HTTPS public origin, a gateway key and narrow target CIDR/port rules. See the [cloud sharing deployment guide](CLOUD-SHARING.md).
 
 1. Establish the target's trusted SSH host key or RDP certificate pin.
 2. In **Share…**, select temporary access and choose the start/expiry, custom address, openings, connection/concurrency limits and clipboard/read-only policy.

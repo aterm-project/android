@@ -52,7 +52,11 @@ fi
 git -C "$ROOT" diff --quiet HEAD || { echo "::warning::the build modified tracked files:"; git -C "$ROOT" diff --stat HEAD; }
 
 version_name="$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' "$ROOT/apps/client/pubspec.yaml")"
-name="atermius-ios-${version_name}-${ATERMIUS_RELEASE_TAG#daily-}.unsigned.ipa"
+# Asset names keep the pre-monorepo form: the platform namespace of the tag is dropped
+# (<p>-daily-20261114.1-<sha12> -> 20261114.1-<sha12>, release <p>-v1.0.0 -> v1.0.0).
+label="${ATERMIUS_RELEASE_TAG#ios-daily-}"
+label="${label#ios-}"
+name="atermius-ios-${version_name}-${label}.unsigned.ipa"
 stage="$RUNNER_TEMP/ipa-stage"
 rm -rf "$stage"
 mkdir -p "$stage/Payload"

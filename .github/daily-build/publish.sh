@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
-# Publish one claimed daily build, then (and only then) advance the baseline.
+# Publish one claimed daily build of one platform, then (and only then) advance
+# that platform's baseline.
 #
 #   publish.sh RELEASE_DIR
+#
+# ATERMIUS_PLATFORM (android|desktop|ios|web) names the platform; the tag must be
+# <platform>-daily-<YYYYMMDD>.<slot>-<sha12> of exactly this claim.
+# ATERMIUS_PLATFORMS lists the evidence platforms of its packages.
 #
 # 1. check-claim: the quota ref still holds this run's claim for this attempt
 #    and source (a re-run never publishes);
@@ -17,22 +22,34 @@ set -euo pipefail
 : "${GH_TOKEN:?}" "${GITHUB_REPOSITORY:?}" "${GITHUB_RUN_ID:?}" "${GITHUB_RUN_ATTEMPT:?}" "${GITHUB_SERVER_URL:?}"
 : "${ATERMIUS_SOURCE_SHA:?}" "${ATERMIUS_QUOTA_DATE:?}" "${ATERMIUS_QUOTA_SLOT:?}" "${ATERMIUS_CLAIM_RECORD:?}"
 : "${ATERMIUS_RELEASE_TAG:?}" "${ATERMIUS_PLATFORMS:?}" "${ATERMIUS_DAILY_NAMESPACE:?}" "${ATERMIUS_RELEASE_TITLE:?}"
+: "${ATERMIUS_PLATFORM:?}"
 : "${RUNNER_TEMP:?}"
 dir="$1"
 TOOLS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 work="$RUNNER_TEMP/publish"
 die() { echo "::error::$*" >&2; exit 1; }
-[[ "$ATERMIUS_RELEASE_TAG" =~ ^daily-[0-9]{8}\.[1-9]-[0-9a-f]{12}$ ]] || die "invalid release tag"
-rm -rf "$work"
-mkdir -p "$work"
+[[ "$ATERMIUS_PLATFORM" =~ ^(android|desktop|ios|web)$ ]] || die "invalid platform"
 # A publication-only recovery preserves the original build/claim provenance.
 # GITHUB_RUN_ID remains the actual recovery action; no build or signing reruns.
 artifact_run_id="${ATERMIUS_ARTIFACT_RUN_ID:-$GITHUB_RUN_ID}"
 artifact_run_attempt="${ATERMIUS_ARTIFACT_RUN_ATTEMPT:-$GITHUB_RUN_ATTEMPT}"
 [[ "$artifact_run_id" =~ ^[0-9]+$ && "$artifact_run_attempt" =~ ^[1-9][0-9]*$ ]] || die "invalid artifact run identity"
+# Daily tags are namespaced per platform. Only a publication recovery of a build
+# claimed before the monorepo merge may use that build's original daily-* tag.
+tag_prefix="$ATERMIUS_PLATFORM-"
+if [[ "$artifact_run_id" != "$GITHUB_RUN_ID" && "$ATERMIUS_RELEASE_TAG" == daily-* ]]; then
+  tag_prefix=""
+fi
+[[ "$ATERMIUS_RELEASE_TAG" =~ ^${tag_prefix}daily-[0-9]{8}\.[1-9]-[0-9a-f]{12}$ ]] || die "invalid release tag"
+[[ "$ATERMIUS_RELEASE_TAG" == "${tag_prefix}daily-${ATERMIUS_QUOTA_DATE//-/}.${ATERMIUS_QUOTA_SLOT}-${ATERMIUS_SOURCE_SHA:0:12}" ]] || \
+  die "release tag does not belong to this claim (date, slot, source)"
+rm -rf "$work"
+mkdir -p "$work"
 claim_args=(--namespace "$ATERMIUS_DAILY_NAMESPACE" --quota-date "$ATERMIUS_QUOTA_DATE" --slot "$ATERMIUS_QUOTA_SLOT"
             --claim-record "$ATERMIUS_CLAIM_RECORD" --run-id "$artifact_run_id" --run-attempt "$artifact_run_attempt"
             --source-sha "$ATERMIUS_SOURCE_SHA")
+# Namespace and claim record must belong to this platform (a pre-merge recovery claim has no platform).
+[[ -z "$tag_prefix" ]] || claim_args+=(--platform "$ATERMIUS_PLATFORM")
 
 python3 -I "$TOOLS/daily_gate.py" check-claim "${claim_args[@]}"
 python3 -I "$TOOLS/release_tool.py" assemble --dir "$dir" --platforms "$ATERMIUS_PLATFORMS" \

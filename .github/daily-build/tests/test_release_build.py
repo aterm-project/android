@@ -36,7 +36,7 @@ import release_tool as tool  # noqa: E402
 spec = importlib.util.spec_from_file_location("test_daily_gate", HERE / "test_daily_gate.py")
 tdg = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tdg)
-run, NS = tdg.run, tdg.NS
+run, NS, LEGACY_NS = tdg.run, tdg.NS, tdg.LEGACY_NS
 DAY1, DAY2 = "2026-11-10T08:00:00Z", "2026-11-11T00:05:00Z"
 REPO = "aterm-project/android"
 
@@ -114,7 +114,7 @@ APK = "atermius-android-1.0.0-{tag}-arm64-x86_64.apk"
 
 def make_packages(out: Path, source: str, tag: str, run_id: str = "77", payload: bytes = b"signed apk bytes") -> Path:
     out.mkdir(parents=True)
-    apk = APK.format(tag=tag)
+    apk = APK.format(tag=tag.removeprefix("android-"))  # as recipe/android_build.sh names release packages
     (out / apk).write_bytes(payload)
     env = {"ATERMIUS_SOURCE_SHA": source, "ATERMIUS_QUOTA_DATE": "2026-11-10", "ATERMIUS_RELEASE_TAG": tag,
            "GITHUB_RUN_ID": run_id, "GITHUB_RUN_ATTEMPT": "2"}
@@ -125,7 +125,7 @@ def make_packages(out: Path, source: str, tag: str, run_id: str = "77", payload:
 
 
 def publish_args(out: Path, work: Path, tag: str, rid: int, source: str, run_id: str = "77"):
-    return argparse.Namespace(dir=str(out), work=str(work), platforms="android", release_tag=tag,
+    return argparse.Namespace(dir=str(out), work=str(work), platform="android", platforms="android", release_tag=tag,
                               release_id=str(rid), source_sha=source, build_date="2026-11-10", run_id=run_id,
                               run_url="https://example.invalid/run")
 
@@ -152,10 +152,12 @@ class GitEnv(tdg.Env):
 
 
 def prepare_args(workspace: Path, tag: str, rid: str = "", *, now: str = DAY1, run_sha: str = "",
-                 ref: str = "refs/heads/main", allocator: bool = True, platforms: str = "android"):
+                 ref: str = "refs/heads/main", allocator: bool = True, platform: str = "android",
+                 platforms: str = "android", legacy: tuple[str, ...] = ()):
     head = run(["git", "rev-parse", "HEAD"], workspace).stdout.strip()
     return argparse.Namespace(
-        repo=str(workspace), remote="origin", namespace=NS, branch="main", rules=gate.DEFAULT_RULES,
+        repo=str(workspace), remote="origin", platform=platform, namespace=gate.platform_namespace(platform),
+        legacy_namespace=list(legacy), branch="main", rules="",
         platforms=platforms, version_allocator=allocator, max_skew=120, now=now, server_date="",
         release_tag=tag, release_id=rid, ref=ref, run_sha=run_sha or head, run_id="900", run_attempt="1",
         repository=REPO)
@@ -190,11 +192,11 @@ class AllocatorTests(unittest.TestCase):
         self.assertIn(f"{NS}/quota/2026-11-10/1", refs)
 
     def test_manual_release_before_and_after_daily_stays_monotonic(self):
-        first = self.release(11, "v1.0.0", now="2026-11-10T00:01:00Z")  # before the late cron start
+        first = self.release(11, "android-v1.0.0", now="2026-11-10T00:01:00Z")  # before the late cron start
         out = self.daily("2026-11-10T00:20:00Z", "1")
         self.env.commit({"apps/client/lib/main.dart": "// 2\n"}, "fix")
-        second = self.release(12, "v1.0.1", now="2026-11-10T09:00:00Z")
-        third = self.release(13, "v1.0.2", now="2026-11-10T23:00:00Z")
+        second = self.release(12, "android-v1.0.1", now="2026-11-10T09:00:00Z")
+        third = self.release(13, "android-v1.0.2", now="2026-11-10T23:00:00Z")
         self.env.commit({"apps/client/lib/main.dart": "// 3\n"}, "next")
         nextday = self.daily(DAY2, "2")
         codes = [first["version_code"], int(out["version_code"]), second["version_code"],
@@ -210,33 +212,33 @@ class AllocatorTests(unittest.TestCase):
         out = self.daily(DAY1, "1", allocator=False)
         self.assertEqual(out["version_code"], "2026111001")
         self.assertNotIn(f"{NS}/version-code", self.env.remote_refs())
-        self.assertEqual(self.release(21, "v2.0.0")["version_code"], 2026111002)
+        self.assertEqual(self.release(21, "android-v2.0.0")["version_code"], 2026111002)
 
     def test_same_release_reuses_its_code_and_moved_tag_is_refused(self):
-        first = self.release(31, "v3.0.0")
-        again = rb.prepare(prepare_args(self.env.full_clone(), "v3.0.0", "31", now="2026-11-10T10:00:00Z"), self.api)
+        first = self.release(31, "android-v3.0.0")
+        again = rb.prepare(prepare_args(self.env.full_clone(), "android-v3.0.0", "31", now="2026-11-10T10:00:00Z"), self.api)
         self.assertEqual((again["version_code"], again["version_record"], again["build_date"]),
                          (first["version_code"], first["version_record"], first["build_date"]))
         allocator = self.env.remote_refs()[f"{NS}/version-code"]
         self.env.commit({"apps/client/lib/main.dart": "// moved\n"}, "moved")
-        self.env.tag("v3.0.0", self.env.head())
-        self.api.tags["v3.0.0"] = self.env.head()
+        self.env.tag("android-v3.0.0", self.env.head())
+        self.api.tags["android-v3.0.0"] = self.env.head()
         with self.assertRaisesRegex(rb.ReleaseError, "already built from"):
-            rb.prepare(prepare_args(self.env.full_clone(), "v3.0.0", "31"), self.api)
+            rb.prepare(prepare_args(self.env.full_clone(), "android-v3.0.0", "31"), self.api)
         self.assertEqual(self.env.remote_refs()[f"{NS}/version-code"], allocator)
 
     def test_release_cap_keeps_codes_for_the_daily_build(self):
         workspace = self.env.full_clone()
         sha = self.env.head()
         now = gate.resolve_now(DAY1, None, 120)[0]
-        info = gate.fingerprint(workspace, sha)
+        info = gate.fingerprint(workspace, sha, gate.platform_rules("android"))
         body = {"schema": gate.SCHEMA, "kind": "version-code", "version_code": 2026111089, "quota_date": "2026-11-10",
                 "source_sha": sha, "fingerprint": info["fingerprint"]}
         seed = gate.make_record(workspace, sha, [sha], body, now)
         self.assertEqual(gate.cas_push(workspace, "origin", f"{NS}/version-code", seed, None), "ok")
-        self.assertEqual(self.release(41, "v4.0.0")["version_code"], 2026111090)
+        self.assertEqual(self.release(41, "android-v4.0.0")["version_code"], 2026111090)
         with self.assertRaisesRegex(gate.GateError, "no Android versionCode left"):
-            self.release(42, "v4.0.1")
+            self.release(42, "android-v4.0.1")
         self.assertNotIn(f"{NS}/release/42", self.env.remote_refs())
         self.assertEqual(self.daily(DAY1, "5")["version_code"], "2026111091")
 
@@ -260,6 +262,32 @@ class AllocatorTests(unittest.TestCase):
             thread.join()
         self.assertEqual(errors, [])
         self.assertEqual(sorted(codes), [2026111001, 2026111002, 2026111003, 2026111004])
+
+    def test_release_on_the_cutover_day_stays_above_the_pre_monorepo_code(self):
+        tdg.seed_legacy(self.env, "2026-11-10", 1, 2026111001)
+        args = prepare_args(self.env.full_clone(), "android-v1.5.0", "61", legacy=(LEGACY_NS,))
+        sha = self.env.head()
+        self.env.tag("android-v1.5.0", sha)
+        self.api.add_release(61, "android-v1.5.0", sha)
+        self.assertEqual(rb.prepare(args, self.api)["version_code"], 2026111002)
+        self.assertNotIn(f"{LEGACY_NS}/release/61", self.env.remote_refs(tdg.ROOT_NS))
+        self.assertIn(f"{NS}/release/61", self.env.remote_refs())
+
+    def test_pre_monorepo_release_binding_is_honoured(self):
+        sha = self.env.head()
+        self.env.tag("android-v1.6.0", sha)
+        self.api.add_release(62, "android-v1.6.0", sha)
+        # a binding the pre-merge android repository recorded for this release id
+        workspace = self.env.full_clone()
+        now = gate.resolve_now(DAY1, None, 120)[0]
+        info = gate.fingerprint(workspace, sha, gate.platform_rules("android"))
+        body = {"schema": gate.SCHEMA, "kind": "release-build", "quota_date": "2026-11-09", "source_sha": sha,
+                "fingerprint": info["fingerprint"], "version_code": 2026110907, "release_tag": "android-v1.6.0"}
+        record = gate.make_record(workspace, sha, [sha], body, now)
+        self.assertEqual(gate.cas_push(workspace, "origin", f"{LEGACY_NS}/release/62", record, None), "ok")
+        out = rb.prepare(prepare_args(self.env.full_clone(), "android-v1.6.0", "62", legacy=(LEGACY_NS,)), self.api)
+        self.assertEqual((out["version_code"], out["version_record"]), (2026110907, record))
+        self.assertNotIn(f"{NS}/version-code", self.env.remote_refs())  # nothing new allocated
 
     def test_corrupt_allocator_refuses(self):
         workspace = self.env.full_clone()
@@ -286,7 +314,7 @@ class PrepareTests(unittest.TestCase):
         return sha
 
     def test_annotated_and_lightweight_tags_resolve_to_the_commit(self):
-        for rid, tag, annotated in ((1, "v1.0.0", True), (2, "v1.0.1-rc.1+b2", False)):
+        for rid, tag, annotated in ((1, "android-v1.0.0", True), (2, "android-v1.0.1-rc.1+b2", False)):
             sha = self.publish_release(rid, tag, annotated=annotated)
             out = rb.prepare(prepare_args(self.env.full_clone(), tag, str(rid)), self.api)
             self.assertEqual((out["build"], out["source_sha"], out["release_id"]), (True, sha, rid))
@@ -294,138 +322,169 @@ class PrepareTests(unittest.TestCase):
     def test_older_main_commit_with_the_same_recipe_is_allowed(self):
         old = self.env.head()
         self.env.commit({"apps/client/lib/main.dart": "// newer\n"}, "newer")
-        self.publish_release(3, "v0.9.0", sha=old)
-        self.assertEqual(rb.prepare(prepare_args(self.env.full_clone(), "v0.9.0"), self.api)["source_sha"], old)
+        self.publish_release(3, "android-v0.9.0", sha=old)
+        self.assertEqual(rb.prepare(prepare_args(self.env.full_clone(), "android-v0.9.0"), self.api)["source_sha"], old)
 
     def test_tag_off_main_is_refused_before_any_allocation(self):
         base = self.env.head()
         side = self.env.commit({"apps/client/lib/main.dart": "// untrusted\n"}, "side", branch="topic")
         run(["git", "reset", "--quiet", "--hard", base], self.env.author)
-        self.publish_release(4, "v9.9.9", sha=side)
+        self.publish_release(4, "android-v9.9.9", sha=side)
         with self.assertRaisesRegex(rb.ReleaseError, "is not on main"):
-            rb.prepare(prepare_args(self.env.full_clone(), "v9.9.9", "4"), self.api)
+            rb.prepare(prepare_args(self.env.full_clone(), "android-v9.9.9", "4"), self.api)
         self.assertEqual(self.env.remote_refs(), {})
 
     def test_recipe_change_between_tag_and_workflow_is_refused(self):
         old = self.env.head()
-        self.env.commit({".github/daily-build/recipe/build.sh": "echo new\n"}, "recipe")
-        self.publish_release(5, "v1.1.0", sha=old)
+        self.env.commit({".github/daily-build/recipe/android_build.sh": "echo new\n"}, "recipe")
+        self.publish_release(5, "android-v1.1.0", sha=old)
         with self.assertRaisesRegex(rb.ReleaseError, "current build recipe"):
-            rb.prepare(prepare_args(self.env.full_clone(), "v1.1.0"), self.api)
+            rb.prepare(prepare_args(self.env.full_clone(), "android-v1.1.0"), self.api)
+        self.env.commit({".github/daily-build/recipe/flutter_sdk.py": "# new pin\n"}, "shared recipe")
+        newer = self.env.head()
+        with self.assertRaisesRegex(rb.ReleaseError, "current build recipe"):
+            rb.prepare(prepare_args(self.env.full_clone(), "android-v1.1.0", run_sha=newer), self.api)
+
+    def test_another_platforms_recipe_change_does_not_block_a_release(self):
+        old = self.env.head()
+        self.env.commit({".github/daily-build/recipe/desktop_linux.sh": "echo new desktop\n"}, "desktop recipe")
+        self.publish_release(19, "android-v1.2.0", sha=old)
+        out = rb.prepare(prepare_args(self.env.full_clone(), "android-v1.2.0"), self.api)
+        self.assertEqual((out["build"], out["source_sha"]), (True, old))
+        self.publish_release(20, "desktop-v1.2.0", sha=old)
+        with self.assertRaisesRegex(rb.ReleaseError, "current build recipe"):
+            rb.prepare(prepare_args(self.env.full_clone(), "desktop-v1.2.0", allocator=False, platform="desktop",
+                                    platforms="linux-x64,macos,windows-x64"), self.api)
 
     def test_untrusted_tag_and_id_values_are_rejected(self):
         workspace = self.env.full_clone()
-        for tag in ("daily-20261110.1-abcdef012345", "v1;id", "$(id)", "a/b", "../x", "v1..2", "x.lock", "-v1",
-                    "v1 2", "v1\nv2", ""):
+        for tag in ("daily-20261110.1-abcdef012345", "android-daily-20261110.1-abcdef012345",
+                    "desktop-daily-20261110.1-abcdef012345", "android-v1;id", "$(id)", "a/b", "../x", "android-v1..2",
+                    "x.lock", "-v1", "android-v1 2", "android-v1\nv2", "", "v1.0.0", "desktop-v1.0.0", "android-",
+                    "androidv1", "ios-v1.0.0"):
             with self.subTest(tag=tag), self.assertRaises(rb.ReleaseError):
                 rb.prepare(prepare_args(workspace, tag), self.api)
-        self.publish_release(6, "v6.0.0")
+        self.publish_release(6, "android-v6.0.0")
         for rid in ("0", "-1", "6 ", "6;7", "abc"):
             with self.subTest(rid=rid), self.assertRaises(rb.ReleaseError):
-                rb.prepare(prepare_args(workspace, "v6.0.0", rid), self.api)
+                rb.prepare(prepare_args(workspace, "android-v6.0.0", rid), self.api)
 
     def test_release_state_checks(self):
-        self.publish_release(7, "v7.0.0", draft=True)
+        self.publish_release(7, "android-v7.0.0", draft=True)
         workspace = self.env.full_clone()
         with self.assertRaisesRegex(rb.ReleaseError, "draft"):
-            rb.prepare(prepare_args(workspace, "v7.0.0"), self.api)
-        self.publish_release(8, "v8.0.0")
+            rb.prepare(prepare_args(workspace, "android-v7.0.0"), self.api)
+        self.publish_release(8, "android-v8.0.0")
         with self.assertRaisesRegex(rb.ReleaseError, "release replaced"):
-            rb.prepare(prepare_args(workspace, "v8.0.0", "99"), self.api)
+            rb.prepare(prepare_args(workspace, "android-v8.0.0", "99"), self.api)
         with self.assertRaisesRegex(rb.ReleaseError, "no published release"):
-            rb.prepare(prepare_args(workspace, "v404"), self.api)
-        self.api.add_release(9, "v-no-tag", self.env.head())
+            rb.prepare(prepare_args(workspace, "android-v404"), self.api)
+        self.api.add_release(9, "android-v-no-tag", self.env.head())
         with self.assertRaisesRegex(rb.ReleaseError, "does not exist"):
-            rb.prepare(prepare_args(workspace, "v-no-tag"), self.api)
+            rb.prepare(prepare_args(workspace, "android-v-no-tag"), self.api)
 
     def test_only_from_main_with_full_history(self):
-        self.publish_release(10, "v10.0.0")
+        self.publish_release(10, "android-v10.0.0")
         with self.assertRaisesRegex(rb.ReleaseError, "only from refs/heads/main"):
-            rb.prepare(prepare_args(self.env.full_clone(), "v10.0.0", ref="refs/tags/v10.0.0"), self.api)
+            rb.prepare(prepare_args(self.env.full_clone(), "android-v10.0.0", ref="refs/tags/v10.0.0"), self.api)
         shallow = self.env.runner_clone()
         with self.assertRaisesRegex(rb.ReleaseError, "full commit history"):
-            rb.prepare(prepare_args(shallow, "v10.0.0"), self.api)
+            rb.prepare(prepare_args(shallow, "android-v10.0.0"), self.api)
 
     def publish_for(self, rid, tag, source):
         out = make_packages(self.tmp / f"pkg-{rid}-{source[:6]}", source, tag)
         rb.publish(publish_args(out, self.tmp / f"work-{rid}-{source[:6]}", tag, rid, source), self.api)
 
     def test_verified_complete_publication_skips(self):
-        sha = self.publish_release(11, "v11.0.0")
-        self.api.tags["v11.0.0"] = sha
-        self.publish_for(11, "v11.0.0", sha)
-        out = rb.prepare(prepare_args(self.env.full_clone(), "v11.0.0", allocator=False), self.api)
+        sha = self.publish_release(11, "android-v11.0.0")
+        self.api.tags["android-v11.0.0"] = sha
+        self.publish_for(11, "android-v11.0.0", sha)
+        out = rb.prepare(prepare_args(self.env.full_clone(), "android-v11.0.0", allocator=False), self.api)
         self.assertEqual((out["build"], out["reason"]), (False, "already-published"))
         self.assertEqual(self.env.remote_refs(), {})
 
     def test_marker_names_alone_never_skip(self):
-        sha = self.publish_release(15, "v15.0.0")
+        sha = self.publish_release(15, "android-v15.0.0")
         self.api.add_asset(15, "evidence-android.json", b"{}")
         self.api.add_asset(15, "SHA256SUMS", b"x")
-        out = rb.prepare(prepare_args(self.env.full_clone(), "v15.0.0"), self.api)
+        out = rb.prepare(prepare_args(self.env.full_clone(), "android-v15.0.0"), self.api)
         self.assertTrue(out["build"])
         self.assertIn("not ours", out["detail"])
         # missing installer: genuine SHA256SUMS + evidence, but the APK asset is gone
-        self.publish_release(16, "v16.0.0", sha=sha)
-        self.publish_for(16, "v16.0.0", sha)
+        self.publish_release(16, "android-v16.0.0", sha=sha)
+        self.publish_for(16, "android-v16.0.0", sha)
         self.api.release_assets[16] = [a for a in self.api.release_assets[16] if not a["name"].endswith(".apk")]
-        out = rb.prepare(prepare_args(self.env.full_clone(), "v16.0.0"), self.api)
+        out = rb.prepare(prepare_args(self.env.full_clone(), "android-v16.0.0"), self.api)
         self.assertTrue(out["build"])
         self.assertIn(".apk is missing", out["detail"])
 
     def test_publication_of_another_source_does_not_skip(self):
-        old = self.publish_release(17, "v17.0.0")
-        self.publish_for(17, "v17.0.0", old)
+        old = self.publish_release(17, "android-v17.0.0")
+        self.publish_for(17, "android-v17.0.0", old)
         new = self.env.commit({"apps/client/lib/main.dart": "// moved\n"}, "moved")
-        self.env.tag("v17.0.0", new)
-        self.api.tags["v17.0.0"] = new
-        out = rb.prepare(prepare_args(self.env.full_clone(), "v17.0.0", allocator=False), self.api)
+        self.env.tag("android-v17.0.0", new)
+        self.api.tags["android-v17.0.0"] = new
+        out = rb.prepare(prepare_args(self.env.full_clone(), "android-v17.0.0", allocator=False), self.api)
         self.assertTrue(out["build"])
         self.assertIn("another platform, source or tag", out["detail"])
 
     def test_moved_tag_is_refused_by_the_binding_before_any_skip(self):
-        old = self.publish_release(18, "v18.0.0")
-        rb.prepare(prepare_args(self.env.full_clone(), "v18.0.0"), self.api)  # binds release 18 to old
+        old = self.publish_release(18, "android-v18.0.0")
+        rb.prepare(prepare_args(self.env.full_clone(), "android-v18.0.0"), self.api)  # binds release 18 to old
         new = self.env.commit({"apps/client/lib/main.dart": "// moved\n"}, "moved")
-        self.env.tag("v18.0.0", new)
-        self.api.tags["v18.0.0"] = new
-        self.publish_for(18, "v18.0.0", new)  # even a complete publication of the new commit
+        self.env.tag("android-v18.0.0", new)
+        self.api.tags["android-v18.0.0"] = new
+        self.publish_for(18, "android-v18.0.0", new)  # even a complete publication of the new commit
         with self.assertRaisesRegex(rb.ReleaseError, "already built from"):
-            rb.prepare(prepare_args(self.env.full_clone(), "v18.0.0"), self.api)
-        self.assertEqual(self.api.tags["v18.0.0"], new)
+            rb.prepare(prepare_args(self.env.full_clone(), "android-v18.0.0"), self.api)
+        self.assertEqual(self.api.tags["android-v18.0.0"], new)
         self.assertNotEqual(old, new)
 
     def test_blobless_full_history_checkout_allocates_and_pushes(self):
         old = self.env.head()
         self.env.commit({"apps/client/lib/main.dart": "// later\n"}, "later")
-        self.publish_release(14, "v14.0.0", sha=old)
+        self.publish_release(14, "android-v14.0.0", sha=old)
         workspace = self.env.partial_clone()
-        out = rb.prepare(prepare_args(workspace, "v14.0.0", "14"), self.api)
+        out = rb.prepare(prepare_args(workspace, "android-v14.0.0", "14"), self.api)
         self.assertEqual((out["source_sha"], out["version_code"]), (old, 2026111001))
         self.assertIn(f"{NS}/release/14", self.env.remote_refs())
 
     def test_desktop_prepare_needs_no_allocator_or_write(self):
-        self.publish_release(12, "v12.0.0")
-        out = rb.prepare(prepare_args(self.env.full_clone(), "v12.0.0", allocator=False,
+        self.publish_release(12, "desktop-v12.0.0")
+        out = rb.prepare(prepare_args(self.env.full_clone(), "desktop-v12.0.0", allocator=False, platform="desktop",
                                       platforms="linux-x64,macos,windows-x64"), self.api)
         self.assertTrue(out["build"])
         self.assertNotIn("version_code", out)
-        self.assertEqual(self.env.remote_refs(), {})
+        self.assertEqual(self.env.remote_refs(tdg.ROOT_NS), {})
+
+    def test_platform_and_package_list_must_agree(self):
+        self.publish_release(22, "android-v22.0.0")
+        workspace = self.env.full_clone()
+        for kwargs, message in (({"platforms": "linux-x64,macos,windows-x64"}, "are not the packages of android"),
+                                ({"platform": "server", "platforms": "server"}, "unknown platform")):
+            with self.subTest(kwargs=kwargs), self.assertRaisesRegex(rb.ReleaseError, message):
+                rb.prepare(prepare_args(workspace, "android-v22.0.0", **kwargs), self.api)
+        args = prepare_args(workspace, "android-v22.0.0")
+        args.namespace = tdg.DESKTOP_NS
+        with self.assertRaisesRegex(gate.GateError, "does not belong to platform"):
+            rb.prepare(args, self.api)
+        self.assertEqual(self.env.remote_refs(tdg.ROOT_NS), {})
 
     def test_cli_reads_untrusted_values_from_env_and_writes_single_line_outputs(self):
-        self.publish_release(13, "v13.0.0")
+        self.publish_release(13, "android-v13.0.0")
         workspace = self.env.full_clone()
         output = workspace / "out.txt"
-        env = {"ATERMIUS_RELEASE_TAG": "v13.0.0", "ATERMIUS_RELEASE_ID": "13", "GITHUB_REF": "refs/heads/main",
+        env = {"ATERMIUS_RELEASE_TAG": "android-v13.0.0", "ATERMIUS_RELEASE_ID": "13", "GITHUB_REF": "refs/heads/main",
                "GITHUB_SHA": self.env.head(), "GITHUB_RUN_ID": "1", "GITHUB_RUN_ATTEMPT": "1",
                "GITHUB_REPOSITORY": REPO, "GH_TOKEN": "t"}
         with mock.patch.dict(os.environ, env), mock.patch.object(rb, "GitHub", return_value=self.api):
-            code = rb.main(["prepare", "--repo", str(workspace), "--platforms", "android", "--version-allocator",
+            code = rb.main(["prepare", "--repo", str(workspace), "--platform", "android", "--platforms", "android",
+                            "--version-allocator", "--legacy-namespace", LEGACY_NS,
                             "--now", DAY1, "--github-output", str(output), "--summary", ""])
         self.assertEqual(code, 0)
         outputs = dict(line.split("=", 1) for line in output.read_text().splitlines())
         self.assertEqual((outputs["build"], outputs["release_tag"], outputs["version_code"]),
-                         ("true", "v13.0.0", "2026111001"))
+                         ("true", "android-v13.0.0", "2026111001"))
 
 
 class PublishTests(unittest.TestCase):
@@ -434,7 +493,7 @@ class PublishTests(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="release-publish-test-"))
         self.api = FakeGitHub()
-        self.release = self.api.add_release(50, "v5.0.0", self.SHA)
+        self.release = self.api.add_release(50, "android-v5.0.0", self.SHA)
         self.unrelated = self.api.add_asset(50, "notes-by-maintainer.pdf", b"human upload")
         self.unrelated_open = self.api.add_asset(50, "other-interrupted.bin", b"", state="open")
 
@@ -442,14 +501,14 @@ class PublishTests(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def packages(self, name="out", source=None):
-        return make_packages(self.tmp / name, source or self.SHA, "v5.0.0")
+        return make_packages(self.tmp / name, source or self.SHA, "android-v5.0.0")
 
     def publish(self, out, run_id="77"):
-        return rb.publish(publish_args(out, self.tmp / f"work-{out.name}", "v5.0.0", 50, self.SHA, run_id),
+        return rb.publish(publish_args(out, self.tmp / f"work-{out.name}", "android-v5.0.0", 50, self.SHA, run_id),
                           self.api)
 
     def complete(self):
-        return rb.publication_gap(self.api, self.api.assets(50), ["android"], "v5.0.0", self.SHA) is None
+        return rb.publication_gap(self.api, self.api.assets(50), ["android"], "android-v5.0.0", self.SHA) is None
 
     def names(self):
         return sorted(a["name"] for a in self.api.release_assets[50])
@@ -516,14 +575,14 @@ class PublishTests(unittest.TestCase):
 
     def test_replaced_release_moved_tag_or_draft_are_refused(self):
         out = self.packages()
-        self.api.add_release(51, "v5.0.0", self.SHA)  # tag now belongs to a replacement release
+        self.api.add_release(51, "android-v5.0.0", self.SHA)  # tag now belongs to a replacement release
         with self.assertRaisesRegex(rb.ReleaseError, "replacement"):
             self.publish(out)
         del self.api.releases[51]
-        self.api.tags["v5.0.0"] = "d" * 40
+        self.api.tags["android-v5.0.0"] = "d" * 40
         with self.assertRaisesRegex(rb.ReleaseError, "no longer points"):
             self.publish(out)
-        self.api.tags["v5.0.0"] = self.SHA
+        self.api.tags["android-v5.0.0"] = self.SHA
         self.api.releases[50]["draft"] = True
         with self.assertRaisesRegex(rb.ReleaseError, "draft"):
             self.publish(out)
@@ -626,7 +685,11 @@ class WorkflowTests(unittest.TestCase):
         return self.yaml.safe_load((self.ROOT / ".github/workflows" / name).read_text())
 
     def test_release_build_reuses_the_daily_build_steps(self):
-        daily, release = self.load("daily-build.yml"), self.load("release-build.yml")
+        for platform in ("android", "desktop"):
+            with self.subTest(platform=platform):
+                self.check_release_reuses_daily(self.load(f"daily-{platform}.yml"), self.load(f"release-{platform}.yml"))
+
+    def check_release_reuses_daily(self, daily, release):
         normalise = {"needs.gate.outputs.source_sha": "needs.prepare.outputs.source_sha"}
 
         def steps(doc, artifact_names):
@@ -656,32 +719,38 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(release["jobs"]["sign"]["environment"], daily["jobs"]["sign"]["environment"])
 
     def test_policy_lint_accepts_the_repository_and_rejects_widening(self):
-        for name in ("release-build.yml", "release-trigger.yml", "daily-build.yml"):
-            self.assertEqual(self.lint.lint_file(self.ROOT / ".github/workflows" / name), [], name)
-        build = (self.ROOT / ".github/workflows/release-build.yml").read_text()
+        workflows = sorted((self.ROOT / ".github/workflows").glob("*.yml"))
+        for path in workflows:
+            self.assertEqual(self.lint.lint_file(path), [], path.name)
+        self.assertEqual(self.lint.lint_repo(workflows), [])
+        build = (self.ROOT / ".github/workflows/release-android.yml").read_text()
         trigger = (self.ROOT / ".github/workflows/release-trigger.yml").read_text()
-        daily = (self.ROOT / ".github/workflows/daily-build.yml").read_text()
+        daily = (self.ROOT / ".github/workflows/daily-android.yml").read_text()
         cases = [
-            ("release-build.yml", build, "    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'\n",
+            ("release-android.yml", build, "    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'\n",
              "    if: needs.prepare.outputs.build == 'true'\n", "main-only"),
-            ("release-build.yml", build, "      release_id:\n", "      extra:\n        type: string\n      release_id:\n",
+            ("release-android.yml", build, "      release_id:\n", "      extra:\n        type: string\n      release_id:\n",
              "must not take inputs"),
-            ("release-build.yml", build, "on:\n  workflow_dispatch:\n", "on:\n  push: {}\n  workflow_dispatch:\n",
+            ("release-android.yml", build, "on:\n  workflow_dispatch:\n", "on:\n  push: {}\n  workflow_dispatch:\n",
              "only by workflow_dispatch"),
-            ("release-build.yml", build, "    permissions:\n      contents: read\n    env:\n",
+            ("release-android.yml", build, "    permissions:\n      contents: read\n    env:\n",
              "    permissions:\n      contents: write\n    env:\n", "write permission"),  # compile job
-            ("release-build.yml", build, "      ATERMIUS_RELEASE_ID: ${{ needs.prepare.outputs.release_id }}\n",
+            ("release-android.yml", build, "      ATERMIUS_RELEASE_ID: ${{ needs.prepare.outputs.release_id }}\n",
              "      ATERMIUS_RELEASE_ID: ${{ inputs.release_id }}\n", "inputs may only reach"),
-            ("release-build.yml", build, "          GH_TOKEN: ${{ github.token }}\n        run: |\n          python3",
+            ("release-android.yml", build, "          GH_TOKEN: ${{ github.token }}\n        run: |\n          python3",
              "          GH_TOKEN: ${{ secrets.X }}\n        run: |\n          python3", "secrets are only"),
-            ("release-build.yml", build, "cancel-in-progress: false", "cancel-in-progress: true", "concurrency"),
+            ("release-android.yml", build, "cancel-in-progress: false", "cancel-in-progress: true", "concurrency"),
             ("release-trigger.yml", trigger, "      actions: write", "      actions: write\n      contents: write",
              "write permission"),
-            ("release-trigger.yml", trigger, "    if: ${{ !startsWith(github.event.release.tag_name, 'daily-') }}\n",
-             "", "daily-* skip"),
+            ("release-trigger.yml", trigger, " && !contains(github.event.release.tag_name, '-daily-')", "",
+             "daily-* and *-daily-* skips"),
+            ("release-android.yml", build, "ATERMIUS_PLATFORM: android\n", "ATERMIUS_PLATFORM: desktop\n",
+             "env ATERMIUS_PLATFORM"),
+            ("release-android.yml", build, '--platform "$ATERMIUS_PLATFORM" --platforms android \\\n',
+             "--platforms android \\\n", "must get --platform"),
             ("release-trigger.yml", trigger, "    types: [published]", "    types: [published, edited]",
              "release published"),
-            ("daily-build.yml", daily, "  workflow_dispatch: {}",
+            ("daily-android.yml", daily, "  workflow_dispatch: {}",
              "  workflow_dispatch:\n    inputs:\n      release_tag:\n        type: string", "must not take inputs"),
         ]
         with tempfile.TemporaryDirectory() as directory:

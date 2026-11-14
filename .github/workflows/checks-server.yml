@@ -1,0 +1,30 @@
+# Rust server test suite (as the pre-monorepo aterm-project/server checks.yml).
+# Path filters: server/, deploy/ and protocol/ (the server tests read
+# protocol/test-vectors and protocol/sync-fixtures). Tag pushes ignore path
+# filters (GitHub), so every tag push still runs it as before.
+name: Server checks
+on:
+  push:
+    paths:
+      - server/**
+      - deploy/**
+      - protocol/**
+      - .github/workflows/checks-server.yml
+  pull_request:
+    paths:
+      - server/**
+      - deploy/**
+      - protocol/**
+      - .github/workflows/checks-server.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    container: rust:1.94.1-bookworm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: cargo test --locked --jobs 2 -- --test-threads=2
+        working-directory: server

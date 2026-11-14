@@ -5,8 +5,9 @@
 | 现象 | 检查方向 |
 | --- | --- |
 | 克隆或下载构建资产返回 404 | 仓库与资产目前为私有，需要对应 GitHub 访问权限；不要把令牌写进 URL 或文档。 |
+| 旧仓库无法推送或找不到新构建 | `desktop`、`ios`、`web`、`server` 已于 2026-11-14 归档为只读，`android` 已更名为 `atermius`；改用 `aterm-project/atermius`，新构建在其 Releases 中，见[安装总览](INSTALLATION.md)。 |
 | SDK 或锁文件不匹配 | 使用 Flutter 3.47.5 / Dart 3.13，保留五个 `packages/` 本地依赖；使用 `--enforce-lockfile`，不要靠任意升级依赖绕过安装问题。 |
-| Windows 缺少 `atermius_rdp.dll` | 先构建原生引擎，或将 `ATERMIUS_RDP_DIR` 指向匹配的完整 bundle。 |
+| Windows 缺少 `atermius_rdp.dll` | 先构建原生引擎，或将 `ATERMIUS_RDP_DIR` 指向匹配的完整 bundle，见[桌面版构建](install/desktop.md)。 |
 | 复制 EXE 后无法启动 | 需要完整运行目录，包含 DLL、资源与许可证，不能只复制 EXE。 |
 | APK 无法覆盖已有应用 | 核对包名和签名证书；不同签名不能直接更新，迁移前先保存资料。 |
 | Web 加载外部 CanvasKit/字体或出现 CSP 错误 | 以 `--no-web-resources-cdn` 重建，部署完整目录并使用提供的代理。 |
@@ -16,7 +17,8 @@
 | 链接暂不可用或过期 | 核对 UTC 时间窗口、打开次数、连接/并发额度及撤销状态；另一链接的 Cookie 不能用于此链接。 |
 | 浏览器本地资料/设置似乎消失 | 核对来源地址、浏览器资料、隐私模式和存储策略，不同来源有不同存储作用域。 |
 | 全套测试失败而针对性 CI 通过 | 区分并记录历史基线失败，提供精确失败用例，不要称全套已通过。 |
+| （Windows/macOS 桌面版）一键导入 Termius 提示无法读取密钥或密钥不匹配 | 先在本机打开一次 Termius 桌面版；macOS 钥匙串弹窗选择“允许”。在 App Store 版与官网版之间切换过时，打开当前使用的版本后重试。仍失败时在 Termius 导出 CSV 再导入。 |
 
-部署、健康检查和备份见[服务端文档](https://github.com/aterm-project/server/blob/main/docs/README.md)；协议细节见[远程桌面](REMOTE-DESKTOP.md)与 [Telnet](TELNET.md)。
+部署、健康检查和备份见[服务端部署](install/server.md)与[文档导航](README.md)中的运维手册；协议细节见[远程桌面](REMOTE-DESKTOP.md)与 [Telnet](TELNET.md)。
 
 提交问题请说明系统/架构、应用或源码版本、协议、最小复现和脱敏错误信息，不要包含密码、私钥、完整访问链接、账户令牌或用户数据库。

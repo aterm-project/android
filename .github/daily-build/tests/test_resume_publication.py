@@ -52,6 +52,22 @@ class RecoveryTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(recovery.RecoveryError):
                 recovery.verify_claim({**claim, key: value}, self.run, 'aterm-project/android')
 
+    def test_repository_renamed_to_the_monorepo_is_accepted(self):
+        # After aterm-project/android became aterm-project/atermius the API reports the new name for
+        # the run, while the original claim record still names the old repository.
+        renamed = {**self.run, 'repository': {'full_name': 'aterm-project/atermius'}}
+        recovery.verify_run(renamed, self.jobs, 'aterm-project/atermius', '42')
+        claim = {'repository': 'aterm-project/android', 'branch': 'main', 'run_id': '42',
+                 'run_attempt': '1', 'source_sha': 'a' * 40}
+        recovery.verify_claim(claim, renamed, 'aterm-project/atermius')
+        with self.assertRaises(recovery.RecoveryError):
+            recovery.verify_run(renamed, self.jobs, 'aterm-project/android', '42')  # run of another repository
+        for repository in ('someone/android', 'aterm-project/desktop'):
+            with self.subTest(repository=repository), self.assertRaises(recovery.RecoveryError):
+                recovery.verify_run({**self.run, 'repository': {'full_name': repository}}, self.jobs, repository, '42')
+            with self.subTest(claim=repository), self.assertRaises(recovery.RecoveryError):
+                recovery.verify_claim({**claim, 'repository': repository}, renamed, 'aterm-project/atermius')
+
     def test_foreign_branch_or_workflow_rejected(self):
         for key, value in [('head_branch', 'feature'), ('event', 'pull_request'),
                            ('path', '.github/workflows/other.yml'), ('conclusion', 'success')]:

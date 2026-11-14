@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Installation packages for a published GitHub Release (stdlib only).
 
-  prepare  runs in the main-branch `release-build.yml` (trusted definition):
-           validate the dispatched tag / release id (untrusted strings), require
-           a published non-daily release, resolve the tag (annotated tags are
+  prepare  runs in the main-branch `release-<platform>.yml` (trusted
+           definition): validate the dispatched tag / release id (untrusted
+           strings; the tag must be `<platform>-...` and not a daily tag),
+           require a published release, resolve the tag (annotated tags are
            peeled) to ONE immutable commit, require that commit to be an
-           ancestor of the default branch and to carry the same build recipe as
-           the running workflow, and, for Android, allocate one versionCode per
-           release from the counter shared with the daily gate.
+           ancestor of the default branch and to carry the same build recipe
+           for this platform as the running workflow, and, for Android,
+           allocate one versionCode per release from the counter shared with
+           the daily gate.
   publish  verify the evidence/SHA-256 of the built packages, then add them to
            exactly that existing published release (by id): identical assets
            are kept, interrupted ("open") uploads of the same name are replaced,
@@ -15,8 +17,9 @@
            assets are never touched. SHA256SUMS is uploaded last and marks a
            complete publication.
 
-The same file is used by the Android and desktop repositories and is exercised
-offline by tests/test_release_build.py (local git remotes + a fake GitHub API).
+One copy serves the release builds of all platforms of the monorepo (today
+android and desktop) and is exercised offline by tests/test_release_build.py
+(local git remotes + a fake GitHub API).
 
 Exit status: 0 decided/succeeded, 1 refused, 3 clock disagreement (retry).
 """
@@ -42,8 +45,12 @@ TAG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,99}$")
 RELEASE_ID_RE = re.compile(r"^[1-9][0-9]{0,15}$")
 # Files the source checkout must share with the running workflow: the jobs call
 # the recipe of the commit they build (as the daily build does), so its
-# interface must be the one this workflow definition was written for.
-RECIPE_PATHS = (".github/daily-build/recipe", ".github/daily-build/release_tool.py")
+# interface must be the one this workflow definition was written for. Only this
+# platform's recipe files count, so a change to another platform's recipe does
+# not block releases of tags created before it.
+RECIPE_DIR = ".github/daily-build/recipe"
+SHARED_RECIPE_FILES = ("flutter_sdk.py",)
+RECIPE_PATHS = (".github/daily-build/release_tool.py",)
 SUMS = "SHA256SUMS"
 PARTIAL_STATES = {"open", "starter"}  # interrupted uploads as reported by the release assets API
 SUMS_LINE = re.compile(r"^([0-9a-f]{64})  ([A-Za-z0-9][A-Za-z0-9._+-]{0,150})$")
@@ -58,11 +65,36 @@ def require(condition: bool, message: str) -> None:
         raise ReleaseError(message)
 
 
-def validate_tag(tag: str) -> str:
+def validate_platform(platform: str, targets: str | None = None) -> str:
+    """``platform`` is a known client platform and ``targets`` (``--platforms``) its evidence platforms."""
+    require(platform in gate.PLATFORMS, f"unknown platform {platform!r}")
+    if targets is not None:
+        require(sorted(targets.split(",")) == sorted(gate.PLATFORMS[platform]),
+                f"--platforms {targets!r} are not the packages of {platform} ({','.join(gate.PLATFORMS[platform])})")
+    return platform
+
+
+def validate_tag(tag: str, platform: str) -> str:
     require(bool(TAG_RE.match(tag)) and ".." not in tag and not tag.endswith((".", ".lock")),
             "release tag must match [A-Za-z0-9][A-Za-z0-9._+-]{0,99} (no '/', '..', trailing '.' or '.lock')")
-    require(not tag.startswith("daily-"), "daily-* releases are published by the daily build itself")
+    require(not tag.startswith("daily-") and not any(tag.startswith(f"{p}-daily-") for p in gate.PLATFORMS),
+            "daily releases (<platform>-daily-*, legacy daily-*) are published by the daily build itself")
+    require(tag.startswith(f"{validate_platform(platform)}-") and len(tag) > len(platform) + 1,
+            f"{platform} packages are attached only to releases tagged {platform}-*")
     return tag
+
+
+def recipe_files(repo: Path, rev: str, platform: str) -> dict[str, str]:
+    """``{name: "mode oid"}`` of this platform's recipe files (``<platform>_*`` and the shared ones)."""
+    proc = gate.git(repo, "ls-tree", "-z", f"{rev}:{RECIPE_DIR}", check=False)
+    require(proc.returncode == 0, f"{RECIPE_DIR} is missing at {rev[:12]}")
+    files = {}
+    for item in proc.stdout.split("\0"):
+        meta, _, name = item.partition("\t")
+        if name and (name.startswith(f"{platform}_") or name in SHARED_RECIPE_FILES):
+            mode, _, oid = meta.split()
+            files[name] = f"{mode} {oid}"
+    return files
 
 
 # ------------------------------------------------------------------ GitHub API
@@ -275,9 +307,10 @@ def resolve_tag(repo: Path, remote: str, tag: str, branch: str) -> tuple[str, st
 
 
 def prepare(args: argparse.Namespace, api) -> dict:
+    validate_platform(args.platform, args.platforms)
     gate.validate_common(args)
     repo = Path(args.repo)
-    tag = validate_tag(args.release_tag)
+    tag = validate_tag(args.release_tag, args.platform)
     release_id = None
     if args.release_id:
         require(bool(RELEASE_ID_RE.match(args.release_id)), "release id must be a positive integer")
@@ -300,6 +333,9 @@ def prepare(args: argparse.Namespace, api) -> dict:
         require(gate.tree_of(repo, source, path) == gate.tree_of(repo, args.run_sha, path),
                 f"{path} of {tag} ({source[:12]}) differs from this workflow's ({args.run_sha[:12]}); "
                 f"tag a commit with the current build recipe")
+    require(recipe_files(repo, source, args.platform) == recipe_files(repo, args.run_sha, args.platform),
+            f"the {args.platform} recipe in {RECIPE_DIR} of {tag} ({source[:12]}) differs from this workflow's "
+            f"({args.run_sha[:12]}); tag a commit with the current build recipe")
     result = {"build": True, "reason": "build", "release_id": release["id"], "release_tag": tag,
               "source_sha": source, "short_sha": source[:12], "build_date": date, "clock_source": clock,
               "prerelease": bool(release.get("prerelease")), "branch_tip": tip}
@@ -318,9 +354,11 @@ def prepare(args: argparse.Namespace, api) -> dict:
 
 
 def release_binding(repo: Path, args: argparse.Namespace, release_id: int, tag: str, source: str) -> dict | None:
-    """The versionCode/source recorded for this release id, if any; a moved tag is refused."""
-    ref = f"{args.namespace}/release/{release_id}"
-    sha = gate.ls_remote(repo, args.remote, [ref]).get(ref)
+    """The versionCode/source recorded for this release id, if any; a moved tag is refused.
+    A binding made before the monorepo merge (legacy namespace) is honoured, never rewritten."""
+    refs = [f"{ns}/release/{release_id}" for ns in [args.namespace] + list(getattr(args, "legacy_namespace", None) or [])]
+    found = gate.ls_remote(repo, args.remote, refs)
+    sha = next((found[r] for r in refs if found.get(r)), None)
     if not sha:
         return None
     gate.fetch_shas(repo, args.remote, [sha])
@@ -341,10 +379,11 @@ def allocate_release_version(repo: Path, args: argparse.Namespace, release_id: i
         return release_binding(repo, args, release_id, tag, source)
 
     info = gate.fingerprint(repo, source, args.rules)
-    payload = {"purpose": "release", "repository": args.repository, "release_id": release_id, "release_tag": tag,
-               "run_id": args.run_id, "run_attempt": args.run_attempt}
+    payload = {"purpose": "release", "platform": args.platform, "repository": args.repository,
+               "release_id": release_id, "release_tag": tag, "run_id": args.run_id, "run_attempt": args.run_attempt}
     code, _ = gate.allocate_version_code(repo, args.remote, args.namespace, date, source, info["fingerprint"],
-                                         payload, now, max_slot=gate.RELEASE_MAX_SLOT)
+                                         payload, now, max_slot=gate.RELEASE_MAX_SLOT,
+                                         legacy_namespaces=tuple(getattr(args, "legacy_namespace", None) or []))
     body = {**payload, "schema": gate.SCHEMA, "kind": "release-build", "quota_date": date, "source_sha": source,
             "fingerprint": info["fingerprint"], "version_code": code, "allocated_at": gate.utc_iso(now),
             "nonce": os.urandom(16).hex()}
@@ -404,7 +443,8 @@ def check_target(api, release_id: int, tag: str, source: str) -> dict:
 
 
 def publish(args: argparse.Namespace, api) -> dict:
-    tag = validate_tag(args.release_tag)
+    validate_platform(args.platform, args.platforms)
+    tag = validate_tag(args.release_tag, args.platform)
     require(bool(RELEASE_ID_RE.match(args.release_id)), "invalid release id")
     require(bool(gate.HEX40.match(args.source_sha)), "invalid source sha")
     release_id = int(args.release_id)
@@ -450,9 +490,12 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("prepare")
     p.add_argument("--repo", default=".")
     p.add_argument("--remote", default="origin")
-    p.add_argument("--namespace", default=gate.DEFAULT_NAMESPACE)
+    p.add_argument("--platform", required=True, help="client platform: " + ", ".join(gate.PLATFORMS))
+    p.add_argument("--namespace", default="", help="default refs/atermius-ci/daily-build/<platform>")
+    p.add_argument("--legacy-namespace", action="append", default=[],
+                   help="pre-monorepo namespace: read-only versionCode floor and release bindings (Android)")
     p.add_argument("--branch", default="")
-    p.add_argument("--rules", default=gate.DEFAULT_RULES)
+    p.add_argument("--rules", default="", help="default .github/daily-build/inputs/<platform>.txt")
     p.add_argument("--platforms", required=True)
     p.add_argument("--version-allocator", action="store_true")
     p.add_argument("--max-skew", type=int, default=gate.MAX_SKEW_DEFAULT)
@@ -462,6 +505,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--summary", default=env.get("GITHUB_STEP_SUMMARY", ""))
 
     p = sub.add_parser("publish")
+    p.add_argument("--platform", required=True, help="client platform: " + ", ".join(gate.PLATFORMS))
     p.add_argument("--dir", required=True)
     p.add_argument("--work", required=True)
     p.add_argument("--platforms", required=True)

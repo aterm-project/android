@@ -1,0 +1,47 @@
+# Inputs of the iOS daily release build (read by .github/daily-build/daily_gate.py
+# --platform ios from the commit being considered). A build is due only when the
+# fingerprint of the selected files (path, mode, blob id) differs from the one recorded
+# in the last ios build that was compiled AND published.
+#   "+ glob" includes, "- glob" excludes, the last matching rule wins and
+#   unmatched files are not inputs. "*" stays in one path segment, "**" crosses.
+# Changing the rules changes the fingerprint (one rebuild). Comments do not.
+#
+# Monorepo layout: apps/client/lib, pubspec.*, l10n.yaml and packages/ are shared by
+# every client platform; each platform runner (apps/client/<runner>/) and engine
+# recipe belongs only to the platform(s) that build it, so a change there rebuilds
+# only those platforms. Keep tests/test_inputs.py in sync when moving files.
+version 1
+
+# Product source, shared app config, lockfile, l10n config, this platform's runner
++ apps/client/**
+- apps/client/test/**
+- apps/client/integration/**
+- apps/client/tool/**
+- apps/client/analysis_options.yaml
+# Other platforms' runners (built by their own daily workflow)
+- apps/client/android/**
+- apps/client/linux/**
+- apps/client/macos/**
+- apps/client/web/**
+- apps/client/windows/**
+# RDP engine: shared sources + apple/ recipe (not the Android recipe)
+- apps/client/native/desktop/android/**
+
+# Local dependency forks (dependency_overrides)
++ packages/**
+- packages/*/test/**
+- packages/*/example/**
+- packages/*/doc/**
+- packages/*/analysis_options.yaml
+- packages/*/dart_test.yaml
+- packages/*/dartdoc_options.yaml
+
+# Documentation never changes a build (no .md file is a bundled asset)
+- **/*.md
+
+# Build recipe: pinned SDK installers, this platform's daily workflow and build/packaging
+# scripts. The gate/publish scripts, tests and README in .github/daily-build/ are not inputs.
++ tools/install_flutter_linux.sh
++ .github/workflows/daily-ios.yml
++ .github/daily-build/recipe/ios_*
++ .github/daily-build/recipe/flutter_sdk.py

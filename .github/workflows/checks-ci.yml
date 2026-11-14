@@ -1,0 +1,34 @@
+# Offline tests of the shared daily/release toolkit (.github/daily-build) and the
+# workflow policy lint. Before the monorepo the android and desktop checks.yml
+# ran these toolkit tests on every push; their inputs all live under .github/
+# (plus the NDK pin that test_android_toolchain.py reads), so they run when
+# those change. Tag pushes ignore path filters (GitHub), so tag pushes run it too.
+name: CI toolkit checks
+on:
+  push:
+    paths:
+      - .github/**
+      - apps/client/native/desktop/android/build_engine.sh
+  pull_request:
+    paths:
+      - .github/**
+      - apps/client/native/desktop/android/build_engine.sh
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: python3 -I .github/daily-build/tests/lint_workflows.py
+      - run: python3 -I .github/daily-build/tests/test_inputs.py
+      - run: python3 -I .github/daily-build/tests/test_daily_gate.py
+      - run: python3 -I .github/daily-build/tests/test_release_tool.py
+      - run: python3 -I .github/daily-build/tests/test_release_build.py
+      - run: python3 -I .github/daily-build/tests/test_android_toolchain.py
+      - run: python3 -I .github/daily-build/tests/test_resume_publication.py

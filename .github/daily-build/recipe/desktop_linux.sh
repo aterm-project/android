@@ -37,7 +37,11 @@ compgen -G "$bundle/lib/*pty*.so" >/dev/null || die "bundle lacks the flutter_pt
 git -C "$ROOT" diff --quiet HEAD || { echo "::warning::the build modified tracked files:"; git -C "$ROOT" diff --stat HEAD; }
 
 version_name="$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' "$ROOT/apps/client/pubspec.yaml")"
-name="atermius-desktop-linux-x64-${version_name}-${ATERMIUS_RELEASE_TAG#daily-}.tar.gz"
+# Asset names keep the pre-monorepo form: the platform namespace of the tag is dropped
+# (<p>-daily-20261114.1-<sha12> -> 20261114.1-<sha12>, release <p>-v1.0.0 -> v1.0.0).
+label="${ATERMIUS_RELEASE_TAG#desktop-daily-}"
+label="${label#desktop-}"
+name="atermius-desktop-linux-x64-${version_name}-${label}.tar.gz"
 python3 -I "$TOOLS/release_tool.py" archive --src "$bundle" --out "$ATERMIUS_OUT/$name" --prefix atermius-linux-x64
 (cd "$bundle" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum) > "$META/bundle-files.sha256"
 python3 -I - "$META/bundle-files.sha256" "$META/bundle-files.json" <<'PY'

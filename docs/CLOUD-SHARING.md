@@ -32,7 +32,7 @@ anything the target account allows — use a dedicated low-privilege account.
 * `ATERMIUS_PUBLIC_ORIGIN` = the exact browser origin (e.g. `https://atermius.example.com`).
 * TLS in front (cookies are `__Host-` / `Secure`).
 
-Start with the complete [English installation flow](INSTALLATION.en.md) or [中文安装流程](INSTALLATION.md). It includes the separate Web image, exact HTTPS origin, Caddy/web-edge routing, administrator setup and target policy. Adding only a gateway overlay does not provision a usable HTTPS guest website.
+Start with the complete [English installation flow](install/server.en.md) or [中文安装流程](install/server.md). It includes the separate Web image, exact HTTPS origin, Caddy/web-edge routing, administrator setup and target policy. Adding only a gateway overlay does not provision a usable HTTPS guest website.
 
 For an existing stack, retain **every** active Web/TLS/backup/etc. overlay and add `compose.desktop.yaml` and `compose.share.yaml`. The environment example keeps temporary links off: explicitly set `ATERMIUS_SHARE_LINKS_ENABLED=true` and a narrow `ATERMIUS_SHARE_ALLOW_CIDRS` before enabling them. Use `--env-file deploy/.env` consistently; `.env` variables affect the container only when the selected Compose files pass them through.
 
@@ -110,7 +110,7 @@ policy also bounds what they may expose.
 
 ## Guest flow
 
-`/s/<slug>#s1.<secret>` → `web/share-bootstrap.js` removes the fragment from
+`/s/<slug>#s1.<secret>` → `apps/client/web/share-bootstrap.js` removes the fragment from
 the address bar before Flutter, routing or any request → neutral landing page
 → **Continue** (redeems; sets `__Host-atermius-guest`, HttpOnly, Secure,
 SameSite=Strict) → target list → **Connect** (30 s one-use ticket →

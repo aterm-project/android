@@ -35,7 +35,11 @@ mkdir -p "$stage/deploy"
 cp -R "$web" "$stage/web"
 cp deploy/nginx.conf "$stage/deploy/nginx.conf"
 version_name="$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' "$ROOT/apps/client/pubspec.yaml")"
-name="atermius-web-${version_name}-${ATERMIUS_RELEASE_TAG#daily-}.tar.gz"
+# Asset names keep the pre-monorepo form: the platform namespace of the tag is dropped
+# (<p>-daily-20261114.1-<sha12> -> 20261114.1-<sha12>, release <p>-v1.0.0 -> v1.0.0).
+label="${ATERMIUS_RELEASE_TAG#web-daily-}"
+label="${label#web-}"
+name="atermius-web-${version_name}-${label}.tar.gz"
 python3 -I "$TOOLS/release_tool.py" archive --src "$stage" --out "$ATERMIUS_OUT/$name" --prefix atermius-web
 python3 -I "$TOOLS/release_tool.py" evidence --platform web --out-dir "$ATERMIUS_OUT" --artifact "$name" \
   --meta "version_name=$version_name" --meta "entry_point=lib/main.dart" \

@@ -47,7 +47,7 @@ Signer #1 certificate SHA-1 digest: 0000000000000000000000000000000000000000
 """
 
 ENV = {"ATERMIUS_SOURCE_SHA": "a" * 40, "ATERMIUS_QUOTA_DATE": "2026-11-10",
-       "ATERMIUS_RELEASE_TAG": "daily-20261110.1-aaaaaaaaaaaa", "GITHUB_REPOSITORY": "aterm-project/test",
+       "ATERMIUS_RELEASE_TAG": "android-daily-20261110.1-aaaaaaaaaaaa", "GITHUB_REPOSITORY": "aterm-project/test",
        "GITHUB_RUN_ID": "42", "GITHUB_RUN_ATTEMPT": "1"}
 
 
@@ -175,15 +175,19 @@ class ReleaseToolTests(unittest.TestCase):
 
 
 WORKFLOW_OK = """
-name: Daily build
+name: Daily build (Android)
 on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch: {}
 permissions: {}
 concurrency:
-  group: daily
+  group: daily-build-android-${{ github.repository }}
   cancel-in-progress: false
+env:
+  ATERMIUS_PLATFORM: android
+  ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build/android
+  ATERMIUS_DAILY_RULES: .github/daily-build/inputs/android.txt
 jobs:
   gate:
     runs-on: ubuntu-24.04
@@ -195,7 +199,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - id: gate
-        run: echo build=true >> "$GITHUB_OUTPUT"
+        run: python3 -I .github/daily-build/daily_gate.py gate --platform "$ATERMIUS_PLATFORM"
   build:
     needs: gate
     if: needs.gate.outputs.build == 'true' && needs.gate.outputs.claim_run_attempt == github.run_attempt
@@ -214,11 +218,11 @@ jobs:
 
 
 class LintTests(unittest.TestCase):
-    def check(self, text: str) -> list[str]:
+    def check(self, text: str, name: str = "daily-android.yml") -> list[str]:
         directory = Path(tempfile.mkdtemp(prefix="lint-test-"))
         try:
-            (directory / "daily-build.yml").write_text(text)
-            return lint.lint_file(directory / "daily-build.yml")
+            (directory / name).write_text(text)
+            return lint.lint_file(directory / name)
         finally:
             shutil.rmtree(directory)
 
@@ -252,6 +256,71 @@ class LintTests(unittest.TestCase):
         text = WORKFLOW_OK.replace("workflow_dispatch: {}", "workflow_dispatch:\n    inputs:\n      ref: {type: string}")
         self.assertTrue(any("inputs" in e for e in self.check(text)))
 
+    def test_daily_workflow_belongs_to_exactly_one_platform(self):
+        cases = [
+            ("ATERMIUS_PLATFORM: android", "ATERMIUS_PLATFORM: desktop", "env ATERMIUS_PLATFORM"),
+            ("refs/atermius-ci/daily-build/android", "refs/atermius-ci/daily-build", "env ATERMIUS_DAILY_NAMESPACE"),
+            ("inputs/android.txt", "inputs/desktop.txt", "env ATERMIUS_DAILY_RULES"),
+            ("daily-build-android-", "daily-build-", "concurrency group must name the platform"),
+            ('gate --platform "$ATERMIUS_PLATFORM"', "gate", "must get --platform"),
+        ]
+        for good, bad, message in cases:
+            with self.subTest(message=message):
+                text = WORKFLOW_OK.replace(good, bad, 1)
+                self.assertNotEqual(text, WORKFLOW_OK)
+                self.assertTrue(any(message in e for e in self.check(text)), self.check(text))
+        self.assertTrue(any("unknown platform" in e for e in self.check(WORKFLOW_OK, "daily-server.yml")))
+        secret = WORKFLOW_OK.replace('      - run: echo "$SHA"', '      - run: echo "$K"\n        env:\n'
+                                     '          K: ${{ secrets.KEY }}')
+        self.assertTrue(any("secrets are only for the sign job" in e for e in self.check(secret)))
+
+    def test_checks_need_matching_path_filters_with_the_shared_client_paths(self):
+        path = HERE.parents[1] / "workflows/checks-ios.yml"
+        original = path.read_text()
+        self.assertEqual(lint.lint_file(path), [])
+        with tempfile.TemporaryDirectory() as directory:
+            candidate = Path(directory) / path.name
+            for old, new, error in [
+                ("      - packages/**\n", "", "shared client paths"),
+                ("  pull_request:\n    paths:\n      - apps/client/lib/**\n",
+                 "  pull_request:\n    paths:\n      - apps/client/ios/**\n      - apps/client/lib/**\n",
+                 "same non-empty paths"),
+                ("      - .github/workflows/checks-ios.yml\n", "", "include the workflow file itself"),
+            ]:
+                with self.subTest(error=error):
+                    self.assertIn(old, original)
+                    candidate.write_text(original.replace(old, new))
+                    self.assertTrue(any(error in item for item in lint.lint_file(candidate)),
+                                    lint.lint_file(candidate))
+
+    def test_repository_rules_across_workflows(self):
+        workflows = HERE.parents[1] / "workflows"
+        files = sorted(workflows.glob("*.yml"))
+        self.assertEqual(lint.lint_repo(files), [])
+        with tempfile.TemporaryDirectory() as directory:
+            for old_name, old, new, error in [
+                ("daily-ios.yml", "daily-build-ios-", "daily-build-web-", "share a concurrency group"),
+                ("resume-publication.yml", "daily-build-android-", "daily-build-", "share the concurrency group"),
+                ("release-trigger.yml", "            desktop-?*) workflow=release-desktop.yml ;;\n", "",
+                 "dispatches"),
+                ("release-trigger.yml", "android-?*) workflow=release-android.yml",
+                 "desktop-?*) workflow=release-android.yml", "must route android-* tags"),
+            ]:
+                with self.subTest(error=error):
+                    copies = []
+                    for source in files:
+                        target = Path(directory) / source.name
+                        text = source.read_text()
+                        if source.name == old_name:
+                            self.assertIn(old, text)
+                            text = text.replace(old, new, 1)
+                        target.write_text(text)
+                        copies.append(target)
+                    problems = lint.lint_repo(copies)
+                    self.assertTrue(any(error in p for p in problems), problems)
+            (Path(directory) / "daily-web.yml").unlink()
+            self.assertIn("daily-web.yml is missing", lint.lint_repo(sorted(Path(directory).glob("*.yml"))))
+
     def test_recovery_is_manual_main_only_with_narrow_permissions(self):
         path = HERE.parents[1] / 'workflows/resume-publication.yml'
         self.assertEqual(lint.lint_file(path), [])
@@ -262,6 +331,8 @@ class LintTests(unittest.TestCase):
                 ('  workflow_dispatch: {}', '  workflow_dispatch: {}\n  push: {}', 'manual only'),
                 ("github.ref == 'refs/heads/main'", 'always()', 'main-only guard'),
                 ('      actions: read', '      actions: write', 'actions:read only'),
+                ('ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build\n',
+                 'ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build/android\n', 'pre-monorepo android claim'),
             ]:
                 with self.subTest(error=error):
                     candidate.write_text(original.replace(old, new))

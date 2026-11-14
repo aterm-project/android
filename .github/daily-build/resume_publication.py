@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Recover publication from a successful signed artifact, never rebuild/sign."""
+"""Recover publication from a successful signed artifact, never rebuild/sign.
+
+Pinned to one daily Android run of the pre-monorepo `aterm-project/android`
+repository (renamed to `aterm-project/atermius`): the run, its claim and its
+release tag keep their original names (`.github/workflows/daily-build.yml`,
+the namespace `refs/atermius-ci/daily-build`, tag `daily-<date>.<slot>-<sha12>`).
+"""
 from __future__ import annotations
 
 import datetime as dt
@@ -13,6 +19,11 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import daily_gate as gate
+
+
+# The same repository before and after the monorepo rename; the original
+# claim record still names the old one.
+REPOSITORIES = ('aterm-project/android', 'aterm-project/atermius')
 
 
 class RecoveryError(ValueError):
@@ -29,7 +40,7 @@ def api(path):
 
 
 def verify_run(run, jobs, repository, run_id):
-    require(repository == 'aterm-project/android', 'unexpected repository')
+    require(repository in REPOSITORIES, 'unexpected repository')
     require(str(run['id']) == run_id and run['repository']['full_name'] == repository,
             'run belongs to another repository or id')
     require(run['path'] == '.github/workflows/daily-build.yml' and run['head_branch'] == 'main',
@@ -51,7 +62,8 @@ def verify_run(run, jobs, repository, run_id):
 
 
 def verify_claim(record, run, repository):
-    require(record.get('repository') == repository and record.get('branch') == 'main' and
+    require(repository in REPOSITORIES and record.get('repository') in REPOSITORIES and
+            record.get('branch') == 'main' and
             str(record.get('run_id')) == str(run['id']) and
             str(record.get('run_attempt')) == str(run['run_attempt']) and
             record.get('source_sha') == run['head_sha'], 'claim does not belong to the source run/attempt')
@@ -77,6 +89,7 @@ def prepare():
     artifact = artifacts[0]
     require(bool(re.fullmatch('sha256:[0-9a-f]{64}', artifact.get('digest', ''))), 'artifact digest missing')
     namespace, repo = os.environ['ATERMIUS_DAILY_NAMESPACE'], Path.cwd()
+    require(namespace == gate.LEGACY_NAMESPACE, 'the original claim lives in the pre-monorepo namespace')
     # Allow a run created just before midnight whose gate claimed the next day.
     start = dt.date.fromisoformat(run['created_at'][:10])
     dates = [start.isoformat(), (start + dt.timedelta(days=1)).isoformat()]

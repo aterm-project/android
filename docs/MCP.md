@@ -45,6 +45,8 @@ Windows、Linux、macOS 和 Android 支持监听；Web、iOS 不监听端口。A
 
 按外部客户端支持的 HTTP 配置语法调整。请求需包含 JSON Content-Type 及协议要求的 Accept/方法头；服务使用 JSON 响应，不提供 SSE 推送，GET 返回 405。应用复制配置与当前启用端口/令牌一致，停用后旧令牌失效。
 
-仅支持 stdio 的客户端需要另行配置兼容适配器；当前拆分仓库不附带旧说明中的 Python 桥接脚本。无需在运行机器克隆整个历史工程或公开监听端口。
+仅支持 stdio 的客户端可使用仓库中的 `integration/mcp/stdio_bridge.py`，以环境变量 `ATERMIUS_MCP_URL`、`ATERMIUS_MCP_TOKEN` 提供端点和令牌（用法见 [Android 连通与后台运行](MCP-ANDROID.md)），也可以另行配置兼容适配器。无需在运行机器克隆整个工程或公开监听端口。
 
 参考：[MCP Streamable HTTP 传输](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports)。
+
+> 合并说明：2026-11-14 合并前，Desktop、iOS、Web 仓库中的本文仍是较早版本，只描述桌面端监听（Web 与移动端只显示能力说明），权限为单一的“允许外部 AI 执行操作”开关，修改权限会停止服务并使旧令牌失效；该版本还称拆分仓库不附带 stdio 桥接脚本。四个客户端仓库当时的代码均已包含“机器访问权限”设置与 `integration/mcp/stdio_bridge.py`，因此本文以 Android 仓库的较新版本为准。

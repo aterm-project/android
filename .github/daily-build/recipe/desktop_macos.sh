@@ -63,7 +63,11 @@ codesign -dv --verbose=2 "$app" 2> "$META/codesign.txt" || true
 git -C "$ROOT" diff --quiet HEAD || { echo "::warning::the build modified tracked files:"; git -C "$ROOT" diff --stat HEAD; }
 
 version_name="$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' "$ROOT/apps/client/pubspec.yaml")"
-name="atermius-desktop-macos-${version_name}-${ATERMIUS_RELEASE_TAG#daily-}.adhoc-signed.zip"
+# Asset names keep the pre-monorepo form: the platform namespace of the tag is dropped
+# (<p>-daily-20261114.1-<sha12> -> 20261114.1-<sha12>, release <p>-v1.0.0 -> v1.0.0).
+label="${ATERMIUS_RELEASE_TAG#desktop-daily-}"
+label="${label#desktop-}"
+name="atermius-desktop-macos-${version_name}-${label}.adhoc-signed.zip"
 /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$app" "$ATERMIUS_OUT/$name"
 python3 -I - "$META" <<'PY'
 import json, sys

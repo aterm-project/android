@@ -1,5 +1,42 @@
-name: Client checks
-on: [push, pull_request, workflow_dispatch]
+# Android client checks: focused Flutter tests and the APK ABI checker self-test (as the pre-monorepo
+# aterm-project/android repository's checks.yml).
+#
+# Path filters: shared client code (apps/client/lib, test, pubspec.*, l10n.yaml,
+# packages/, protocol/, the Flutter installer) runs every client's checks; the
+# Android runner and engine directories run only these. Tag pushes ignore path
+# filters (GitHub), so every tag push still runs all checks as before. Keep the
+# push and pull_request lists identical (lint_workflows.py enforces it).
+name: Android checks
+on:
+  push:
+    paths:
+      - apps/client/lib/**
+      - apps/client/test/**
+      - apps/client/pubspec.*
+      - apps/client/l10n.yaml
+      - packages/**
+      - protocol/**
+      - tools/install_flutter_linux.sh
+      - apps/client/android/**
+      - apps/client/native/desktop/*
+      - apps/client/native/desktop/android/**
+      - integration/native/android_*
+      - .github/workflows/checks-android.yml
+  pull_request:
+    paths:
+      - apps/client/lib/**
+      - apps/client/test/**
+      - apps/client/pubspec.*
+      - apps/client/l10n.yaml
+      - packages/**
+      - protocol/**
+      - tools/install_flutter_linux.sh
+      - apps/client/android/**
+      - apps/client/native/desktop/*
+      - apps/client/native/desktop/android/**
+      - integration/native/android_*
+      - .github/workflows/checks-android.yml
+  workflow_dispatch:
 permissions:
   contents: read
 env:
@@ -17,10 +54,6 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - run: python3 -I .github/daily-build/tests/test_android_toolchain.py
-      - run: python3 -I .github/daily-build/tests/test_resume_publication.py
-      - run: python3 -I .github/daily-build/tests/test_release_tool.py
-      - run: python3 -I .github/daily-build/tests/test_release_build.py
       - run: bash tools/install_flutter_linux.sh
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/client

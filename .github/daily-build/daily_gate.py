@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Daily build gate: UTC-day build quota + success baseline, stored in git refs.
 
-Standard library only; drives the git CLI. The same file is used by the four
-Atermius client repositories (android, desktop, ios, web) and is exercised
+Standard library only; drives the git CLI. One copy serves the four client
+platforms of the Atermius monorepo (android, desktop, ios, web); each platform
+has its own state namespace, input rules and release tag prefix, and the gate
+of one platform never reads or writes another platform's refs. Exercised
 offline by tests/test_daily_gate.py against local bare repositories.
 
 Policy (adjust here or through the CLI flags the workflow passes; see README.md)
@@ -11,13 +13,15 @@ Policy (adjust here or through the CLI flags the workflow passes; see README.md)
   GitHub starts scheduled runs at or after that minute -- usually minutes late,
   sometimes much later, occasionally not at all under load. The quota day is
   therefore the UTC date *when the gate runs*, never the cron time.
-* Quota: ``--daily-quota`` build attempts per UTC day (default 1) per quota
-  remote (default: this repository, i.e. "each client repository once a day").
+* Quota: ``--daily-quota`` build attempts per UTC day (default 1) per platform
+  namespace (``refs/atermius-ci/daily-build/<platform>``), i.e. "each client
+  platform once a day".
   A real build attempt consumes a slot whether it later succeeds or fails; a
   gate run that only checks and skips consumes nothing.
 * Change detection: a fingerprint over the product/packaging input files of
-  the default-branch tip (rules in ``.github/daily-build/inputs.txt`` *of that
-  tip*), compared with the fingerprint stored in the success baseline. It never
+  the default-branch tip (rules in ``.github/daily-build/inputs/<platform>.txt``
+  *of that tip*), compared with the fingerprint stored in the success baseline
+  of the same platform. It never
   looks at workflow-run history, so test-only CI runs or skipped gates cannot
   be mistaken for a build.
 * Baseline: moved only by ``advance``, which the publish job calls after the
@@ -25,6 +29,9 @@ Policy (adjust here or through the CLI flags the workflow passes; see README.md)
 
 State (refs on the state remote; quota refs may live on a separate remote)
 -------------------------------------------------------------------------
+<ns> is ``refs/atermius-ci/daily-build/<platform>``; the gate refuses a
+namespace whose last segment is not its ``--platform``.
+
   <ns>/quota/<YYYY-MM-DD>/<slot>  one claim record per build attempt; created
                                   by an atomic compare-and-swap push that
                                   requires the ref to be absent; never moved.
@@ -41,6 +48,14 @@ file relative to its first parent), whose first parent is the source commit
 (keeping it reachable even if the branch is rewritten) and, for the baseline,
 whose second parent is the previous baseline record. The message is a title
 line followed by one JSON document.
+
+Daily release tags are ``<platform>-daily-<YYYYMMDD>.<slot>-<sha12>``.
+
+``--legacy-namespace`` (Android only) names the namespace the platform used
+before the monorepo merge (``refs/atermius-ci/daily-build``). It is only read:
+claims of the current UTC day there count against today's quota, and its
+``version-code`` record is a floor for the versionCode allocator, so the
+cutover day neither builds twice nor repeats a versionCode.
 
 Exit status: 0 decision made (build or skip) / command succeeded,
              1 refused (precondition, verification or infrastructure error),
@@ -62,8 +77,15 @@ import time
 from pathlib import Path
 
 SCHEMA = "atermius-daily-build/1"
-DEFAULT_NAMESPACE = "refs/atermius-ci/daily-build"
-DEFAULT_RULES = ".github/daily-build/inputs.txt"
+NAMESPACE_ROOT = "refs/atermius-ci/daily-build"
+LEGACY_NAMESPACE = NAMESPACE_ROOT  # pre-monorepo single-platform namespace (android repository)
+# platform -> evidence platforms of its packages (evidence-<name>.json, release_tool.py --platforms)
+PLATFORMS = {
+    "android": ("android",),
+    "desktop": ("linux-x64", "macos", "windows-x64"),
+    "ios": ("ios",),
+    "web": ("web",),
+}
 CI_DEFINITION_DIR = ".github"
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
@@ -81,6 +103,18 @@ BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com"
 
 class GateError(Exception):
     """Refusal: configuration, verification or infrastructure problem."""
+
+
+def platform_namespace(platform: str) -> str:
+    return f"{NAMESPACE_ROOT}/{platform}"
+
+
+def platform_rules(platform: str) -> str:
+    return f".github/daily-build/inputs/{platform}.txt"
+
+
+def daily_tag(platform: str, date: str, slot: int, source: str) -> str:
+    return f"{platform}-daily-{date.replace('-', '')}.{slot}-{source[:12]}"
 
 
 class ClockError(GateError):
@@ -242,7 +276,7 @@ def load_rules(repo: Path, rev: str, rules_path: str) -> Rules:
     return Rules(proc.stdout)
 
 
-def fingerprint(repo: Path, rev: str, rules_path: str = DEFAULT_RULES) -> dict:
+def fingerprint(repo: Path, rev: str, rules_path: str) -> dict:
     rules = load_rules(repo, rev, rules_path)
     selected = {p: e for p, e in tree_entries(repo, rev).items() if rules.match(p)}
     if not selected:
@@ -277,7 +311,8 @@ def make_record(repo: Path, source: str, parents: list[str], payload: dict, when
     tree = tree_of(repo, source)
     if not tree:
         raise GateError(f"source commit {source[:12]} is not available locally")
-    title = f"atermius daily-build {payload['kind']} {payload.get('quota_date') or ''}".rstrip()
+    platform = f"{payload['platform']} " if payload.get("platform") else ""
+    title = f"atermius daily-build {platform}{payload['kind']} {payload.get('quota_date') or ''}".rstrip()
     message = title + "\n\n" + json.dumps(payload, indent=2, sort_keys=True) + "\n"
     stamp = f"{int(when.timestamp())} +0000"
     env = _git_env()
@@ -313,7 +348,8 @@ def read_record(repo: Path, sha: str, kind: str) -> dict:
 
 
 def allocate_version_code(repo: Path, remote: str, namespace: str, date: str, source: str, fingerprint_hex: str,
-                          payload: dict, now: dt.datetime, *, max_slot: int, quota_remote: str = "") -> tuple[int, str]:
+                          payload: dict, now: dt.datetime, *, max_slot: int, quota_remote: str = "",
+                          legacy_namespaces: tuple[str, ...] = ()) -> tuple[int, str]:
     """Allocate the next Android versionCode from ``<ns>/version-code`` by compare-and-swap.
 
     code = max(last allocated + 1, YYYYMMDD*100 + highest slot claimed today + 1, YYYYMMDD*100 + 1),
@@ -322,14 +358,18 @@ def allocate_version_code(repo: Path, remote: str, namespace: str, date: str, so
     kind came first on a day. The quota-slot floor keeps codes above a daily attempt that was
     claimed before this allocator existed (legacy ``YYYYMMDD*100 + slot``). Losing a race only
     retries; a code allocated by a run that later fails is skipped (gaps are harmless).
+    ``legacy_namespaces`` are only read: their ``version-code`` record and today's quota slots
+    raise the floor (the pre-monorepo counter of the same app), they are never written.
     """
     if not DATE_RE.match(date) or not 1 <= max_slot <= DAILY_MAX_SLOT:
         raise GateError("invalid version allocation date/slot limit")
     base = int(date.replace("-", "")) * 100
     ref = f"{namespace}/{VERSION_REF}"
     quota_prefix = f"{namespace}/quota/{date}/"
+    legacy_refs = [f"{legacy}/{VERSION_REF}" for legacy in legacy_namespaces]
+    legacy_prefixes = [f"{legacy}/quota/{date}/" for legacy in legacy_namespaces]
     for _ in range(5):
-        refs = ls_remote(repo, remote, [ref, quota_prefix + "*"])
+        refs = ls_remote(repo, remote, [ref, quota_prefix + "*"] + legacy_refs + [x + "*" for x in legacy_prefixes])
         if quota_remote and quota_remote != remote:
             refs.update(ls_remote(repo, quota_remote, [quota_prefix + "*"]))
         current = refs.get(ref)
@@ -337,8 +377,14 @@ def allocate_version_code(repo: Path, remote: str, namespace: str, date: str, so
         if current:
             fetch_shas(repo, remote, [current])
             last = read_record(repo, current, "version-code")["version_code"]
-        slots = [int(r[len(quota_prefix):]) for r in refs if r.startswith(quota_prefix) and r[len(quota_prefix):].isdigit()]
-        code = max(last + 1, base + max(slots, default=0) + 1, base + 1)
+        legacy_last = 0
+        for legacy_ref in legacy_refs:
+            if refs.get(legacy_ref):
+                fetch_shas(repo, remote, [refs[legacy_ref]])
+                legacy_last = max(legacy_last, read_record(repo, refs[legacy_ref], "version-code")["version_code"])
+        slots = [int(r[len(prefix):]) for prefix in [quota_prefix] + legacy_prefixes
+                 for r in refs if r.startswith(prefix) and r[len(prefix):].isdigit()]
+        code = max(last + 1, legacy_last + 1, base + max(slots, default=0) + 1, base + 1)
         if code > base + max_slot or code > VERSION_CODE_MAX:
             raise GateError(f"no Android versionCode left for {date} (next {code}, limit {base + max_slot}); "
                             "nothing was allocated")
@@ -346,6 +392,7 @@ def allocate_version_code(repo: Path, remote: str, namespace: str, date: str, so
         # our record" as success, which must never match a competitor's identical payload.
         body = {**payload, "schema": SCHEMA, "kind": "version-code", "version_code": code, "quota_date": date,
                 "source_sha": source, "fingerprint": fingerprint_hex, "previous_version_code": last or None,
+                "legacy_version_code": legacy_last or None,
                 "previous_record": current or None, "allocated_at": utc_iso(now), "nonce": os.urandom(16).hex()}
         record = make_record(repo, source, [source] + ([current] if current else []), body, now)
         if cas_push(repo, remote, ref, record, current) == "ok":
@@ -416,9 +463,11 @@ def emit(result: dict, github_output: str | None, summary: str | None) -> None:
                     raise GateError(f"output {key} contains a newline")
                 handle.write(f"{key}={value}\n")
     if summary:
-        lines = [f"### Daily build gate: {'BUILD' if result.get('build') else 'skip'} ({result.get('reason')})", "",
+        lines = [f"### Daily build gate {result.get('platform') or ''}: "
+                 f"{'BUILD' if result.get('build') else 'skip'} ({result.get('reason')})", "",
                  "| key | value |", "| --- | --- |"]
-        for key in ("quota_date", "clock_source", "event", "source_sha", "quota_used_before", "daily_quota",
+        for key in ("platform", "namespace", "quota_date", "clock_source", "event", "source_sha", "quota_used_before",
+                    "daily_quota",
                     "inputs_changed", "input_files", "fingerprint", "baseline_source_sha", "claim_ref",
                     "release_tag", "detail"):
             if result.get(key) not in (None, ""):
@@ -434,22 +483,54 @@ def emit(result: dict, github_output: str | None, summary: str | None) -> None:
 # --------------------------------------------------------------------- commands
 
 
+def valid_namespace(namespace: str) -> bool:
+    return bool(NAMESPACE_RE.match(namespace)) and not namespace.startswith(("refs/heads/", "refs/pull/", "refs/tags/"))
+
+
 def validate_common(args: argparse.Namespace) -> None:
-    if not NAMESPACE_RE.match(args.namespace) or args.namespace.startswith(("refs/heads/", "refs/pull/")):
+    """Namespace/branch syntax; with --platform, the namespace must belong to that platform and
+    --rules defaults to its inputs file. Without --platform (check-claim/advance/status of an
+    explicit namespace, e.g. the pre-monorepo one) only the syntax is checked."""
+    platform = getattr(args, "platform", "") or ""
+    if platform:
+        if platform not in PLATFORMS:
+            raise GateError(f"unknown platform {platform!r} (expected one of {', '.join(PLATFORMS)})")
+        if not args.namespace:
+            args.namespace = platform_namespace(platform)
+        if args.namespace.rsplit("/", 1)[-1] != platform:
+            raise GateError(f"state namespace {args.namespace!r} does not belong to platform {platform!r}; "
+                            "each platform keeps its own quota, baseline and versionCode refs")
+        if hasattr(args, "rules") and not args.rules:
+            args.rules = platform_rules(platform)
+    elif not args.namespace:
+        raise GateError("--namespace or --platform is required")
+    if hasattr(args, "rules") and not args.rules:
+        raise GateError("--rules or --platform is required")
+    if not valid_namespace(args.namespace):
         raise GateError(f"invalid state namespace {args.namespace!r}")
+    for legacy in getattr(args, "legacy_namespace", None) or []:
+        if not valid_namespace(legacy) or legacy == args.namespace or legacy.startswith(args.namespace + "/"):
+            raise GateError(f"invalid legacy namespace {legacy!r}")
     if args.branch and not BRANCH_RE.match(args.branch):
         raise GateError("invalid --branch")
 
 
 def cmd_fingerprint(args: argparse.Namespace) -> int:
+    if not args.rules:
+        if args.platform not in PLATFORMS:
+            raise GateError("--rules or a known --platform is required")
+        args.rules = platform_rules(args.platform)
     info = fingerprint(Path(args.repo), args.rev, args.rules)
     print(json.dumps({k: v for k, v in info.items() if not k.startswith("_")}, indent=2, sort_keys=True))
     return 0
 
 
 def cmd_gate(args: argparse.Namespace) -> int:
+    if not args.platform:
+        raise GateError("gate needs --platform (" + ", ".join(PLATFORMS) + ")")
     validate_common(args)
     repo = Path(args.repo)
+    legacy = list(args.legacy_namespace or [])
     quota_remote = args.quota_remote or args.remote
     if not 1 <= args.daily_quota <= 9:
         raise GateError("--daily-quota must be 1..9")
@@ -458,7 +539,8 @@ def cmd_gate(args: argparse.Namespace) -> int:
     result: dict = {
         "schema": SCHEMA, "build": False, "reason": None, "checked_at": utc_iso(now), "clock_source": clock,
         "quota_date": date, "daily_quota": args.daily_quota, "event": args.event, "run_id": args.run_id,
-        "run_attempt": args.run_attempt, "repository": args.repository,
+        "run_attempt": args.run_attempt, "repository": args.repository, "platform": args.platform,
+        "namespace": args.namespace,
     }
 
     def skip(reason: str, detail: str = "") -> int:
@@ -474,12 +556,15 @@ def cmd_gate(args: argparse.Namespace) -> int:
 
     ns = args.namespace
     quota_prefix = f"{ns}/quota/{date}/"
-    patterns = [f"refs/heads/{branch}", f"{ns}/baseline"]
+    legacy_prefixes = [f"{x}/quota/{date}/" for x in legacy]
+    patterns = [f"refs/heads/{branch}", f"{ns}/baseline"] + [x + "*" for x in legacy_prefixes]
     if quota_remote == args.remote:
         patterns.append(quota_prefix + "*")
     refs = ls_remote(repo, args.remote, patterns)
     quota_refs = refs if quota_remote == args.remote else ls_remote(repo, quota_remote, [quota_prefix + "*"])
     used = sorted(r for r in quota_refs if r.startswith(quota_prefix))
+    # Claims made today under the pre-monorepo namespace of this platform use today's quota too.
+    used += sorted(r for r in refs if any(r.startswith(x) for x in legacy_prefixes))
     tip = refs.get(f"refs/heads/{branch}")
     if not tip:
         raise GateError(f"remote branch {branch} not found")
@@ -527,12 +612,12 @@ def cmd_gate(args: argparse.Namespace) -> int:
         # while an allocation failure must not consume today's build attempt.
         version_code, _ = allocate_version_code(
             repo, args.remote, ns, date, tip, info["fingerprint"],
-            {"purpose": "daily", "repository": args.repository, "run_id": args.run_id,
+            {"purpose": "daily", "platform": args.platform, "repository": args.repository, "run_id": args.run_id,
              "run_attempt": args.run_attempt, "event": args.event},
-            now, max_slot=DAILY_MAX_SLOT, quota_remote=quota_remote)
+            now, max_slot=DAILY_MAX_SLOT, quota_remote=quota_remote, legacy_namespaces=tuple(legacy))
 
     payload = {
-        "schema": SCHEMA, "kind": "quota", "repository": args.repository, "quota_date": date,
+        "schema": SCHEMA, "kind": "quota", "platform": args.platform, "repository": args.repository, "quota_date": date,
         "claimed_at": utc_iso(now), "clock_source": clock, "branch": branch, "source_sha": tip,
         "fingerprint": info["fingerprint"], "input_files": info["input_files"],
         "rules_sha256": info["rules_sha256"], "baseline_before": baseline_sha or None,
@@ -542,7 +627,7 @@ def cmd_gate(args: argparse.Namespace) -> int:
     if version_code is not None:
         payload["version_code"] = version_code
     test_sync()
-    taken = {int(r.rsplit("/", 1)[1]) for r in used if r.rsplit("/", 1)[1].isdigit()}
+    taken = {int(r.rsplit("/", 1)[1]) for r in used if r.rsplit("/", 1)[1].isdigit()}  # incl. legacy slots
     for slot in range(1, args.daily_quota + 1):
         if slot in taken:
             continue
@@ -555,7 +640,7 @@ def cmd_gate(args: argparse.Namespace) -> int:
                 build=True, reason="claimed", quota_slot=slot, claim_ref=ref, claim_record=record,
                 claim_run_attempt=args.run_attempt,
                 version_code=version_code if version_code is not None else int(compact) * 100 + slot,
-                release_tag=f"daily-{compact}.{slot}-{tip[:12]}",
+                release_tag=daily_tag(args.platform, date, slot, tip),
                 detail=f"claimed {ref}; this attempt counts for {date} UTC whether it succeeds or fails")
             emit(result, args.github_output, args.summary)
             return 0
@@ -573,6 +658,8 @@ def verify_claim(repo: Path, remote: str, args: argparse.Namespace) -> dict:
     record = read_record(repo, current, "quota")
     mismatch = [k for k, v in (("run_id", args.run_id), ("run_attempt", args.run_attempt),
                                ("source_sha", args.source_sha)) if v and str(record.get(k)) != str(v)]
+    if getattr(args, "platform", "") and record.get("platform") not in (None, args.platform):
+        mismatch.append("platform")
     if mismatch:
         raise GateError(f"claim {ref} belongs to another run/attempt/source ({', '.join(mismatch)}); "
                         "a re-run never builds or publishes again")
@@ -617,7 +704,7 @@ def cmd_advance(args: argparse.Namespace) -> int:
         if expect:
             fetch_shas(repo, args.remote, [expect])  # parent 2 of the new record
         payload = {
-            "schema": SCHEMA, "kind": "baseline", "repository": claim.get("repository"),
+            "schema": SCHEMA, "kind": "baseline", "platform": claim.get("platform"), "repository": claim.get("repository"),
             "quota_date": claim["quota_date"], "slot": claim.get("slot", 1), "source_sha": source,
             "fingerprint": claim["fingerprint"], "input_files": claim.get("input_files"),
             "claim_record": args.claim_record, "run_id": claim["run_id"], "run_attempt": claim["run_attempt"],
@@ -655,18 +742,23 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--repo", default=".")
         p.add_argument("--remote", default="origin", help="state remote (baseline; quota unless --quota-remote)")
         p.add_argument("--quota-remote", default="", help="optional separate remote for quota refs (shared quota)")
-        p.add_argument("--namespace", default=DEFAULT_NAMESPACE)
+        p.add_argument("--platform", default="", help="client platform: " + ", ".join(PLATFORMS)
+                       + " (selects/validates the namespace and the default --rules)")
+        p.add_argument("--namespace", default="", help="state namespace (default refs/atermius-ci/daily-build/<platform>)")
         p.add_argument("--branch", default="", help="expected release branch (must be the remote default)")
 
     p = sub.add_parser("fingerprint")
     p.add_argument("--repo", default=".")
     p.add_argument("--rev", default="HEAD")
-    p.add_argument("--rules", default=DEFAULT_RULES)
+    p.add_argument("--platform", default="")
+    p.add_argument("--rules", default="", help="default .github/daily-build/inputs/<platform>.txt")
     p.set_defaults(func=cmd_fingerprint)
 
     p = sub.add_parser("gate")
     common(p)
-    p.add_argument("--rules", default=DEFAULT_RULES)
+    p.add_argument("--rules", default="", help="default .github/daily-build/inputs/<platform>.txt")
+    p.add_argument("--legacy-namespace", action="append", default=[],
+                   help="pre-monorepo namespace of this platform: read-only quota/versionCode floor")
     p.add_argument("--ref", required=True)
     p.add_argument("--run-sha", required=True)
     p.add_argument("--run-id", required=True)

@@ -1,103 +1,113 @@
-# Installation package for a published (non-daily) GitHub Release.
+# Daily Android release build, limited to one build attempt per UTC day.
 #
-# Started by release-trigger.yml when a release is published (or by hand:
-# Actions > Release build > Run workflow, with the release tag). It always runs
-# this definition from main; prepare treats the tag/id as untrusted strings,
-# resolves the tag (annotated tags are peeled) to one commit that must be on
-# main and carry this build recipe, and allocates the Android versionCode from
-# the counter shared with the daily build. Build and sign reuse the daily
-# recipe and the daily-release signing environment (main only, certificate
-# pin); publish adds the signed APK, evidence and SHA256SUMS to exactly that
-# existing release. Manual releases neither check nor use the daily quota.
-# Re-run failed jobs to resume: successful jobs and their packages are reused.
+# One of four per-platform daily workflows of the monorepo (daily-android/desktop/
+# ios/web.yml); each has its own quota, baseline and tags and never reads another
+# platform's state.
+# Checkpoint: cron 00:00 UTC. GitHub does not start scheduled runs to the
+# second: they usually start minutes late, sometimes much later, and may be
+# dropped under load; the quota day is the UTC date when the gate runs.
+# A run builds only if (a) it runs for the default branch, (b) no android build
+# attempt was claimed yet for that UTC day, and (c) android product/packaging inputs
+# (.github/daily-build/inputs/android.txt) differ from the last android build that was
+# compiled AND published. Repeated schedule/dispatch/re-runs on the same day
+# only check and skip. State lives in git refs (refs/atermius-ci/daily-build/android/*),
+# never in Actions caches/artifacts; the release is tagged android-daily-<YYYYMMDD>.<slot>-<sha12>.
 # Details: .github/daily-build/README.md
-name: Release build
+name: Daily build (Android)
 
 on:
-  workflow_dispatch:
-    inputs:
-      release_tag:
-        description: Tag of the published release (not daily-*)
-        required: true
-        type: string
-      release_id:
-        description: Optional numeric release id (set by release-trigger.yml)
-        required: false
-        type: string
-        default: ""
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}
 
 permissions: {}
 
 concurrency:
-  group: release-build-${{ github.repository }}-${{ inputs.release_tag }}
+  group: daily-build-android-${{ github.repository }}
   cancel-in-progress: false
 
 env:
+  ATERMIUS_PLATFORM: android
   ATERMIUS_RELEASE_BRANCH: main
-  ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build
+  ATERMIUS_DAILY_QUOTA: "1"
+  ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build/android
+  ATERMIUS_DAILY_RULES: .github/daily-build/inputs/android.txt
+  # Pre-monorepo namespace of this repository (then aterm-project/android): read only, so the
+  # cutover day neither builds twice nor repeats a versionCode. See README.md.
+  ATERMIUS_LEGACY_NAMESPACE: refs/atermius-ci/daily-build
   CMAKE_BUILD_PARALLEL_LEVEL: "2"
   CMAKE_BUILD_PARALLEL: "2"
   MAKEFLAGS: "-j2"
   FLUTTER_SUPPRESS_ANALYTICS: "true"
 
 jobs:
-  prepare:
-    name: Prepare (release, tag source on main, versionCode)
-    if: github.ref == 'refs/heads/main'
+  gate:
+    name: Gate (UTC quota, inputs, claim)
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      contents: write # versionCode allocator refs; no build or third-party code runs here
+      contents: write # quota claim + shared versionCode refs; no build or third-party code runs here
     outputs:
-      build: ${{ steps.prepare.outputs.build }}
-      release_id: ${{ steps.prepare.outputs.release_id }}
-      release_tag: ${{ steps.prepare.outputs.release_tag }}
-      source_sha: ${{ steps.prepare.outputs.source_sha }}
-      build_date: ${{ steps.prepare.outputs.build_date }}
-      version_code: ${{ steps.prepare.outputs.version_code }}
+      build: ${{ steps.gate.outputs.build }}
+      source_sha: ${{ steps.gate.outputs.source_sha }}
+      quota_date: ${{ steps.gate.outputs.quota_date }}
+      quota_slot: ${{ steps.gate.outputs.quota_slot }}
+      claim_record: ${{ steps.gate.outputs.claim_record }}
+      claim_run_attempt: ${{ steps.gate.outputs.claim_run_attempt }}
+      baseline_record: ${{ steps.gate.outputs.baseline_record }}
+      version_code: ${{ steps.gate.outputs.version_code }}
+      release_tag: ${{ steps.gate.outputs.release_tag }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          fetch-depth: 0 # main ancestry of the tagged commit
-          filter: blob:none
-          persist-credentials: true # git push of refs/atermius-ci/daily-build/{version-code,release/*}
-      - name: Validate release and tag; allocate versionCode
-        id: prepare
+          fetch-depth: 1
+          persist-credentials: true # git push of refs/atermius-ci/daily-build/android/quota/*
+      - name: Check quota and inputs; claim today's build
+        id: gate
         env:
-          GH_TOKEN: ${{ github.token }}
-          ATERMIUS_RELEASE_TAG: ${{ inputs.release_tag }}
-          ATERMIUS_RELEASE_ID: ${{ inputs.release_id }}
           ATERMIUS_ANDROID_SIGNING_CERT_SHA256: ${{ vars.ATERMIUS_ANDROID_SIGNING_CERT_SHA256 }}
         run: |
-          test -n "$ATERMIUS_ANDROID_SIGNING_CERT_SHA256" || {
-            echo "::error::ATERMIUS_ANDROID_SIGNING_CERT_SHA256 is not configured; nothing was allocated"; exit 1; }
+          # Runner clock decides the UTC day; a fresh (cache-busted) GitHub Date must agree
+          # within 120 s and on the same date, else the gate exits 3 and nothing is claimed.
           for attempt in 1 2 3 4; do
-            status=0
-            python3 -I .github/daily-build/release_build.py prepare --platforms android --version-allocator \
-              --branch "$ATERMIUS_RELEASE_BRANCH" --namespace "$ATERMIUS_DAILY_NAMESPACE" || status=$?
-            [ "$status" -eq 3 ] || exit "$status"
+            server_date="$(curl -fsS --max-time 20 -o /dev/null -D - -H 'Cache-Control: no-cache' \
+              "$GITHUB_API_URL/rate_limit?daily_gate=$GITHUB_RUN_ID.$GITHUB_RUN_ATTEMPT.$attempt" \
+              | tr -d '\r' | sed -n 's/^[Dd]ate: //p' | head -n 1)" || server_date=""
+            if [ -n "$server_date" ]; then
+              status=0
+              python3 -I .github/daily-build/daily_gate.py gate --platform "$ATERMIUS_PLATFORM" \
+                --branch "$ATERMIUS_RELEASE_BRANCH" --namespace "$ATERMIUS_DAILY_NAMESPACE" \
+                --rules "$ATERMIUS_DAILY_RULES" \
+                --daily-quota "$ATERMIUS_DAILY_QUOTA" --ref "$GITHUB_REF" --run-sha "$GITHUB_SHA" \
+                --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" --event "$GITHUB_EVENT_NAME" \
+                --workflow "$GITHUB_WORKFLOW_REF" --repository "$GITHUB_REPOSITORY" \
+                --server-date "$server_date" --version-allocator \
+                --legacy-namespace "$ATERMIUS_LEGACY_NAMESPACE" \
+                --require-env ATERMIUS_ANDROID_SIGNING_CERT_SHA256 || status=$?
+              [ "$status" -eq 3 ] || exit "$status"
+            fi
             sleep 30
           done
-          echo "::error::no consistent GitHub server Date after 4 attempts; nothing was allocated"
+          echo "::error::no consistent GitHub server Date after 4 attempts; nothing was claimed"
           exit 1
 
   build:
     name: Build APK (arm64-v8a + x86_64, RDP engine)
-    needs: prepare
-    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'
+    needs: gate
+    if: needs.gate.outputs.build == 'true' && needs.gate.outputs.claim_run_attempt == github.run_attempt
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     permissions:
       contents: read
     env:
-      ATERMIUS_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
-      ATERMIUS_QUOTA_DATE: ${{ needs.prepare.outputs.build_date }}
-      ATERMIUS_RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
-      ATERMIUS_VERSION_CODE: ${{ needs.prepare.outputs.version_code }}
+      ATERMIUS_SOURCE_SHA: ${{ needs.gate.outputs.source_sha }}
+      ATERMIUS_QUOTA_DATE: ${{ needs.gate.outputs.quota_date }}
+      ATERMIUS_RELEASE_TAG: ${{ needs.gate.outputs.release_tag }}
+      ATERMIUS_VERSION_CODE: ${{ needs.gate.outputs.version_code }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ needs.prepare.outputs.source_sha }}
+          ref: ${{ needs.gate.outputs.source_sha }}
           fetch-depth: 1
           persist-credentials: false
       - name: Work paths and NDK pin (from build_engine.sh)
@@ -165,36 +175,35 @@ jobs:
       - name: Upload intermediate APK (not distributable)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: release-android-intermediate
+          name: android-intermediate-${{ github.run_attempt }}
           path: ${{ runner.temp }}/out/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 3
           compression-level: 0
-
 
   sign:
     name: Sign APK with the stable project key
-    needs: [prepare, build]
-    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'
+    needs: [gate, build]
+    if: needs.gate.outputs.build == 'true' && needs.gate.outputs.claim_run_attempt == github.run_attempt
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: daily-release # signing secrets live here; deployment branches: main only
     permissions:
       contents: read
     env:
-      ATERMIUS_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
-      ATERMIUS_QUOTA_DATE: ${{ needs.prepare.outputs.build_date }}
-      ATERMIUS_RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+      ATERMIUS_SOURCE_SHA: ${{ needs.gate.outputs.source_sha }}
+      ATERMIUS_QUOTA_DATE: ${{ needs.gate.outputs.quota_date }}
+      ATERMIUS_RELEASE_TAG: ${{ needs.gate.outputs.release_tag }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ needs.prepare.outputs.source_sha }}
+          ref: ${{ needs.gate.outputs.source_sha }}
           fetch-depth: 1
           persist-credentials: false
           sparse-checkout: .github/daily-build
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: release-android-intermediate
+          name: android-intermediate-${{ github.run_attempt }}
           path: ${{ runner.temp }}/intermediate
       - name: build-tools
         run: |
@@ -210,38 +219,41 @@ jobs:
         run: bash .github/daily-build/recipe/android_sign.sh "$RUNNER_TEMP/intermediate" "$RUNNER_TEMP/release"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: release-android-signed
+          name: android-release-${{ github.run_attempt }}
           path: ${{ runner.temp }}/release/
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
           compression-level: 0
 
   publish:
-    name: Attach packages to the published release
-    needs: [prepare, sign]
-    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'
+    name: Publish release and advance baseline
+    needs: [gate, sign]
+    if: needs.gate.outputs.build == 'true' && needs.gate.outputs.claim_run_attempt == github.run_attempt
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     permissions:
-      contents: write # upload release assets; runs only the verified script below, no git push
+      contents: write # GitHub release + tag, baseline ref; runs only the verified scripts below
     env:
-      ATERMIUS_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
-      ATERMIUS_BUILD_DATE: ${{ needs.prepare.outputs.build_date }}
-      ATERMIUS_RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
-      ATERMIUS_RELEASE_ID: ${{ needs.prepare.outputs.release_id }}
+      ATERMIUS_SOURCE_SHA: ${{ needs.gate.outputs.source_sha }}
+      ATERMIUS_QUOTA_DATE: ${{ needs.gate.outputs.quota_date }}
+      ATERMIUS_QUOTA_SLOT: ${{ needs.gate.outputs.quota_slot }}
+      ATERMIUS_CLAIM_RECORD: ${{ needs.gate.outputs.claim_record }}
+      ATERMIUS_BASELINE_RECORD: ${{ needs.gate.outputs.baseline_record }}
+      ATERMIUS_RELEASE_TAG: ${{ needs.gate.outputs.release_tag }}
+      ATERMIUS_PLATFORMS: android # evidence platforms of the packages
+      ATERMIUS_RELEASE_TITLE: Atermius Android daily ${{ needs.gate.outputs.release_tag }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          ref: ${{ needs.gate.outputs.source_sha }}
           fetch-depth: 1
-          persist-credentials: false
+          persist-credentials: true # git push of the baseline ref
           sparse-checkout: .github/daily-build
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: release-android-signed
+          name: android-release-${{ github.run_attempt }}
           path: ${{ runner.temp }}/release
-      - name: Verify and attach to the exact existing release
+      - name: Verify, publish, advance baseline
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 -I .github/daily-build/release_build.py publish --platforms android \
-            --dir "$RUNNER_TEMP/release" --work "$RUNNER_TEMP/publish"
+        run: bash .github/daily-build/publish.sh "$RUNNER_TEMP/release"

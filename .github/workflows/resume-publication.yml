@@ -1,12 +1,16 @@
 # Publication-only recovery of the already built/signed 2026-11-10 APK.
 # The source run is fixed and validated against its original quota claim.
 # No compiler, Gradle or signing credentials are used here.
+# The run predates the monorepo: its claim lives in the pre-merge namespace
+# refs/atermius-ci/daily-build and its release keeps the original daily-* tag
+# (the repository was aterm-project/android then). It shares the Android daily
+# build's concurrency group.
 name: Resume Android publication
 on:
   workflow_dispatch: {}
 permissions: {}
 concurrency:
-  group: daily-build-${{ github.repository }}
+  group: daily-build-android-${{ github.repository }}
   cancel-in-progress: false
 jobs:
   publish:
@@ -18,6 +22,7 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
+      ATERMIUS_PLATFORM: android
       ATERMIUS_RECOVER_RUN_ID: "42875528747"
       ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build
       ATERMIUS_RECOVERY_USE_EXISTING_TAG: "true"

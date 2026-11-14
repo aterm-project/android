@@ -1,11 +1,16 @@
-# Publishing a (non-daily) GitHub Release starts the main-branch release build.
+# Publishing a GitHub Release starts the main-branch release build of its platform.
+#
+# Releases are namespaced by tag: android-* starts release-android.yml and
+# desktop-* starts release-desktop.yml. Daily releases (<platform>-daily-*, and
+# the pre-monorepo daily-*) are created by the daily build with GITHUB_TOKEN,
+# which starts no workflow, and are skipped here as well. Any other tag (ios-*,
+# web-*, server-*, unprefixed) has no package build and only gets a warning.
 #
 # A release event runs the workflow file of the tagged commit, which need not
-# be reviewed code; this job therefore only dispatches release-build.yml on
+# be reviewed code; this job therefore only dispatches the release build on
 # main (trusted definition) with the tag and release id, both validated here
 # and again there, passed as arguments, never interpolated into the script.
-# Daily releases are created with GITHUB_TOKEN, which starts no workflow, and
-# daily-* tags are skipped as well. No checkout, no secrets, actions: write only.
+# No checkout, no secrets, actions: write only.
 name: Release published
 
 on:
@@ -16,22 +21,30 @@ permissions: {}
 
 jobs:
   dispatch:
-    name: Start the release build on main
-    if: ${{ !startsWith(github.event.release.tag_name, 'daily-') }}
+    name: Start the platform release build on main
+    if: ${{ !startsWith(github.event.release.tag_name, 'daily-') && !contains(github.event.release.tag_name, '-daily-') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
-      actions: write # workflow_dispatch of release-build.yml only
+      actions: write # workflow_dispatch of release-android.yml / release-desktop.yml only
     steps:
-      - name: Dispatch release-build.yml on main
+      - name: Dispatch release-<platform>.yml on main
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
           RELEASE_ID: ${{ github.event.release.id }}
         run: |
-          [[ "$RELEASE_TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]{0,99}$ && "$RELEASE_TAG" != daily-* ]] || {
-            echo "::error::unsupported release tag"; exit 1; }
+          [[ "$RELEASE_TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]{0,99}$ && "$RELEASE_TAG" != daily-* \
+             && "$RELEASE_TAG" != *-daily-* ]] || { echo "::error::unsupported release tag"; exit 1; }
           [[ "$RELEASE_ID" =~ ^[1-9][0-9]{0,15}$ ]] || { echo "::error::invalid release id"; exit 1; }
-          gh workflow run release-build.yml --repo "$GITHUB_REPOSITORY" --ref main \
+          case "$RELEASE_TAG" in
+            android-?*) workflow=release-android.yml ;;
+            desktop-?*) workflow=release-desktop.yml ;;
+            *)
+              echo "::warning::release $RELEASE_TAG gets no packages: only android-* and desktop-* releases are built"
+              echo "No package build for $RELEASE_TAG (only android-* and desktop-* tags)." >> "$GITHUB_STEP_SUMMARY"
+              exit 0 ;;
+          esac
+          gh workflow run "$workflow" --repo "$GITHUB_REPOSITORY" --ref main \
             -f "release_tag=$RELEASE_TAG" -f "release_id=$RELEASE_ID"
-          echo "Dispatched release-build.yml on main for release $RELEASE_ID." >> "$GITHUB_STEP_SUMMARY"
+          echo "Dispatched $workflow on main for release $RELEASE_ID." >> "$GITHUB_STEP_SUMMARY"

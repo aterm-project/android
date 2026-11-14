@@ -87,7 +87,11 @@ python3 -I "$TOOLS/release_tool.py" inspect-apk --apk "$apk" --abis arm64-v8a,x8
 echo "::endgroup::"
 
 version_name="$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' "$ROOT/apps/client/pubspec.yaml")"
-name="atermius-android-${version_name}-${ATERMIUS_RELEASE_TAG#daily-}-arm64-x86_64.debugsigned-intermediate.apk"
+# Asset names keep the pre-monorepo form: the platform namespace of the tag is dropped
+# (<p>-daily-20261114.1-<sha12> -> 20261114.1-<sha12>, release <p>-v1.0.0 -> v1.0.0).
+label="${ATERMIUS_RELEASE_TAG#android-daily-}"
+label="${label#android-}"
+name="atermius-android-${version_name}-${label}-arm64-x86_64.debugsigned-intermediate.apk"
 cp "$apk" "$ATERMIUS_OUT/$name"
 python3 -I "$TOOLS/release_tool.py" evidence --platform android-intermediate --out-dir "$ATERMIUS_OUT" \
   --artifact "$name" \

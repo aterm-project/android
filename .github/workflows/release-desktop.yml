@@ -1,0 +1,218 @@
+# Installation packages (Windows / Linux / macOS) for a published GitHub Release
+# tagged desktop-* (not desktop-daily-*, which the daily build publishes itself).
+#
+# Started by release-trigger.yml when a desktop-* release is published (or by
+# hand: Actions > Release build (desktop) > Run workflow, with the release tag).
+# It always runs this definition from main; prepare treats the tag/id as
+# untrusted strings, refuses tags of other platforms and
+# resolves the tag (annotated tags are peeled) to one commit that must be on
+# main and carry this build recipe. Build reuses the daily recipe unchanged
+# (Windows ZIP with atermius_rdp.dll, Linux tar.gz, macOS ad-hoc signed ZIP
+# with libatermius_rdp.dylib, engine licenses); publish adds the packages,
+# evidence and SHA256SUMS to exactly that existing release. Manual releases
+# neither check nor use the daily quota. Re-run failed jobs to resume:
+# successful platforms and their packages are reused.
+# Details: .github/daily-build/README.md
+name: Release build (desktop)
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Tag of the published release (desktop-*, not desktop-daily-*)
+        required: true
+        type: string
+      release_id:
+        description: Optional numeric release id (set by release-trigger.yml)
+        required: false
+        type: string
+        default: ""
+
+permissions: {}
+
+concurrency:
+  group: release-build-desktop-${{ github.repository }}-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+env:
+  ATERMIUS_PLATFORM: desktop
+  ATERMIUS_RELEASE_BRANCH: main
+  ATERMIUS_DAILY_NAMESPACE: refs/atermius-ci/daily-build/desktop
+  CMAKE_BUILD_PARALLEL_LEVEL: "2"
+  CMAKE_BUILD_PARALLEL: "2"
+  MAKEFLAGS: "-j2"
+  FLUTTER_SUPPRESS_ANALYTICS: "true"
+
+jobs:
+  prepare:
+    name: Prepare (release, tag source on main)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      build: ${{ steps.prepare.outputs.build }}
+      release_id: ${{ steps.prepare.outputs.release_id }}
+      release_tag: ${{ steps.prepare.outputs.release_tag }}
+      source_sha: ${{ steps.prepare.outputs.source_sha }}
+      build_date: ${{ steps.prepare.outputs.build_date }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0 # main ancestry of the tagged commit
+          filter: blob:none
+          persist-credentials: true # read-only token: fetch the tag; no push
+      - name: Validate release and tag
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ATERMIUS_RELEASE_TAG: ${{ inputs.release_tag }}
+          ATERMIUS_RELEASE_ID: ${{ inputs.release_id }}
+        run: |
+          for attempt in 1 2 3 4; do
+            status=0
+            python3 -I .github/daily-build/release_build.py prepare --platform "$ATERMIUS_PLATFORM" \
+              --platforms linux-x64,macos,windows-x64 \
+              --branch "$ATERMIUS_RELEASE_BRANCH" --namespace "$ATERMIUS_DAILY_NAMESPACE" || status=$?
+            [ "$status" -eq 3 ] || exit "$status"
+            sleep 30
+          done
+          echo "::error::no consistent GitHub server Date after 4 attempts"
+          exit 1
+
+  build:
+    name: Build ${{ matrix.platform }}
+    needs: prepare
+    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'
+    strategy:
+      fail-fast: false # one failed platform blocks publication; finish the others (re-run failed jobs reuses them)
+      max-parallel: 2
+      matrix:
+        include:
+          - platform: windows-x64
+            os: windows-2022 # build_rdp_windows.ps1 generates for Visual Studio 2022
+          - platform: linux-x64
+            os: ubuntu-24.04
+          - platform: macos
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    env:
+      ATERMIUS_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+      ATERMIUS_QUOTA_DATE: ${{ needs.prepare.outputs.build_date }}
+      ATERMIUS_RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Work paths
+        run: |
+          {
+            echo "ATERMIUS_OUT=$RUNNER_TEMP/out"
+            echo "PUB_CACHE=$RUNNER_TEMP/pub-cache"
+            echo "ATERMIUS_VCPKG_CACHE=$RUNNER_TEMP/vcpkg-bincache"
+            echo "ATERMIUS_FIREBASE_CACHE=$RUNNER_TEMP/firebase-sdk"
+          } >> "$GITHUB_ENV"
+      - name: Cache Flutter SDK (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/aterminal-flutter-3.47.5
+          key: flutter-3.47.5-2132e990f236f8d2-${{ runner.os }}-${{ runner.arch }}-desktop
+      - name: Flutter SDK 3.47.5 (Linux, pinned archive digest)
+        if: runner.os == 'Linux'
+        run: bash tools/install_flutter_linux.sh
+      - name: Cache Flutter SDK (macOS / Windows)
+        if: runner.os != 'Linux'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/flutter-sdk
+          key: flutter-3.47.5-6a19cca56475-${{ runner.os }}-${{ runner.arch }}
+      - name: Flutter SDK 3.47.5 (macOS, verified archive)
+        if: runner.os == 'macOS'
+        run: python3 -I .github/daily-build/recipe/flutter_sdk.py install --dest "$RUNNER_TEMP/flutter-sdk"
+      - name: Flutter SDK 3.47.5 (Windows, pinned archive digest)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: python -I .github/daily-build/recipe/flutter_sdk.py install --dest "$env:RUNNER_TEMP/flutter-sdk"
+      - name: Cache pub packages
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/pub-cache
+          key: pub-${{ runner.os }}-3.47.5-${{ hashFiles('apps/client/pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-3.47.5-
+      - name: vcpkg revision (Windows)
+        id: vcpkg
+        if: runner.os == 'Windows'
+        run: echo "commit=$(git -C "$VCPKG_INSTALLATION_ROOT" rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Cache vcpkg binary packages (Windows; ABI-hash addressed)
+        if: runner.os == 'Windows'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/vcpkg-bincache
+          key: vcpkg-${{ steps.vcpkg.outputs.commit }}-x64-windows-static-md
+          restore-keys: vcpkg-${{ steps.vcpkg.outputs.commit }}-
+      - name: Cache Firebase C++ SDK (Windows; digest-checked)
+        if: runner.os == 'Windows'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/firebase-sdk
+          key: firebase-cpp-sdk-windows-${{ hashFiles('apps/client/pubspec.lock') }}
+          restore-keys: firebase-cpp-sdk-windows-
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '& ./.github/daily-build/recipe/desktop_windows.ps1'
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: bash .github/daily-build/recipe/desktop_linux.sh
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: bash .github/daily-build/recipe/desktop_macos.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-desktop-${{ matrix.platform }}
+          path: ${{ runner.temp }}/out/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  publish:
+    name: Attach packages to the published release
+    needs: [prepare, build]
+    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write # upload release assets; runs only the verified script below, no git push
+    env:
+      ATERMIUS_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+      ATERMIUS_BUILD_DATE: ${{ needs.prepare.outputs.build_date }}
+      ATERMIUS_RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+      ATERMIUS_RELEASE_ID: ${{ needs.prepare.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: .github/daily-build
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: release-desktop-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/release
+      - name: Verify and attach to the exact existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 -I .github/daily-build/release_build.py publish --platform "$ATERMIUS_PLATFORM" \
+            --platforms linux-x64,macos,windows-x64 \
+            --dir "$RUNNER_TEMP/release" --work "$RUNNER_TEMP/publish"

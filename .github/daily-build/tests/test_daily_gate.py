@@ -3,7 +3,9 @@
 
 Each test builds a private bare "origin" repository (file:// URL, so pushes go
 through real receive-pack with its ref locking and old-value checks) and runs
-the gate CLI from fresh shallow clones, the way GitHub runners do.
+the gate CLI from fresh shallow clones, the way GitHub runners do. The origin
+has the monorepo shape: two client platforms (android, desktop) with their own
+runner directories, input rules and state namespaces.
 
   python3 -I .github/daily-build/tests/test_daily_gate.py -v
 """
@@ -23,23 +25,43 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 GATE = HERE.parent / "daily_gate.py"
-NS = "refs/atermius-ci/daily-build"
+ROOT_NS = "refs/atermius-ci/daily-build"
+LEGACY_NS = ROOT_NS  # the pre-monorepo android namespace
+NS = f"{ROOT_NS}/android"
+DESKTOP_NS = f"{ROOT_NS}/desktop"
 
 spec = importlib.util.spec_from_file_location("daily_gate", GATE)
 gate_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gate_module)
 
 RULES = """\
-# test rules (same shape as the real inputs.txt)
+# test rules (same shape as the real inputs/android.txt)
 version 1
 + apps/client/**
 - apps/client/test/**
 - apps/client/integration/**
+- apps/client/windows/**
 - **/*.md
 + packages/**
 - packages/*/test/**
-+ .github/workflows/daily-build.yml
-+ .github/daily-build/recipe/**
++ .github/workflows/daily-android.yml
++ .github/daily-build/recipe/android_*
++ .github/daily-build/recipe/flutter_sdk.py
++ tools/install_flutter_linux.sh
+"""
+DESKTOP_RULES = """\
+# test rules (same shape as the real inputs/desktop.txt)
+version 1
++ apps/client/**
+- apps/client/test/**
+- apps/client/integration/**
+- apps/client/android/**
+- **/*.md
++ packages/**
+- packages/*/test/**
++ .github/workflows/daily-desktop.yml
++ .github/daily-build/recipe/desktop_*
++ .github/daily-build/recipe/flutter_sdk.py
 + tools/install_flutter_linux.sh
 """
 
@@ -54,11 +76,17 @@ BASE_FILES = {
     "packages/xterm/lib/xterm.dart": "// xterm\n",
     "packages/xterm/test/xterm_test.dart": "// t\n",
     "packages/xterm/LICENSE": "MIT\n",
-    ".github/workflows/daily-build.yml": "name: daily\n",
-    ".github/workflows/checks.yml": "name: checks\n",
-    ".github/daily-build/inputs.txt": RULES,
+    "apps/client/android/app/build.gradle.kts": "// android runner\n",
+    "apps/client/windows/runner/main.cpp": "// windows runner\n",
+    ".github/workflows/daily-android.yml": "name: daily android\n",
+    ".github/workflows/daily-desktop.yml": "name: daily desktop\n",
+    ".github/workflows/checks-android.yml": "name: checks\n",
+    ".github/daily-build/inputs/android.txt": RULES,
+    ".github/daily-build/inputs/desktop.txt": DESKTOP_RULES,
     ".github/daily-build/daily_gate.py": "# gate\n",
-    ".github/daily-build/recipe/build.sh": "echo build\n",
+    ".github/daily-build/recipe/android_build.sh": "echo build\n",
+    ".github/daily-build/recipe/desktop_linux.sh": "echo desktop\n",
+    ".github/daily-build/recipe/flutter_sdk.py": "# sdk\n",
     "tools/install_flutter_linux.sh": "echo sdk\n",
 }
 
@@ -124,14 +152,16 @@ class Env:
 
     def gate(self, now: str, *, run_id: str = "100", attempt: str = "1", event: str = "schedule",
              ref: str = "refs/heads/main", run_sha: str | None = None, extra: list[str] | None = None,
-             env: dict | None = None, workspace: Path | None = None, check: bool = True) -> tuple[int, dict, dict]:
+             env: dict | None = None, workspace: Path | None = None, check: bool = True,
+             platform: str = "android") -> tuple[int, dict, dict]:
         run_sha = run_sha or self.head()
         workspace = workspace or self.runner_clone(run_sha)
         output = workspace / "gh_output.txt"
         output.write_text("")
         cmd = [sys.executable, "-I", str(GATE), "gate", "--repo", str(workspace), "--branch", "main",
+               "--platform", platform,
                "--ref", ref, "--run-sha", run_sha, "--run-id", run_id, "--run-attempt", attempt,
-               "--event", event, "--repository", "aterm-project/test", "--workflow", "daily-build.yml",
+               "--event", event, "--repository", "aterm-project/test", "--workflow", f"daily-{platform}.yml",
                "--now", now, "--github-output", str(output), "--summary", str(workspace / "summary.md")]
         proc = run(cmd + (extra or []), workspace, check=False, env={**os.environ, **(env or {})})
         if check and proc.returncode not in (0, 1, 3):
@@ -141,17 +171,38 @@ class Env:
         return proc.returncode, outputs, result
 
     def advance(self, outputs: dict, *, run_id: str = "100", attempt: str = "1", now: str = DAY1,
-                expect: str | None = None, check: bool = True) -> subprocess.CompletedProcess:
+                expect: str | None = None, check: bool = True, platform: str = "android") -> subprocess.CompletedProcess:
         workspace = self.runner_clone(outputs["source_sha"])
         artifacts = workspace / "artifacts.json"
         artifacts.write_text(json.dumps([{"name": "app.apk", "sha256": "ab" * 32, "size": 1}]))
-        cmd = [sys.executable, "-I", str(GATE), "advance", "--repo", str(workspace),
+        cmd = [sys.executable, "-I", str(GATE), "advance", "--repo", str(workspace), "--platform", platform,
                "--quota-date", outputs["quota_date"], "--slot", outputs["quota_slot"],
                "--claim-record", outputs["claim_record"], "--run-id", run_id, "--run-attempt", attempt,
                "--source-sha", outputs["source_sha"],
                "--expect-baseline", expect if expect is not None else (outputs["baseline_record"] or "none"),
                "--release-tag", outputs["release_tag"], "--artifacts", str(artifacts), "--now", now]
         return run(cmd, workspace, check=check)
+
+
+def seed_legacy(env: Env, date: str, slot: int, version_code: int | None) -> None:
+    """Records like the pre-monorepo android gate left them under refs/atermius-ci/daily-build."""
+    workspace = env.runner_clone()
+    sha = env.head()
+    now = gate_module.resolve_now(f"{date}T00:05:00Z", None, 120)[0]
+    info = gate_module.fingerprint(workspace, sha, ".github/daily-build/inputs/android.txt")
+    quota = {"schema": gate_module.SCHEMA, "kind": "quota", "quota_date": date, "slot": slot, "source_sha": sha,
+             "fingerprint": info["fingerprint"], "repository": "aterm-project/android", "run_id": "1",
+             "run_attempt": "1"}
+    record = gate_module.make_record(workspace, sha, [sha], quota, now)
+    if gate_module.cas_push(workspace, "origin", f"{LEGACY_NS}/quota/{date}/{slot}", record, None) != "ok":
+        raise AssertionError("legacy quota seed failed")
+    if version_code:
+        body = {"schema": gate_module.SCHEMA, "kind": "version-code", "version_code": version_code,
+                "quota_date": date, "source_sha": sha, "fingerprint": info["fingerprint"]}
+        record = gate_module.make_record(workspace, sha, [sha], body, now)
+        ref = f"{LEGACY_NS}/version-code"
+        if gate_module.cas_push(workspace, "origin", ref, record, env.remote_refs(ref).get(ref)) != "ok":
+            raise AssertionError("legacy version-code seed failed")
 
 
 class GateTests(unittest.TestCase):
@@ -177,7 +228,7 @@ class GateTests(unittest.TestCase):
         self.assertEqual(out["quota_date"], "2026-11-10")
         self.assertEqual(out["baseline_record"], "")
         self.assertEqual(out["version_code"], "2026111001")
-        self.assertEqual(out["release_tag"], f"daily-20261110.1-{self.env.head()[:12]}")
+        self.assertEqual(out["release_tag"], f"android-daily-20261110.1-{self.env.head()[:12]}")
         refs = self.env.remote_refs()
         self.assertEqual(list(refs), [f"{NS}/quota/2026-11-10/1"])
         self.assertNotIn(f"{NS}/baseline", refs)  # the gate never moves the baseline
@@ -218,7 +269,11 @@ class GateTests(unittest.TestCase):
             {"README.md": "new readme\n"}, {"docs/GUIDE.md": "new\n"}, {"apps/client/README.md": "x\n"},
             {"apps/client/test/widget_test.dart": "// new test\n"}, {"packages/xterm/test/xterm_test.dart": "//\n"},
             {"apps/client/integration/native/probe.c": "int y;\n"}, {".github/daily-build/daily_gate.py": "# v2\n"},
-            {".github/workflows/checks.yml": "name: checks2\n"}, {"docs/NEW.md": "added\n"},
+            {".github/workflows/checks-android.yml": "name: checks2\n"}, {"docs/NEW.md": "added\n"},
+            # another platform's runner, recipe, rules and daily workflow are not android inputs
+            {"apps/client/windows/runner/main.cpp": "// v2\n"}, {".github/daily-build/recipe/desktop_linux.sh": "#\n"},
+            {".github/daily-build/inputs/desktop.txt": DESKTOP_RULES + "+ protocol/**\n"},
+            {".github/workflows/daily-desktop.yml": "name: daily desktop v2\n"},
         ]
         for number, change in enumerate(changes):
             self.env.commit(change, f"non-input {number}")
@@ -230,7 +285,7 @@ class GateTests(unittest.TestCase):
         cases = [
             {"apps/client/lib/main.dart": "void main() { run(); }\n"}, {"apps/client/pubspec.lock": "lock: 2\n"},
             {"packages/xterm/lib/xterm.dart": "// v2\n"}, {"packages/xterm/LICENSE": "MIT 2\n"},
-            {".github/daily-build/recipe/build.sh": "echo build2\n"}, {"tools/install_flutter_linux.sh": "echo 2\n"},
+            {".github/daily-build/recipe/android_build.sh": "echo build2\n"}, {"tools/install_flutter_linux.sh": "echo 2\n"},
             {"apps/client/lib/extra.dart": "// added\n"}, {"apps/client/lib/extra.dart": None},
         ]
         day = 11
@@ -332,8 +387,8 @@ class GateTests(unittest.TestCase):
     def test_check_claim_rejects_rerun_attempt_and_other_runs(self):
         _, out, _ = self.env.gate(DAY1, run_id="300", attempt="1")
         workspace = self.env.runner_clone()
-        base = [sys.executable, "-I", str(GATE), "check-claim", "--repo", str(workspace), "--quota-date",
-                out["quota_date"], "--slot", out["quota_slot"], "--claim-record", out["claim_record"],
+        base = [sys.executable, "-I", str(GATE), "check-claim", "--repo", str(workspace), "--platform", "android",
+                "--quota-date", out["quota_date"], "--slot", out["quota_slot"], "--claim-record", out["claim_record"],
                 "--source-sha", out["source_sha"]]
         ok = run(base + ["--run-id", "300", "--run-attempt", "1"], workspace, check=False)
         self.assertEqual(ok.returncode, 0, ok.stderr)
@@ -410,7 +465,7 @@ class GateTests(unittest.TestCase):
 
     def test_ci_definition_changed_since_trigger_is_skipped(self):
         old = self.env.head()
-        self.env.commit({".github/workflows/daily-build.yml": "name: daily v2\n"}, "ci change")
+        self.env.commit({".github/workflows/daily-android.yml": "name: daily v2\n"}, "ci change")
         _, out, _ = self.env.gate(DAY1, run_sha=old)
         self.assertEqual(out["reason"], "ci-definition-changed")
         self.assertEqual(self.env.remote_refs(), {})
@@ -470,7 +525,7 @@ class GateTests(unittest.TestCase):
 
     def test_rules_change_rebuilds_once(self):
         self.build_and_publish(DAY1, "1")
-        self.env.commit({".github/daily-build/inputs.txt": RULES + "+ protocol/**\n"}, "rules")
+        self.env.commit({".github/daily-build/inputs/android.txt": RULES + "+ protocol/**\n"}, "rules")
         _, out, _ = self.env.gate(DAY2, run_id="2")
         # inputs.txt sits under .github/, so this run (triggered at the old sha) would skip;
         # it was triggered at the new tip here, so it builds once.
@@ -480,6 +535,106 @@ class GateTests(unittest.TestCase):
         _, out, _ = self.env.gate(DAY1)
         for key, value in out.items():
             self.assertNotIn("\n", value, key)
+
+    # 13 monorepo: one quota, baseline and tag namespace per platform
+    def test_platforms_have_separate_quota_baseline_and_tags(self):
+        _, android, _ = self.env.gate(DAY1, run_id="1")
+        _, desktop, _ = self.env.gate(DAY1, run_id="2", platform="desktop")
+        self.assertEqual((android["build"], desktop["build"]), ("true", "true"))  # android's claim is not desktop's
+        tip = self.env.head()[:12]
+        self.assertEqual((android["release_tag"], desktop["release_tag"]),
+                         (f"android-daily-20261110.1-{tip}", f"desktop-daily-20261110.1-{tip}"))
+        self.assertEqual(sorted(self.env.remote_refs(ROOT_NS)),
+                         sorted([f"{DESKTOP_NS}/quota/2026-11-10/1", f"{NS}/quota/2026-11-10/1"]))
+        self.env.advance(android, run_id="1")
+        self.env.advance(desktop, run_id="2", platform="desktop")
+        self.assertIn(f"{NS}/baseline", self.env.remote_refs())
+        self.assertIn(f"{DESKTOP_NS}/baseline", self.env.remote_refs(DESKTOP_NS))
+        # a runner change rebuilds only its platform; a shared change rebuilds both
+        self.env.commit({"apps/client/android/app/build.gradle.kts": "// v2\n"}, "android runner")
+        _, a2, _ = self.env.gate(DAY2, run_id="3")
+        _, d2, _ = self.env.gate(DAY2, run_id="4", platform="desktop")
+        self.assertEqual((a2["reason"], d2["reason"]), ("claimed", "no-input-changes"))
+        self.env.advance(a2, run_id="3", now=DAY2)
+        self.env.commit({"apps/client/windows/runner/main.cpp": "// v2\n"}, "windows runner")
+        _, a3, _ = self.env.gate(DAY3, run_id="5")
+        _, d3, _ = self.env.gate(DAY3, run_id="6", platform="desktop")
+        self.assertEqual((a3["reason"], d3["reason"]), ("no-input-changes", "claimed"))
+        self.env.advance(d3, run_id="6", now=DAY3, platform="desktop")
+        self.env.commit({"apps/client/lib/main.dart": "void main() { shared(); }\n"}, "shared")
+        _, a4, _ = self.env.gate("2026-11-13T00:05:00Z", run_id="7")
+        _, d4, _ = self.env.gate("2026-11-13T00:05:00Z", run_id="8", platform="desktop")
+        self.assertEqual((a4["reason"], d4["reason"]), ("claimed", "claimed"))
+        # the advance of one platform never touches the other's baseline
+        record = run(["git", "ls-remote", self.env.url, f"{DESKTOP_NS}/baseline"], self.env.root).stdout.split()[0]
+        workspace = self.env.runner_clone()
+        run(["git", "fetch", "--quiet", "--depth", "1", "origin", record], workspace)
+        self.assertEqual(gate_module.read_record(workspace, record, "baseline")["platform"], "desktop")
+
+    def test_namespace_and_rules_must_belong_to_the_platform(self):
+        for extra, platform, message in (
+                (["--namespace", DESKTOP_NS], "android", "does not belong to platform"),
+                (["--namespace", ROOT_NS], "android", "does not belong to platform"),
+                ([], "server", "unknown platform"),
+                (["--legacy-namespace", NS], "android", "invalid legacy namespace"),
+                (["--legacy-namespace", f"{NS}/old"], "android", "invalid legacy namespace")):
+            with self.subTest(extra=extra, platform=platform):
+                code, _, result = self.env.gate(DAY1, extra=extra, platform=platform)
+                self.assertEqual(code, 1, result)
+                self.assertIn(message, result["stderr"])
+        workspace = self.env.runner_clone()
+        proc = run([sys.executable, "-I", str(GATE), "gate", "--repo", str(workspace), "--ref", "refs/heads/main",
+                    "--run-sha", self.env.head(), "--run-id", "1", "--run-attempt", "1", "--event", "schedule",
+                    "--now", DAY1], workspace, check=False)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("needs --platform", proc.stderr)
+        self.assertEqual(self.env.remote_refs(ROOT_NS), {})
+
+    def test_check_claim_refuses_another_platforms_claim(self):
+        _, out, _ = self.env.gate(DAY1, run_id="9", platform="desktop")
+        workspace = self.env.runner_clone()
+        base = [sys.executable, "-I", str(GATE), "check-claim", "--repo", str(workspace), "--namespace", DESKTOP_NS,
+                "--quota-date", out["quota_date"], "--slot", out["quota_slot"], "--claim-record", out["claim_record"],
+                "--run-id", "9", "--run-attempt", "1"]
+        self.assertEqual(run(base + ["--platform", "desktop"], workspace, check=False).returncode, 0)
+        wrong = run(base + ["--platform", "android"], workspace, check=False)
+        self.assertEqual(wrong.returncode, 1)
+        self.assertIn("does not belong to platform", wrong.stderr)
+
+    def seed_legacy(self, date: str, slot: int, version_code: int | None) -> None:
+        seed_legacy(self.env, date, slot, version_code)
+
+    def test_legacy_namespace_is_a_read_only_floor_on_the_cutover_day(self):
+        self.seed_legacy("2026-11-10", 1, 2026111001)
+        legacy_before = {k: v for k, v in self.env.remote_refs(ROOT_NS).items() if not k.startswith(NS + "/")}
+        extra = ["--legacy-namespace", LEGACY_NS, "--version-allocator"]
+        # the pre-merge android repository already built today: no second android build
+        _, same_day, result = self.env.gate(DAY1_LATE, extra=extra)
+        self.assertEqual((same_day["build"], same_day["reason"]), ("false", "quota-used"), result)
+        self.assertEqual(self.env.remote_refs(NS), {})  # nothing allocated or claimed
+        # a manual release the same day stays above the legacy daily code
+        workspace = self.env.runner_clone()
+        now = gate_module.resolve_now(DAY1_LATE, None, 120)[0]
+        code, _ = gate_module.allocate_version_code(workspace, "origin", NS, "2026-11-10", self.env.head(), "ab" * 32,
+                                                    {"purpose": "release"}, now, max_slot=90,
+                                                    legacy_namespaces=(LEGACY_NS,))
+        self.assertEqual(code, 2026111002)
+        # next day: normal daily code; the legacy refs were never written
+        _, next_day, _ = self.env.gate(DAY2, run_id="3", extra=extra)
+        self.assertEqual((next_day["build"], next_day["version_code"], next_day["quota_slot"]),
+                         ("true", "2026111101", "1"))
+        self.assertEqual({k: v for k, v in self.env.remote_refs(ROOT_NS).items() if not k.startswith(NS + "/")},
+                         legacy_before)
+
+    def test_without_the_legacy_namespace_the_cutover_day_would_repeat_a_code(self):
+        self.seed_legacy("2026-11-10", 1, 2026111001)
+        _, unaware, _ = self.env.gate(DAY1_LATE, extra=["--version-allocator"])
+        self.assertEqual((unaware["build"], unaware["version_code"]), ("true", "2026111001"))  # why android passes it
+
+    def test_legacy_version_code_floor_without_a_legacy_claim_today(self):
+        self.seed_legacy("2026-11-09", 1, 2026111005)  # e.g. a release allocated just before the cutover
+        _, out, _ = self.env.gate(DAY1, extra=["--legacy-namespace", LEGACY_NS, "--version-allocator"])
+        self.assertEqual((out["build"], out["version_code"]), ("true", "2026111006"))
 
 
 if __name__ == "__main__":

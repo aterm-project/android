@@ -1,8 +1,8 @@
 # Implementation and verification boundaries
 
-[Install](INSTALLATION.en.md) · [中文安装](INSTALLATION.md) · [Cloud behavior](CLOUD-SHARING.md)
+[Install](install/server.en.md) · [中文安装](install/server.md) · [Cloud behavior](CLOUD-SHARING.md)
 
-This page describes the 2026-11-09 cloud integration baseline. Documentation updates do not establish new native builds or a hosted service.
+This page describes the 2026-11-09 cloud integration baseline. Documentation updates do not establish new native builds or a hosted service. At that baseline the clients and the server were separate repositories, so "each platform repository" and "per repository" below refer to the pre-merge layout; since 2026-11-14 the client source is `apps/client/` in this repository, and the linked server CI run stays in the archived `server` repository.
 
 | Area | Current boundary |
 | --- | --- |

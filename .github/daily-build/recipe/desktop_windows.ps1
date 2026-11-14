@@ -147,8 +147,13 @@ $files | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $Meta 'bu
 $Info.engine_sha256 = $EngineSha
 $Info | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $Meta 'windows.json') -Encoding utf8NoBOM
 $version = ((Get-Content (Join-Path $App 'pubspec.yaml') | Where-Object { $_ -match '^version:\s*([0-9][0-9.]*)' } | Select-Object -First 1) -replace '^version:\s*([0-9][0-9.]*).*$', '$1')
-# Daily tags lose their "daily-" prefix (as ${TAG#daily-} on Linux/macOS); release tags stay whole.
-$Suffix = if ($Tag.StartsWith('daily-')) { $Tag.Substring(6) } else { $Tag }
+# Asset names keep the pre-monorepo form (as desktop_linux.sh / desktop_macos.sh): the platform
+# namespace of the tag is dropped (desktop-daily-20261114.1-<sha12> -> 20261114.1-<sha12>,
+# release desktop-v1.0.0 -> v1.0.0).
+$Suffix = $Tag
+foreach ($Prefix in @('desktop-daily-', 'desktop-')) {
+    if ($Suffix.StartsWith($Prefix)) { $Suffix = $Suffix.Substring($Prefix.Length); break }
+}
 $name = "atermius-desktop-windows-x64-$version-$Suffix.zip"
 & python -I (Join-Path $Tools 'release_tool.py') archive --src $Stage --out (Join-Path $Out $name) --prefix atermius-windows-x64
 & python -I (Join-Path $Tools 'release_tool.py') evidence --platform windows-x64 --out-dir $Out --artifact $name `

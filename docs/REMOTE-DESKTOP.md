@@ -41,15 +41,15 @@ Android 上 RDP/VNC 只走直接连接，在会话标签和分屏内显示：VNC
 
 网关可访问目标登录信息、画面和输入，是受信组件。仅将 guacd 放在受控私有网络，限制目标范围，不向外发布 4822。普通 SSH 字节 Relay 不需要 guacd。
 
-使用[服务端安装指南](https://github.com/aterm-project/server/blob/main/docs/INSTALLATION.md)组装独立 API/Web；常规远程桌面添加 `compose.desktop.yaml` 并配置 Relay 目标策略。临时分享另加 `compose.share.yaml`，参考[分享配置](https://github.com/aterm-project/server/blob/main/docs/CLOUD-SHARING.md)。操作时保留原来的 TLS/Web/其他覆盖文件，不在客户端仓库运行不存在的服务端路径。
+使用[服务端部署指南](install/server.md)组装独立 API/Web；常规远程桌面添加 `compose.desktop.yaml` 并配置 Relay 目标策略。临时分享另加 `compose.share.yaml`，参考[分享配置](CLOUD-SHARING.md)。操作时保留原来的 TLS/Web/其他覆盖文件，并在仓库根目录执行 Compose 命令。
 
-Windows 直接 RDP 构建步骤见[桌面仓库指南](https://github.com/aterm-project/desktop/blob/main/docs/INSTALLATION.md)。使用配套 FreeRDP 源码摘要与许可证，不引用历史测试机器的构建目录，也不单独替换 Dart 程序或 DLL。
+Windows 直接 RDP 构建步骤见[桌面版构建指南](install/desktop.md)。使用配套 FreeRDP 源码摘要与许可证，不引用历史测试机器的构建目录，也不单独替换 Dart 程序或 DLL。
 
 ## 已知边界与验证
 
 RDP 目标的 NLA、域策略、所有键盘布局、资源/剪贴板组合仍需相应环境验证。VNC 支持的传统 RFB 传输不提供端到端加密，未实现所有专有/VeNCrypt 认证；传统剪贴板按 Latin-1 处理，不承诺完整 Unicode 剪贴板。当前源码 CI 的组件/协议检查不等于新的 Windows/macOS/Android/iOS 可视 GUI 验收。
 
-针对性测试入口为 `apps/client/test/desktop_protocol_test.dart`、`desktop_host_editor_test.dart`、Android 路由的 `android_direct_desktop_test.dart`/`android_desktop_route_test.dart` 及显式启用的网关/Console 验收文件。跨仓服务端链路参考[集成说明](https://github.com/aterm-project/server/blob/main/docs/INTEGRATION.md)。环境条件不足的跳过不算真实目标通过；物理硬件和当前安装包验收单独记录。
+针对性测试入口为 `apps/client/test/desktop_protocol_test.dart`、`desktop_host_editor_test.dart`、Android 路由的 `android_direct_desktop_test.dart`/`android_desktop_route_test.dart` 及显式启用的网关/Console 验收文件。前后端链路参考[集成说明](INTEGRATION.md)。环境条件不足的跳过不算真实目标通过；物理硬件和当前安装包验收单独记录。
 
 参考：[Guacamole 协议](https://guacamole.apache.org/doc/gug/guacamole-protocol.html)、[RDP 配置](https://guacamole.apache.org/doc/gug/configuring-guacamole.html)、[Flutter Windows 分发](https://docs.flutter.dev/platform-integration/windows/building)。
 
