@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "Atermius";
+"CFBundleName" = "Atermius";
+"NSLocalNetworkUsageDescription" = "Atermius подключается к узлам SSH, SFTP, RDP, VNC и MCP в вашей локальной сети.";

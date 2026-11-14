@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "Atermius";
+"CFBundleName" = "Atermius";
+"NSLocalNetworkUsageDescription" = "Atermius connects to SSH, SFTP, RDP, VNC, and MCP hosts on your local network.";
