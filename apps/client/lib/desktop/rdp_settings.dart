@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../domain/models.dart';
 import 'desktop_resolution.dart';
 import 'rdp_features.dart';
@@ -38,8 +40,21 @@ class RdpDriveRedirect {
   int get hashCode => Object.hash(name, path);
 }
 
+/// Longest mapped path in UTF-8 bytes. FreeRDP's drive channel keeps at most
+/// MAX_PATH (260) bytes including the terminator; the native engine rejects
+/// longer paths instead of letting them be truncated.
+const rdpMaxDrivePathBytes = 259;
+
+/// Whether [path] fits the engine's drive channel ([rdpMaxDrivePathBytes]).
+/// New mappings must fit; a longer stored one is skipped when connecting.
+bool rdpPathFitsEngine(String path) =>
+    path.length <= rdpMaxDrivePathBytes &&
+    utf8.encode(path).length <= rdpMaxDrivePathBytes;
+
 /// Absolute local path without control characters or the native config
 /// separators. Windows (`C:\x`, `\\server\share`) and POSIX forms accepted.
+/// Up to 1024 UTF-16 units, as older versions stored them in the synchronized
+/// Host, so such a Host stays readable; see [rdpPathFitsEngine].
 bool isSafeLocalPath(String path) {
   if (path.isEmpty || path.length > 1024 || path != path.trim()) return false;
   if (path.runes.any((r) => r < 32 || r == 0x7f)) return false;
@@ -100,7 +115,15 @@ class RdpSettings {
   });
 
   static const defaults = RdpSettings();
+
+  /// Folders one Host stores. Part of the synchronized rdp_settings_v1
+  /// schema: clients before local disk mapping reject a Host with more (and
+  /// would save their defaults over it), so this stays 8 within version 1.
   static const maxDrives = 8;
+
+  /// Mappings in one connection (Host folders plus local disks); matches the
+  /// native engine's MAX_DRIVES.
+  static const maxConnectionDrives = 32;
   static const maxUsbDevices = 16;
   static const scales = [100, 125, 150, 175, 200, 250, 300];
 
@@ -128,14 +151,17 @@ class RdpSettings {
 
   static final _usbId = RegExp(r'^[0-9a-f]{4}:[0-9a-f]{4}$');
 
-  String? validate() {
+  /// Validates the settings as stored in a Host.
+  String? validate() => _validate(maxDrives);
+
+  String? _validate(int driveLimit) {
     if (resolution == RdpResolutionMode.fixed) {
       final issue = validateDesktopSize(width, height);
       if (issue != null) return issue;
     }
     if (!scales.contains(scalePercent)) return currentL10n.unsupportedRdpDisplayScale;
-    if (drives.length > maxDrives) {
-      return currentL10n.atMostMaxdrivesRedirectedFolders(maxDrives);
+    if (drives.length > driveLimit) {
+      return currentL10n.atMostMaxdrivesRedirectedFolders(driveLimit);
     }
     final names = <String>{};
     for (final drive in drives) {
@@ -326,6 +352,8 @@ class RdpSettings {
   /// first, so no newline/`|` can reach the native parser. Requested resources
   /// the engine cannot provide are omitted and named in
   /// [RdpNativeConfig.unavailable] so the UI can say so instead of pretending.
+  /// [drives] may hold up to [maxConnectionDrives] mappings here (Host
+  /// folders plus this device's local disks).
   RdpNativeConfig toNativeConfig({
     required RdpFeatures features,
     required int initialWidth,
@@ -333,7 +361,7 @@ class RdpSettings {
     List<RdpMonitorLayout> monitorLayout = const [],
     String? defaultPrinterName,
   }) {
-    final issue = validate();
+    final issue = _validate(maxConnectionDrives);
     if (issue != null) throw FormatException(issue);
     final unavailable = <String>[];
     bool want(bool requested, int feature, String label) {
@@ -352,9 +380,17 @@ class RdpSettings {
     final mic = want(microphone, RdpFeatures.audioIn, 'microphone');
     final cards = want(smartCards, RdpFeatures.smartcard, 'smart cards');
     final camera = want(cameras, RdpFeatures.camera, 'cameras');
-    final folders = want(drives.isNotEmpty, RdpFeatures.drive, 'folders')
+    final requestedFolders =
+        want(drives.isNotEmpty, RdpFeatures.drive, 'folders')
         ? drives
         : const <RdpDriveRedirect>[];
+    // The engine rejects the whole configuration for a longer path; a stored
+    // one is normally skipped (and named) before this.
+    final folders = [
+      for (final d in requestedFolders)
+        if (rdpPathFitsEngine(d.path)) d,
+    ];
+    if (folders.length != requestedFolders.length) unavailable.add('folders');
     final usb = want(usbDevices.isNotEmpty, RdpFeatures.usb, 'USB devices')
         ? usbDevices
         : const <String>[];

@@ -14,8 +14,10 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 /** Native RDPDR uses live filesystem paths, rather than a copied SAF cache.
- * Storage access is requested only when the user adds a mapping. The engine
- * receives only the explicitly selected roots/folders for the current host. */
+ * Storage access is requested only by an explicit user action (adding a
+ * mapping, or the grant button of the Host's "Map local disks" switch);
+ * connecting only checks it. The engine receives only the drive= lines Dart
+ * built for the current connection. */
 class RdpStorageAccess(private val activity: Activity, messenger: BinaryMessenger) {
     private val channel = MethodChannel(messenger, "atermius/rdp_storage")
     private var pending: MethodChannel.Result? = null
@@ -72,24 +74,48 @@ class RdpStorageAccess(private val activity: Activity, messenger: BinaryMessenge
         result?.success(hasAccess())
     }
 
+    /** Storage volumes with their state. Dart maps the mounted, readable ones
+     * at connect time and names volumes that are present but not ready (still
+     * being checked, unmounted, unformatted) in a notice; the disk picker
+     * offers only usable ones. "uuid" gives SD cards and USB drives a stable
+     * share name. Removed volumes are left out. */
     @Suppress("DEPRECATION")
-    private fun roots(): List<Map<String, Any>> {
+    private fun roots(): List<Map<String, Any?>> {
         val manager = activity.getSystemService(StorageManager::class.java)
         if (Build.VERSION.SDK_INT >= 30) {
             return manager.storageVolumes.mapNotNull { volume ->
-                val directory = volume.directory ?: return@mapNotNull null
-                if (volume.state != Environment.MEDIA_MOUNTED || !directory.canRead()) return@mapNotNull null
-                mapOf("path" to directory.absolutePath, "label" to volume.getDescription(activity), "primary" to volume.isPrimary)
+                val state: String? = volume.state
+                if (state == null || state == Environment.MEDIA_REMOVED ||
+                    state == Environment.MEDIA_BAD_REMOVAL) {
+                    return@mapNotNull null
+                }
+                val directory = volume.directory
+                mapOf(
+                    "path" to (directory?.absolutePath ?: ""),
+                    "label" to volume.getDescription(activity),
+                    "primary" to volume.isPrimary,
+                    "removable" to volume.isRemovable,
+                    "uuid" to volume.uuid,
+                    "state" to state,
+                    "readable" to (directory?.canRead() == true),
+                )
             }
         }
-        val paths = linkedSetOf(Environment.getExternalStorageDirectory().absolutePath)
+        val primary = Environment.getExternalStorageDirectory().absolutePath
+        val paths = linkedSetOf(primary)
         activity.getExternalFilesDirs(null).filterNotNull().forEach { directory ->
             paths.add(directory.absolutePath.substringBefore("/Android/"))
         }
         return paths.mapNotNull { path ->
             val directory = File(path)
             if (!directory.isDirectory || !directory.canRead()) null
-            else mapOf("path" to path, "primary" to (path == Environment.getExternalStorageDirectory().absolutePath))
+            else mapOf(
+                "path" to path,
+                "primary" to (path == primary),
+                "uuid" to (if (path == primary) null else directory.name),
+                "state" to Environment.MEDIA_MOUNTED,
+                "readable" to true,
+            )
         }
     }
 

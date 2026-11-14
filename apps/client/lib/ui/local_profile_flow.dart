@@ -23,6 +23,7 @@ import '../telnet/telnet_transport.dart';
 import '../telnet/telnet_ui.dart';
 import '../desktop/desktop_session.dart';
 import '../desktop/rdp_certificate_persistence.dart';
+import '../desktop/rdp_local_drives.dart';
 import '../domain/quick_connect.dart';
 import 'host_search_field.dart';
 import 'host_search_palette.dart';
@@ -1234,7 +1235,9 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     try {
       final repository = _repository;
       if (repository == null) throw StateError(context.l10n.noLocalProfile);
-      await repository.createHost(draft);
+      final saved = await repository.createHost(draft);
+      // The editor kept this device's disk-mapping choice under its draft id.
+      unawaited(RdpLocalDrivesController.instance.moveHost(draft.id, saved.id));
       if (!_isCurrentOperation(generation)) return;
       if (!await _reloadHosts(generation)) {
         _showMessage(currentL10n.theHostWasSavedButThe);
@@ -1901,6 +1904,8 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
     HostRecord? saved;
     try {
       saved = await repository.createHost(draft);
+      // The editor kept this device's disk-mapping choice under its draft id.
+      unawaited(RdpLocalDrivesController.instance.moveHost(draft.id, saved.id));
       if (_isCurrentOperation(generation)) await _reloadHosts(generation);
     } catch (_) {
       if (mounted) _showMessage(context.l10n.couldntSaveTheHostCheckThe);
@@ -1969,7 +1974,11 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
       // A once-connected desktop restores through its own session; a retry
       // from the progress surface starts a fresh session in the same tab.
       if (reuseSession != null && !reuseSession.progress.isVisible) {
-        await reuseSession.desktop?.reconnect();
+        // With the Host saved now, so mappings saved since the first connect
+        // apply; the session keeps its in-session display choice.
+        await reuseSession.desktop?.reconnect(
+          host: _hosts.where((h) => h.id == host.id).firstOrNull ?? host,
+        );
         return;
       }
       if (_activeProfile == null || (_busy && reuseSession == null)) return;
@@ -1996,6 +2005,8 @@ class _LocalProfileFlowState extends State<LocalProfileFlow> {
 
       final desktop = DesktopSession(
         reconnectAllowed: current,
+        // "Restore connection" in the view resolves the Host saved now.
+        latestHost: (id) => _hosts.where((h) => h.id == id).firstOrNull,
         saveRdpCertificate: (reviewed, pin) async {
           final saved = await RdpCertificatePersistence.saveLocal(
             repository: repository,
@@ -5972,8 +5983,7 @@ _showMessage(
         ),
       ),
       // ACCOUNT worker: local mode explains sync and routes to sign-in.
-      if (Theme.of(context).platform == TargetPlatform.android ||
-          Theme.of(context).platform == TargetPlatform.iOS)
+      if (remoteDesktopSettingsAvailable(Theme.of(context).platform))
         SettingsSection(
           id: 'remote-desktop',
           title: context.l10n.remoteDesktop,

@@ -416,17 +416,9 @@ void _rdpWorker(List<dynamic> args) {
         case 'frameAck':
           framePending = false;
         case 'key':
-          final sym = command[1] as int, down = command[2] as int;
-          final scan = rdpScancode(sym);
-          if (scan != null) {
-            api!.key(handle, scan, down, 0);
-          } else {
-            final rune = sym & 0x00ffffff;
-            if (rune >= 32 && rune <= 0x10ffff) {
-              for (final unit in String.fromCharCode(rune).codeUnits) {
-                api!.key(handle, unit, down, 1);
-              }
-            }
+          final down = command[2] as int;
+          for (final (code, unicode) in rdpKeyEvents(command[1] as int)) {
+            api!.key(handle, code, down, unicode ? 1 : 0);
           }
         case 'mouse':
           api!.mouse(
@@ -797,11 +789,66 @@ int? rdpScancode(int keysym) {
     0xffec: 0x15c,
     0xffe5: 0x3a,
     0xff7f: 0x45,
+    // Keys that only full keyboard mapping (keyboard_capture_keymaps.dart)
+    // produces. Pause (0xff13) needs an E1-prefixed sequence the engine
+    // cannot send, so it has no scancode and is dropped.
+    0xff0b: 0x4c, // Clear (keypad 5 without Num Lock)
+    0xff14: 0x46, // Scroll Lock
+    0xff21: 0x29, // Kanji (Alt+半角/全角)
+    0xff22: 0x7b, // Muhenkan
+    0xff23: 0x79, // Henkan
+    0xff27: 0x70, // Hiragana_Katakana
+    0xff2a: 0x29, // Zenkaku/Hankaku
+    0xff30: 0x3a, // Eisu_toggle (英数, the Caps Lock position)
+    0xff31: 0x72, // Hangul (Han/Yeong)
+    0xff34: 0x71, // Hangul_Hanja
+    0xff61: 0x137, // Print Screen
+    0xff67: 0x15d, // Menu (Application)
+    0xff6a: 0x63, // Help
+    0xffaa: 0x37, // keypad *
+    0xffab: 0x4e, // keypad +
+    0xffac: 0x7e, // keypad separator (JIS/ABNT keypad comma)
+    0xffad: 0x4a, // keypad -
+    0xffae: 0x53, // keypad .
+    0xffaf: 0x135, // keypad /
+    0xffb0: 0x52, // keypad 0
+    0xffb1: 0x4f,
+    0xffb2: 0x50,
+    0xffb3: 0x51,
+    0xffb4: 0x4b,
+    0xffb5: 0x4c,
+    0xffb6: 0x4d,
+    0xffb7: 0x47,
+    0xffb8: 0x48,
+    0xffb9: 0x49, // keypad 9
+    0xffbd: 0x59, // keypad =
+    // XF86 media, browser and launch keys.
+    0x1008ff11: 0x12e, // AudioLowerVolume
+    0x1008ff12: 0x120, // AudioMute
+    0x1008ff13: 0x130, // AudioRaiseVolume
+    0x1008ff14: 0x122, // AudioPlay (play/pause)
+    0x1008ff15: 0x124, // AudioStop
+    0x1008ff16: 0x110, // AudioPrev
+    0x1008ff17: 0x119, // AudioNext
+    0x1008ff18: 0x132, // HomePage
+    0x1008ff19: 0x16c, // Mail
+    0x1008ff1b: 0x165, // Search
+    0x1008ff1d: 0x121, // Calculator (launch app 2)
+    0x1008ff26: 0x16a, // Back
+    0x1008ff27: 0x169, // Forward
+    0x1008ff28: 0x168, // Stop
+    0x1008ff29: 0x167, // Refresh
+    0x1008ff2f: 0x15f, // Sleep
+    0x1008ff30: 0x166, // Favorites
+    0x1008ff32: 0x16d, // AudioMedia (media select)
+    0x1008ff33: 0x16b, // MyComputer (launch app 1)
   };
   if (special.containsKey(keysym)) return special[keysym];
   if (keysym >= 0xffbe && keysym <= 0xffc7) return 0x3b + keysym - 0xffbe;
   if (keysym == 0xffc8) return 0x57;
   if (keysym == 0xffc9) return 0x58;
+  if (keysym >= 0xffca && keysym <= 0xffd4) return 0x64 + keysym - 0xffca;
+  if (keysym == 0xffd5) return 0x76; // F24
   const rows = [
     ("1234567890-=", 2),
     ("qwertyuiop[]", 16),
@@ -819,6 +866,31 @@ int? rdpScancode(int keysym) {
     if (char == '`') return 0x29;
   }
   return null;
+}
+
+/// The character typed as RDP Unicode input for a keysym without a scancode,
+/// or null. X11 function keysyms (0xff00-0xffff: Print 0xff61, Pause, the
+/// keypad, ...), the ISO/dead-key and 3270 blocks below them and vendor
+/// keysyms (XF86 media keys 0x1008ff00-) are not characters: they are dropped
+/// instead of being typed as halfwidth/fullwidth forms or private-plane code
+/// points.
+int? rdpUnicodeRune(int keysym) {
+  if (keysym >= 0xfd00 && keysym <= 0xffff) return null;
+  // Above 24 bits only the Unicode keysyms (0x01000000 | code point) type.
+  if (keysym > 0x00ffffff && keysym >> 24 != 0x01) return null;
+  final rune = keysym & 0x00ffffff;
+  return rune >= 32 && rune <= 0x10ffff ? rune : null;
+}
+
+/// The engine key events for one X11 keysym press or release: a set-1
+/// scancode `(code, false)`, the UTF-16 units of a character `(unit, true)`,
+/// or nothing for a key the remote cannot receive (Pause, unknown keysyms).
+List<(int, bool)> rdpKeyEvents(int keysym) {
+  final scan = rdpScancode(keysym);
+  if (scan != null) return [(scan, false)];
+  final rune = rdpUnicodeRune(keysym);
+  if (rune == null) return const [];
+  return [for (final unit in String.fromCharCode(rune).codeUnits) (unit, true)];
 }
 
 typedef _CreateNative = Pointer<Void> Function(

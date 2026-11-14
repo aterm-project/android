@@ -4,9 +4,18 @@
 
 #include "flutter_window.h"
 #include "utils.h"
+#include "window_identity.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
+  // Fail file operations on a drive without media instead of showing the
+  // system "There is no disk in the drive" dialog. Local disks (card
+  // readers, optical drives) are mapped to remote desktops by default and
+  // are touched from engine and Dart I/O threads, so this is set once for
+  // the whole process, as Microsoft recommends, before any thread starts.
+  ::SetErrorMode(::GetErrorMode() | SEM_FAILCRITICALERRORS |
+                 SEM_NOOPENFILEERRORBOX);
+
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
@@ -21,10 +30,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();
+  // Decided once: detached remote-desktop / session windows get their own
+  // taskbar icon and group.
+  const WindowKind window_kind = WindowKindFromArguments(command_line_arguments);
 
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
-  FlutterWindow window(project);
+  FlutterWindow window(project, window_kind);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
   if (!window.Create(L"Atermius", origin, size)) {

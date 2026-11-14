@@ -2,8 +2,11 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="mcp-access-v1/" />
+        <!-- RDP "Map local disks" choices are device-local by design. -->
+        <exclude domain="file" path="rdp-local-drives-v1" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="mcp-access-v1/" />
+        <exclude domain="file" path="rdp-local-drives-v1" />
     </device-transfer>
 </data-extraction-rules>

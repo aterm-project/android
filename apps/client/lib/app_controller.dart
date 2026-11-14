@@ -2,6 +2,7 @@ import 'domain/window_combination.dart';
 import 'console/local_console.dart';
 import 'console/local_shell_l10n.dart';
 import 'desktop/desktop_session.dart';
+import 'desktop/direct/connection.dart' show DirectDesktopConnection;
 import 'desktop/rdp_certificate_persistence.dart';
 import 'desktop/window/desktop_tab_windows.dart';
 import 'auth/session_startup.dart';
@@ -1061,6 +1062,7 @@ class AppController extends ChangeNotifier {
     @visibleForTesting this.apiClientFactoryForTesting,
     @visibleForTesting MobilePushRegistration? mobilePushRegistrationForTesting,
     @visibleForTesting this.mobilePushAutoSyncForTesting,
+    @visibleForTesting this.desktopConnectionForTesting,
     SyncPreferenceStore? syncPreferenceStore,
   }) : crypto = VaultCrypto(sodium),
        recoveryCrypto = AccountRecoveryCrypto(sodium),
@@ -1129,6 +1131,11 @@ class AppController extends ChangeNotifier {
   final MobilePushRegistration _mobilePushRegistration;
   @visibleForTesting
   final Future<void> Function()? mobilePushAutoSyncForTesting;
+
+  /// Replaces the direct RDP/VNC transport of desktop tabs in tests.
+  @visibleForTesting
+  final DirectDesktopConnection Function(HostRecord host)?
+  desktopConnectionForTesting;
   @visibleForTesting
   final Future<List<Map<String, dynamic>>> Function(SyncRepository repository)?
   loadRecordsForTesting;
@@ -20148,7 +20155,9 @@ class AppController extends ChangeNotifier {
     final host = hosts.where((h) => h.id == savedHost.id).firstOrNull ?? savedHost;
     try {
       if (tab.desktop != null) {
-        await tab.desktop!.reconnect();
+        // The latest saved Host, so mappings saved since the first connect
+        // apply (the session keeps its in-session display choice).
+        await tab.desktop!.reconnect(host: host);
       } else {
         await _openTerminalTab(host, reuseTab: tab);
       }
@@ -20232,7 +20241,10 @@ class AppController extends ChangeNotifier {
         session?.accountId == reviewedAccount &&
         identity?.deviceId == reviewedDevice;
     final desktop = DesktopSession(
+      directConnectionForTesting: desktopConnectionForTesting,
       reconnectAllowed: () => current() && tab.recovery?.available == true,
+      // "Restore connection" in the view resolves the Host saved now.
+      latestHost: (id) => hosts.where((h) => h.id == id).firstOrNull,
       saveRdpCertificate: (reviewed, pin) async {
         final saved = await RdpCertificatePersistence.saveCloud(
           controller: this,

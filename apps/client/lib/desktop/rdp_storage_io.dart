@@ -1,6 +1,9 @@
+import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:win32/win32.dart';
 
@@ -20,16 +23,11 @@ Future<void> requestRdpStorageAccess() async {
 
 Future<List<RdpStorageRoot>> localRdpStorageRoots() async {
   if (Platform.isAndroid || Platform.isIOS) {
-    final values = await rdpStorageChannel.invokeListMethod<Object?>('roots');
-    return [
-      for (final value in values ?? const [])
-        if (value is Map && value['path'] is String)
-          RdpStorageRoot(
-            path: value['path'] as String,
-            label: value['label'] as String? ?? '',
-            primary: value['primary'] == true,
-          ),
-    ];
+    // Android also lists volumes that are not mounted (for the connect-time
+    // notice); only usable ones can be chosen.
+    return rdpStorageRootsFrom(
+      await rdpStorageChannel.invokeListMethod<Object?>('roots'),
+    );
   }
   if (Platform.isMacOS) {
     final roots = <RdpStorageRoot>[];
@@ -63,7 +61,7 @@ Future<List<RdpStorageRoot>> localRdpStorageRoots() async {
       if (mask & (1 << i) == 0) continue;
       final letter = String.fromCharCode(65 + i);
       final path = '$letter:\\';
-      final native = path.toNativeUtf16();
+      final native = path.toNativeUtf16(allocator: calloc);
       try {
         final type = GetDriveType(native);
         if (type == DRIVE_FIXED ||
@@ -115,4 +113,141 @@ Future<void> validateRdpDriveConfig(String config) async {
       }
     }),
   );
+}
+
+/// Local volumes for automatic RDP disk mapping on Windows and Android.
+RdpLocalVolumeSource platformRdpLocalVolumeSource() =>
+    const _PlatformLocalVolumes();
+
+class _PlatformLocalVolumes implements RdpLocalVolumeSource {
+  const _PlatformLocalVolumes();
+  @override
+  RdpAutoDriveOs? get os => Platform.isWindows
+      ? RdpAutoDriveOs.windows
+      : Platform.isAndroid
+      ? RdpAutoDriveOs.android
+      : null;
+  @override
+  bool get windowsPaths => Platform.isWindows;
+  @override
+  Future<bool> hasAccess() async =>
+      !Platform.isAndroid ||
+      await rdpStorageChannel.invokeMethod<bool>('checkAccess') == true;
+  @override
+  Future<bool> requestAccess() async {
+    try {
+      await requestRdpStorageAccess();
+      return true;
+    } on Object {
+      return false;
+    }
+  }
+
+  @override
+  Future<List<RdpLocalVolume>> volumes() async {
+    if (Platform.isWindows) return _windowsVolumes();
+    if (Platform.isAndroid) {
+      return rdpAndroidVolumesFrom(
+        await rdpStorageChannel.invokeListMethod<Object?>('roots'),
+      );
+    }
+    return const [];
+  }
+}
+
+/// Fixed, removable, optical and RAM disks. Network drives belong to another
+/// computer and are never mapped automatically.
+const _autoDriveTypes = {
+  DRIVE_FIXED,
+  DRIVE_REMOVABLE,
+  DRIVE_CDROM,
+  DRIVE_RAMDISK,
+};
+
+/// Optical drives and card readers can take seconds to answer.
+const _readyProbeTimeout = Duration(seconds: 3);
+
+Future<List<RdpLocalVolume>> _windowsVolumes() => windowsRdpVolumes(
+  mask: GetLogicalDrives(),
+  driveType: _driveType,
+  ready: _probeReady,
+);
+
+/// Drive letters in [mask] (bit 0 is A) whose [driveType] is mapped
+/// automatically, each named by its letter so the server shows `\\tsclient\C`.
+/// [ready] is probed for all of them at once; a probe that fails or takes
+/// longer than [timeout] counts as not ready.
+@visibleForTesting
+Future<List<RdpLocalVolume>> windowsRdpVolumes({
+  required int mask,
+  required int Function(String root) driveType,
+  required Future<bool> Function(String root) ready,
+  Duration timeout = _readyProbeTimeout,
+}) {
+  final probes = <Future<RdpLocalVolume>>[];
+  for (var i = 0; i < 26; i++) {
+    if (mask & (1 << i) == 0) continue;
+    final letter = String.fromCharCode(65 + i);
+    final root = '$letter:\\';
+    if (!_autoDriveTypes.contains(driveType(root))) continue;
+    probes.add(
+      Future.sync(() => ready(root))
+          .timeout(timeout, onTimeout: () => false)
+          .catchError((Object _) => false)
+          .then(
+            (ready) => RdpLocalVolume(name: letter, path: root, ready: ready),
+          ),
+    );
+  }
+  return Future.wait(probes);
+}
+
+/// GetDriveType reads no media and never shows a dialog.
+int _driveType(String root) {
+  final native = root.toNativeUtf16(allocator: calloc);
+  try {
+    return GetDriveType(native);
+  } finally {
+    calloc.free(native);
+  }
+}
+
+/// The probe runs on its own isolate (only [root] is sent), so a drive that
+/// hangs never blocks the UI.
+Future<bool> _probeReady(String root) =>
+    Isolate.run(() => windowsVolumeReady(root));
+
+/// Whether [root] has readable media. The critical-error dialog ("There is
+/// no disk in the drive") is suppressed for the calling thread only and the
+/// previous mode is restored afterwards, so a card reader without media
+/// never shows a system dialog.
+bool windowsVolumeReady(String root) {
+  final path = root.toNativeUtf16(allocator: calloc);
+  final previous = calloc<Uint32>();
+  try {
+    final changed =
+        SetThreadErrorMode(
+          SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX,
+          previous,
+        ) !=
+        0;
+    try {
+      return GetVolumeInformation(
+            path,
+            nullptr,
+            0,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            0,
+          ) !=
+          0;
+    } finally {
+      if (changed) SetThreadErrorMode(previous.value, nullptr);
+    }
+  } finally {
+    calloc.free(previous);
+    calloc.free(path);
+  }
 }

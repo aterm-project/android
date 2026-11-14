@@ -8057,7 +8057,7 @@ abstract class AppLocalizations {
   /// No description provided for @redirectedFolders.
   ///
   /// In en, this message translates to:
-  /// **'Redirected folders'**
+  /// **'Additional mapped folders'**
   String get redirectedFolders;
 
   /// No description provided for @remoteAudio.
@@ -29182,6 +29182,78 @@ abstract class AppLocalizations {
   /// **'This choice applies now, but could not be saved. Try again.'**
   String get desktopKeyboardSaveFailed;
 
+  /// No description provided for @keyboardCaptureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full keyboard mapping'**
+  String get keyboardCaptureTitle;
+
+  /// No description provided for @keyboardCaptureOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get keyboardCaptureOff;
+
+  /// No description provided for @keyboardCaptureFullscreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Only in full screen'**
+  String get keyboardCaptureFullscreen;
+
+  /// No description provided for @keyboardCaptureFocused.
+  ///
+  /// In en, this message translates to:
+  /// **'When the session is focused'**
+  String get keyboardCaptureFocused;
+
+  /// No description provided for @keyboardCaptureWindowsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The Windows key, Alt+Tab, Ctrl+Esc, Alt+F4, Print Screen and other system shortcuts go to the remote computer while the remote desktop has keyboard focus and the pointer is over it. Move the pointer off the remote desktop to use them locally.'**
+  String get keyboardCaptureWindowsDescription;
+
+  /// No description provided for @keyboardCaptureMacDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Command+Tab, Command+Space, Control+arrow keys and other system shortcuts go to the remote computer while the remote desktop has keyboard focus and the pointer is over it. Move the pointer off the remote desktop to use them locally.'**
+  String get keyboardCaptureMacDescription;
+
+  /// No description provided for @keyboardCaptureAndroidDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Where Android allows it, system shortcuts from a hardware keyboard, such as the Meta key and Alt+Tab, go to the remote computer while Atermius is the active front window and the remote desktop has focus. Home, Recents and other reserved keys always stay on this device.'**
+  String get keyboardCaptureAndroidDescription;
+
+  /// No description provided for @keyboardCaptureIosDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab, Space and arrow-key combinations from a hardware keyboard go to the remote computer, even where keyboard navigation would use them, while Atermius is the active window and the remote desktop has focus. iPadOS shortcuts such as Command+Tab, Command+Space, Command+H, the Globe key and screenshots always stay on this device.'**
+  String get keyboardCaptureIosDescription;
+
+  /// No description provided for @keyboardCaptureCtrlAltDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Press Ctrl+Alt+End to send Ctrl+Alt+Delete. Ctrl+Alt+Home opens the session menu.'**
+  String get keyboardCaptureCtrlAltDelete;
+
+  /// No description provided for @keyboardCapturePermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'macOS needs Accessibility access before Atermius can capture system shortcuts. Allow Atermius in System Settings › Privacy & Security › Accessibility.'**
+  String get keyboardCapturePermissionRequired;
+
+  /// No description provided for @keyboardCaptureGrantPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Accessibility access'**
+  String get keyboardCaptureGrantPermission;
+
+  /// No description provided for @keyboardCaptureUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Atermius can’t capture system shortcuts on this device.'**
+  String get keyboardCaptureUnsupported;
+
   /// No description provided for @rdpAddDisk.
   ///
   /// In en, this message translates to:
@@ -29209,7 +29281,7 @@ abstract class AppLocalizations {
   /// No description provided for @rdpStoragePermissionRequired.
   ///
   /// In en, this message translates to:
-  /// **'To map a disk or folder, allow Atermius to access files in Android Settings, then try again. Only folders added to this host are shared.'**
+  /// **'To map a disk or folder, allow Atermius to access files in Android Settings, then try again.'**
   String get rdpStoragePermissionRequired;
 
   /// No description provided for @rdpStoragePickerFailed.
@@ -29241,6 +29313,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connect to the remote session again to apply mapping changes.'**
   String get rdpMappingReconnect;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Map local disks (\\\\tsclient)'**
+  String get rdpMapLocalDisks;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to this device only.'**
+  String get rdpMapLocalDisksThisDevice;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Will map: {names}'**
+  String rdpMapLocalDisksWillMap(String names);
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'No local disk is available right now.'**
+  String get rdpMapLocalDisksNone;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Mapping this device’s storage requires All files access.'**
+  String get rdpMapLocalDisksNeedsAccess;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow All files access'**
+  String get rdpGrantFileAccess;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **', '**
+  String get rdpListSeparator;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Local disks {names} are mapped to the remote desktop (\\\\tsclient). To stop this, turn off “Map local disks” when editing the host.'**
+  String rdpLocalDisksMapped(String names);
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'This device’s storage isn’t mapped because All files access is off. Allow it under “Map local disks” when editing the host, or turn mapping off there.'**
+  String get rdpLocalDisksNeedAccess;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped local disks that aren’t ready: {names}'**
+  String rdpLocalDisksUnavailable(String names);
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped folders whose paths belong to another device’s operating system: {names}'**
+  String rdpDrivesFromOtherDevice(String names);
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'A connection maps at most {count} disks and folders. Not mapped: {names}'**
+  String rdpDrivesLeftOut(int count, String names);
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'This choice applies in this window but couldn’t be saved on this device. Try again.'**
+  String get rdpMapLocalDisksSaveFailed;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved disk-mapping choices on this device couldn’t be read, so local disks aren’t mapped until they can be.'**
+  String get rdpMapLocalDisksUnreadable;
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped folders whose paths are too long to map (over 259 bytes): {names}'**
+  String rdpDrivesPathTooLong(String names);
+
+  /// RDP local disk mapping.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder’s path is too long to map (over 259 bytes). Choose a folder with a shorter path.'**
+  String get rdpFolderPathTooLong;
 
   /// No description provided for @keybarShiftGuidance.
   ///

@@ -3677,7 +3677,7 @@
   "@printers": {},
   "rdpOptions": "RDP options",
   "@rdpOptions": {},
-  "redirectedFolders": "Redirected folders",
+  "redirectedFolders": "Additional mapped folders",
   "@redirectedFolders": {},
   "remoteAudio": "Remote audio",
   "@remoteAudio": {},
@@ -15143,6 +15143,18 @@
   "desktopKeyboardOverlayDescription": "Show the keyboard and special keys over the desktop without changing its resolution or scaling.",
   "desktopKeyboardResizeDescription": "Shrink the desktop to the space above the keyboard. Window-following sessions also update the remote resolution.",
   "desktopKeyboardSaveFailed": "This choice applies now, but could not be saved. Try again.",
+  "keyboardCaptureTitle": "Full keyboard mapping",
+  "keyboardCaptureOff": "Off",
+  "keyboardCaptureFullscreen": "Only in full screen",
+  "keyboardCaptureFocused": "When the session is focused",
+  "keyboardCaptureWindowsDescription": "The Windows key, Alt+Tab, Ctrl+Esc, Alt+F4, Print Screen and other system shortcuts go to the remote computer while the remote desktop has keyboard focus and the pointer is over it. Move the pointer off the remote desktop to use them locally.",
+  "keyboardCaptureMacDescription": "Command+Tab, Command+Space, Control+arrow keys and other system shortcuts go to the remote computer while the remote desktop has keyboard focus and the pointer is over it. Move the pointer off the remote desktop to use them locally.",
+  "keyboardCaptureAndroidDescription": "Where Android allows it, system shortcuts from a hardware keyboard, such as the Meta key and Alt+Tab, go to the remote computer while Atermius is the active front window and the remote desktop has focus. Home, Recents and other reserved keys always stay on this device.",
+  "keyboardCaptureIosDescription": "Tab, Space and arrow-key combinations from a hardware keyboard go to the remote computer, even where keyboard navigation would use them, while Atermius is the active window and the remote desktop has focus. iPadOS shortcuts such as Command+Tab, Command+Space, Command+H, the Globe key and screenshots always stay on this device.",
+  "keyboardCaptureCtrlAltDelete": "Press Ctrl+Alt+End to send Ctrl+Alt+Delete. Ctrl+Alt+Home opens the session menu.",
+  "keyboardCapturePermissionRequired": "macOS needs Accessibility access before Atermius can capture system shortcuts. Allow Atermius in System Settings › Privacy & Security › Accessibility.",
+  "keyboardCaptureGrantPermission": "Allow Accessibility access",
+  "keyboardCaptureUnsupported": "This version of Atermius can’t capture system shortcuts on this device.",
   "rdpAddDisk": "Add disk",
   "rdpChooseDisk": "Choose a disk",
   "rdpLocalStorage": "Local Storage",
@@ -15154,12 +15166,109 @@
       }
     }
   },
-  "rdpStoragePermissionRequired": "To map a disk or folder, allow Atermius to access files in Android Settings, then try again. Only folders added to this host are shared.",
+  "rdpStoragePermissionRequired": "To map a disk or folder, allow Atermius to access files in Android Settings, then try again.",
   "rdpStoragePickerFailed": "Could not choose a local folder. Try another folder on this device.",
   "rdpDriveMappingHelp": "Mapped disks and folders appear under \\\\tsclient in the remote session. Changes apply after reconnecting. Android requires file access permission for live disk mapping.",
   "rdpRenameMapping": "Rename mapping",
   "rdpMappingName": "Mapping name",
   "rdpMappingReconnect": "Connect to the remote session again to apply mapping changes.",
+  "@rdpMapLocalDisks": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpMapLocalDisks": "Map local disks (\\\\tsclient)",
+  "@rdpMapLocalDisksThisDevice": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpMapLocalDisksThisDevice": "Applies to this device only.",
+  "@rdpMapLocalDisksWillMap": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    },
+    "description": "RDP local disk mapping."
+  },
+  "rdpMapLocalDisksWillMap": "Will map: {names}",
+  "@rdpMapLocalDisksNone": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpMapLocalDisksNone": "No local disk is available right now.",
+  "@rdpMapLocalDisksNeedsAccess": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpMapLocalDisksNeedsAccess": "Mapping this device’s storage requires All files access.",
+  "@rdpGrantFileAccess": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpGrantFileAccess": "Allow All files access",
+  "@rdpListSeparator": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpListSeparator": ", ",
+  "@rdpLocalDisksMapped": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    },
+    "description": "RDP local disk mapping."
+  },
+  "rdpLocalDisksMapped": "Local disks {names} are mapped to the remote desktop (\\\\tsclient). To stop this, turn off “Map local disks” when editing the host.",
+  "@rdpLocalDisksNeedAccess": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpLocalDisksNeedAccess": "This device’s storage isn’t mapped because All files access is off. Allow it under “Map local disks” when editing the host, or turn mapping off there.",
+  "@rdpLocalDisksUnavailable": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    },
+    "description": "RDP local disk mapping."
+  },
+  "rdpLocalDisksUnavailable": "Skipped local disks that aren’t ready: {names}",
+  "@rdpDrivesFromOtherDevice": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    },
+    "description": "RDP local disk mapping."
+  },
+  "rdpDrivesFromOtherDevice": "Skipped folders whose paths belong to another device’s operating system: {names}",
+  "@rdpDrivesLeftOut": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    },
+    "description": "RDP local disk mapping."
+  },
+  "rdpDrivesLeftOut": "A connection maps at most {count} disks and folders. Not mapped: {names}",
+  "@rdpMapLocalDisksSaveFailed": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpMapLocalDisksSaveFailed": "This choice applies in this window but couldn’t be saved on this device. Try again.",
+  "@rdpMapLocalDisksUnreadable": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpMapLocalDisksUnreadable": "The saved disk-mapping choices on this device couldn’t be read, so local disks aren’t mapped until they can be.",
+  "@rdpDrivesPathTooLong": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    },
+    "description": "RDP local disk mapping."
+  },
+  "rdpDrivesPathTooLong": "Skipped folders whose paths are too long to map (over 259 bytes): {names}",
+  "@rdpFolderPathTooLong": {
+    "description": "RDP local disk mapping."
+  },
+  "rdpFolderPathTooLong": "This folder’s path is too long to map (over 259 bytes). Choose a folder with a shorter path.",
   "keybarShiftGuidance": "Shift: tap for the next key only, double-tap to lock",
   "lockShiftModifier": "Lock Shift modifier",
   "releaseModifiers": "Release Control, Alt and Shift",

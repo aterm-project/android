@@ -4,6 +4,7 @@ import '../platform/fullscreen.dart';
 import '../domain/models.dart';
 import 'desktop_mobile_controls.dart';
 import 'desktop_keyboard_mode.dart';
+import 'keyboard_capture.dart';
 import 'desktop_touch_input.dart';
 import 'desktop_direct_touch.dart';
 import '../ui/app_motion.dart';
@@ -81,6 +82,31 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
 
   final _focus = FocusNode();
   final Map<PhysicalKeyboardKey, int> _pressed = {};
+
+  /// Full keyboard mapping: OS-reserved shortcuts swallowed by the runner
+  /// while this view is the focus-rule target arrive as keysyms here.
+  late final KeyboardCaptureTarget _capture;
+  KeyboardCaptureSend _captureSend(DesktopSession receiver) => (sym, down) {
+    receiver.send(['key', sym, down ? 1 : 0]);
+    // Like [_key]: a released non-modifier consumes latched keybar modifiers.
+    const modifiers = {
+      0xffe1,
+      0xffe2,
+      0xffe3,
+      0xffe4,
+      0xffe9,
+      0xffea,
+      0xffeb,
+      0xffec,
+    };
+    if (!down && !modifiers.contains(sym)) {
+      _mobile.currentState?.consumeModifiers();
+    }
+  };
+
+  /// Only a connected session takes the system shortcuts away from the OS.
+  void _captureSessionChanged() =>
+      _capture.update(enabled: session.state == 'connected');
   int _buttons = 0;
   Size? _lastSize;
   int _generation = -1;
@@ -142,6 +168,15 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
       send: _sendMouse,
     );
     _focus.addListener(_focusChanged);
+    _capture = KeyboardCaptureController.instance.register(
+      _captureSend(session),
+      onMenuShortcut: () {
+        _release();
+        _menu.currentState?.showButtonMenu();
+      },
+    );
+    session.addListener(_captureSessionChanged);
+    _captureSessionChanged();
     session.onNotice = _showNotice;
     session.onFilesSaved = _filesSaved;
     session.addListener(_certificateChanged);
@@ -313,6 +348,10 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
       _keyboardOpen = false;
       DesktopKeyboardController.instance.keyboardVisible(this, false);
       _release(oldWidget.session);
+      _capture.retarget(_captureSend(session));
+      oldWidget.session.removeListener(_captureSessionChanged);
+      session.addListener(_captureSessionChanged);
+      _captureSessionChanged();
       oldWidget.session.removeListener(_certificateChanged);
       _removeCertificateDialog();
       if (oldWidget.session.onNotice == _showNotice)
@@ -337,6 +376,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
   }
 
   void _focusChanged() {
+    _capture.update(focused: _focus.hasFocus);
     if (!_focus.hasFocus) {
       DesktopKeyboardController.instance.keyboardVisible(
         this,
@@ -367,6 +407,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
   @override
   void dispose() {
     DesktopKeyboardController.instance.keyboardVisible(this, false);
+    session.removeListener(_captureSessionChanged);
     session.removeListener(_certificateChanged);
     _removeCertificateDialog();
     if (session.onNotice == _showNotice) session.onNotice = null;
@@ -374,6 +415,7 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _directTouch.reset();
     _touch.dispose();
+    _capture.unregister();
     _release();
     _resizeTimer?.cancel();
     _focus.dispose();
@@ -406,6 +448,28 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
         HardwareKeyboard.instance.isControlPressed &&
         HardwareKeyboard.instance.isAltPressed) {
       return KeyEventResult.handled; // repeat of the menu shortcut
+    }
+    final held = _pressed[event.physicalKey];
+    if (event is KeyRepeatEvent && held != null) {
+      // Auto-repeat keeps the keysym of the original press whatever the
+      // modifiers are now, so the release always matches it remotely. The
+      // Delete sent for Ctrl+Alt+End is never repeated.
+      if (held != 0xffff || event.logicalKey != LogicalKeyboardKey.end) {
+        session.send(['key', held, 1]);
+      }
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.end &&
+        event is! KeyUpEvent &&
+        _capture.controlAndAltHeld) {
+      // Ctrl+Alt+Delete cannot be captured on Windows: Ctrl+Alt+End sends
+      // Delete while Ctrl+Alt stay held remotely (mstsc convention). The
+      // End release then releases Delete.
+      if (event is KeyDownEvent) {
+        _pressed[event.physicalKey] = 0xffff;
+        session.send(['key', 0xffff, 1]);
+      }
+      return KeyEventResult.handled;
     }
     final mapped = desktopKeysym(event);
     if (event is KeyUpEvent) {
@@ -767,8 +831,14 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
                       onKeyEvent: _key,
                       child: MouseRegion(
                         cursor: SystemMouseCursors.none,
-                        onEnter: (_) => setState(() => _pointerInside = true),
-                        onExit: (_) => setState(() => _pointerInside = false),
+                        onEnter: (_) {
+                          _capture.update(hovered: true);
+                          setState(() => _pointerInside = true);
+                        },
+                        onExit: (_) {
+                          _capture.update(hovered: false);
+                          setState(() => _pointerInside = false);
+                        },
                         child: Listener(
                           onPointerDown: mouse,
                           onPointerUp: mouse,
@@ -838,7 +908,10 @@ class DesktopViewState extends State<DesktopView> with WidgetsBindingObserver {
                             const SizedBox(height: 12),
                             FilledButton.icon(
                               key: const ValueKey('desktop_restore_connection'),
-                              onPressed: session.reconnect,
+                              // The session resolves the Host saved now
+                              // (DesktopSession.latestHost), not the one it
+                              // was first opened with.
+                              onPressed: () => session.reconnect(),
                               icon: const Icon(Icons.refresh),
                               label: Text(context.l10n.restoreConnection),
                             ),

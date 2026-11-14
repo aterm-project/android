@@ -22,6 +22,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Remote-desktop keyboard full mapping (Android 16 QPR2+): while a
+         remote-desktop page is focused in the first window, system shortcuts
+         such as Meta and Alt+Tab go to the remote computer. Normal permission
+         granted at install; Home, Overview and Power stay with the system and
+         a long Escape press ends capture. -->
+    <uses-permission android:name="android.permission.CAPTURE_KEYBOARD" />
     <application
         android:label="Atermius"
         android:name="${applicationName}"

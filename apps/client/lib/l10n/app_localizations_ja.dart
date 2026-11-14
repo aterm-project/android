@@ -4985,7 +4985,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rdpOptions => 'RDP オプション';
 
   @override
-  String get redirectedFolders => 'リダイレクトするフォルダー';
+  String get redirectedFolders => '追加で共有するフォルダー';
 
   @override
   String get remoteAudio => 'リモートオーディオ';
@@ -17399,6 +17399,49 @@ class AppLocalizationsJa extends AppLocalizations {
       '今回の選択は適用されましたが、保存できませんでした。もう一度お試しください。';
 
   @override
+  String get keyboardCaptureTitle => 'キーボードの完全マッピング';
+
+  @override
+  String get keyboardCaptureOff => 'オフ';
+
+  @override
+  String get keyboardCaptureFullscreen => '全画面表示のときのみ';
+
+  @override
+  String get keyboardCaptureFocused => 'セッションにフォーカスがあるとき';
+
+  @override
+  String get keyboardCaptureWindowsDescription =>
+      'リモートデスクトップにキーボードフォーカスがあり、ポインターがその上にある間は、Windows キー、Alt+Tab、Ctrl+Esc、Alt+F4、Print Screen などのシステムショートカットをリモートコンピューターに送信します。ローカルで使うには、ポインターをリモートデスクトップの外に移動してください。';
+
+  @override
+  String get keyboardCaptureMacDescription =>
+      'リモートデスクトップにキーボードフォーカスがあり、ポインターがその上にある間は、Command+Tab、Command+Space、Control+矢印キーなどのシステムショートカットをリモートコンピューターに送信します。ローカルで使うには、ポインターをリモートデスクトップの外に移動してください。';
+
+  @override
+  String get keyboardCaptureAndroidDescription =>
+      'Android が対応している場合、Atermius が最前面のアクティブなウィンドウで、リモートデスクトップにフォーカスがある間は、ハードウェアキーボードの Meta キーや Alt+Tab などのシステムショートカットをリモートコンピューターに送信します。ホーム、最近使ったアプリなどの予約済みキーは常にこのデバイスで処理されます。';
+
+  @override
+  String get keyboardCaptureIosDescription =>
+      'Atermius がアクティブなウィンドウで、リモートデスクトップにフォーカスがある間は、ハードウェアキーボードの Tab、Space、矢印キーの組み合わせを、キーボード操作で使われる場合でもリモートコンピューターに送信します。Command+Tab、Command+Space、Command+H、地球儀キー、スクリーンショットなどの iPadOS ショートカットは常にこのデバイスで処理されます。';
+
+  @override
+  String get keyboardCaptureCtrlAltDelete =>
+      'Ctrl+Alt+End で Ctrl+Alt+Delete を送信します。Ctrl+Alt+Home でセッションメニューを開きます。';
+
+  @override
+  String get keyboardCapturePermissionRequired =>
+      'システムショートカットを取得するには、macOS のアクセシビリティ権限が必要です。「システム設定 › プライバシーとセキュリティ › アクセシビリティ」で Atermius を許可してください。';
+
+  @override
+  String get keyboardCaptureGrantPermission => 'アクセシビリティを許可';
+
+  @override
+  String get keyboardCaptureUnsupported =>
+      'このバージョンの Atermius では、このデバイスでシステムショートカットを取得できません。';
+
+  @override
   String get rdpAddDisk => 'ドライブを追加';
 
   @override
@@ -17414,7 +17457,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rdpStoragePermissionRequired =>
-      'ドライブまたはフォルダーを共有するには、Android 設定で Atermius のファイルアクセスを許可してから再試行してください。このホストに追加したフォルダーだけを共有します。';
+      'ドライブまたはフォルダーを共有するには、Android 設定で Atermius のファイルアクセスを許可してから再試行してください。';
 
   @override
   String get rdpStoragePickerFailed =>
@@ -17432,6 +17475,71 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rdpMappingReconnect => '共有設定の変更を反映するにはリモートセッションに再接続してください。';
+
+  @override
+  String get rdpMapLocalDisks => 'ローカルディスクを共有（\\\\tsclient）';
+
+  @override
+  String get rdpMapLocalDisksThisDevice => 'このデバイスでのみ有効です。';
+
+  @override
+  String rdpMapLocalDisksWillMap(String names) {
+    return '共有するディスク：$names';
+  }
+
+  @override
+  String get rdpMapLocalDisksNone => '現在共有できるローカルディスクはありません。';
+
+  @override
+  String get rdpMapLocalDisksNeedsAccess =>
+      'このデバイスのストレージを共有するには「すべてのファイルへのアクセス」の許可が必要です。';
+
+  @override
+  String get rdpGrantFileAccess => 'すべてのファイルへのアクセスを許可';
+
+  @override
+  String get rdpListSeparator => '、';
+
+  @override
+  String rdpLocalDisksMapped(String names) {
+    return 'ローカルディスク $names をリモートデスクトップ（\\\\tsclient）に共有しました。ホストの編集画面で「ローカルディスクを共有」をオフにすると停止できます。';
+  }
+
+  @override
+  String get rdpLocalDisksNeedAccess =>
+      '「すべてのファイルへのアクセス」が許可されていないため、このデバイスのストレージは共有されていません。ホストの編集画面の「ローカルディスクを共有」で許可するか、共有をオフにしてください。';
+
+  @override
+  String rdpLocalDisksUnavailable(String names) {
+    return '準備ができていないローカルディスクをスキップしました：$names';
+  }
+
+  @override
+  String rdpDrivesFromOtherDevice(String names) {
+    return '別のデバイスの OS のパスを持つフォルダーをスキップしました：$names';
+  }
+
+  @override
+  String rdpDrivesLeftOut(int count, String names) {
+    return '1 回の接続で共有できるディスクとフォルダーは最大 $count 個です。共有されなかったもの：$names';
+  }
+
+  @override
+  String get rdpMapLocalDisksSaveFailed =>
+      'この選択はこのウィンドウでは有効ですが、このデバイスに保存できませんでした。もう一度お試しください。';
+
+  @override
+  String get rdpMapLocalDisksUnreadable =>
+      'このデバイスに保存されたディスク共有の設定を読み取れないため、読み取れるまでローカルディスクは共有されません。';
+
+  @override
+  String rdpDrivesPathTooLong(String names) {
+    return 'パスが長すぎる（259 バイト超）ため共有できないフォルダーをスキップしました：$names';
+  }
+
+  @override
+  String get rdpFolderPathTooLong =>
+      'このフォルダーのパスは長すぎるため共有できません（259 バイト超）。より短いパスのフォルダーを選択してください。';
 
   @override
   String get keybarShiftGuidance => 'Shift：タップで次のキーのみ有効、ダブルタップで固定';

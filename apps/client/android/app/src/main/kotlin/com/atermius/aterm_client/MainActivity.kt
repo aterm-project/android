@@ -23,17 +23,38 @@ class MainActivity : FlutterActivity() {
     private var resumed = false
     private var rdpStorage: RdpStorageAccess? = null
     private var externalFileOpener: ExternalFileOpener? = null
+    private var keyboardCapture: KeyboardCapture? = null
+    private var windowFocused = false
+    private var topResumed = false
 
     override fun onResume() {
         super.onResume()
         resumed = true
+        updateFirstWindow()
         if (fullscreenRequested) applyFullscreen(true)
         // Notification settings may have changed while the app was away
         // (e.g. in system settings); restore or downgrade MCP protection.
         McpForegroundLease.recheckNotifications(applicationContext)
         SshSessionKeepalive.recheckNotifications(applicationContext)
     }
-    override fun onPause() { resumed = false; super.onPause() }
+    override fun onPause() { resumed = false; updateFirstWindow(); super.onPause() }
+
+    override fun onTopResumedActivityChanged(isTopResumedActivity: Boolean) {
+        super.onTopResumedActivityChanged(isTopResumedActivity)
+        topResumed = isTopResumedActivity
+        updateFirstWindow()
+    }
+
+    /**
+     * Android's "first window" for remote-desktop keyboard full mapping: this
+     * activity holds window focus and is resumed and, on API 29+ where split
+     * screen, freeform, DeX and foldables resume several activities, also the
+     * top-resumed one.
+     */
+    private fun firstWindow() =
+        windowFocused && resumed && (Build.VERSION.SDK_INT < 29 || topResumed)
+
+    private fun updateFirstWindow() { keyboardCapture?.focusChanged(firstWindow()) }
 
     // SSH session keepalive follows visibility (onStart/onStop), not focus:
     // IME, permission and picker dialogs only pause the activity.
@@ -78,6 +99,7 @@ class MainActivity : FlutterActivity() {
         loadRdpEngine()
         rdpStorage = RdpStorageAccess(this, flutterEngine.dartExecutor.binaryMessenger)
         externalFileOpener = ExternalFileOpener(this, flutterEngine.dartExecutor.binaryMessenger)
+        keyboardCapture = KeyboardCapture(this, flutterEngine.dartExecutor.binaryMessenger, firstWindow())
         fullscreenChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
             "atermius/fullscreen").also { channel ->
             channel.setMethodCallHandler { call, result ->
@@ -199,6 +221,8 @@ class MainActivity : FlutterActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
+        windowFocused = hasFocus
+        updateFirstWindow()
         if (hasFocus && fullscreenRequested) applyFullscreen(true)
     }
 
@@ -252,6 +276,9 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        // Ends any capture and Samsung Meta key request with the engine (onDestroy).
+        keyboardCapture?.close()
+        keyboardCapture = null
         externalFileOpener?.close()
         externalFileOpener = null
         rdpStorage?.close()

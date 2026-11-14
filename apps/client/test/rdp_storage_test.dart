@@ -75,6 +75,55 @@ void main() {
       await validateRdpDriveConfig('version=1\nclipboard_text=1\n');
     },
   );
+  test('the disk picker offers only usable Android volumes', () {
+    // Android now reports volumes that are not mounted too; the picker
+    // (localRdpStorageRoots) and the connect-time list share one filter.
+    final raw = <Object?>[
+      {
+        'path': '/storage/emulated/0',
+        'label': 'Internal shared storage',
+        'primary': true,
+        'state': 'mounted',
+      },
+      {'path': '', 'uuid': 'AB-CD', 'state': 'unmounted', 'readable': false},
+      {'path': '/storage/AB-CD', 'uuid': 'AB-CD', 'state': 'mounted_ro'},
+      {'path': '/storage/EF-01', 'state': 'checking'},
+      {'path': '/storage/unreadable', 'state': 'mounted', 'readable': false},
+      {'path': '/storage/odd', 'state': 1},
+      {'path': '/storage/legacy', 'label': 7}, // runner without state
+      {'path': 42},
+      'garbage',
+    ];
+    final roots = rdpStorageRootsFrom(raw);
+    expect(roots.map((root) => root.path), [
+      '/storage/emulated/0',
+      '/storage/AB-CD',
+      '/storage/legacy',
+    ]);
+    expect(roots.map((root) => root.label), [
+      'Internal shared storage',
+      '',
+      '',
+    ]);
+    expect(roots.map((root) => root.primary), [true, false, false]);
+    expect(
+      rdpAndroidVolumesFrom(raw)
+          .where((volume) => volume.ready)
+          .map((volume) => volume.path),
+      roots.map((root) => root.path),
+    );
+    expect(rdpStorageRootsFrom(null), isEmpty);
+  });
+  testWidgets('a second Windows root of the same letter gets a unique name', (
+    tester,
+  ) async {
+    RdpSettings? value;
+    await mount(tester, changed: (v) => value = v, disk: (_) async => 'c:/');
+    await press(tester, 'add_disk');
+    await press(tester, 'add_disk');
+    expect(value!.drives.map((d) => d.name), ['C', 'C 2']);
+    expect(value!.validate(), isNull);
+  });
   testWidgets(
     'non-Latin folder names get valid unique share names; disk roots get useful names',
     (tester) async {
@@ -136,12 +185,12 @@ void main() {
     },
   );
   testWidgets(
-    'Windows root maps as Drive C and can be renamed through the actual dialog',
+    'Windows root maps as C (\\\\tsclient\\C) and can be renamed through the actual dialog',
     (tester) async {
       RdpSettings? value;
       await mount(tester, changed: (v) => value = v, disk: (_) async => 'C:\\');
       await press(tester, 'add_disk');
-      expect(value!.drives.single.name, 'Drive C');
+      expect(value!.drives.single.name, 'C');
       await tester.ensureVisible(find.byTooltip(currentL10n.rdpRenameMapping));
       await tester.tap(find.byTooltip(currentL10n.rdpRenameMapping));
       await tester.pumpAndSettle();
@@ -153,7 +202,7 @@ void main() {
       await tester.tap(find.widgetWithText(TextButton, currentL10n.save));
       await tester.pump();
       expect(find.text(currentL10n.driveNameMustBe131), findsOneWidget);
-      expect(value!.drives.single.name, 'Drive C');
+      expect(value!.drives.single.name, 'C');
       await tester.enterText(field, 'Work');
       await tester.tap(find.widgetWithText(TextButton, currentL10n.save));
       await tester.pumpAndSettle();

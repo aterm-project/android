@@ -19,6 +19,7 @@ import 'guacamole_protocol.dart';
 import 'desktop_resolution.dart';
 import 'local/local_desktop.dart';
 import 'rdp_features.dart';
+import 'rdp_local_drives.dart';
 import 'rdp_settings.dart';
 import '../l10n/l10n.dart';
 
@@ -36,7 +37,20 @@ class DesktopSession extends ChangeNotifier {
     this.directConnectionForTesting,
     this.saveDisplaySettings,
     this.reconnectAllowed,
+    this.latestHost,
+    this.localDrives,
   });
+
+  /// Latest saved revision of a Host by id; null when it no longer exists or
+  /// the caller cannot tell. "Restore connection" and recovery use it, so
+  /// settings saved after the first connect (such as disk mappings) apply.
+  final HostRecord? Function(String id)? latestHost;
+
+  /// Device-local "Map local disks" choices and this device's volumes;
+  /// [RdpLocalDrivesController.instance] when null.
+  final RdpLocalDrivesController? localDrives;
+  RdpLocalDrivesController get _localDrives =>
+      localDrives ?? RdpLocalDrivesController.instance;
 
   /// Persists in-session display changes to the Host (optional). Must apply
   /// revision checks like certificate persistence; failures keep the change
@@ -70,12 +84,17 @@ class DesktopSession extends ChangeNotifier {
   bool _closed = false;
   bool _disposed = false, _reconnecting = false;
   Future<void>? _closing;
-  Future<void> Function()? _reconnect;
+  Future<void> Function(HostRecord? latest)? _reconnect;
+  String? _reconnectHostId;
   final bool Function()? reconnectAllowed;
   bool get canReconnect =>
       !_disposed && _reconnect != null && (reconnectAllowed?.call() ?? true);
 
-  Future<void> reconnect() async {
+  /// Opens the session again with the latest saved revision of its Host:
+  /// [host] when the caller already resolved it, otherwise [latestHost].
+  /// Without either it replays the Host of the previous connect. An
+  /// in-session display choice of the same Host carries over.
+  Future<void> reconnect({HostRecord? host}) async {
     if (!canReconnect || _reconnecting || state != 'disconnected') return;
     _reconnecting = true;
     try {
@@ -87,10 +106,28 @@ class DesktopSession extends ChangeNotifier {
       state = 'connecting';
       displayGeneration++;
       notifyListeners();
-      await _reconnect!();
+      await _reconnect!(_latestRevision(host));
     } finally {
       _reconnecting = false;
     }
+  }
+
+  /// Only another revision of the same desktop Host replaces the one this
+  /// session was opened with.
+  HostRecord? _latestRevision(HostRecord? given) {
+    final id = _reconnectHostId;
+    if (id == null) return null;
+    HostRecord? latest = given;
+    if (latest == null) {
+      try {
+        latest = latestHost?.call(id);
+      } on Object {
+        latest = null;
+      }
+    }
+    return latest != null && latest.id == id && !latest.protocol.isTerminal
+        ? latest
+        : null;
   }
 
   DirectDesktopConnection? _direct;
@@ -159,7 +196,7 @@ class DesktopSession extends ChangeNotifier {
     }
     if (host.protocol == HostProtocol.rdp) {
       if ((rdpConfig?.monitors.length ?? 0) > 1) {
-        onNotice?.call(currentL10n.inAMultiMonitorSessionThe);
+        _notice(currentL10n.inAMultiMonitorSessionThe);
         return;
       }
       _rdp = fixed
@@ -173,7 +210,7 @@ class DesktopSession extends ChangeNotifier {
         if (serverResize == true) {
           send(['size', width, height, true]);
         } else {
-          onNotice?.call(currentL10n.theServerDoesntOfferDynamicResolution);
+          _notice(currentL10n.theServerDoesntOfferDynamicResolution);
         }
       }
     } else {
@@ -187,11 +224,11 @@ class DesktopSession extends ChangeNotifier {
             )
           : _vnc.copyWith(resolution: VncResolutionMode.fitWindow);
       if (serverResize != true && !server) {
-        onNotice?.call(currentL10n.thisVncServerDoesntSupportResizing);
+        _notice(currentL10n.thisVncServerDoesntSupportResizing);
       } else if (fixed) {
         send(['size', width, height, true]);
       } else if (server) {
-        onNotice?.call(currentL10n.stoppedRequestingAResizeTheServer);
+        _notice(currentL10n.stoppedRequestingAResizeTheServer);
       }
     }
     displayGeneration++;
@@ -222,7 +259,7 @@ class DesktopSession extends ChangeNotifier {
       );
       if (!_closed && saved.id == host.id) _host = saved;
     } catch (_) {
-      onNotice?.call(currentL10n.theResolutionSettingAppliesToThis);
+      _notice(currentL10n.theResolutionSettingAppliesToThis);
     }
   }
 
@@ -231,7 +268,36 @@ class DesktopSession extends ChangeNotifier {
   bool get isDirect => _direct != null;
   String state = 'connecting';
   String? error;
-  ValueChanged<String>? onNotice;
+  ValueChanged<String>? _onNotice;
+  final _pendingNotices = <String>[];
+  bool _accessNoticeShown = false, _unreadableNoticeShown = false;
+
+  /// Shows a notice for this session. Notices raised before a view attaches
+  /// (a connect starts before DesktopView.initState runs) are kept and
+  /// replayed to the next handler once the current build has finished.
+  ValueChanged<String>? get onNotice => _onNotice;
+  set onNotice(ValueChanged<String>? value) {
+    _onNotice = value;
+    if (value == null || _pendingNotices.isEmpty) return;
+    final pending = List.of(_pendingNotices);
+    _pendingNotices.clear();
+    scheduleMicrotask(() {
+      for (final text in pending) {
+        _notice(text);
+      }
+    });
+  }
+
+  void _notice(String text) {
+    final handler = _onNotice;
+    if (handler != null) {
+      handler(text);
+      return;
+    }
+    if (_disposed) return;
+    if (_pendingNotices.length >= 8) _pendingNotices.removeAt(0);
+    _pendingNotices.add(text);
+  }
   RdpCertificateRequest? certificateRequest;
   bool savingCertificate = false;
   int _directAttempt = 0;
@@ -286,7 +352,8 @@ class DesktopSession extends ChangeNotifier {
   }
 
   Future<void> connect(ApiClient api, String deviceId, HostRecord host) async {
-    _reconnect = () => connect(api, deviceId, host);
+    _reconnectHostId = host.id;
+    _reconnect = (latest) => connect(api, deviceId, latest ?? host);
     try {
       if (host.protocol.isTerminal || host.validate() != null)
         throw const FormatException('Invalid desktop Host');
@@ -405,7 +472,11 @@ class DesktopSession extends ChangeNotifier {
   }
 
   Future<void> connectLocal(HostRecord host, {int? guacdPort}) async {
-    _reconnect = () => connectLocal(_host ?? host, guacdPort: guacdPort);
+    _reconnectHostId = host.id;
+    // A reconnect uses the latest saved revision when one is known; an
+    // in-session display change of the same Host still carries over below.
+    _reconnect = (latest) =>
+        connectLocal(latest ?? _host ?? host, guacdPort: guacdPort);
     // An explicit port remains available to the gateway integration tests and
     // existing Linux installations. Native UI sessions use direct transports.
     if (directConnectionForTesting == null &&
@@ -456,16 +527,21 @@ class DesktopSession extends ChangeNotifier {
       nativeTouch = false;
       lastResize = null;
       String config = '';
-      if (host.protocol == HostProtocol.rdp &&
-          directConnectionForTesting == null) {
+      if (host.protocol == HostProtocol.rdp) {
+        final testing = directConnectionForTesting != null;
         try {
-          config = _rdpConfigFor(host);
+          final built = await _rdpConfigFor(
+            host,
+            attempt,
+            features: testing ? rdpFeaturesForTesting : null,
+          );
+          // Closed or superseded while local disks were listed.
+          if (built == null) return;
+          if (!testing) config = built;
         } on FormatException catch (e) {
           _fail(currentL10n.invalidRdpOptionsMessage(e.message));
           return;
         }
-      } else if (host.protocol == HostProtocol.rdp) {
-        _rdpConfigFor(host, features: rdpFeaturesForTesting);
       }
       _direct =
           directConnectionForTesting?.call(host) ??
@@ -540,7 +616,7 @@ class DesktopSession extends ChangeNotifier {
                 DesktopResizeResult.unsupported =>
                   currentL10n.theServerDoesntSupportResizingOnly2,
               };
-              if (message != null) onNotice?.call(message);
+              if (message != null) _notice(message);
             }
             if (first &&
                 host.protocol == HostProtocol.vnc &&
@@ -557,14 +633,14 @@ class DesktopSession extends ChangeNotifier {
           } else if (event is DesktopFileTransfer) {
             transfer = event.finished ? null : event;
             if (event.error != null)
-              onNotice?.call(
+              _notice(
                 currentL10n.couldntSaveRemoteFilesError('${event.error}'),
               );
             final saved = event.savedPaths;
             if (saved != null) onFilesSaved?.call(saved);
             notifyListeners();
           } else if (event is DesktopNotice) {
-            onNotice?.call(event.text);
+            _notice(event.text);
           }
         },
         onError: (Object error) {
@@ -754,18 +830,53 @@ class DesktopSession extends ChangeNotifier {
   @visibleForTesting
   RdpFeatures? rdpFeaturesForTesting;
 
-  String _rdpConfigFor(HostRecord host, {RdpFeatures? features}) {
+  /// Native options for this attempt, or null when the attempt was closed or
+  /// superseded meanwhile.
+  Future<String?> _rdpConfigFor(
+    HostRecord host,
+    int attempt, {
+    RdpFeatures? features,
+  }) async {
     final settings = _rdp;
     _clipboardText = settings.clipboardText;
     final engine = features ?? rdpEngineFeatures();
     if (!engine.has(RdpFeatures.configV1)) {
       rdpConfig = null;
       if (settings != RdpSettings.defaults || RdpSettings.unreadable(host)) {
-        onNotice?.call(currentL10n.theInstalledRdpEngineDoesntSupport);
+        _notice(currentL10n.theInstalledRdpEngineDoesntSupport);
       }
       return '';
     }
-    final config = settings.toNativeConfig(
+    var effective = settings;
+    RdpDriveExpansion? expansion;
+    // Without the engine's drive channel no drive= line is sent at all (the
+    // native parser would reject the whole configuration).
+    if (engine.has(RdpFeatures.drive)) {
+      // Local disks become explicit drive= lines for this attempt only. They
+      // never enter [_rdp], which in-session display changes save back to
+      // the synchronized Host. The device-local switch is read again for
+      // every connect and reconnect.
+      final local = _localDrives;
+      var automatic = false, unreadable = false;
+      if (local.offered) {
+        await local.refresh();
+        automatic = local.enabled(host.id);
+        // Fails closed: stored choices that cannot be read map nothing.
+        unreadable = !automatic && local.unreadable;
+      }
+      expansion = await expandRdpDrives(
+        explicit: settings.drives,
+        automatic: automatic,
+        source: local.source,
+      );
+      if (_closed || attempt != _directAttempt) return null;
+      effective = settings.copyWith(drives: expansion.drives);
+      if (unreadable && !_unreadableNoticeShown) {
+        _unreadableNoticeShown = true;
+        _notice(currentL10n.rdpMapLocalDisksUnreadable);
+      }
+    }
+    final config = effective.toNativeConfig(
       features: engine,
       initialWidth: 1280,
       initialHeight: 800,
@@ -775,12 +886,45 @@ class DesktopSession extends ChangeNotifier {
           : null,
     );
     rdpConfig = config;
+    if (expansion != null) _driveNotices(host, expansion);
     if (config.unavailable.isNotEmpty) {
-      onNotice?.call(
+      _notice(
         currentL10n.thisClientCantProvideJoinThe(config.unavailable.join('、')),
       );
     }
     return config.text;
+  }
+
+  void _driveNotices(HostRecord host, RdpDriveExpansion expansion) {
+    final l10n = currentL10n;
+    String names(List<String> list) => list.join(l10n.rdpListSeparator);
+    if (expansion.otherDevice.isNotEmpty) {
+      _notice(l10n.rdpDrivesFromOtherDevice(names(expansion.otherDevice)));
+    }
+    if (expansion.tooLong.isNotEmpty) {
+      _notice(l10n.rdpDrivesPathTooLong(names(expansion.tooLong)));
+    }
+    final local = _localDrives;
+    if (expansion.mapped.isNotEmpty && !local.noticeShown(host.id)) {
+      _notice(l10n.rdpLocalDisksMapped(names(expansion.mapped)));
+      unawaited(local.markNoticeShown(host.id));
+    }
+    // Once per tab: every reconnect would otherwise repeat it.
+    if (expansion.accessRequired && !_accessNoticeShown) {
+      _accessNoticeShown = true;
+      _notice(l10n.rdpLocalDisksNeedAccess);
+    }
+    if (expansion.unavailable.isNotEmpty) {
+      _notice(l10n.rdpLocalDisksUnavailable(names(expansion.unavailable)));
+    }
+    if (expansion.leftOut.isNotEmpty) {
+      _notice(
+        l10n.rdpDrivesLeftOut(
+          RdpSettings.maxConnectionDrives,
+          names(expansion.leftOut),
+        ),
+      );
+    }
   }
 
   /// Offer local files/folders on the remote clipboard (user action).
@@ -866,6 +1010,7 @@ class DesktopSession extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     onNotice = null;
+    _pendingNotices.clear();
     onFilesSaved = null;
     unawaited(_frameUpdates.close());
     unawaited(close());
