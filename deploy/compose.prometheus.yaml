@@ -1,0 +1,55 @@
+# Opt-in Prometheus collector. Apply alongside compose.yaml after provisioning
+# a private host directory containing the one-line scrape credential.
+services:
+  server:
+    networks:
+      - default
+      - metrics
+
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    user: "65534:65534"
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.listen-address=0.0.0.0:9090
+    ports:
+      - "127.0.0.1:${ATERMIUS_PROMETHEUS_HOST_PORT:-9090}:9090"
+    volumes:
+      - type: bind
+        source: ./prometheus/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./prometheus/atermius-alerts.yml
+        target: /etc/prometheus/atermius-alerts.yml
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${ATERMIUS_PROMETHEUS_CREDENTIALS_HOST_DIR:?Set in deploy/.env}/"
+        target: /run/atermius-secrets
+        read_only: true
+        bind:
+          create_host_path: false
+      - prometheus-data:/prometheus
+    networks:
+      - default
+      - metrics
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+
+volumes:
+  prometheus-data:
+
+networks:
+  metrics:
+    internal: true

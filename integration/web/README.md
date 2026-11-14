@@ -1,8 +1,8 @@
 # Browser integration fixture reference
 
-[Setup the combined API/Web workspace](https://github.com/aterm-project/server/blob/main/docs/INTEGRATION.md)
+[Setup the combined API/Web workspace](../../docs/INTEGRATION.md)
 
-Commands and paths below assume the **assembled test workspace**, including both API source and the compiled frontend. They are not directly runnable from an API-only or Web-only checkout. Historical acceptance counts belong to their named version/run; they are not a current full-suite pass. Missing environment/fixture skips require explicit reporting. Use only disposable test accounts and targets.
+Commands and paths below run from a full monorepo checkout, which includes both the API source and the client that builds the compiled frontend. Historical acceptance counts belong to their named version/run; they are not a current full-suite pass. Missing environment/fixture skips require explicit reporting. Use only disposable test accounts and targets.
 
 ## Web profile acceptance
 

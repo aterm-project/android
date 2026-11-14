@@ -1,0 +1,18 @@
+# Apply AFTER compose.web.yaml and compose.caddy.yaml.
+services:
+  web:
+    ports: !reset []
+    networks:
+      - default
+      - caddy-backend
+  edge:
+    depends_on:
+      web:
+        condition: service_started
+    volumes:
+      - type: bind
+        source: ./Caddyfile.web
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind:
+          create_host_path: false

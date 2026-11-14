@@ -1,0 +1,1237 @@
+openapi: 3.1.0
+info:
+  title: Atermius Cloud Collaboration & Temporary Access (DRAFT PROPOSAL)
+  version: 0.1.0-draft
+  description: >-
+    DESIGN DRAFT ONLY — none of these routes are implemented. Extends server/openapi.yaml.
+    See DESIGN.md for trust model. Phase tags: x-phase P1 (owner-only share links + guest gateway),
+    P2 (organizations, teams, Vault grants, host access grants, link approval/OTP, schedules),
+    P3 (Vault admin role). Every Vault-scoped route returns the same generic 404 for unknown IDs
+    and IDs the caller cannot access (same as require_vault). Path IDs must equal any body IDs (400 otherwise).
+    Bearer routes keep the existing X-Atermius-Capability-Marker rules. Guest routes are cookie-authenticated,
+    require exact Origin == ATERMIUS_PUBLIC_ORIGIN, header X-Atermius-Guest: v1 and JSON content type,
+    and never accept bearer tokens; bearer routes never accept the guest cookie. Secrets
+    (redeem_token, invitation token, tickets, cookies, capsules) are never logged and are stored only as SHA-256.
+    Core security gates (object authorization, Origin/CSRF, baseline rate/concurrency caps, log-leak protection
+    and their negative tests) are release blockers for any exposed route in this file.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: organizations
+  - name: vault-grants
+  - name: gateway
+  - name: share-links
+  - name: guest
+  - name: admin
+paths:
+  /orgs:
+    get:
+      tags: [organizations]
+      x-phase: P2
+      summary: List organizations where the caller is an active member
+      responses:
+        '200':
+          description: Organizations
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [organizations]
+                properties:
+                  organizations:
+                    type: array
+                    items: {$ref: '#/components/schemas/Organization'}
+    post:
+      tags: [organizations]
+      x-phase: P2
+      summary: Create an organization (instance policy org_creation any|instance_admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [org_id, name]
+              properties:
+                org_id: {$ref: '#/components/schemas/Uuid'}
+                name: {type: string, minLength: 1, maxLength: 128}
+      responses:
+        '201':
+          description: Created (idempotent on identical org_id + body)
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Organization'}
+        '403': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+  /orgs/{org_id}:
+    parameters: [{$ref: '#/components/parameters/OrgId'}]
+    get:
+      tags: [organizations]
+      x-phase: P2
+      summary: Read organization
+      responses:
+        '200':
+          description: Organization
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Organization'}
+        '404': {$ref: '#/components/responses/Error'}
+    patch:
+      tags: [organizations]
+      x-phase: P2
+      summary: Rename / change policy bits (O-Owner, O-Admin for name only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [expected_revision]
+              properties:
+                expected_revision: {type: integer, minimum: 1}
+                name: {type: string, minLength: 1, maxLength: 128}
+                editors_may_share: {type: boolean}
+                remove_from_org_vaults_on_leave: {type: boolean}
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Organization'}
+        '409': {$ref: '#/components/responses/Error'}
+  /orgs/{org_id}/members:
+    parameters: [{$ref: '#/components/parameters/OrgId'}]
+    get:
+      tags: [organizations]
+      x-phase: P2
+      summary: List members (any active member)
+      responses:
+        '200':
+          description: Members
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [membership_revision, members]
+                properties:
+                  membership_revision: {type: integer}
+                  members:
+                    type: array
+                    items: {$ref: '#/components/schemas/OrgMember'}
+  /orgs/{org_id}/members/{user_id}:
+    parameters:
+      - {$ref: '#/components/parameters/OrgId'}
+      - {$ref: '#/components/parameters/UserId'}
+    put:
+      tags: [organizations]
+      x-phase: P2
+      summary: Change role (cannot remove the last owner; admins cannot promote to owner)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [role, expected_membership_revision]
+              properties:
+                role: {type: string, enum: [owner, admin, member]}
+                expected_membership_revision: {type: integer}
+      responses:
+        '200': {description: Updated}
+        '409': {$ref: '#/components/responses/Error'}
+    delete:
+      tags: [organizations]
+      x-phase: P2
+      summary: Remove member. Same transaction removes team memberships, suspends grant-derived Vault memberships, suspends links the user owns in org Vaults, bumps authz revisions and marks affected Vaults rotation_required.
+      parameters:
+        - {name: expected_membership_revision, in: query, required: true, schema: {type: integer}}
+      responses:
+        '200':
+          description: Removed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [membership_revision, suspended_vault_ids, suspended_link_count, rotation_required_vault_ids]
+                properties:
+                  membership_revision: {type: integer}
+                  suspended_vault_ids: {type: array, items: {$ref: '#/components/schemas/Uuid'}}
+                  suspended_link_count: {type: integer}
+                  rotation_required_vault_ids: {type: array, items: {$ref: '#/components/schemas/Uuid'}}
+  /orgs/{org_id}/invitations:
+    parameters: [{$ref: '#/components/parameters/OrgId'}]
+    get:
+      tags: [organizations]
+      x-phase: P2
+      summary: List pending invitations (O-Owner/O-Admin); never returns tokens
+      responses:
+        '200': {description: Invitations}
+    post:
+      tags: [organizations]
+      x-phase: P2
+      summary: Create invitation; returns the token exactly once. Client builds /join#o1.<token>.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [invitation_id, role, expires_in_seconds]
+              properties:
+                invitation_id: {$ref: '#/components/schemas/Uuid'}
+                role: {type: string, enum: [admin, member]}
+                intended_username: {type: string, maxLength: 256}
+                initial_team_ids: {type: array, maxItems: 32, items: {$ref: '#/components/schemas/Uuid'}}
+                expires_in_seconds: {type: integer, minimum: 600, maximum: 1209600}
+                issue_account_invitation: {type: boolean, default: false, description: "Also issue an account_invitations row when registration is closed"}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [invitation_id, token, expires_at]
+                properties:
+                  invitation_id: {$ref: '#/components/schemas/Uuid'}
+                  token: {$ref: '#/components/schemas/Secret32'}
+                  expires_at: {$ref: '#/components/schemas/Instant'}
+  /orgs/{org_id}/invitations/{invitation_id}/revoke:
+    parameters:
+      - {$ref: '#/components/parameters/OrgId'}
+      - {name: invitation_id, in: path, required: true, schema: {$ref: '#/components/schemas/Uuid'}}
+    post:
+      tags: [organizations]
+      x-phase: P2
+      summary: Revoke pending invitation (idempotent)
+      responses:
+        '200': {description: Revoked}
+  /org-invitations/inspect:
+    post:
+      tags: [organizations]
+      x-phase: P2
+      security: []
+      summary: Show org display name, inviter display name and role for a token. Rate-limited; unknown/expired/revoked/consumed share one 404.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token]
+              properties:
+                token: {$ref: '#/components/schemas/Secret32'}
+      responses:
+        '200': {description: Invitation summary}
+        '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
+  /org-invitations/accept:
+    post:
+      tags: [organizations]
+      x-phase: P2
+      summary: Atomically consume token and join (bearer). Does not distribute any Vault key.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token]
+              properties:
+                token: {$ref: '#/components/schemas/Secret32'}
+      responses:
+        '200': {description: Joined}
+        '404': {$ref: '#/components/responses/Error'}
+  /orgs/{org_id}/teams:
+    parameters: [{$ref: '#/components/parameters/OrgId'}]
+    get:
+      tags: [organizations]
+      x-phase: P2
+      summary: List teams
+      responses:
+        '200': {description: Teams}
+    post:
+      tags: [organizations]
+      x-phase: P2
+      summary: Create team (O-Owner/O-Admin); NFKC+lowercase name_key unique per org
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [team_id, name]
+              properties:
+                team_id: {$ref: '#/components/schemas/Uuid'}
+                name: {type: string, minLength: 1, maxLength: 128}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Team'}
+  /orgs/{org_id}/teams/{team_id}:
+    parameters:
+      - {$ref: '#/components/parameters/OrgId'}
+      - {$ref: '#/components/parameters/TeamId'}
+    get:
+      tags: [organizations]
+      x-phase: P2
+      summary: Read team (404 if team_id belongs to another org)
+      responses:
+        '200':
+          description: Team
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Team'}
+    patch:
+      tags: [organizations]
+      x-phase: P2
+      summary: Rename team (CAS)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, expected_revision]
+              properties:
+                name: {type: string, minLength: 1, maxLength: 128}
+                expected_revision: {type: integer}
+      responses:
+        '200': {description: Renamed}
+    delete:
+      tags: [organizations]
+      x-phase: P2
+      summary: Delete team; requires revision and membership_revision; removes its grants (same effects as member removal for affected users)
+      parameters:
+        - {name: expected_revision, in: query, required: true, schema: {type: integer}}
+        - {name: expected_membership_revision, in: query, required: true, schema: {type: integer}}
+      responses:
+        '200': {description: Deleted}
+  /orgs/{org_id}/teams/{team_id}/members:
+    parameters:
+      - {$ref: '#/components/parameters/OrgId'}
+      - {$ref: '#/components/parameters/TeamId'}
+    put:
+      tags: [organizations]
+      x-phase: P2
+      summary: CAS full replacement of team members (all must be active org members)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [expected_membership_revision, user_ids]
+              properties:
+                expected_membership_revision: {type: integer}
+                user_ids: {type: array, maxItems: 1000, uniqueItems: true, items: {$ref: '#/components/schemas/Uuid'}}
+      responses:
+        '200': {description: Replaced}
+        '409': {$ref: '#/components/responses/Error'}
+
+  /vaults/{vault_id}/organization:
+    parameters: [{$ref: '#/components/parameters/VaultId'}]
+    put:
+      tags: [vault-grants]
+      x-phase: P2
+      summary: Attach a Vault to an organization (V-Owner who is also O-Owner/O-Admin). Detach is not supported in P2.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [org_id]
+              properties:
+                org_id: {$ref: '#/components/schemas/Uuid'}
+      responses:
+        '200': {description: Attached}
+  /vaults/{vault_id}/grants:
+    parameters: [{$ref: '#/components/parameters/VaultId'}]
+    get:
+      tags: [vault-grants]
+      x-phase: P2
+      summary: List desired-state grants (Vault members; O-Owner/O-Admin for org Vaults)
+      responses:
+        '200':
+          description: Grants
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [grants_revision, grants]
+                properties:
+                  grants_revision: {type: integer}
+                  grants:
+                    type: array
+                    items: {$ref: '#/components/schemas/VaultGrant'}
+  /vaults/{vault_id}/grants/{principal_type}/{principal_id}:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/PrincipalType'}
+      - {$ref: '#/components/parameters/PrincipalId'}
+    put:
+      tags: [vault-grants]
+      x-phase: P2
+      summary: Set desired role. Grantor may only grant <= own capability. Team must belong to vault.org_id. Does not distribute keys.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [role, expected_grants_revision]
+              properties:
+                role: {type: string, enum: [editor, viewer], description: "'admin' accepted only in P3 when membership_roles_v2 is satisfied"}
+                expected_grants_revision: {type: integer}
+      responses:
+        '200': {description: Set}
+        '403': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+    delete:
+      tags: [vault-grants]
+      x-phase: P2
+      summary: Remove grant; members with no remaining source become suspended immediately and Vault becomes rotation_required
+      parameters:
+        - {name: expected_grants_revision, in: query, required: true, schema: {type: integer}}
+      responses:
+        '200': {description: Removed}
+  /vaults/{vault_id}/key-distribution:
+    parameters: [{$ref: '#/components/parameters/VaultId'}]
+    get:
+      tags: [vault-grants]
+      x-phase: P2
+      summary: Derived pending key work for a key-holding V-Owner client. Client must confirm fingerprints per user before applying.
+      responses:
+        '200':
+          description: Pending work
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/KeyDistribution'}
+  /vaults/{vault_id}/membership/apply:
+    parameters: [{$ref: '#/components/parameters/VaultId'}]
+    post:
+      tags: [vault-grants]
+      x-phase: P2
+      summary: Apply additions as a new signed manifest + key envelopes for the active epoch (removals use existing /keys/rotate)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [expected_membership_version, expected_grants_revision, membership, key_envelopes]
+              properties:
+                expected_membership_version: {$ref: '#/components/schemas/DecimalString'}
+                expected_grants_revision: {type: integer}
+                membership: {type: object, description: "Existing ManifestInput shape from server/openapi.yaml"}
+                key_envelopes:
+                  type: array
+                  maxItems: 256
+                  items: {type: object, description: "Existing KeyEnvelopeInput shape"}
+      responses:
+        '200': {description: Applied}
+        '409': {$ref: '#/components/responses/Error'}
+        '426': {$ref: '#/components/responses/Error'}
+
+  /share-gateway/keys:
+    get:
+      tags: [gateway]
+      x-phase: P1
+      security: []
+      summary: Active and retiring gateway X25519 public keys, each signed by the instance Ed25519 key. Clients verify against the pinned instance key before sealing.
+      responses:
+        '200':
+          description: Keys
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [keys]
+                properties:
+                  keys:
+                    type: array
+                    items: {$ref: '#/components/schemas/GatewayKey'}
+        '503': {$ref: '#/components/responses/Error'}
+  /vaults/{vault_id}/gateway-capsules:
+    parameters: [{$ref: '#/components/parameters/VaultId'}]
+    get:
+      tags: [gateway]
+      x-phase: P1
+      summary: List capsule metadata (never sealed bytes); filter needs_reseal=true for stale/retiring-key capsules
+      parameters:
+        - {name: needs_reseal, in: query, schema: {type: boolean}}
+      responses:
+        '200': {description: Capsule metadata list}
+  /vaults/{vault_id}/hosts/{host_id}/gateway-capsule:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/HostId'}
+    get:
+      tags: [gateway]
+      x-phase: P1
+      summary: Capsule metadata for one Host (V-Owner)
+      responses:
+        '200':
+          description: Metadata
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CapsuleMetadata'}
+    put:
+      tags: [gateway]
+      x-phase: P1
+      summary: Create/replace the Host's gateway capsule (V-Owner in P1). Server validates signature, sealer role, current host head revision, gateway key state and target policy.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CapsulePut'}
+      responses:
+        '200':
+          description: Stored
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CapsuleMetadata'}
+        '403': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+    delete:
+      tags: [gateway]
+      x-phase: P1
+      summary: Revoke capsule (hard-deletes sealed bytes); suspends dependent link targets and access grants; closes their connections
+      responses:
+        '200': {description: Revoked}
+  /vaults/{vault_id}/hosts/{host_id}/access-grants:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/HostId'}
+    get:
+      tags: [gateway]
+      x-phase: P2
+      summary: List gateway_connect grants for the Host
+      responses:
+        '200': {description: Grants}
+  /vaults/{vault_id}/hosts/{host_id}/access-grants/{principal_type}/{principal_id}:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/HostId'}
+      - {$ref: '#/components/parameters/PrincipalType'}
+      - {$ref: '#/components/parameters/PrincipalId'}
+    put:
+      tags: [gateway]
+      x-phase: P2
+      summary: Grant gateway_connect (no Vault key). Narrowing bumps authz_revision and closes active connections.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [label, permissions]
+              properties:
+                expected_revision: {type: integer, description: "Omit to create"}
+                label: {type: string, minLength: 1, maxLength: 128, description: "Server-visible display name"}
+                permissions: {$ref: '#/components/schemas/SessionPermissions'}
+                expires_at: {$ref: '#/components/schemas/Instant'}
+      responses:
+        '200': {description: Set}
+    delete:
+      tags: [gateway]
+      x-phase: P2
+      summary: Revoke grant; closes the grantee's gateway connections within 2 s
+      responses:
+        '200': {description: Revoked}
+  /shared-with-me:
+    get:
+      tags: [gateway]
+      x-phase: P2
+      summary: Hosts the caller may use through gateway_connect grants (label, protocol, permissions; no host content)
+      responses:
+        '200': {description: Entries}
+  /vaults/{vault_id}/hosts/{host_id}/gateway-tickets:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/HostId'}
+    post:
+      tags: [gateway]
+      x-phase: P2
+      summary: One-use 30 s ticket for /gateway/v1/connect for a Vault member or gateway_connect grantee (bearer, active session/device)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: {type: object, additionalProperties: false, maxProperties: 0}
+      responses:
+        '200':
+          description: Ticket
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GatewayTicket'}
+        '429': {$ref: '#/components/responses/Error'}
+
+  /share-links:
+    get:
+      tags: [share-links]
+      x-phase: P1
+      summary: Links the caller owns or can manage across Vaults (no secrets, no display envelope plaintext)
+      parameters:
+        - {name: status, in: query, schema: {type: string, enum: [active, scheduled, expired, exhausted, revoked, suspended, paused]}}
+        - {name: cursor, in: query, schema: {type: string, maxLength: 512}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+      responses:
+        '200': {description: Page of ShareLink}
+  /share-slugs/{slug}/availability:
+    parameters:
+      - {name: slug, in: path, required: true, schema: {$ref: '#/components/schemas/Slug'}}
+    get:
+      tags: [share-links]
+      x-phase: P1
+      summary: Check a custom slug (bearer; rate-limited; does not reveal owner)
+      responses:
+        '200':
+          description: Availability
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [available]
+                properties:
+                  available: {type: boolean}
+                  reason: {type: string, enum: [taken, reserved_word, cooldown, invalid]}
+  /vaults/{vault_id}/share-links:
+    parameters: [{$ref: '#/components/parameters/VaultId'}]
+    get:
+      tags: [share-links]
+      x-phase: P1
+      summary: List links in a Vault (V-Owner in P1)
+      responses:
+        '200': {description: Links}
+    post:
+      tags: [share-links]
+      x-phase: P1
+      summary: Create a temporary link. Idempotent on link_id + request digest.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ShareLinkCreate'}
+      responses:
+        '201':
+          description: Created. Client appends '#s1.<link_secret>' locally; the server never sees link_secret.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/ShareLink'}
+                  - type: object
+                    required: [url_base]
+                    properties:
+                      url_base: {type: string, description: "e.g. https://atermius.example.com/s/<slug>"}
+        '403': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+  /vaults/{vault_id}/share-links/{link_id}:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/LinkId'}
+    get:
+      tags: [share-links]
+      x-phase: P1
+      summary: Read link
+      responses:
+        '200':
+          description: Link
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ShareLink'}
+    patch:
+      tags: [share-links]
+      x-phase: P1
+      summary: Update times/limits/permissions/state(active|paused)/slug. Narrowing bumps authz_revision (closes connections); widening does not.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ShareLinkPatch'}
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ShareLink'}
+        '409': {$ref: '#/components/responses/Error'}
+  /vaults/{vault_id}/share-links/{link_id}/revoke:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/LinkId'}
+    post:
+      tags: [share-links]
+      x-phase: P1
+      summary: Revoke (idempotent). Same tx revokes guest sessions and unconsumed tickets; sockets close within 2 s.
+      responses:
+        '200': {description: Revoked}
+  /vaults/{vault_id}/share-links/{link_id}/rotate-secret:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/LinkId'}
+    post:
+      tags: [share-links]
+      x-phase: P1
+      summary: Replace redeem token hash and display envelope; secret_version+1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [expected_secret_version, redeem_token, display_envelope]
+              properties:
+                expected_secret_version: {type: integer}
+                redeem_token: {$ref: '#/components/schemas/Secret32'}
+                display_envelope: {$ref: '#/components/schemas/DisplayEnvelope'}
+                revoke_existing_sessions: {type: boolean, default: true}
+                reset_redemptions: {type: boolean, default: false}
+      responses:
+        '200': {description: Rotated}
+  /vaults/{vault_id}/share-links/{link_id}/adopt:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/LinkId'}
+    post:
+      tags: [share-links]
+      x-phase: P2
+      summary: Another V-Owner takes over a link suspended for creator_lost_access (must reseal capsules first)
+      responses:
+        '200': {description: Adopted}
+  /vaults/{vault_id}/share-links/{link_id}/activity:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/LinkId'}
+    get:
+      tags: [share-links]
+      x-phase: P1
+      summary: Redemptions, guest sessions and connections (metadata only; IP per instance audit policy)
+      responses:
+        '200': {description: Activity page}
+  /vaults/{vault_id}/share-links/{link_id}/guest-sessions/{guest_session_id}/terminate:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/LinkId'}
+      - {name: guest_session_id, in: path, required: true, schema: {$ref: '#/components/schemas/Uuid'}}
+    post:
+      tags: [share-links]
+      x-phase: P1
+      summary: Terminate one guest session and its connections
+      responses:
+        '200': {description: Terminated}
+  /vaults/{vault_id}/share-links/{link_id}/guest-sessions/{guest_session_id}/approval:
+    parameters:
+      - {$ref: '#/components/parameters/VaultId'}
+      - {$ref: '#/components/parameters/LinkId'}
+      - {name: guest_session_id, in: path, required: true, schema: {$ref: '#/components/schemas/Uuid'}}
+    post:
+      tags: [share-links]
+      x-phase: P2
+      summary: Approve or deny a pending redemption (links with redeem_requires_approval)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision]
+              properties:
+                decision: {type: string, enum: [approve, deny]}
+      responses:
+        '200': {description: Recorded}
+
+  /guest/redeem:
+    post:
+      tags: [guest]
+      x-phase: P1
+      security: []
+      summary: Redeem a link (user-initiated POST only). Sets __Host-atermius-guest cookie. Requires exact Origin and X-Atermius-Guest. Rate-limited per IP.
+      parameters:
+        - {$ref: '#/components/parameters/GuestHeader'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [slug, redeem_token]
+              properties:
+                slug: {$ref: '#/components/schemas/Slug'}
+                redeem_token: {$ref: '#/components/schemas/Secret32'}
+                verification_code: {type: string, pattern: '^[0-9]{6}$', description: "P2, only for links with a verification code"}
+      responses:
+        '200':
+          description: Redeemed
+          headers:
+            Set-Cookie:
+              description: "__Host-atermius-guest=<opaque>; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=<= session remaining"
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GuestSession'}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '410': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
+  /guest/session:
+    get:
+      tags: [guest]
+      x-phase: P1
+      security: [{guestCookie: []}]
+      summary: Current guest session (restores after reload without consuming a redemption)
+      parameters:
+        - {$ref: '#/components/parameters/GuestHeader'}
+      responses:
+        '200':
+          description: Session
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GuestSession'}
+        '401': {$ref: '#/components/responses/Error'}
+  /guest/logout:
+    post:
+      tags: [guest]
+      x-phase: P1
+      security: [{guestCookie: []}]
+      summary: End guest session, close its connections, clear cookie
+      parameters:
+        - {$ref: '#/components/parameters/GuestHeader'}
+      responses:
+        '204': {description: Ended}
+  /guest/connections:
+    post:
+      tags: [guest]
+      x-phase: P1
+      security: [{guestCookie: []}]
+      summary: One-use 30 s ticket for one link target. No target/protocol/credential fields exist.
+      parameters:
+        - {$ref: '#/components/parameters/GuestHeader'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target_id]
+              properties:
+                target_id: {$ref: '#/components/schemas/Uuid'}
+      responses:
+        '200':
+          description: Ticket
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GatewayTicket'}
+        '403': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
+
+  /admin/share-policy:
+    get:
+      tags: [admin]
+      x-phase: P1
+      summary: Instance share policy (allowlisted instance admins). Missing row = defaults with links disabled.
+      responses:
+        '200':
+          description: Policy
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SharePolicy'}
+    put:
+      tags: [admin]
+      x-phase: P1
+      summary: CAS update; may only narrow deployment limits; narrowing closes affected connections
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - {$ref: '#/components/schemas/SharePolicy'}
+                - type: object
+                  required: [expected_revision]
+                  properties:
+                    expected_revision: {type: integer, minimum: 0}
+      responses:
+        '200': {description: Updated}
+
+x-websocket:
+  /gateway/v1/connect:
+    x-phase: P1
+    description: >-
+      Exact Origin required for browsers. Guest tickets additionally require the guest cookie whose session equals the
+      ticket's guest_session_id. First text frame within 10 s: {"type":"authenticate","ticket":"..."}; server replies
+      {"type":"authenticated","connection_id","expires_at","idle_timeout_seconds","permissions"}. Client then sends
+      {"type":"open","width":int,"height":int} (deny_unknown_fields; clamped to Host display setting and policy max).
+      Afterwards text frames starting with a digit are Guacamole instructions (client->server filtered by the existing
+      valid_input allowlist plus permission filters; server->client clipboard stream filtered); frames starting with '{'
+      are control JSON. Server control: {"type":"notice","code":"SESSION_EXPIRING","at"}, {"type":"closing","code"}.
+      Re-authorization at most every 2 s plus in-process/LISTEN wakeups. Close codes: 4400 protocol, 4401 auth,
+      4403 revoked/lost access, 4408 expired/idle, 4409 schedule window closed, 4429 budget/concurrency,
+      4502 target or gateway failure (no detail). Max message 96 KiB.
+
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}
+    guestCookie: {type: apiKey, in: cookie, name: __Host-atermius-guest}
+  parameters:
+    OrgId: {name: org_id, in: path, required: true, schema: {$ref: '#/components/schemas/Uuid'}}
+    TeamId: {name: team_id, in: path, required: true, schema: {$ref: '#/components/schemas/Uuid'}}
+    UserId: {name: user_id, in: path, required: true, schema: {$ref: '#/components/schemas/Uuid'}}
+    VaultId: {name: vault_id, in: path, required: true, schema: {$ref: '#/components/schemas/Uuid'}}
+    HostId: {name: host_id, in: path, required: true, description: "Opaque Vault record ID of the Host", schema: {$ref: '#/components/schemas/Uuid'}}
+    LinkId: {name: link_id, in: path, required: true, schema: {$ref: '#/components/schemas/Uuid'}}
+    PrincipalType: {name: principal_type, in: path, required: true, schema: {type: string, enum: [user, team]}}
+    PrincipalId: {name: principal_id, in: path, required: true, schema: {$ref: '#/components/schemas/Uuid'}}
+    GuestHeader: {name: X-Atermius-Guest, in: header, required: true, schema: {type: string, const: v1}}
+  responses:
+    Error:
+      description: Error (see DESIGN.md §12.3 for codes)
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ApiError'}
+  schemas:
+    Uuid: {type: string, pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'}
+    Instant: {type: string, format: date-time, description: "UTC RFC 3339, whole seconds"}
+    DecimalString: {type: string, pattern: '^(0|[1-9][0-9]{0,18})$'}
+    Secret32: {type: string, pattern: '^[A-Za-z0-9_-]{43}$', description: "base64url-no-pad of 32 random bytes"}
+    Slug: {type: string, pattern: '^[a-z0-9](?:[a-z0-9-]{1,46}[a-z0-9])$'}
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, request_id]
+          properties:
+            code: {type: string}
+            message: {type: string}
+            request_id: {$ref: '#/components/schemas/Uuid'}
+            details: {type: object, additionalProperties: true}
+    Organization:
+      type: object
+      required: [org_id, name, role, revision, membership_revision, editors_may_share]
+      properties:
+        org_id: {$ref: '#/components/schemas/Uuid'}
+        name: {type: string}
+        role: {type: string, enum: [owner, admin, member]}
+        revision: {type: integer}
+        membership_revision: {type: integer}
+        editors_may_share: {type: boolean}
+        remove_from_org_vaults_on_leave: {type: boolean}
+    OrgMember:
+      type: object
+      required: [user_id, username, role, joined_at]
+      properties:
+        user_id: {$ref: '#/components/schemas/Uuid'}
+        username: {type: string}
+        role: {type: string, enum: [owner, admin, member]}
+        joined_at: {$ref: '#/components/schemas/Instant'}
+    Team:
+      type: object
+      required: [team_id, org_id, name, revision, membership_revision, member_user_ids]
+      properties:
+        team_id: {$ref: '#/components/schemas/Uuid'}
+        org_id: {$ref: '#/components/schemas/Uuid'}
+        name: {type: string}
+        revision: {type: integer}
+        membership_revision: {type: integer}
+        member_user_ids: {type: array, items: {$ref: '#/components/schemas/Uuid'}}
+    VaultGrant:
+      type: object
+      required: [principal_type, principal_id, role, revision, materialized]
+      properties:
+        principal_type: {type: string, enum: [user, team]}
+        principal_id: {$ref: '#/components/schemas/Uuid'}
+        org_id: {$ref: '#/components/schemas/Uuid'}
+        role: {type: string, enum: [admin, editor, viewer]}
+        revision: {type: integer}
+        materialized:
+          type: object
+          description: How many expanded users already appear in the signed manifest with keys
+          required: [users_total, users_with_keys]
+          properties:
+            users_total: {type: integer}
+            users_with_keys: {type: integer}
+    KeyDistribution:
+      type: object
+      required: [membership_version, active_epoch, grants_revision, pending_additions, pending_removals, rotation_required]
+      properties:
+        membership_version: {$ref: '#/components/schemas/DecimalString'}
+        active_epoch: {$ref: '#/components/schemas/DecimalString'}
+        grants_revision: {type: integer}
+        pending_additions:
+          type: array
+          items:
+            type: object
+            required: [user_id, username, role, sources, devices]
+            properties:
+              user_id: {$ref: '#/components/schemas/Uuid'}
+              username: {type: string}
+              role: {type: string, enum: [admin, editor, viewer]}
+              sources: {type: array, items: {type: string, description: "user | team:<team_id>"}}
+              devices:
+                type: array
+                items:
+                  type: object
+                  required: [device_id, encryption_public_key, fingerprint]
+                  properties:
+                    device_id: {$ref: '#/components/schemas/Uuid'}
+                    encryption_public_key: {type: string}
+                    fingerprint: {type: string}
+        pending_removals:
+          type: array
+          items:
+            type: object
+            required: [user_id, reason]
+            properties:
+              user_id: {$ref: '#/components/schemas/Uuid'}
+              reason: {type: string, enum: [grant_removed, org_member_removed, team_member_removed, account_disabled]}
+        rotation_required: {type: boolean}
+    GatewayKey:
+      type: object
+      required: [key_id, public_key, state, created_at, instance_signature]
+      properties:
+        key_id: {$ref: '#/components/schemas/Uuid'}
+        public_key: {type: string, description: "base64url X25519"}
+        state: {type: string, enum: [active, retiring]}
+        created_at: {$ref: '#/components/schemas/Instant'}
+        retire_after: {$ref: '#/components/schemas/Instant'}
+        instance_signature: {type: string, description: "Ed25519 over JCS({key_id,public_key,created_at}) by the instance key"}
+    CapsuleHeader:
+      type: object
+      additionalProperties: false
+      required: [format, vault_id, host_record_id, host_revision_id, membership_version, gateway_key_id, protocol, target_host, target_port, sealed_sha256, sealer_user_id, sealer_device_id, created_at, signature]
+      properties:
+        format: {type: string, const: atermius-gateway-capsule-v1}
+        vault_id: {$ref: '#/components/schemas/Uuid'}
+        host_record_id: {$ref: '#/components/schemas/Uuid'}
+        host_revision_id: {$ref: '#/components/schemas/Uuid'}
+        membership_version: {$ref: '#/components/schemas/DecimalString'}
+        gateway_key_id: {$ref: '#/components/schemas/Uuid'}
+        protocol: {type: string, enum: [ssh, rdp, vnc]}
+        target_host: {type: string, maxLength: 253}
+        target_port: {type: integer, minimum: 1, maximum: 65535}
+        sealed_sha256: {type: string}
+        sealer_user_id: {$ref: '#/components/schemas/Uuid'}
+        sealer_device_id: {$ref: '#/components/schemas/Uuid'}
+        created_at: {$ref: '#/components/schemas/Instant'}
+        signature: {type: string, description: "Ed25519 by sealer device over JCS(all fields except signature)"}
+    CapsulePut:
+      type: object
+      additionalProperties: false
+      required: [capsule_id, header, sealed_capsule]
+      properties:
+        capsule_id: {$ref: '#/components/schemas/Uuid'}
+        expected_capsule_revision: {type: integer, description: "Omit when no current capsule"}
+        header: {$ref: '#/components/schemas/CapsuleHeader'}
+        sealed_capsule: {type: string, maxLength: 409600, description: "base64url crypto_box_seal(gateway_pk, JCS(inner)); inner carries the same binding fields plus username, auth, ssh_known_host (required for ssh), rdp.certificate_sha256 (required for rdp), display {mode, width?, height?}"}
+    CapsuleMetadata:
+      type: object
+      required: [capsule_id, host_record_id, host_revision_id, gateway_key_id, protocol, target_host, target_port, state, revision, created_at]
+      properties:
+        capsule_id: {$ref: '#/components/schemas/Uuid'}
+        host_record_id: {$ref: '#/components/schemas/Uuid'}
+        host_revision_id: {$ref: '#/components/schemas/Uuid'}
+        gateway_key_id: {$ref: '#/components/schemas/Uuid'}
+        protocol: {type: string, enum: [ssh, rdp, vnc]}
+        target_host: {type: string}
+        target_port: {type: integer}
+        state: {type: string, enum: [active, stale, revoked]}
+        stale_reason: {type: string, enum: [host_revision_changed, gateway_key_retired, sealer_lost_access]}
+        revision: {type: integer}
+        created_at: {$ref: '#/components/schemas/Instant'}
+        referenced_by: {type: object, properties: {links: {type: integer}, access_grants: {type: integer}}}
+    SessionPermissions:
+      type: object
+      additionalProperties: false
+      properties:
+        clipboard_to_remote: {type: boolean, default: false}
+        clipboard_from_remote: {type: boolean, default: false}
+        view_only: {type: boolean, default: false}
+        file_transfer: {type: boolean, const: false, description: "Locked off in P1"}
+        recording: {type: boolean, const: false, description: "Locked off in P1"}
+    Schedule:
+      type: object
+      additionalProperties: false
+      description: P2. Wall-clock windows in an IANA timezone; DST rules in DESIGN §8.3.
+      required: [timezone, windows]
+      properties:
+        timezone: {type: string, maxLength: 64, examples: [Asia/Shanghai]}
+        windows:
+          type: array
+          minItems: 1
+          maxItems: 14
+          items:
+            type: object
+            additionalProperties: false
+            required: [days, start, end]
+            properties:
+              days: {type: array, minItems: 1, uniqueItems: true, items: {type: string, enum: [mon, tue, wed, thu, fri, sat, sun]}}
+              start: {type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'}
+              end: {type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'}
+    DisplayEnvelope:
+      type: object
+      additionalProperties: false
+      required: [format, nonce, ciphertext]
+      description: "XChaCha20-Poly1305 under display_key = HKDF(link_secret, salt=link_id, info=JCS([atermius, share-link-display, 1, link_id, secret_version])); AAD = JCS({format, link_id, vault_id, secret_version}); plaintext {title, note, targets:[{target_id,label}]} <= 8 KiB"
+      properties:
+        format: {type: string, const: atermius-share-display-v1}
+        nonce: {type: string}
+        ciphertext: {type: string, maxLength: 11500}
+    ShareLinkLimits:
+      type: object
+      additionalProperties: false
+      properties:
+        max_redemptions: {type: [integer, 'null'], minimum: 1, maximum: 1000, default: 1}
+        max_connections: {type: [integer, 'null'], minimum: 1, maximum: 10000}
+        max_concurrent: {type: integer, minimum: 1, maximum: 10, default: 1}
+        guest_session_seconds: {type: integer, minimum: 300, maximum: 43200, default: 7200}
+        idle_timeout_seconds: {type: integer, minimum: 60, maximum: 3600, default: 900}
+    ShareLinkCreate:
+      type: object
+      additionalProperties: false
+      required: [link_id, redeem_token, display_envelope, valid_from, expires_at, targets, permissions, limits]
+      properties:
+        link_id: {$ref: '#/components/schemas/Uuid'}
+        slug: {$ref: '#/components/schemas/Slug', description: "Omit for a random 10-char slug"}
+        redeem_token: {$ref: '#/components/schemas/Secret32'}
+        display_envelope: {$ref: '#/components/schemas/DisplayEnvelope'}
+        valid_from: {$ref: '#/components/schemas/Instant'}
+        expires_at: {$ref: '#/components/schemas/Instant'}
+        schedule: {$ref: '#/components/schemas/Schedule'}
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            type: object
+            additionalProperties: false
+            required: [target_id, host_record_id]
+            properties:
+              target_id: {$ref: '#/components/schemas/Uuid'}
+              host_record_id: {$ref: '#/components/schemas/Uuid'}
+        permissions: {$ref: '#/components/schemas/SessionPermissions'}
+        limits: {$ref: '#/components/schemas/ShareLinkLimits'}
+        suspend_on_host_change: {type: boolean, default: true}
+        redeem_requires_approval: {type: boolean, default: false, description: "P2"}
+        verification_code: {type: string, pattern: '^[0-9]{6}$', description: "P2; stored only as Argon2id hash"}
+    ShareLinkPatch:
+      type: object
+      additionalProperties: false
+      required: [expected_revision]
+      properties:
+        expected_revision: {type: integer}
+        state: {type: string, enum: [active, paused]}
+        slug: {$ref: '#/components/schemas/Slug'}
+        valid_from: {$ref: '#/components/schemas/Instant'}
+        expires_at: {$ref: '#/components/schemas/Instant'}
+        schedule: {oneOf: [{$ref: '#/components/schemas/Schedule'}, {type: 'null'}]}
+        permissions: {$ref: '#/components/schemas/SessionPermissions'}
+        limits: {$ref: '#/components/schemas/ShareLinkLimits'}
+    ShareLink:
+      type: object
+      required: [link_id, vault_id, owner_user_id, slug, slug_kind, status, valid_from, expires_at, permissions, limits, redemptions, connections, active_connections, revision, authz_revision, secret_version, display_envelope, targets]
+      properties:
+        link_id: {$ref: '#/components/schemas/Uuid'}
+        vault_id: {$ref: '#/components/schemas/Uuid'}
+        owner_user_id: {$ref: '#/components/schemas/Uuid'}
+        slug: {$ref: '#/components/schemas/Slug'}
+        slug_kind: {type: string, enum: [random, custom]}
+        status: {type: string, enum: [active, scheduled, outside_schedule, exhausted, expired, paused, suspended, revoked]}
+        suspend_reason: {type: string, enum: [creator_lost_access, host_deleted, capsule_stale, vault_deleting, gateway_key_retired, policy]}
+        valid_from: {$ref: '#/components/schemas/Instant'}
+        expires_at: {$ref: '#/components/schemas/Instant'}
+        schedule: {$ref: '#/components/schemas/Schedule'}
+        tzdata_version: {type: string}
+        permissions: {$ref: '#/components/schemas/SessionPermissions'}
+        limits: {$ref: '#/components/schemas/ShareLinkLimits'}
+        redemptions: {type: integer}
+        connections: {type: integer}
+        active_connections: {type: integer}
+        revision: {type: integer}
+        authz_revision: {type: integer}
+        secret_version: {type: integer}
+        display_envelope: {$ref: '#/components/schemas/DisplayEnvelope'}
+        targets:
+          type: array
+          items:
+            type: object
+            required: [target_id, host_record_id, protocol, state]
+            properties:
+              target_id: {$ref: '#/components/schemas/Uuid'}
+              host_record_id: {$ref: '#/components/schemas/Uuid'}
+              protocol: {type: string, enum: [ssh, rdp, vnc]}
+              state: {type: string, enum: [active, suspended]}
+    GuestSession:
+      type: object
+      required: [guest_session_id, link_id, vault_id, secret_version, expires_at, idle_timeout_seconds, permissions, display_envelope, targets, approval_state]
+      properties:
+        guest_session_id: {$ref: '#/components/schemas/Uuid'}
+        link_id: {$ref: '#/components/schemas/Uuid'}
+        vault_id: {$ref: '#/components/schemas/Uuid', description: "Needed only as display-envelope AAD input"}
+        secret_version: {type: integer}
+        expires_at: {$ref: '#/components/schemas/Instant'}
+        link_expires_at: {$ref: '#/components/schemas/Instant'}
+        idle_timeout_seconds: {type: integer}
+        permissions: {$ref: '#/components/schemas/SessionPermissions'}
+        display_envelope: {$ref: '#/components/schemas/DisplayEnvelope'}
+        approval_state: {type: string, enum: [not_required, pending, approved, denied]}
+        next_window_start: {$ref: '#/components/schemas/Instant'}
+        targets:
+          type: array
+          maxItems: 8
+          items:
+            type: object
+            required: [target_id, protocol, available]
+            properties:
+              target_id: {$ref: '#/components/schemas/Uuid'}
+              protocol: {type: string, enum: [ssh, rdp, vnc]}
+              available: {type: boolean}
+    GatewayTicket:
+      type: object
+      required: [ticket, ticket_expires_at, connect_path]
+      properties:
+        ticket: {$ref: '#/components/schemas/Secret32'}
+        ticket_expires_at: {$ref: '#/components/schemas/Instant'}
+        connect_path: {type: string, const: /gateway/v1/connect}
+    SharePolicy:
+      type: object
+      additionalProperties: false
+      required: [links_enabled, gateway_grants_enabled, org_creation, allowed_protocols, allow_ports, max_link_lifetime_seconds, max_guest_session_seconds, max_instance_guest_connections, max_display_width, max_display_height]
+      properties:
+        revision: {type: integer, readOnly: true}
+        links_enabled: {type: boolean, default: false}
+        gateway_grants_enabled: {type: boolean, default: false}
+        org_creation: {type: string, enum: [any, instance_admin], default: instance_admin}
+        allowed_protocols: {type: array, uniqueItems: true, items: {type: string, enum: [ssh, rdp, vnc]}, default: [ssh, rdp]}
+        allow_ports: {type: array, maxItems: 64, items: {type: integer, minimum: 1, maximum: 65535}, default: [22, 3389]}
+        max_link_lifetime_seconds: {type: integer, minimum: 3600, maximum: 7776000, default: 2592000}
+        max_guest_session_seconds: {type: integer, minimum: 300, maximum: 43200, default: 7200}
+        max_instance_guest_connections: {type: integer, minimum: 0, maximum: 1024, default: 32}
+        max_display_width: {type: integer, minimum: 320, maximum: 4096, default: 1920}
+        max_display_height: {type: integer, minimum: 200, maximum: 4096, default: 1200}

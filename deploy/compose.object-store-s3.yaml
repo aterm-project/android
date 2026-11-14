@@ -1,0 +1,19 @@
+# Opt-in S3-compatible backend for client-encrypted Vault attachment objects.
+# This is independent of compose.backup-s3.yaml, which replicates .atb archives.
+services:
+  server:
+    environment:
+      ATERMIUS_OBJECT_STORE_BACKEND: s3
+      ATERMIUS_OBJECT_STORE_S3_BUCKET: "${ATERMIUS_OBJECT_STORE_S3_BUCKET:?Set in deploy/.env}"
+      ATERMIUS_OBJECT_STORE_S3_REGION: "${ATERMIUS_OBJECT_STORE_S3_REGION:?Set in deploy/.env}"
+      ATERMIUS_OBJECT_STORE_S3_CREDENTIALS_FILE: /run/secrets/atermius-object-store-s3.json
+      # Optional pass-throughs remain unset when omitted from deploy/.env.
+      ATERMIUS_OBJECT_STORE_S3_ENDPOINT_URL:
+      ATERMIUS_OBJECT_STORE_S3_PREFIX:
+    volumes:
+      - type: bind
+        source: "${ATERMIUS_OBJECT_STORE_S3_CREDENTIALS_HOST_FILE:?Set in deploy/.env}"
+        target: /run/secrets/atermius-object-store-s3.json
+        read_only: true
+        bind:
+          create_host_path: false

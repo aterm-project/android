@@ -1,0 +1,54 @@
+# Optional Grafana UI. Apply after compose.yaml and compose.prometheus.yaml.
+# The admin password file must be provisioned before starting this service.
+services:
+  grafana:
+    image: grafana/grafana:13.2.3
+    user: "472:0"
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_started
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/atermius-secrets/admin-password
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_AUTH_BASIC_ENABLED: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SECURITY_COOKIE_SAMESITE: strict
+      GF_LOG_MODE: console
+      GF_PLUGINS_PREINSTALL_AUTO_UPDATE: "false"
+    ports:
+      - "127.0.0.1:${ATERMIUS_GRAFANA_HOST_PORT:-3000}:3000"
+    volumes:
+      - type: bind
+        source: ./grafana/provisioning
+        target: /etc/grafana/provisioning
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./grafana/dashboards
+        target: /etc/grafana/dashboards
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${ATERMIUS_GRAFANA_ADMIN_PASSWORD_HOST_DIR:?Set in deploy/.env}/"
+        target: /run/atermius-secrets
+        read_only: true
+        bind:
+          create_host_path: false
+      - grafana-data:/var/lib/grafana
+    networks:
+      - default
+      - metrics
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+
+volumes:
+  grafana-data:

@@ -40,3 +40,7 @@
 PROJECT_PLAN.md
 /dist/
 **/Pods/
+
+# Synthetic test fixtures referenced by Rust tests, never deployment credentials.
+!server/tests/fixtures/fcm_test_private.pem
+!server/tests/fixtures/apns_test_public.pem

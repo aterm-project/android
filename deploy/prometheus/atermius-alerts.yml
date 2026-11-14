@@ -1,0 +1,15 @@
+groups:
+  - name: atermius-scrape
+    interval: 15s
+    rules:
+      - alert: AtermiusMetricsScrapeUnavailable
+        expr: up{job="atermius"} == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Atermius metrics scrape unavailable
+          description: >-
+            Prometheus has failed to scrape the Atermius metrics endpoint for
+            at least 30 seconds. Check service readiness and the protected
+            scrape credential file.

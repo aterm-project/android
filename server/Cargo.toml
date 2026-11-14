@@ -1,0 +1,56 @@
+[package]
+name = "atermius-server"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-or-later"
+description = "Self-hosted ciphertext-only sync and relay service for Atermius"
+
+[lib]
+name = "atermius_server"
+path = "src/lib.rs"
+
+[[bin]]
+name = "atermius-server"
+path = "src/main.rs"
+
+[dependencies]
+aws-config = "1"
+aws-credential-types = "1"
+aws-sdk-s3 = "1"
+aws-smithy-types = "1"
+argon2 = "0.5"
+axum = { version = "0.8", features = ["ws", "macros"] }
+base64 = "0.22"
+chacha20poly1305 = "0.10"
+chrono = { version = "0.4", features = ["serde"] }
+crypto_box = { version = "0.9", features = ["seal", "std"] }
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+futures-util = "0.3"
+hex = "0.4"
+hmac = "0.12"
+hkdf = "0.12"
+ipnet = "2.11"
+libc = "0.2"
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_jcs = "0.1"
+sha2 = "0.10"
+sha1 = "0.10"
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "postgres", "chrono", "uuid", "migrate", "macros"] }
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["trace", "cors", "limit", "fs"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+url = "2"
+uuid = { version = "1", features = ["v4", "serde"] }
+unicode-normalization = "0.1"
+zeroize = "1"
+reqwest = { version = "0.12", default-features = false, features = ["http2", "json", "rustls-tls"] }
+jsonwebtoken = "9"
+
+[dev-dependencies]
+http-body-util = "0.1"
+tokio-tungstenite = "0.29.0"
+tower = { version = "0.5", features = ["util"] }

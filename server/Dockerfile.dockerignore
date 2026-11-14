@@ -1,0 +1,12 @@
+# Build context allowlist for server/Dockerfile (BuildKit per-Dockerfile ignore file).
+# The repository-root .dockerignore applies to the web Dockerfile.
+**
+!server/
+!server/Cargo.toml
+!server/Cargo.lock
+!server/src/
+!server/src/**
+!server/migrations/
+!server/migrations/**
+!server/openapi.yaml
+!server/Dockerfile

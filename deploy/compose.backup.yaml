@@ -1,0 +1,19 @@
+# Opt-in overlay for the allowlist-gated server-triggered encrypted backup job.
+# Apply alongside compose.yaml only after provisioning both host directories.
+services:
+  server:
+    environment:
+      ATERMIUS_BACKUP_ARCHIVE_DIR: /backups
+      ATERMIUS_BACKUP_KEY_FILE: /backup-key/atermius-backup.key
+      # Pass through only when supplied in deploy/.env or the Compose shell.
+      # A null value preserves "unset"; do not replace it with ${VAR:-},
+      # which would turn an unset setting into an invalid explicit empty value.
+      ATERMIUS_BACKUP_RETENTION_COUNT:
+    volumes:
+      - type: bind
+        source: "${ATERMIUS_BACKUP_ARCHIVE_HOST_DIR:?Set in deploy/.env}"
+        target: /backups
+      - type: bind
+        source: "${ATERMIUS_BACKUP_KEY_HOST_DIR:?Set in deploy/.env}"
+        target: /backup-key
+        read_only: true

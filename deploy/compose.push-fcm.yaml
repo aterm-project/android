@@ -1,0 +1,13 @@
+# Opt-in FCM HTTP v1 sender. This can be applied alongside the APNs overlay.
+# Keep the service-account file outside the data volume.
+services:
+  server:
+    environment:
+      ATERMIUS_FCM_SERVICE_ACCOUNT_FILE: /run/secrets/atermius-fcm-service-account.json
+    volumes:
+      - type: bind
+        source: "${ATERMIUS_FCM_SERVICE_ACCOUNT_HOST_FILE:?Set in deploy/.env}"
+        target: /run/secrets/atermius-fcm-service-account.json
+        read_only: true
+        bind:
+          create_host_path: false

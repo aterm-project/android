@@ -1,0 +1,26 @@
+# Opt-in PostgreSQL sync runtime. Apply after compose.object-store-filesystem.yaml
+# so a restore cutover can point the object root into the private archive bind.
+services:
+  server:
+    environment:
+      ATERMIUS_SYNC_BACKEND: postgres
+      ATERMIUS_SYNC_PG_URL: "${ATERMIUS_SYNC_PG_URL:?Set in deploy/.env}"
+      ATERMIUS_SYNC_PG_SCHEMA: "${ATERMIUS_SYNC_PG_SCHEMA:?Set in deploy/.env}"
+      ATERMIUS_PG_INSTANCE_SIGNING_KEY_FILE: "${ATERMIUS_PG_INSTANCE_SIGNING_KEY_FILE:?Set in deploy/.env}"
+      ATERMIUS_PG_AUTH_RATE_LIMIT_KEY_FILE: "${ATERMIUS_PG_AUTH_RATE_LIMIT_KEY_FILE:?Set in deploy/.env}"
+      ATERMIUS_PG_RESTORE_TARGET_URL: "${ATERMIUS_PG_RESTORE_TARGET_URL:?Set in deploy/.env}"
+      ATERMIUS_OBJECT_STORE_BACKEND: filesystem
+      ATERMIUS_OBJECT_STORE_FILESYSTEM_ROOT: "${ATERMIUS_OBJECT_STORE_FILESYSTEM_ROOT:-/object-store}"
+    volumes:
+      - type: bind
+        source: "${ATERMIUS_PG_INSTANCE_SIGNING_KEY_HOST_FILE:?Set in deploy/.env}"
+        target: /run/secrets/atermius-pg-instance-ed25519.key
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${ATERMIUS_PG_AUTH_RATE_LIMIT_KEY_HOST_FILE:?Set in deploy/.env}"
+        target: /run/secrets/atermius-pg-auth-rate-limit.key
+        read_only: true
+        bind:
+          create_host_path: false
