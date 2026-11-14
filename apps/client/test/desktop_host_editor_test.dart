@@ -147,6 +147,8 @@ void main() {
   for (final (platform, protocol, direct) in [
     (TargetPlatform.android, HostProtocol.vnc, true),
     (TargetPlatform.android, HostProtocol.rdp, true),
+    (TargetPlatform.iOS, HostProtocol.vnc, true),
+    (TargetPlatform.iOS, HostProtocol.rdp, true),
     (TargetPlatform.linux, HostProtocol.vnc, true),
     (TargetPlatform.linux, HostProtocol.rdp, false),
   ]) {

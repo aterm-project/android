@@ -7,13 +7,21 @@ import 'package:flutter/services.dart';
 class WindowChromeState {
   const WindowChromeState({
     this.enabled = false,
+    bool? customFrame,
     this.maximized = false,
     this.minimized = false,
     this.focused = true,
     this.captionHeight,
-  });
+    this.leadingInset = 0,
+  }) : customFrame = customFrame ?? enabled;
 
   final bool enabled;
+
+  /// True when the native runner removed the OS title bar so Flutter should
+  /// draw custom caption controls (Windows). False when native window lifecycle
+  /// and close-guard control are enabled while keeping the native title bar
+  /// (macOS traffic-light title bar).
+  final bool customFrame;
   final bool maximized;
   final bool minimized;
   final bool focused;
@@ -24,10 +32,15 @@ class WindowChromeState {
   /// GetDpiForWindow DPI. Null when the runner does not report it.
   final double? captionHeight;
 
+  /// Leading horizontal safe inset reserved for native window controls inside a
+  /// full-size unified title bar (e.g. macOS traffic lights, 0 in fullscreen).
+  final double leadingInset;
+
   /// Plausibility bounds for the reported metric. Values outside them are
   /// ignored (treated as unreported) rather than trusted.
   static const minCaptionHeight = 16.0;
   static const maxCaptionHeight = 96.0;
+  static const maxLeadingInset = 240.0;
 
   static double? _captionHeight(Object? value) {
     if (value is! num) return null;
@@ -40,6 +53,15 @@ class WindowChromeState {
     return height;
   }
 
+  static double _leadingInset(Object? value) {
+    if (value is! num) return 0;
+    final inset = value.toDouble();
+    if (!inset.isFinite || inset < 0 || inset > maxLeadingInset) {
+      return 0;
+    }
+    return inset;
+  }
+
   static WindowChromeState? fromNative(Object? value) {
     if (value is! Map ||
         const [
@@ -50,12 +72,17 @@ class WindowChromeState {
         ].any((key) => value[key] is! bool)) {
       return null;
     }
+    final enabled = value['enabled'] as bool;
     return WindowChromeState(
-      enabled: value['enabled'] as bool,
+      enabled: enabled,
+      customFrame: value['customFrame'] is bool
+          ? (value['customFrame'] as bool && enabled)
+          : enabled,
       maximized: value['maximized'] as bool,
       minimized: value['minimized'] as bool,
       focused: value['focused'] as bool,
       captionHeight: _captionHeight(value['captionHeight']),
+      leadingInset: enabled ? _leadingInset(value['leadingInset']) : 0,
     );
   }
 }
@@ -71,7 +98,9 @@ class WindowChromeController extends ChangeNotifier {
   }) : _channel = channel,
        supported =
            supported ??
-           (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows);
+           (!kIsWeb &&
+               (defaultTargetPlatform == TargetPlatform.windows ||
+                   defaultTargetPlatform == TargetPlatform.macOS));
 
   static final instance = WindowChromeController();
   final MethodChannel _channel;
@@ -117,10 +146,12 @@ class WindowChromeController extends ChangeNotifier {
     final next = WindowChromeState.fromNative(value);
     if (_disposed || next == null) return;
     if (next.enabled == _state.enabled &&
+        next.customFrame == _state.customFrame &&
         next.maximized == _state.maximized &&
         next.minimized == _state.minimized &&
         next.focused == _state.focused &&
-        next.captionHeight == _state.captionHeight) {
+        next.captionHeight == _state.captionHeight &&
+        next.leadingInset == _state.leadingInset) {
       return;
     }
     _state = next;

@@ -58,6 +58,28 @@ API int aterm_rdp_set_home(const char* dir) {
   pthread_mutex_unlock(&home_lock);
   return ok;
 }
+#elif defined(__APPLE__)
+#include <TargetConditionals.h>
+#include <sys/stat.h>
+#include <pthread.h>
+// On iOS/macOS sandboxed containers, point XDG_CONFIG_HOME (and missing HOME)
+// to an app-writable Application Support directory so FreeRDP never tries to
+// mkdir inside an unwritable container root.
+static pthread_mutex_t home_lock = PTHREAD_MUTEX_INITIALIZER;
+API int aterm_rdp_set_home(const char* dir) {
+  if (!dir || dir[0] != '/' || strlen(dir) >= PATH_MAX) return 0;
+  struct stat st;
+  if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) return 0;
+  pthread_mutex_lock(&home_lock);
+  const char* xdg = getenv("XDG_CONFIG_HOME");
+  int ok = (xdg && *xdg) ? 1 : setenv("XDG_CONFIG_HOME", dir, 0) == 0;
+  const char* current = getenv("HOME");
+  if (!current || !*current) {
+    ok = ok && (setenv("HOME", dir, 0) == 0);
+  }
+  pthread_mutex_unlock(&home_lock);
+  return ok;
+}
 #endif
 
 // Feature bits; must match lib/desktop/rdp_features.dart.
@@ -856,8 +878,8 @@ API void* aterm_rdp_create_ex(const char* host, int port, const char* user,
   #define NUM(k,v) if (!freerdp_settings_set_uint32(s, FreeRDP_##k, v)) goto fail
   #define BOOLVAL(k,v) if (!freerdp_settings_set_bool(s, FreeRDP_##k, v)) goto fail
   STR(ServerHostname, host); NUM(ServerPort, (UINT32)port);
-#if defined(__ANDROID__)
-  // Connect straight to the Host through Android's routing/VPN. FreeRDP would
+#if defined(__ANDROID__) || defined(__APPLE__)
+  // Connect straight to the Host through OS routing/VPN. FreeRDP would
   // otherwise adopt http(s)_proxy from the process environment.
   NUM(ProxyType, PROXY_TYPE_IGNORE);
 #endif

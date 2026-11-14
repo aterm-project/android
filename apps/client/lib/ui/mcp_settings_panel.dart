@@ -524,9 +524,11 @@ class _McpSettingsPanelState extends State<McpSettingsPanel> {
                 id: mcpLocalDeviceHostId,
                 name: l10n.mcpLocalDeviceName,
                 detail: l10n.mcpLocalDeviceDetail,
-                icon: Theme.of(context).platform == TargetPlatform.android
-                    ? Icons.phone_android_outlined
-                    : Icons.computer_outlined,
+                icon: switch (Theme.of(context).platform) {
+                  TargetPlatform.android => Icons.phone_android_outlined,
+                  TargetPlatform.iOS => Icons.phone_iphone_outlined,
+                  _ => Icons.computer_outlined,
+                },
               ),
             if (hosts.length > 6) ...[
               const SizedBox(height: 12),

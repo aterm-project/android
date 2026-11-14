@@ -18,8 +18,8 @@ const _maxFrameBytes = 4 * 1024 * 1024;
 const _maxInputBytes = 64 * 1024;
 const _maxOutstandingBytes = 512 * 1024;
 
-// The owning engine can be hidden safely only by the Windows close-guard bridge.
-bool get supportsLiveTerminalWindows => Platform.isWindows;
+// The owning engine can be hidden safely by the Windows/macOS close-guard bridge.
+bool get supportsLiveTerminalWindows => Platform.isWindows || Platform.isMacOS;
 String _nonce(int bytes) => base64UrlEncode(
   List<int>.generate(bytes, (_) => Random.secure().nextInt(256)),
 ).replaceAll('=', '');

@@ -67,6 +67,7 @@ import '../domain/vault_preference.dart';
 import '../domain/workspace_layout.dart';
 import 'openssh_config_import_dialog.dart';
 import 'termius_transfer_dialog.dart';
+import '../import/termius_local_app_import.dart';
 import '../import/termius_transfer_target.dart';
 import '../import/termius_keychain_bridge.dart';
 import 'ansible_inventory_import_dialog.dart';
@@ -210,6 +211,7 @@ class _AppShellState extends State<AppShell> {
         onSelected: () => _importAnsibleInventory(context, app),
         enabled: writable,
       ),
+      ?_cloudTermiusOneClickAction(context, app),
       ?_cloudTermiusTransferAction(context, app),
     ];
   }
@@ -1748,6 +1750,14 @@ _snack(context, context.l10n.theNewWindowWasntReadyThe, error: true);
                     () => _importOpenSshConfig(context, app),
                     enabled: app.activeVault?.canWrite == true,
                   ),
+                  if (hasLocalTermiusInstallation())
+                    WorkspaceAction(
+                      'host_termius_one_click',
+                      context.l10n.termiusLocalOneClickAction,
+                      Icons.bolt_rounded,
+                      () => _runCloudOneClickTermiusImport(context, app),
+                      enabled: app.activeVault?.canWrite == true,
+                    ),
                   WorkspaceAction(
                     'host_termius_transfer',
                     context.l10n.r7ImportMenuAction,
@@ -2765,6 +2775,38 @@ class _NavItem {
 /// (id `cloud_termius_transfer`) opening `showTermiusTransferDialog(context,
 /// target: CloudTermiusTransferTarget(app))`; omitted while null. The import
 /// branch's own `host_termius_transfer` home-menu action stays separate.
+Future<void> _runCloudOneClickTermiusImport(
+  BuildContext context,
+  AppController app,
+) async {
+  final outcome = await runOneClickTermiusImport(
+    context,
+    target: CloudTermiusTransferTarget(app),
+    certificates: const KeychainTermiusCertificateBridge(),
+  );
+  if (!context.mounted || outcome == null || outcome.importedHosts == 0) {
+    return;
+  }
+  _snack(
+    context,
+    currentL10n.r7ImportDone(outcome.importedHosts, outcome.createdGroups),
+  );
+}
+
+HomeSidebarAction? _cloudTermiusOneClickAction(
+  BuildContext context,
+  AppController app,
+) {
+  if (!hasLocalTermiusInstallation()) return null;
+  return HomeSidebarAction(
+    id: 'cloud_termius_one_click',
+    label: context.l10n.termiusLocalOneClickAction,
+    icon: Icons.bolt_rounded,
+    enabled: app.activeVault?.canWrite == true,
+    onSelected: () => _runCloudOneClickTermiusImport(context, app),
+  );
+}
+
 HomeSidebarAction? _cloudTermiusTransferAction(
   BuildContext context,
   AppController app,
@@ -3136,6 +3178,9 @@ class _HostsPageState extends State<_HostsPage> {
           HomeAddSharingRow(
             idPrefix: 'cloud',
             canAddHosts: canWrite,
+            onQuickImportTermius: hasLocalTermiusInstallation()
+                ? () => _runCloudOneClickTermiusImport(context, app)
+                : null,
             onAddHost: (protocol) => _showCloudHostEditor(
               context,
               app,
@@ -15521,7 +15566,8 @@ class _SettingsPage extends StatelessWidget {
           ),
         ),
         // ACCOUNT worker: account/login category (identity, session actions).
-        if (Theme.of(context).platform == TargetPlatform.android)
+        if (Theme.of(context).platform == TargetPlatform.android ||
+            Theme.of(context).platform == TargetPlatform.iOS)
           SettingsSection(
             id: 'remote-desktop',
             title: context.l10n.remoteDesktop,

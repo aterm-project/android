@@ -4920,5 +4920,20 @@
   "connectProgressRetry": "重试",
   "connectProgressClose": "关闭",
   "connectProgressRetryUnavailable": "此标签页属于之前的登录、Vault 或配置文件，无法重试。请关闭后重新连接。",
-  "connectProgressNoCredential": "此主机没有可用的已保存登录凭据。请添加或修正凭据后重试。"
+  "connectProgressNoCredential": "此主机没有可用的已保存登录凭据。请添加或修正凭据后重试。",
+  "termiusLocalOneClickAction": "一键导入 Termius",
+  "termiusLocalDetectedTitle": "已检测到本机 Termius 桌面版",
+  "termiusLocalDetectedBody": "无需导出文件。Atermius 以只读方式读取本机 Termius 数据，通过系统钥匙串中的 Termius 密钥解锁（如有授权提示请选择“允许”），在内存中解密并导入主机、分组、标签、密码、SSH 密钥、端口转发与跳板机。已存在的主机会被跳过。",
+  "termiusLocalImportButton": "从本机 Termius 一键导入",
+  "termiusLocalProgress": "正在从本机 Termius 导入…如系统请求钥匙串访问权限，请选择“允许”。",
+  "termiusLocalAllExist": "本机 Termius 中的 {count} 台主机已全部存在，未导入任何内容。",
+  "termiusLocalNothingNew": "本机 Termius 中没有可导入的新主机。",
+  "termiusLocalFailNotInstalled": "未在本机找到 Termius 桌面版数据。请先在本机打开一次 Termius 桌面版，然后重试。",
+  "termiusLocalFailKeyNotFound": "无法从系统钥匙串或凭据管理器读取 Termius 密钥。如有授权提示请选择“允许”，并确认已在本机打开过 Termius，然后重试。",
+  "termiusLocalFailKeyRejected": "系统钥匙串中的 Termius 密钥无法解锁这份 Termius 数据，未导入任何内容。若曾在 App Store 版与下载版之间切换，请先打开当前使用的版本一次，然后重试。",
+  "termiusLocalFailUnsupportedCipher": "此 Termius 版本使用了未知的加密格式（{header}），未导入任何内容；请改用 Termius CSV 导出文件。",
+  "termiusLocalFailEmpty": "本机 Termius 数据中没有可导入的主机。",
+  "termiusLocalFailReadFailed": "无法读取本机 Termius 数据，未导入任何内容。如 Termius 正在同步，请稍候再试。",
+  "termiusLocalFailTooLarge": "本机 Termius 数据超出导入安全上限，未导入任何内容。请改用 Termius CSV 导出文件。",
+  "termiusLocalReviewNeeded": "部分 Termius 主机需要处理后才能导入（例如缺少用户名）。尚未猜测或导入任何内容：请查看下方提示，填写默认用户名或排除相应行后再导入。"
 }

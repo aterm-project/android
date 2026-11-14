@@ -157,11 +157,13 @@ class TerminalKeybarPreferences extends ChangeNotifier {
 /// Whether touching a terminal only focuses it and leaves the software
 /// keyboard to the keybar's keyboard button.
 ///
-/// Native Android only: once the user hides the keyboard, a tap (to scroll,
+/// Native Android and iOS: once the user hides the keyboard, a tap (to scroll,
 /// select or read) must not bring it back. Pass the negation to
 /// [TerminalView.showKeyboardOnTap] for every terminal that has a keybar.
 bool get terminalTouchKeyboardOnDemand =>
-    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
 
 enum _Modifier { ctrl, alt, shift }
 
@@ -228,7 +230,9 @@ class _TerminalKeybarState extends State<TerminalKeybar>
   _ModifierInputHandler? _handler;
   TerminalKeybarPreferences? _preferences;
   bool get _visible =>
-      kIsWeb || defaultTargetPlatform != TargetPlatform.windows;
+      kIsWeb ||
+      (defaultTargetPlatform != TargetPlatform.windows &&
+          defaultTargetPlatform != TargetPlatform.macOS);
   _Latch _ctrl = _Latch.off;
   _Latch _alt = _Latch.off;
   _Latch _shift = _Latch.off;

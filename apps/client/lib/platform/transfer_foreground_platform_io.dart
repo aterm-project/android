@@ -1,3 +1,3 @@
 import 'dart:io';
 
-bool get needsTransferForegroundService => Platform.isAndroid;
+bool get needsTransferForegroundService => Platform.isAndroid || Platform.isIOS;

@@ -1,0 +1,7 @@
+"CFBundleDisplayName" = "Atermius";
+"CFBundleName" = "Atermius";
+"NSLocalNetworkUsageDescription" = "Atermius はローカルネットワーク上の SSH、SFTP、RDP、VNC、MCP ホストに接続します。";
+"NSDesktopFolderUsageDescription" = "Atermius は SFTP、SCP、または RDP でファイルを転送する際にデスクトップ上のファイルにアクセスします。";
+"NSDocumentsFolderUsageDescription" = "Atermius は SSH キーの読み込みや SFTP、SCP、RDP ファイル転送時に書類フォルダへアクセスします。";
+"NSDownloadsFolderUsageDescription" = "Atermius は要求されたファイル転送のためにダウンロードフォルダを読み書きします。";
+"NSRemovableVolumesUsageDescription" = "Atermius は SFTP 転送や RDP ドライブ共有で選択された外部ボリュームにアクセスします。";

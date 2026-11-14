@@ -18581,4 +18581,64 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get connectProgressNoCredential =>
       'This host has no usable saved sign-in. Add or fix its credential, then retry.';
+
+  @override
+  String get termiusLocalOneClickAction => 'One-click Termius import';
+
+  @override
+  String get termiusLocalDetectedTitle =>
+      'Termius Desktop found on this device';
+
+  @override
+  String get termiusLocalDetectedBody =>
+      'No export file needed. Atermius reads the local Termius data without changing it, unlocks it with the Termius key from the system keychain (choose Allow if asked), decrypts it in memory and imports hosts, groups, tags, passwords, SSH keys, port forwards and jump hosts. Hosts that already exist are skipped.';
+
+  @override
+  String get termiusLocalImportButton => 'Import from local Termius';
+
+  @override
+  String get termiusLocalProgress =>
+      'Importing from local Termius… If the system asks for keychain access, choose Allow.';
+
+  @override
+  String termiusLocalAllExist(int count) {
+    return 'All $count Termius hosts already exist here. Nothing was imported.';
+  }
+
+  @override
+  String get termiusLocalNothingNew =>
+      'Local Termius has no new hosts to import.';
+
+  @override
+  String get termiusLocalFailNotInstalled =>
+      'No local Termius Desktop data was found. Open Termius Desktop once on this device, then retry.';
+
+  @override
+  String get termiusLocalFailKeyNotFound =>
+      'Couldn’t read the Termius key from the system keychain or Credential Manager. Choose Allow if asked, make sure Termius has been opened on this device, then retry.';
+
+  @override
+  String get termiusLocalFailKeyRejected =>
+      'The Termius key in the system keychain doesn’t unlock this Termius data. Nothing was imported. If you switched between the App Store and downloaded Termius, open the one you use once, then retry.';
+
+  @override
+  String termiusLocalFailUnsupportedCipher(String header) {
+    return 'This Termius version uses an unknown encryption format ($header). Nothing was imported; use a Termius CSV export instead.';
+  }
+
+  @override
+  String get termiusLocalFailEmpty =>
+      'The local Termius data contains no hosts to import.';
+
+  @override
+  String get termiusLocalFailReadFailed =>
+      'Couldn’t read the local Termius data, so nothing was imported. If Termius is syncing, wait a moment and retry.';
+
+  @override
+  String get termiusLocalFailTooLarge =>
+      'The local Termius data exceeds the import safety limits, so nothing was imported. Use a Termius CSV export instead.';
+
+  @override
+  String get termiusLocalReviewNeeded =>
+      'Some Termius hosts need attention before import (for example a missing username). Nothing was guessed or imported yet: review the findings below, enter a default username or exclude rows, then import.';
 }

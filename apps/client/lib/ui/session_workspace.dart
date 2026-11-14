@@ -326,8 +326,10 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
       builder: (context, constraints) {
         final root = widget.controller.root;
         if (root == null) return const SizedBox.shrink();
-        final android = Theme.of(context).platform == TargetPlatform.android;
-        final immersive = android && FullscreenController.instance.enabled;
+        final mobile =
+            Theme.of(context).platform == TargetPlatform.android ||
+            Theme.of(context).platform == TargetPlatform.iOS;
+        final immersive = mobile && FullscreenController.instance.enabled;
         final peek = FullscreenTabsPeek.instance;
         final peekVisible = immersive && peek.visible;
         // The dropped-down strip covers the top of the selected pane; its
@@ -375,10 +377,10 @@ class _SessionWorkspaceViewState extends State<SessionWorkspaceView> {
 
         layout(root, Offset.zero & constraints.biggest);
         final grouped = panes.length > 1;
-        // Android handle: Close also covers a lone pane (closing its tab) and
+        // Mobile handle: Close also covers a lone pane (closing its tab) and
         // Split reuses the tab menu's flow, so fullscreen keeps both.
-        final handleClose = grouped || android;
-        final handleSplit = android && widget.onSplit != null;
+        final handleClose = grouped || mobile;
+        final handleSplit = mobile && widget.onSplit != null;
         Rect paneRect(({String id, Rect bounds}) pane) =>
             immersive && widget.controller.selectedId == pane.id
             ? Offset.zero & constraints.biggest

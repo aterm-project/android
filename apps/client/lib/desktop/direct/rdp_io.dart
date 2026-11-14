@@ -17,21 +17,22 @@ import 'connection.dart';
 import 'rdp_file_transfer_io.dart';
 import '../../l10n/l10n.dart';
 
-// Windows packages ship the engine beside the executable. Android APKs ship
-// libatermius_rdp.so (native/desktop/android/build_engine.sh) in the app's
-// native library directory and are detected by loading it. Other native
+// Windows packages ship the engine beside the executable. Android APKs, macOS
+// app bundles and iOS frameworks ship their native FreeRDP engine in the app's
+// packaged library directory and are detected by loading it. Other native
 // platforms retain their existing gateway path until their own engine
 // packaging is enabled.
 bool get bundledRdpAvailable =>
     Platform.isWindows ||
     Platform.environment.containsKey('ATERMIUS_RDP_LIBRARY') ||
-    (Platform.isAndroid && _androidEngineLoads);
+    ((Platform.isAndroid || Platform.isMacOS || Platform.isIOS) &&
+        _nativeEngineLoads);
 
-bool? _androidEngine;
-bool get _androidEngineLoads => _androidEngine ??= () {
+bool? _nativeEngine;
+bool get _nativeEngineLoads => _nativeEngine ??= () {
   try {
     final library = DynamicLibrary.open(_libraryPath);
-    // Android engines need an app-private HOME before FreeRDP starts.
+    // Packaged mobile/Apple engines set an app-private HOME before FreeRDP starts.
     return library.providesSymbol('aterm_rdp_create_ex') &&
         library.providesSymbol('aterm_rdp_set_home');
   } catch (_) {
@@ -39,9 +40,9 @@ bool get _androidEngineLoads => _androidEngine ??= () {
   }
 }();
 
-/// App-private directory used as the engine's HOME on Android, where app
-/// processes have none and FreeRDP refuses to start without it.
-Future<String> _androidEngineHome() async {
+/// App-private directory used as the engine's HOME/XDG_CONFIG_HOME on Android,
+/// iOS and macOS so FreeRDP never relies on ambient process environment state.
+Future<String> _engineHome() async {
   final directory = Directory(
     path.join((await getApplicationSupportDirectory()).path, 'rdp-engine'),
   );
@@ -56,6 +57,17 @@ String get _libraryPath =>
             path.dirname(Platform.resolvedExecutable),
             'atermius_rdp.dll',
           )
+        : Platform.isMacOS
+        ? path.normalize(
+            path.join(
+              path.dirname(Platform.resolvedExecutable),
+              '..',
+              'Frameworks',
+              'libatermius_rdp.dylib',
+            ),
+          )
+        : Platform.isIOS
+        ? 'atermius_rdp.framework/atermius_rdp'
         : 'libatermius_rdp.so');
 
 RdpFeatures? _features;
@@ -106,7 +118,9 @@ class RdpConnection implements DirectDesktopConnection {
     unawaited(() async {
       try {
         await validateRdpDriveConfig(config);
-        final home = Platform.isAndroid ? await _androidEngineHome() : '';
+        final home = (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)
+            ? await _engineHome()
+            : '';
         if (connection._closed) {
           connection._message(null);
           return;

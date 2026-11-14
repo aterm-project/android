@@ -17493,4 +17493,61 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get connectProgressNoCredential =>
       'このホストには使用できる保存済みのサインイン情報がありません。認証情報を追加または修正してから再試行してください。';
+
+  @override
+  String get termiusLocalOneClickAction => 'Termius 一括取り込み';
+
+  @override
+  String get termiusLocalDetectedTitle => 'この端末で Termius デスクトップが見つかりました';
+
+  @override
+  String get termiusLocalDetectedBody =>
+      'エクスポートは不要です。Atermius はこの端末の Termius データを変更せずに読み取り、システムのキーチェーンにある Termius の鍵で解錠し（確認が表示されたら「許可」を選択）、メモリ上で復号してホスト、グループ、タグ、パスワード、SSH 鍵、ポート転送、踏み台ホストを取り込みます。既存のホストはスキップされます。';
+
+  @override
+  String get termiusLocalImportButton => 'この端末の Termius から取り込む';
+
+  @override
+  String get termiusLocalProgress =>
+      'この端末の Termius から取り込んでいます…キーチェーンへのアクセスを求められたら「許可」を選択してください。';
+
+  @override
+  String termiusLocalAllExist(int count) {
+    return 'Termius の $count 件のホストはすべて登録済みのため、何も取り込みませんでした。';
+  }
+
+  @override
+  String get termiusLocalNothingNew => 'この端末の Termius に取り込める新しいホストはありません。';
+
+  @override
+  String get termiusLocalFailNotInstalled =>
+      'この端末に Termius デスクトップのデータが見つかりません。一度 Termius デスクトップを開いてから再試行してください。';
+
+  @override
+  String get termiusLocalFailKeyNotFound =>
+      'システムのキーチェーンまたは資格情報マネージャーから Termius の鍵を読み取れませんでした。確認が表示されたら「許可」を選び、この端末で Termius を開いたことがあるか確認してから再試行してください。';
+
+  @override
+  String get termiusLocalFailKeyRejected =>
+      'システムのキーチェーンにある Termius の鍵ではこの Termius データを解錠できないため、何も取り込みませんでした。App Store 版とダウンロード版を切り替えた場合は、使用中の方を一度開いてから再試行してください。';
+
+  @override
+  String termiusLocalFailUnsupportedCipher(String header) {
+    return 'この Termius のバージョンは不明な暗号形式（$header）を使用しているため、何も取り込みませんでした。代わりに Termius の CSV エクスポートを使用してください。';
+  }
+
+  @override
+  String get termiusLocalFailEmpty => 'この端末の Termius データには取り込めるホストがありません。';
+
+  @override
+  String get termiusLocalFailReadFailed =>
+      'この端末の Termius データを読み取れなかったため、何も取り込みませんでした。Termius が同期中の場合は、しばらく待ってから再試行してください。';
+
+  @override
+  String get termiusLocalFailTooLarge =>
+      'この端末の Termius データが取り込みの安全上限を超えているため、何も取り込みませんでした。代わりに Termius の CSV エクスポートを使用してください。';
+
+  @override
+  String get termiusLocalReviewNeeded =>
+      '取り込む前に確認が必要な Termius ホストがあります（ユーザー名が未設定など）。まだ何も推測・取り込みしていません。下の指摘を確認し、既定のユーザー名を入力するか行を除外してから取り込んでください。';
 }

@@ -57,7 +57,8 @@ class DesktopSession extends ChangeNotifier {
       (protocol == HostProtocol.vnc ||
           (protocol == HostProtocol.rdp &&
               (bundledRdpAvailable ||
-                  defaultTargetPlatform == TargetPlatform.android)));
+                  defaultTargetPlatform == TargetPlatform.android ||
+                  defaultTargetPlatform == TargetPlatform.iOS)));
   @visibleForTesting
   final void Function(Object)? onErrorForTesting;
   final display = DesktopDisplay();
@@ -413,7 +414,9 @@ class DesktopSession extends ChangeNotifier {
         !bundledRdpAvailable) {
       // Android cannot host a local guacd: RDP there uses only the engine
       // packaged in the APK, and an APK without it reports that plainly.
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      if (!kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.android ||
+              defaultTargetPlatform == TargetPlatform.iOS)) {
         _fail(currentL10n.couldntStartTheRdpEngineCheck);
         return;
       }

@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../app_controller.dart';
 import '../domain/models.dart';
 import '../import/openssh_config_import.dart';
+import '../import/termius_import_picker.dart';
 import 'app_motion.dart';
 import '../l10n/l10n.dart';
 
@@ -53,28 +53,31 @@ class _OpenSshConfigImportDialogState extends State<OpenSshConfigImportDialog> {
   Future<Uint8List?> _pickBytes() async {
     final injected = widget.pickBytesForTesting;
     if (injected != null) return injected();
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-      allowMultiple: false,
-      withData: true,
-    );
-    final file = result?.files.single;
-    if (file == null) return null;
-    if (file.size > maxOpenSshConfigBytes) {
-      final bytes = file.bytes;
-      if (bytes != null) bytes.fillRange(0, bytes.length, 0);
-      throw FormatException(currentL10n.theSelectedConfigExceedsThe1);
-    }
-    final bytes = file.bytes;
-    if (bytes == null || bytes.length != file.size) {
-      if (bytes != null) bytes.fillRange(0, bytes.length, 0);
+    try {
+      final picked = await pickBoundedImportFile(
+        maxBytes: maxOpenSshConfigBytes,
+        showHiddenFiles: true,
+      );
+      if (picked == null) return null;
+      _fileName = picked.name;
+      return picked.bytes;
+    } on FormatException {
       throw FormatException(currentL10n.theSelectedConfigCouldNotBe);
     }
-    _fileName = file.name;
-    return bytes;
   }
 
-  Future<void> _chooseFile() async {
+  Future<void> _chooseFile() => _loadConfigBytes(_pickBytes);
+
+  Future<void> _loadLocalDefaultConfig() => _loadConfigBytes(() async {
+    final picked = await readLocalDefaultSshConfig(
+      maxBytes: maxOpenSshConfigBytes,
+    );
+    if (picked == null) return null;
+    _fileName = picked.name;
+    return picked.bytes;
+  });
+
+  Future<void> _loadConfigBytes(Future<Uint8List?> Function() loader) async {
     if (_busy) return;
     setState(() {
       _busy = true;
@@ -85,7 +88,7 @@ class _OpenSshConfigImportDialogState extends State<OpenSshConfigImportDialog> {
     });
     Uint8List? bytes;
     try {
-      bytes = await _pickBytes();
+      bytes = await loader();
       if (!mounted || bytes == null) return;
       if (bytes.length > maxOpenSshConfigBytes) {
         throw FormatException(context.l10n.theSelectedConfigExceedsThe1);
@@ -361,14 +364,32 @@ class _OpenSshConfigImportDialogState extends State<OpenSshConfigImportDialog> {
           children: [
             Text(context.l10n.reviewLiteralHostAliasesHostnameUser),
             const SizedBox(height: 14),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                key: const ValueKey('openssh_config_pick_file'),
-                onPressed: _busy ? null : _chooseFile,
-                icon: const Icon(Icons.file_open_outlined),
-                label: Text(_fileName ?? context.l10n.chooseSshConfigFile),
-              ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  key: const ValueKey('openssh_config_pick_file'),
+                  onPressed: _busy ? null : _chooseFile,
+                  icon: const Icon(Icons.file_open_outlined),
+                  label: Text(_fileName ?? context.l10n.chooseSshConfigFile),
+                ),
+                if (widget.pickBytesForTesting == null &&
+                    hasLocalDefaultSshConfig())
+                  OutlinedButton.icon(
+                    key: const ValueKey('openssh_config_load_default'),
+                    onPressed: _busy ? null : _loadLocalDefaultConfig,
+                    icon: const Icon(Icons.terminal_outlined),
+                    label: Text(
+                      switch (Localizations.localeOf(context).languageCode) {
+                        'zh' => '读取 ~/.ssh/config',
+                        'ja' => '~/.ssh/config を読み込む',
+                        'ru' => 'Загрузить ~/.ssh/config',
+                        _ => 'Load ~/.ssh/config',
+                      },
+                    ),
+                  ),
+              ],
             ),
             if (_busy) ...[
               const SizedBox(height: 12),

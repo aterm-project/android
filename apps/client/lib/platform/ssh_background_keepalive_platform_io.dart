@@ -1,3 +1,3 @@
 import 'dart:io';
 
-bool get needsSshBackgroundKeepalive => Platform.isAndroid;
+bool get needsSshBackgroundKeepalive => Platform.isAndroid || Platform.isIOS;

@@ -18,7 +18,9 @@ Future<String?> pickRdpRedirectFolder() async {
 bool get rdpDiskPickerAvailable =>
     !kIsWeb &&
     (defaultTargetPlatform == TargetPlatform.android ||
-        defaultTargetPlatform == TargetPlatform.windows);
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.macOS);
 
 Future<String?> pickRdpRedirectDisk(BuildContext context) async {
   await requestRdpStorageAccess();

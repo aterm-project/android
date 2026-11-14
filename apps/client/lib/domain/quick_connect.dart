@@ -62,11 +62,12 @@ class QuickConnectRequest {
       if (args.isEmpty) {
         throw FormatException(currentL10n.serialFormatConsoleTtyCom3B);
       }
-      final device = args
-          .removeAt(0)
-          .replaceFirst(RegExp(r'^@'), '')
-          .toUpperCase();
-      if (!RegExp(r'^COM[1-9][0-9]{0,3}$').hasMatch(device)) {
+      final rawDevice = args.removeAt(0).replaceFirst(RegExp(r'^@'), '');
+      final posixDevice = RegExp(
+        r'^/dev/(?:cu|tty)\.[A-Za-z0-9._-]+$',
+      ).hasMatch(rawDevice) && !rawDevice.contains('..');
+      final device = posixDevice ? rawDevice : rawDevice.toUpperCase();
+      if (!posixDevice && !RegExp(r'^COM[1-9][0-9]{0,3}$').hasMatch(device)) {
         throw FormatException(currentL10n.enterAValidSerialPortFor);
       }
       var baud = 115200;

@@ -9,6 +9,7 @@ analyzer:
     - ios/**
     - windows/**
     - linux/**
+    - macos/**
 
 linter:
   rules:

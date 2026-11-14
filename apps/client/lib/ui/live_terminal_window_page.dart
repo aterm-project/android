@@ -98,7 +98,15 @@ class _LiveTerminalWindowPageState extends State<LiveTerminalWindowPage> {
                     ),
                     child: Row(
                       children: [
-                        const SizedBox(width: 12),
+                        ListenableBuilder(
+                          listenable: WindowChromeScope.of(context),
+                          builder: (context, _) {
+                            final inset = WindowChromeScope.of(
+                              context,
+                            ).state.leadingInset;
+                            return SizedBox(width: inset > 0 ? inset : 12);
+                          },
+                        ),
                         const Icon(Icons.terminal, size: 18),
                         const SizedBox(width: 10),
                         Expanded(

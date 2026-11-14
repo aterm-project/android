@@ -29349,6 +29349,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This host has no usable saved sign-in. Add or fix its credential, then retry.'**
   String get connectProgressNoCredential;
+
+  /// No description provided for @termiusLocalOneClickAction.
+  ///
+  /// In en, this message translates to:
+  /// **'One-click Termius import'**
+  String get termiusLocalOneClickAction;
+
+  /// No description provided for @termiusLocalDetectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Termius Desktop found on this device'**
+  String get termiusLocalDetectedTitle;
+
+  /// No description provided for @termiusLocalDetectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No export file needed. Atermius reads the local Termius data without changing it, unlocks it with the Termius key from the system keychain (choose Allow if asked), decrypts it in memory and imports hosts, groups, tags, passwords, SSH keys, port forwards and jump hosts. Hosts that already exist are skipped.'**
+  String get termiusLocalDetectedBody;
+
+  /// No description provided for @termiusLocalImportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from local Termius'**
+  String get termiusLocalImportButton;
+
+  /// No description provided for @termiusLocalProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing from local Termius… If the system asks for keychain access, choose Allow.'**
+  String get termiusLocalProgress;
+
+  /// Local Termius one-click import.
+  ///
+  /// In en, this message translates to:
+  /// **'All {count} Termius hosts already exist here. Nothing was imported.'**
+  String termiusLocalAllExist(int count);
+
+  /// No description provided for @termiusLocalNothingNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Termius has no new hosts to import.'**
+  String get termiusLocalNothingNew;
+
+  /// No description provided for @termiusLocalFailNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'No local Termius Desktop data was found. Open Termius Desktop once on this device, then retry.'**
+  String get termiusLocalFailNotInstalled;
+
+  /// No description provided for @termiusLocalFailKeyNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t read the Termius key from the system keychain or Credential Manager. Choose Allow if asked, make sure Termius has been opened on this device, then retry.'**
+  String get termiusLocalFailKeyNotFound;
+
+  /// No description provided for @termiusLocalFailKeyRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The Termius key in the system keychain doesn’t unlock this Termius data. Nothing was imported. If you switched between the App Store and downloaded Termius, open the one you use once, then retry.'**
+  String get termiusLocalFailKeyRejected;
+
+  /// Local Termius one-click import.
+  ///
+  /// In en, this message translates to:
+  /// **'This Termius version uses an unknown encryption format ({header}). Nothing was imported; use a Termius CSV export instead.'**
+  String termiusLocalFailUnsupportedCipher(String header);
+
+  /// No description provided for @termiusLocalFailEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The local Termius data contains no hosts to import.'**
+  String get termiusLocalFailEmpty;
+
+  /// No description provided for @termiusLocalFailReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t read the local Termius data, so nothing was imported. If Termius is syncing, wait a moment and retry.'**
+  String get termiusLocalFailReadFailed;
+
+  /// No description provided for @termiusLocalFailTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The local Termius data exceeds the import safety limits, so nothing was imported. Use a Termius CSV export instead.'**
+  String get termiusLocalFailTooLarge;
+
+  /// No description provided for @termiusLocalReviewNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Some Termius hosts need attention before import (for example a missing username). Nothing was guessed or imported yet: review the findings below, enter a default username or exclude rows, then import.'**
+  String get termiusLocalReviewNeeded;
 }
 
 class _AppLocalizationsDelegate
