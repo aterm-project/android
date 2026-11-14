@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../desktop/desktop_session.dart' show DesktopSession;
 import '../desktop/direct/rdp.dart' show rdpEngineFeatures;
 import '../desktop/desktop_resolution.dart';
+import '../desktop/rdp_features.dart';
 import '../desktop/rdp_folder_picker.dart';
+import '../desktop/rdp_local_drives.dart';
 import '../desktop/rdp_settings.dart';
 import '../desktop/rdp_settings_editor.dart';
 import '../domain/models.dart';
@@ -73,6 +77,7 @@ class HostEditorPanel extends StatefulWidget {
     this.onValidate,
     this.canEdit = true,
     this.keyPrefix = 'host_editor',
+    this.rdpFeaturesForTesting,
   });
   final List<GroupRecord> groups;
   final List<HostRecord> hosts;
@@ -90,6 +95,10 @@ class HostEditorPanel extends StatefulWidget {
   final HostRecord? initialDraft;
   final String? submitLabel;
   final HostProtocol initialProtocol;
+
+  /// Replaces the installed engine's capabilities in widget tests.
+  @visibleForTesting
+  final RdpFeatures? rdpFeaturesForTesting;
 
   @override
   State<HostEditorPanel> createState() => _HostEditorPanelState();
@@ -120,6 +129,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
   late RdpSettings _rdpSettings;
   late VncSettings _vncSettings;
 
+  /// Device-local "Map local disks" choice (on by default, never synced).
+  late bool _mapLocalDisks;
+
   @override
   void initState() {
     super.initState();
@@ -127,6 +139,9 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
     _protocol = item?.protocol ?? widget.initialProtocol;
     _rdpSettings = item == null ? RdpSettings.defaults : RdpSettings.of(item);
     _vncSettings = item == null ? VncSettings.defaults : VncSettings.of(item);
+    _mapLocalDisks = RdpLocalDrivesController.instance.enabled(
+      widget.existing?.id,
+    );
     _rdpFingerprint = TextEditingController(
       text: item?.rdpCertificateSha256 ?? '',
     );
@@ -328,12 +343,19 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
                             unreadable:
                                 widget.existing != null &&
                                 RdpSettings.unreadable(widget.existing!),
-                            features: rdpEngineFeatures(),
+                            features:
+                                widget.rdpFeaturesForTesting ??
+                                rdpEngineFeatures(),
                             pickFolder: pickRdpRedirectFolder,
                             pickDisk: rdpDiskPickerAvailable
                                 ? pickRdpRedirectDisk
                                 : null,
                             onChanged: (value) => _rdpSettings = value,
+                            localVolumes:
+                                RdpLocalDrivesController.instance.source,
+                            localDrives: RdpLocalDrivesController.instance,
+                            mapLocalDisks: _mapLocalDisks,
+                            onMapLocalDisksChanged: _setMapLocalDisks,
                           ),
                           fieldGap,
                         ],
@@ -721,6 +743,16 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
     ),
   );
 
+  /// A saved Host applies the device-local choice at once, even where the
+  /// Host itself is read-only; a new Host keeps it until it is saved.
+  void _setMapLocalDisks(bool value) {
+    _mapLocalDisks = value;
+    final id = widget.existing?.id;
+    if (id != null) {
+      unawaited(RdpLocalDrivesController.instance.setEnabled(id, value));
+    }
+  }
+
   void _save() {
     final port = int.tryParse(_port.text.trim());
     final host = HostRecord(
@@ -792,6 +824,14 @@ class _HostEditorPanelState extends State<HostEditorPanel> {
     if (referenceIssue != null) {
       setState(() => _formError = referenceIssue);
       return;
+    }
+    // Device-local only. A saved Host applied a change already when the
+    // switch moved; re-applying the value shown would turn mapping off for
+    // good if the stored choices could not be read when the editor opened.
+    if (_protocol == HostProtocol.rdp && widget.existing == null) {
+      unawaited(
+        RdpLocalDrivesController.instance.setEnabled(host.id, _mapLocalDisks),
+      );
     }
     Navigator.pop(context, host);
   }

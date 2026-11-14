@@ -97,7 +97,8 @@ API int aterm_rdp_set_home(const char* dir) {
 
 #define MAX_DESKTOP_SIDE 8192u
 #define MAX_DESKTOP_PIXELS (8192u * 4096u)
-#define MAX_DRIVES 8
+#define MAX_DRIVES 32
+#define MAX_DRIVE_PATH 259  // UTF-8 bytes; FreeRDP keeps strnlen(path, MAX_PATH=260)
 #define MAX_PRINTERS 1
 #define MAX_MONITORS 16
 #define MAX_USB 16
@@ -719,7 +720,12 @@ static BOOL parse_config(const char* text, AtermConfig* cfg) {
       if (!bar || cfg->drive_count >= MAX_DRIVES) return FALSE;
       *bar = '\0';
       const char* name = v; const char* path = bar + 1;
-      if (!safe_text(name, 31) || !safe_text(path, 1024)) return FALSE;
+      // A longer path would be silently truncated by FreeRDP's drive channel.
+      // "*" (every local drive, with hotplug) and "%" (home) are FreeRDP
+      // wildcards; only explicit folders are mapped.
+      if (!safe_text(name, 31) || !safe_text(path, MAX_DRIVE_PATH) ||
+          strcmp(path, "*") == 0 || strcmp(path, "%") == 0)
+        return FALSE;
       for (const char* q = name; *q; q++)
         if (!isalnum((unsigned char)*q) && *q != ' ' && *q != '_' && *q != '-') return FALSE;
       DriveConfig* d = &cfg->drives[cfg->drive_count];
@@ -923,7 +929,8 @@ API void* aterm_rdp_create_ex(const char* host, int port, const char* user,
   BOOLVAL(RedirectClipboard, cfg.clipboard);
   BOOLVAL(AutoReconnectionEnabled, FALSE);
   // Redirection: each resource is explicit. No "all drives" and no hotplug of
-  // arbitrary drives; only folders the user listed for this Host.
+  // arbitrary drives; only the drive= lines Dart sent (the local volumes it
+  // found at connect time and folders listed for this Host).
   BOOLVAL(RedirectDrives, FALSE); BOOLVAL(RedirectHomeDrive, FALSE);
   BOOLVAL(RedirectPrinters, FALSE); BOOLVAL(RedirectSmartCards, FALSE);
   BOOLVAL(RedirectSerialPorts, FALSE); BOOLVAL(RedirectParallelPorts, FALSE);

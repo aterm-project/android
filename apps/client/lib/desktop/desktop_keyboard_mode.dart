@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import '../platform/fullscreen.dart';
 import '../storage/desktop_keyboard_store.dart';
+import 'keyboard_capture.dart';
+import 'keyboard_capture_settings.dart';
 
 enum DesktopKeyboardMode { overlay, resize }
 
@@ -158,8 +160,34 @@ class _DesktopKeyboardViewportState extends State<DesktopKeyboardViewport> {
   );
 }
 
+/// The remote-desktop settings section: the soft keyboard mode on phones and
+/// tablets, and full keyboard mapping wherever the runner can capture keys.
+bool remoteDesktopSettingsAvailable(TargetPlatform platform) =>
+    platform == TargetPlatform.android ||
+    platform == TargetPlatform.iOS ||
+    keyboardCaptureAvailable(platform);
+
 class DesktopKeyboardSettings extends StatelessWidget {
   const DesktopKeyboardSettings({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final platform = Theme.of(context).platform;
+    final mobile =
+        platform == TargetPlatform.android || platform == TargetPlatform.iOS;
+    final capture = keyboardCaptureAvailable(platform);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (mobile) const _DesktopSoftKeyboardSettings(),
+        if (mobile && capture) const SizedBox(height: 24),
+        if (capture) const KeyboardCaptureSettings(),
+      ],
+    );
+  }
+}
+
+class _DesktopSoftKeyboardSettings extends StatelessWidget {
+  const _DesktopSoftKeyboardSettings();
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: DesktopKeyboardController.instance,

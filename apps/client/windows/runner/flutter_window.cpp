@@ -6,8 +6,9 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
-FlutterWindow::FlutterWindow(const flutter::DartProject &project)
-    : project_(project) {}
+FlutterWindow::FlutterWindow(const flutter::DartProject &project,
+                             WindowKind kind)
+    : taskbar_identity_(kind), project_(project) {}
 
 FlutterWindow::~FlutterWindow() {}
 
@@ -15,6 +16,8 @@ bool FlutterWindow::OnCreate() {
   if (!Win32Window::OnCreate()) {
     return false;
   }
+  // Before the first Show(): the taskbar groups the window by these.
+  taskbar_identity_.Apply(GetHandle());
 
   RECT frame = GetClientArea();
 
@@ -31,6 +34,8 @@ bool FlutterWindow::OnCreate() {
 
   geometry_channel_ = std::make_unique<WindowGeometryChannel>(
       flutter_controller_->engine()->messenger(), [this]() { return GetHandle(); });
+  keyboard_capture_ = std::make_unique<KeyboardCapture>(
+      flutter_controller_->engine()->messenger(), GetHandle());
   chrome_channel_ =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           flutter_controller_->engine()->messenger(), "atermius/window_chrome",
@@ -126,7 +131,9 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  ReleaseWindowResources(GetHandle());
   geometry_channel_.reset();
+  keyboard_capture_.reset();
   chrome_channel_.reset();
   Win32Window::OnDestroy();
   if (flutter_controller_) {
@@ -143,6 +150,18 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   if (message == WM_CLOSE && close_guard_enabled_ && chrome_channel_) {
     chrome_channel_->InvokeMethod("closeRequested", nullptr);
     return 0;
+  }
+  if (message == WM_DESTROY) {
+    ReleaseWindowResources(hwnd);
+  } else if (keyboard_capture_) {
+    // Forwarded keys, activation (capture follows foreground) and menu mode.
+    if (const auto handled =
+            keyboard_capture_->HandleMessage(message, wparam, lparam)) {
+      return *handled;
+    }
+  }
+  if (message == WM_DPICHANGED) {
+    taskbar_identity_.UpdateIcons(hwnd, LOWORD(wparam));
   }
   // Frame layout must be resolved before plugin handlers consume NC messages.
   if (custom_chrome_enabled() &&
@@ -199,6 +218,16 @@ flutter::EncodableValue FlutterWindow::ChromeState() {
         flutter::EncodableValue(caption_height);
   }
   return flutter::EncodableValue(state);
+}
+
+void FlutterWindow::ReleaseWindowResources(HWND window) {
+  // Forwarded keys are released to Dart while the engine can still hear it.
+  if (keyboard_capture_) {
+    keyboard_capture_->Shutdown();
+  }
+  if (window) {
+    taskbar_identity_.Release(window);
+  }
 }
 
 void FlutterWindow::NotifyChromeState() {

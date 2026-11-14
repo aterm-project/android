@@ -2,4 +2,6 @@
 <full-backup-content>
     <!-- External-AI grants belong only to this device, never to a restore. -->
     <exclude domain="file" path="mcp-access-v1/" />
+    <!-- RDP "Map local disks" choices are device-local by design. -->
+    <exclude domain="file" path="rdp-local-drives-v1" />
 </full-backup-content>

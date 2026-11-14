@@ -104,11 +104,13 @@ void main() {
     );
     await _until(() => acked == 1, what: 'partial frame');
     child.send(['key', 0x61, 1]);
+    child.send(['key', 0x1008ff13, 1]); // XF86AudioRaiseVolume (29-bit keysym)
     child.send(['mouse', 10, 12, 1]);
     child.paste('hi');
-    await _until(() => fake.sent.length >= 2 && fake.pasted.isNotEmpty, what: 'input');
+    await _until(() => fake.sent.length >= 3 && fake.pasted.isNotEmpty, what: 'input');
     expect(fake.sent, containsAllInOrder([
       ['key', 0x61, 1],
+      ['key', 0x1008ff13, 1],
       ['mouse', 10, 12, 1],
     ]));
     expect(fake.pasted, ['hi']);

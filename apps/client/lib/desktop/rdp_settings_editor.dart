@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'desktop_resolution.dart';
 import 'desktop_resolution_picker.dart';
 import 'rdp_features.dart';
+import 'rdp_local_drives.dart';
 import 'rdp_settings.dart';
 import 'rdp_storage.dart';
 import '../l10n/l10n.dart';
@@ -21,6 +24,10 @@ class RdpSettingsEditor extends StatefulWidget {
     this.pickDisk,
     this.keyPrefix = 'host',
     this.unreadable = false,
+    this.localVolumes,
+    this.localDrives,
+    this.mapLocalDisks = true,
+    this.onMapLocalDisksChanged,
   });
   final RdpSettings initial;
   final ValueChanged<RdpSettings> onChanged;
@@ -29,13 +36,26 @@ class RdpSettingsEditor extends StatefulWidget {
   final Future<String?> Function(BuildContext)? pickDisk;
   final String keyPrefix;
 
+  /// This device's volumes. The "Map local disks" switch is shown only where
+  /// they are mapped automatically (Windows, Android) and the engine has a
+  /// drive channel.
+  final RdpLocalVolumeSource? localVolumes;
+
+  /// Where the device-local choice is stored; the switch says when it could
+  /// not be saved or the stored choices could not be read.
+  final RdpLocalDrivesController? localDrives;
+
+  /// Device-local choice, not part of [RdpSettings] (never synchronized).
+  final bool mapLocalDisks;
+  final ValueChanged<bool>? onMapLocalDisksChanged;
+
   /// The stored entry was written by a newer version; saving replaces it.
   final bool unreadable;
   @override
   State<RdpSettingsEditor> createState() => _RdpSettingsEditorState();
 }
 
-enum _RdpEditorError { settings, invalidFolder }
+enum _RdpEditorError { settings, invalidFolder, folderPathTooLong }
 
 class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
   late RdpSettings _value = widget.initial;
@@ -121,10 +141,18 @@ class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
       setState(() => _error = _RdpEditorError.invalidFolder);
       return;
     }
+    // Stored Hosts may hold longer paths from older versions; a new mapping
+    // must fit the engine's drive channel.
+    if (!rdpPathFitsEngine(path)) {
+      setState(() => _error = _RdpEditorError.folderPathTooLong);
+      return;
+    }
     final diskLetter = RegExp(r'^([A-Za-z]):[\\/]*$').firstMatch(path);
+    // A whole Windows disk is named by its letter, so the server shows it as
+    // \\tsclient\C like the automatic mappings.
     final base =
         (diskLetter != null
-                ? 'Drive ${diskLetter[1]!.toUpperCase()}'
+                ? diskLetter[1]!.toUpperCase()
                 : RegExp(r'^/storage/emulated/[0-9]+/?$').hasMatch(path)
                 ? 'Local Storage'
                 : path
@@ -222,6 +250,7 @@ class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
     final error = switch (_error) {
       _RdpEditorError.invalidFolder =>
         context.l10n.desktopChooseAbsoluteLocalFolder,
+      _RdpEditorError.folderPathTooLong => context.l10n.rdpFolderPathTooLong,
       _RdpEditorError.settings =>
         (v.resolution == RdpResolutionMode.fixed
                 ? validateDesktopSize(v.width, v.height, l10n: context.l10n)
@@ -229,7 +258,9 @@ class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
             v.validate(),
       null => null,
     };
-    return ExpansionTile(
+    final volumes = widget.localVolumes;
+    final changedLocalDisks = widget.onMapLocalDisksChanged;
+    final options = ExpansionTile(
       key: _k('options'),
       tilePadding: EdgeInsets.zero,
       // Top inset keeps the first field's floating label clear of the header.
@@ -486,6 +517,206 @@ class _RdpSettingsEditorState extends State<RdpSettingsEditor> {
             style: TextStyle(color: theme.colorScheme.error),
           ),
         ],
+      ],
+    );
+    if (volumes?.os == null ||
+        changedLocalDisks == null ||
+        !widget.features.has(RdpFeatures.drive)) {
+      return options;
+    }
+    // Outside the collapsed options so the default is visible at a glance.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        RdpLocalDisksSwitch(
+          keyPrefix: widget.keyPrefix,
+          source: volumes!,
+          status: widget.localDrives,
+          value: widget.mapLocalDisks,
+          onChanged: changedLocalDisks,
+        ),
+        options,
+      ],
+    );
+  }
+}
+
+/// "Map local disks (\\tsclient)": this device's disks are mapped to the
+/// remote session unless turned off for the Host. Shows what would be mapped
+/// now and, on Android, the All files access state with a way to grant it.
+class RdpLocalDisksSwitch extends StatefulWidget {
+  const RdpLocalDisksSwitch({
+    super.key,
+    required this.source,
+    required this.value,
+    required this.onChanged,
+    this.status,
+    this.keyPrefix = 'host',
+  });
+  final RdpLocalVolumeSource source;
+
+  /// Store state shown under the switch (save failure, unreadable choices).
+  final RdpLocalDrivesController? status;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final String keyPrefix;
+  @override
+  State<RdpLocalDisksSwitch> createState() => _RdpLocalDisksSwitchState();
+}
+
+class _RdpLocalDisksSwitchState extends State<RdpLocalDisksSwitch>
+    with WidgetsBindingObserver {
+  late bool _value = widget.value;
+  bool? _access;
+  List<RdpLocalVolume>? _volumes;
+  bool _requesting = false, _denied = false;
+  int _loads = 0;
+
+  Key _k(String name) => ValueKey('${widget.keyPrefix}_rdp_$name');
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_load());
+  }
+
+  /// All files access is granted in Android Settings, outside the app, so
+  /// Android lists again on return. Elsewhere the list is read once per
+  /// editor: Windows desktop resumes on every focus change, and each listing
+  /// probes every drive (spinning up optical media). Connecting always lists
+  /// the drives present then.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        widget.source.os == RdpAutoDriveOs.android) {
+      unawaited(_load());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final load = ++_loads;
+    bool? access;
+    var volumes = const <RdpLocalVolume>[];
+    try {
+      access = await widget.source.hasAccess().timeout(
+        const Duration(seconds: 5),
+      );
+      if (access) {
+        volumes = await widget.source.volumes().timeout(
+          const Duration(seconds: 10),
+        );
+      }
+    } on Object {
+      // Unknown: the switch still works; only the description is shorter.
+    }
+    if (!mounted || load != _loads) return;
+    setState(() {
+      _access = access;
+      _volumes = access == null ? null : volumes;
+    });
+  }
+
+  Future<void> _grant() async {
+    setState(() {
+      _requesting = true;
+      _denied = false;
+    });
+    var granted = false;
+    try {
+      granted = await widget.source.requestAccess();
+    } on Object {
+      granted = false;
+    }
+    if (!mounted) return;
+    setState(() {
+      _requesting = false;
+      _denied = !granted;
+    });
+    await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final needsAccess =
+        widget.source.os == RdpAutoDriveOs.android && _access == false;
+    final ready = [
+      for (final volume in _volumes ?? const <RdpLocalVolume>[])
+        if (volume.ready) volume.name,
+    ];
+    final detail = needsAccess
+        ? l10n.rdpMapLocalDisksNeedsAccess
+        : _volumes == null
+        ? null
+        : ready.isEmpty
+        ? l10n.rdpMapLocalDisksNone
+        : l10n.rdpMapLocalDisksWillMap(ready.join(l10n.rdpListSeparator));
+    final errorStyle = TextStyle(color: theme.colorScheme.error);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SwitchListTile(
+          key: _k('local_disks'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.rdpMapLocalDisks),
+          subtitle: ListenableBuilder(
+            listenable: Listenable.merge([widget.status]),
+            builder: (context, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.rdpMapLocalDisksThisDevice),
+                if (detail != null)
+                  Text(detail, key: _k('local_disks_detail')),
+                if (widget.status?.unreadable == true)
+                  Text(
+                    l10n.rdpMapLocalDisksUnreadable,
+                    key: _k('local_disks_unreadable'),
+                    style: errorStyle,
+                  ),
+                if (widget.status?.writeFailed == true)
+                  Text(
+                    l10n.rdpMapLocalDisksSaveFailed,
+                    key: _k('local_disks_save_failed'),
+                    style: errorStyle,
+                  ),
+              ],
+            ),
+          ),
+          value: _value,
+          onChanged: (on) {
+            setState(() => _value = on);
+            widget.onChanged(on);
+          },
+        ),
+        if (needsAccess && _value)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                FilledButton.tonal(
+                  key: _k('local_disks_grant'),
+                  onPressed: _requesting ? null : _grant,
+                  child: Text(l10n.rdpGrantFileAccess),
+                ),
+                if (_denied)
+                  Text(l10n.rdpStoragePermissionRequired, style: errorStyle),
+              ],
+            ),
+          ),
       ],
     );
   }

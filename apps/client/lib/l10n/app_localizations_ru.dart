@@ -5379,7 +5379,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get rdpOptions => 'Параметры RDP';
 
   @override
-  String get redirectedFolders => 'Перенаправляемые папки';
+  String get redirectedFolders => 'Дополнительные папки';
 
   @override
   String get remoteAudio => 'Удалённый звук';
@@ -18530,6 +18530,49 @@ class AppLocalizationsRu extends AppLocalizations {
       'Настройка действует, но сохранить её не удалось. Повторите попытку.';
 
   @override
+  String get keyboardCaptureTitle => 'Полный перехват клавиатуры';
+
+  @override
+  String get keyboardCaptureOff => 'Выключено';
+
+  @override
+  String get keyboardCaptureFullscreen => 'Только в полноэкранном режиме';
+
+  @override
+  String get keyboardCaptureFocused => 'Когда сеанс в фокусе';
+
+  @override
+  String get keyboardCaptureWindowsDescription =>
+      'Клавиша Windows, Alt+Tab, Ctrl+Esc, Alt+F4, Print Screen и другие системные сочетания передаются на удалённый компьютер, пока удалённый рабочий стол в фокусе клавиатуры и указатель находится над ним. Чтобы использовать их локально, уведите указатель с удалённого рабочего стола.';
+
+  @override
+  String get keyboardCaptureMacDescription =>
+      'Command+Tab, Command+Пробел, Control+стрелки и другие системные сочетания передаются на удалённый компьютер, пока удалённый рабочий стол в фокусе клавиатуры и указатель находится над ним. Чтобы использовать их локально, уведите указатель с удалённого рабочего стола.';
+
+  @override
+  String get keyboardCaptureAndroidDescription =>
+      'Если Android это позволяет, системные сочетания аппаратной клавиатуры, например клавиша Meta и Alt+Tab, передаются на удалённый компьютер, пока Atermius — активное окно на переднем плане и удалённый рабочий стол в фокусе. «Домой», «Недавние» и другие зарезервированные клавиши всегда остаются на этом устройстве.';
+
+  @override
+  String get keyboardCaptureIosDescription =>
+      'Сочетания с Tab, Пробелом и клавишами со стрелками на аппаратной клавиатуре передаются на удалённый компьютер, даже если их использовала бы клавиатурная навигация, пока Atermius — активное окно и удалённый рабочий стол в фокусе. Сочетания iPadOS, такие как Command+Tab, Command+Пробел, Command+H, клавиша «Глобус» и снимки экрана, всегда остаются на этом устройстве.';
+
+  @override
+  String get keyboardCaptureCtrlAltDelete =>
+      'Ctrl+Alt+End отправляет Ctrl+Alt+Delete, Ctrl+Alt+Home открывает меню сеанса.';
+
+  @override
+  String get keyboardCapturePermissionRequired =>
+      'Чтобы перехватывать системные сочетания, Atermius нужно разрешение «Универсальный доступ» в macOS. Разрешите Atermius в «Системные настройки › Конфиденциальность и безопасность › Универсальный доступ».';
+
+  @override
+  String get keyboardCaptureGrantPermission => 'Разрешить универсальный доступ';
+
+  @override
+  String get keyboardCaptureUnsupported =>
+      'Эта версия Atermius не может перехватывать системные сочетания на этом устройстве.';
+
+  @override
   String get rdpAddDisk => 'Добавить диск';
 
   @override
@@ -18545,7 +18588,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get rdpStoragePermissionRequired =>
-      'Для перенаправления диска или папки разрешите Atermius доступ к файлам в настройках Android и повторите попытку. Доступны только папки, добавленные для этого хоста.';
+      'Для перенаправления диска или папки разрешите Atermius доступ к файлам в настройках Android и повторите попытку.';
 
   @override
   String get rdpStoragePickerFailed =>
@@ -18564,6 +18607,72 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get rdpMappingReconnect =>
       'Переподключитесь к удалённому сеансу, чтобы применить изменения перенаправления.';
+
+  @override
+  String get rdpMapLocalDisks => 'Подключать локальные диски (\\\\tsclient)';
+
+  @override
+  String get rdpMapLocalDisksThisDevice =>
+      'Действует только на этом устройстве.';
+
+  @override
+  String rdpMapLocalDisksWillMap(String names) {
+    return 'Будут подключены: $names';
+  }
+
+  @override
+  String get rdpMapLocalDisksNone => 'Сейчас нет доступных локальных дисков.';
+
+  @override
+  String get rdpMapLocalDisksNeedsAccess =>
+      'Чтобы подключить хранилище этого устройства, нужен доступ ко всем файлам.';
+
+  @override
+  String get rdpGrantFileAccess => 'Разрешить доступ ко всем файлам';
+
+  @override
+  String get rdpListSeparator => ', ';
+
+  @override
+  String rdpLocalDisksMapped(String names) {
+    return 'Локальные диски $names подключены к удалённому рабочему столу (\\\\tsclient). Чтобы отключить это, выключите «Подключать локальные диски» в настройках хоста.';
+  }
+
+  @override
+  String get rdpLocalDisksNeedAccess =>
+      'Хранилище этого устройства не подключено: нет доступа ко всем файлам. Разрешите его в пункте «Подключать локальные диски» в настройках хоста или отключите там подключение дисков.';
+
+  @override
+  String rdpLocalDisksUnavailable(String names) {
+    return 'Пропущены неготовые локальные диски: $names';
+  }
+
+  @override
+  String rdpDrivesFromOtherDevice(String names) {
+    return 'Пропущены папки с путями операционной системы другого устройства: $names';
+  }
+
+  @override
+  String rdpDrivesLeftOut(int count, String names) {
+    return 'За одно подключение можно подключить не более $count дисков и папок. Не подключены: $names';
+  }
+
+  @override
+  String get rdpMapLocalDisksSaveFailed =>
+      'Этот выбор действует в этом окне, но не сохранён на устройстве. Повторите попытку.';
+
+  @override
+  String get rdpMapLocalDisksUnreadable =>
+      'Не удалось прочитать сохранённые на устройстве настройки подключения дисков, поэтому локальные диски не подключаются, пока их не удастся прочитать.';
+
+  @override
+  String rdpDrivesPathTooLong(String names) {
+    return 'Пропущены папки со слишком длинным путём (более 259 байт): $names';
+  }
+
+  @override
+  String get rdpFolderPathTooLong =>
+      'Путь к этой папке слишком длинный для подключения (более 259 байт). Выберите папку с более коротким путём.';
 
   @override
   String get keybarShiftGuidance =>

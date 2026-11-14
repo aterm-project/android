@@ -4519,7 +4519,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rdpOptions => 'RDP 选项';
 
   @override
-  String get redirectedFolders => '重定向的文件夹';
+  String get redirectedFolders => '额外映射的文件夹';
 
   @override
   String get remoteAudio => '远程音频';
@@ -16513,6 +16513,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopKeyboardSaveFailed => '当前选择已生效，但未能保存，请重试。';
 
   @override
+  String get keyboardCaptureTitle => '键盘全面映射';
+
+  @override
+  String get keyboardCaptureOff => '关闭';
+
+  @override
+  String get keyboardCaptureFullscreen => '仅全屏时';
+
+  @override
+  String get keyboardCaptureFocused => '会话获得焦点时';
+
+  @override
+  String get keyboardCaptureWindowsDescription =>
+      '远程桌面获得键盘焦点且鼠标指针位于其上时，Windows 键、Alt+Tab、Ctrl+Esc、Alt+F4、Print Screen 等系统快捷键将发送到远程计算机。将指针移出远程桌面即可在本机使用这些快捷键。';
+
+  @override
+  String get keyboardCaptureMacDescription =>
+      '远程桌面获得键盘焦点且鼠标指针位于其上时，Command+Tab、Command+空格、Control+方向键等系统快捷键将发送到远程计算机。将指针移出远程桌面即可在本机使用这些快捷键。';
+
+  @override
+  String get keyboardCaptureAndroidDescription =>
+      '在 Android 允许的设备上，当 Atermius 为当前前台窗口且远程桌面获得焦点时，硬件键盘的 Meta 键、Alt+Tab 等系统快捷键将发送到远程计算机。主屏幕、最近任务等系统保留按键始终由本机处理。';
+
+  @override
+  String get keyboardCaptureIosDescription =>
+      '当 Atermius 为当前活动窗口且远程桌面获得焦点时，硬件键盘的 Tab、空格和方向键组合将发送到远程计算机，即使键盘导航原本会使用这些按键。Command+Tab、Command+空格、Command+H、地球仪键和截屏等 iPadOS 快捷键始终由本机处理。';
+
+  @override
+  String get keyboardCaptureCtrlAltDelete =>
+      '按 Ctrl+Alt+End 发送 Ctrl+Alt+Delete；Ctrl+Alt+Home 打开会话菜单。';
+
+  @override
+  String get keyboardCapturePermissionRequired =>
+      'macOS 需要授予辅助功能权限，Atermius 才能捕获系统快捷键。请在“系统设置 › 隐私与安全性 › 辅助功能”中允许 Atermius。';
+
+  @override
+  String get keyboardCaptureGrantPermission => '授予辅助功能权限';
+
+  @override
+  String get keyboardCaptureUnsupported => '当前版本的 Atermius 无法在此设备上捕获系统快捷键。';
+
+  @override
   String get rdpAddDisk => '添加磁盘';
 
   @override
@@ -16528,7 +16570,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rdpStoragePermissionRequired =>
-      '映射磁盘或文件夹需要在 Android 设置中允许 Atermius 访问文件，然后重试。仅共享为此主机添加的目录。';
+      '映射磁盘或文件夹需要在 Android 设置中允许 Atermius 访问文件，然后重试。';
 
   @override
   String get rdpStoragePickerFailed => '无法选择本机文件夹，请换一个当前设备上的目录重试。';
@@ -16545,6 +16587,67 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rdpMappingReconnect => '重新连接远程会话后，磁盘映射改动生效。';
+
+  @override
+  String get rdpMapLocalDisks => '映射本机磁盘（\\\\tsclient）';
+
+  @override
+  String get rdpMapLocalDisksThisDevice => '仅对本设备生效。';
+
+  @override
+  String rdpMapLocalDisksWillMap(String names) {
+    return '将映射：$names';
+  }
+
+  @override
+  String get rdpMapLocalDisksNone => '目前没有可映射的本机磁盘。';
+
+  @override
+  String get rdpMapLocalDisksNeedsAccess => '映射本机存储需要“所有文件访问权限”。';
+
+  @override
+  String get rdpGrantFileAccess => '授予所有文件访问权限';
+
+  @override
+  String get rdpListSeparator => '、';
+
+  @override
+  String rdpLocalDisksMapped(String names) {
+    return '已将本机磁盘 $names 映射到远程桌面（\\\\tsclient）。可在编辑主机时关闭“映射本机磁盘”。';
+  }
+
+  @override
+  String get rdpLocalDisksNeedAccess =>
+      '未映射本机存储：尚未授予“所有文件访问权限”。可在编辑主机的“映射本机磁盘”处授权，或在那里关闭映射。';
+
+  @override
+  String rdpLocalDisksUnavailable(String names) {
+    return '以下本机磁盘未就绪，已跳过：$names';
+  }
+
+  @override
+  String rdpDrivesFromOtherDevice(String names) {
+    return '以下文件夹的路径属于其他设备的操作系统，已跳过：$names';
+  }
+
+  @override
+  String rdpDrivesLeftOut(int count, String names) {
+    return '一次连接最多映射 $count 个磁盘和文件夹，未映射：$names';
+  }
+
+  @override
+  String get rdpMapLocalDisksSaveFailed => '此选择已在当前窗口生效，但未能保存到本设备，请重试。';
+
+  @override
+  String get rdpMapLocalDisksUnreadable => '无法读取本设备保存的磁盘映射选择，在能读取之前不会映射本机磁盘。';
+
+  @override
+  String rdpDrivesPathTooLong(String names) {
+    return '以下文件夹路径过长（超过 259 字节），无法映射，已跳过：$names';
+  }
+
+  @override
+  String get rdpFolderPathTooLong => '此文件夹路径过长（超过 259 字节），无法映射。请选择路径更短的文件夹。';
 
   @override
   String get keybarShiftGuidance => 'Shift：单击仅对下一个按键生效，双击锁定';

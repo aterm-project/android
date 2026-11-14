@@ -1,6 +1,10 @@
 import 'platform/file_window_tracking.dart';
 import 'desktop/desktop_keyboard_mode.dart';
 import 'storage/desktop_keyboard_store.dart';
+import 'desktop/keyboard_capture.dart';
+import 'storage/keyboard_capture_store.dart';
+import 'desktop/rdp_local_drives.dart';
+import 'storage/rdp_local_drives_store.dart';
 
 import 'dart:async';
 
@@ -142,6 +146,12 @@ Future<void> main(List<String> arguments) async {
   // Geometry-only file tracking is ready before any authentication/UI startup.
   await startFileWindowTracking(arguments, filesLaunch);
   await DesktopKeyboardController.instance.load(createDesktopKeyboardStore());
+  // Device-local full keyboard mapping preference; detached remote-desktop
+  // windows are separate processes and read it here too.
+  await KeyboardCaptureController.instance.load(createKeyboardCaptureStore());
+  // Device-local "Map local disks" choice per RDP Host (on by default). Kept
+  // out of the Host, sync, Vault export and backup on purpose.
+  await RdpLocalDrivesController.instance.load(createRdpLocalDrivesStore());
   // Device-local display language (plain preference file / localStorage, not
   // secure storage): safe for renderer children before any profile startup.
   await AppLanguageController.instance.load(createAppLanguageStore());

@@ -5403,7 +5403,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rdpOptions => 'RDP options';
 
   @override
-  String get redirectedFolders => 'Redirected folders';
+  String get redirectedFolders => 'Additional mapped folders';
 
   @override
   String get remoteAudio => 'Remote audio';
@@ -18484,6 +18484,49 @@ class AppLocalizationsEn extends AppLocalizations {
       'This choice applies now, but could not be saved. Try again.';
 
   @override
+  String get keyboardCaptureTitle => 'Full keyboard mapping';
+
+  @override
+  String get keyboardCaptureOff => 'Off';
+
+  @override
+  String get keyboardCaptureFullscreen => 'Only in full screen';
+
+  @override
+  String get keyboardCaptureFocused => 'When the session is focused';
+
+  @override
+  String get keyboardCaptureWindowsDescription =>
+      'The Windows key, Alt+Tab, Ctrl+Esc, Alt+F4, Print Screen and other system shortcuts go to the remote computer while the remote desktop has keyboard focus and the pointer is over it. Move the pointer off the remote desktop to use them locally.';
+
+  @override
+  String get keyboardCaptureMacDescription =>
+      'Command+Tab, Command+Space, Control+arrow keys and other system shortcuts go to the remote computer while the remote desktop has keyboard focus and the pointer is over it. Move the pointer off the remote desktop to use them locally.';
+
+  @override
+  String get keyboardCaptureAndroidDescription =>
+      'Where Android allows it, system shortcuts from a hardware keyboard, such as the Meta key and Alt+Tab, go to the remote computer while Atermius is the active front window and the remote desktop has focus. Home, Recents and other reserved keys always stay on this device.';
+
+  @override
+  String get keyboardCaptureIosDescription =>
+      'Tab, Space and arrow-key combinations from a hardware keyboard go to the remote computer, even where keyboard navigation would use them, while Atermius is the active window and the remote desktop has focus. iPadOS shortcuts such as Command+Tab, Command+Space, Command+H, the Globe key and screenshots always stay on this device.';
+
+  @override
+  String get keyboardCaptureCtrlAltDelete =>
+      'Press Ctrl+Alt+End to send Ctrl+Alt+Delete. Ctrl+Alt+Home opens the session menu.';
+
+  @override
+  String get keyboardCapturePermissionRequired =>
+      'macOS needs Accessibility access before Atermius can capture system shortcuts. Allow Atermius in System Settings › Privacy & Security › Accessibility.';
+
+  @override
+  String get keyboardCaptureGrantPermission => 'Allow Accessibility access';
+
+  @override
+  String get keyboardCaptureUnsupported =>
+      'This version of Atermius can’t capture system shortcuts on this device.';
+
+  @override
   String get rdpAddDisk => 'Add disk';
 
   @override
@@ -18499,7 +18542,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rdpStoragePermissionRequired =>
-      'To map a disk or folder, allow Atermius to access files in Android Settings, then try again. Only folders added to this host are shared.';
+      'To map a disk or folder, allow Atermius to access files in Android Settings, then try again.';
 
   @override
   String get rdpStoragePickerFailed =>
@@ -18518,6 +18561,71 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get rdpMappingReconnect =>
       'Connect to the remote session again to apply mapping changes.';
+
+  @override
+  String get rdpMapLocalDisks => 'Map local disks (\\\\tsclient)';
+
+  @override
+  String get rdpMapLocalDisksThisDevice => 'Applies to this device only.';
+
+  @override
+  String rdpMapLocalDisksWillMap(String names) {
+    return 'Will map: $names';
+  }
+
+  @override
+  String get rdpMapLocalDisksNone => 'No local disk is available right now.';
+
+  @override
+  String get rdpMapLocalDisksNeedsAccess =>
+      'Mapping this device’s storage requires All files access.';
+
+  @override
+  String get rdpGrantFileAccess => 'Allow All files access';
+
+  @override
+  String get rdpListSeparator => ', ';
+
+  @override
+  String rdpLocalDisksMapped(String names) {
+    return 'Local disks $names are mapped to the remote desktop (\\\\tsclient). To stop this, turn off “Map local disks” when editing the host.';
+  }
+
+  @override
+  String get rdpLocalDisksNeedAccess =>
+      'This device’s storage isn’t mapped because All files access is off. Allow it under “Map local disks” when editing the host, or turn mapping off there.';
+
+  @override
+  String rdpLocalDisksUnavailable(String names) {
+    return 'Skipped local disks that aren’t ready: $names';
+  }
+
+  @override
+  String rdpDrivesFromOtherDevice(String names) {
+    return 'Skipped folders whose paths belong to another device’s operating system: $names';
+  }
+
+  @override
+  String rdpDrivesLeftOut(int count, String names) {
+    return 'A connection maps at most $count disks and folders. Not mapped: $names';
+  }
+
+  @override
+  String get rdpMapLocalDisksSaveFailed =>
+      'This choice applies in this window but couldn’t be saved on this device. Try again.';
+
+  @override
+  String get rdpMapLocalDisksUnreadable =>
+      'The saved disk-mapping choices on this device couldn’t be read, so local disks aren’t mapped until they can be.';
+
+  @override
+  String rdpDrivesPathTooLong(String names) {
+    return 'Skipped folders whose paths are too long to map (over 259 bytes): $names';
+  }
+
+  @override
+  String get rdpFolderPathTooLong =>
+      'This folder’s path is too long to map (over 259 bytes). Choose a folder with a shorter path.';
 
   @override
   String get keybarShiftGuidance =>

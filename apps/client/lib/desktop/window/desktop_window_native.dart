@@ -437,7 +437,8 @@ class DesktopWindowBroker {
           if (!_clientReady ||
               sym is! int ||
               sym < 0 ||
-              sym > 0x01ffffff ||
+              // X11 keysyms are 29-bit; XF86 media keys are 0x1008ffxx.
+              sym > 0x1fffffff ||
               (down != 0 && down != 1)) {
             throw const FormatException();
           }

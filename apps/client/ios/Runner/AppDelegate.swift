@@ -8,6 +8,16 @@ import UIKit
   private var mcpChannel: FlutterMethodChannel?
   private var externalEditChannel: FlutterMethodChannel?
   private var rdpStorageChannel: FlutterMethodChannel?
+  private var keyboardCaptureChannel: FlutterMethodChannel?
+
+  private var keyboardCaptureArmed = false
+  /// Set between UIScene.willDeactivate and didActivate (activationState still reads
+  /// foregroundActive while the scene is deactivating).
+  private var keyboardCaptureSceneDeactivating = false
+  private var keyboardCaptureLastFocus: Bool?
+  private var keyboardCaptureObservers: [NSObjectProtocol] = []
+  /// Built once: UIKit may stop delivering key commands whose array changes identity per query.
+  private lazy var keyboardCaptureCommands: [UIKeyCommand] = self.makeKeyboardCaptureCommands()
 
   private var sshRevision: Int = 0
   private var sshSessions: Int = 0
@@ -26,6 +36,7 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     installLifecycleObservers()
+    installKeyboardCaptureObservers()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -37,6 +48,7 @@ import UIKit
     setupMcpForegroundChannel(messenger: messenger)
     setupExternalEditChannel(messenger: messenger)
     setupRdpStorageChannel(messenger: messenger)
+    setupKeyboardCaptureChannel(messenger: messenger)
   }
 
   // MARK: - App Lifecycle Background Task Rotation
@@ -412,8 +424,210 @@ import UIKit
     }
   }
 
+  // MARK: - Keyboard Capture (`atermius/keyboard_capture`)
+
+  // Flutter already receives hardware-keyboard presses through pressesBegan.
+  // Since iOS 15 the text input and focus systems (notably Full Keyboard Access
+  // navigation) see navigation keys first and may consume them before Flutter.
+  // While Dart arms capture and the scene is foreground-active with its window
+  // key, the app delegate (the end of the responder chain) offers key commands
+  // with wantsPriorityOverSystemBehavior for those keys; each fired command is
+  // forwarded to Dart as a key down+up pair for the remote computer.
+  // iPadOS-level shortcuts (Command+Tab, Command+Space, Command+H, the Globe
+  // key, screenshots) are handled outside the app and cannot be captured.
+  // Key contents only travel in memory to Dart; nothing is logged or stored.
+
+  private func keyboardCaptureState(includeFocus: Bool) -> [String: Any] {
+    var state: [String: Any] = [
+      "supported": true,
+      "permission": "notRequired",
+    ]
+    if includeFocus {
+      state["windowFocused"] = keyboardCaptureWindowFocused()
+    }
+    return state
+  }
+
+  private func keyboardCaptureWindow() -> UIWindow? {
+    for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+      if let window = scene.windows.first(where: { $0.rootViewController is FlutterViewController }) {
+        return window
+      }
+    }
+    return nil
+  }
+
+  /// Focus rule: the Flutter scene is foreground-active and its window is key.
+  private func keyboardCaptureWindowFocused() -> Bool {
+    guard !keyboardCaptureSceneDeactivating,
+          let window = keyboardCaptureWindow(),
+          let scene = window.windowScene else {
+      return false
+    }
+    return scene.activationState == .foregroundActive && window.isKeyWindow
+  }
+
+  private func setupKeyboardCaptureChannel(messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "atermius/keyboard_capture",
+      binaryMessenger: messenger
+    )
+    keyboardCaptureChannel = channel
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(["supported": false, "permission": "notRequired"])
+        return
+      }
+      switch call.method {
+      case "configure":
+        let args = call.arguments as? [String: Any]
+        self.keyboardCaptureArmed = (args?["armed"] as? Bool) ?? false
+        result(self.keyboardCaptureState(includeFocus: false))
+      case "getState":
+        result(self.keyboardCaptureState(includeFocus: true))
+      case "requestPermission":
+        result(self.keyboardCaptureState(includeFocus: false))
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  private func installKeyboardCaptureObservers() {
+    let center = NotificationCenter.default
+    let sceneEvents: [(Notification.Name, Bool)] = [
+      (UIScene.didActivateNotification, false),
+      (UIScene.willDeactivateNotification, true),
+    ]
+    for (name, deactivating) in sceneEvents {
+      keyboardCaptureObservers.append(
+        center.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+          self?.keyboardCaptureSceneChanged(note, deactivating: deactivating)
+        }
+      )
+    }
+    for name in [UIWindow.didBecomeKeyNotification, UIWindow.didResignKeyNotification] {
+      keyboardCaptureObservers.append(
+        center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+          self?.emitKeyboardCaptureFocus()
+        }
+      )
+    }
+  }
+
+  private func keyboardCaptureSceneChanged(_ note: Notification, deactivating: Bool) {
+    if let scene = note.object as? UIScene,
+       let ownScene = keyboardCaptureWindow()?.windowScene,
+       scene !== ownScene {
+      return
+    }
+    keyboardCaptureSceneDeactivating = deactivating
+    emitKeyboardCaptureFocus()
+  }
+
+  private func emitKeyboardCaptureFocus() {
+    guard let channel = keyboardCaptureChannel else { return }
+    let focused = keyboardCaptureWindowFocused()
+    guard keyboardCaptureLastFocus != focused else { return }
+    keyboardCaptureLastFocus = focused
+    channel.invokeMethod("windowFocus", arguments: ["focused": focused])
+  }
+
+  private func makeKeyboardCaptureCommands() -> [UIKeyCommand] {
+    let tabModifiers: [UIKeyModifierFlags] = [
+      [], .shift, .control, [.control, .shift], .alternate, [.alternate, .shift],
+    ]
+    let arrowModifiers: [UIKeyModifierFlags] = [
+      [], .shift, .control, [.control, .shift], .alternate, [.alternate, .shift],
+      .command, [.command, .shift],
+    ]
+    let spaceModifiers: [UIKeyModifierFlags] = [[], .control]
+    let arrows = [
+      UIKeyCommand.inputUpArrow,
+      UIKeyCommand.inputDownArrow,
+      UIKeyCommand.inputLeftArrow,
+      UIKeyCommand.inputRightArrow,
+    ]
+    var entries: [(String, [UIKeyModifierFlags])] = [("\t", tabModifiers), (" ", spaceModifiers)]
+    for arrow in arrows {
+      entries.append((arrow, arrowModifiers))
+    }
+    var commands: [UIKeyCommand] = []
+    for (input, modifierSets) in entries {
+      for modifiers in modifierSets {
+        let command = UIKeyCommand(
+          input: input,
+          modifierFlags: modifiers,
+          action: #selector(AppDelegate.handleKeyboardCaptureCommand(_:))
+        )
+        command.wantsPriorityOverSystemBehavior = true
+        command.allowsAutomaticLocalization = false
+        command.allowsAutomaticMirroring = false
+        commands.append(command)
+      }
+    }
+    return commands
+  }
+
+  /// UIKeyboardHIDUsage code and base character of a capture command's input.
+  private static func keyboardCaptureKey(for input: String) -> (code: Int, char: String)? {
+    switch input {
+    case "\t":
+      return (UIKeyboardHIDUsage.keyboardTab.rawValue, "\t")
+    case " ":
+      return (UIKeyboardHIDUsage.keyboardSpacebar.rawValue, " ")
+    case UIKeyCommand.inputUpArrow:
+      return (UIKeyboardHIDUsage.keyboardUpArrow.rawValue, "")
+    case UIKeyCommand.inputDownArrow:
+      return (UIKeyboardHIDUsage.keyboardDownArrow.rawValue, "")
+    case UIKeyCommand.inputLeftArrow:
+      return (UIKeyboardHIDUsage.keyboardLeftArrow.rawValue, "")
+    case UIKeyCommand.inputRightArrow:
+      return (UIKeyboardHIDUsage.keyboardRightArrow.rawValue, "")
+    default:
+      return nil
+    }
+  }
+
+  /// Queried by UIKit for every hardware key press, so arming takes effect at once.
+  override var keyCommands: [UIKeyCommand]? {
+    let inherited = super.keyCommands
+    guard keyboardCaptureArmed, keyboardCaptureWindowFocused() else {
+      return inherited
+    }
+    guard let inherited = inherited, !inherited.isEmpty else {
+      return keyboardCaptureCommands
+    }
+    return inherited + keyboardCaptureCommands
+  }
+
+  @objc private func handleKeyboardCaptureCommand(_ sender: UIKeyCommand) {
+    guard keyboardCaptureArmed,
+          keyboardCaptureWindowFocused(),
+          let channel = keyboardCaptureChannel,
+          let input = sender.input,
+          let key = Self.keyboardCaptureKey(for: input) else {
+      return
+    }
+    // Key commands report presses only (repeats fire again), so each one is a
+    // complete tap; modifiers held around it already reached Flutter normally.
+    for down in [true, false] {
+      channel.invokeMethod("key", arguments: [
+        "platform": "ios",
+        "down": down,
+        "code": key.code,
+        "scan": 0,
+        "extended": false,
+        "char": key.char,
+      ])
+    }
+  }
+
   deinit {
     for observer in lifecycleObservers {
+      NotificationCenter.default.removeObserver(observer)
+    }
+    for observer in keyboardCaptureObservers {
       NotificationCenter.default.removeObserver(observer)
     }
     endSshBackgroundTask()

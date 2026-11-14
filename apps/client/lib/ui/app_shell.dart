@@ -15566,8 +15566,7 @@ class _SettingsPage extends StatelessWidget {
           ),
         ),
         // ACCOUNT worker: account/login category (identity, session actions).
-        if (Theme.of(context).platform == TargetPlatform.android ||
-            Theme.of(context).platform == TargetPlatform.iOS)
+        if (remoteDesktopSettingsAvailable(Theme.of(context).platform))
           SettingsSection(
             id: 'remote-desktop',
             title: context.l10n.remoteDesktop,

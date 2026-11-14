@@ -109,6 +109,69 @@ void main() {
       }
     });
 
+    test('a Host stores at most 8 folders (synchronized schema); a '
+        'connection carries at most 32 mappings, as the native engine', () {
+      List<RdpDriveRedirect> drives(int count) => [
+        for (var i = 0; i < count; i++)
+          RdpDriveRedirect(name: 'D$i', path: '/srv/$i'),
+      ];
+      // Earlier versions reject a stored entry with more than 8 folders and
+      // would save their defaults over it.
+      expect(RdpSettings.maxDrives, 8);
+      expect(RdpSettings(drives: drives(8)).validate(), isNull);
+      expect(RdpSettings(drives: drives(9)).validate(), isNotNull);
+      expect(
+        () => RdpSettings.fromJson({
+          ...RdpSettings.defaults.toJson(),
+          'drives': [for (final d in drives(9)) d.toJson()],
+        }),
+        throwsFormatException,
+      );
+      expect(RdpSettings.maxConnectionDrives, 32);
+      RdpNativeConfig native(int count) => RdpSettings(
+        drives: drives(count),
+      ).toNativeConfig(
+        features: const RdpFeatures(RdpFeatures.configV1 | RdpFeatures.drive),
+        initialWidth: 1280,
+        initialHeight: 800,
+      );
+      expect('drive='.allMatches(native(32).text), hasLength(32));
+      expect(() => native(33), throwsFormatException);
+    });
+
+    test('a stored folder path longer than the engine carries keeps every '
+        'other setting readable', () {
+      // Earlier versions accepted up to 1024 characters; ~87 CJK characters
+      // already exceed 259 UTF-8 bytes.
+      final long = '/storage/emulated/0/${'项' * 90}';
+      final host = _rdp.copyWith(
+        manifest: {
+          rdpSettingsManifestKey: {
+            'version': 1,
+            'clipboard_files': true,
+            'printers': 'all',
+            'resolution': 'fixed',
+            'width': 1920,
+            'height': 1080,
+            'drives': [
+              {'name': 'Proj', 'path': long},
+            ],
+          },
+        },
+      );
+      expect(RdpSettings.unreadable(host), isFalse);
+      final settings = RdpSettings.of(host);
+      expect(settings.clipboardFiles, isTrue);
+      expect(settings.printers, RdpPrinterMode.all);
+      expect(settings.resolution, RdpResolutionMode.fixed);
+      expect(settings.drives.single.path, long);
+      // Saving again keeps the folder for every synchronized device.
+      expect(
+        RdpSettings.fromJson(settings.applyTo(null)![rdpSettingsManifestKey]),
+        settings,
+      );
+    });
+
     test('a corrupt or newer entry falls back to defaults and is flagged', () {
       final host = _rdp.copyWith(
         manifest: {

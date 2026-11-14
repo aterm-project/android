@@ -1,3 +1,4 @@
+import ApplicationServices
 import Cocoa
 import Darwin
 import FlutterMacOS
@@ -123,6 +124,41 @@ let atermMacosRetainedCExports: [Any] = [
   atermMacosWriteClipboardFiles as Any,
 ]
 
+/// Carbon `kVK_*` virtual key codes (HIToolbox/Events.h) used by keyboard capture.
+private enum MacVirtualKey {
+  static let ansiH = 0x04 // kVK_ANSI_H
+  static let ansiQ = 0x0C // kVK_ANSI_Q
+  static let ansiW = 0x0D // kVK_ANSI_W
+  static let ansiM = 0x2E // kVK_ANSI_M
+  static let tab = 0x30 // kVK_Tab
+  static let space = 0x31 // kVK_Space
+  static let grave = 0x32 // kVK_ANSI_Grave
+  static let escape = 0x35 // kVK_Escape
+  static let leftArrow = 0x7B // kVK_LeftArrow
+  static let rightArrow = 0x7C // kVK_RightArrow
+  static let downArrow = 0x7D // kVK_DownArrow
+  static let upArrow = 0x7E // kVK_UpArrow
+}
+
+/// CGEventTap callback of the keyboard capture mode (`atermius/keyboard_capture`).
+/// The tap's run loop source is added to the main run loop, so this always runs
+/// on the main thread. Returning nil swallows the event.
+private func atermKeyboardCaptureTapCallback(
+  _ proxy: CGEventTapProxy,
+  _ type: CGEventType,
+  _ event: CGEvent,
+  _ userInfo: UnsafeMutableRawPointer?
+) -> Unmanaged<CGEvent>? {
+  guard let userInfo = userInfo else {
+    return Unmanaged.passUnretained(event)
+  }
+  let window = Unmanaged<MainFlutterWindow>.fromOpaque(userInfo).takeUnretainedValue()
+  let swallow = MainActor.assumeIsolated {
+    window.keyboardCaptureShouldSwallow(type: type, event: event)
+  }
+  return swallow ? nil : Unmanaged.passUnretained(event)
+}
+
 class MainFlutterWindow: NSWindow, NSWindowDelegate {
   private var fullscreenChannel: FlutterMethodChannel?
   private var chromeChannel: FlutterMethodChannel?
@@ -142,9 +178,34 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
   private var preCoverStyleMask: NSWindow.StyleMask?
   private var preCoverPresentationOptions: NSApplication.PresentationOptions?
 
+  private var keyboardCaptureChannel: FlutterMethodChannel?
+  private var keyboardCaptureObservers: [NSObjectProtocol] = []
+  private var keyboardCaptureArmed = false
+  private var keyboardCaptureTap: CFMachPort?
+  private var keyboardCaptureTapSource: CFRunLoopSource?
+  /// Keys whose down was swallowed and forwarded to Dart, mapped to their base character.
+  private var keyboardCaptureForwarded: [Int: String] = [:]
+  /// Keys already released towards Dart (capture stopped mid-press) whose OS events stay
+  /// swallowed until the physical key-up, so their auto-repeat never fires a local shortcut.
+  private var keyboardCaptureSuppressed: Set<Int> = []
+  private var keyboardCaptureSuppressDeadline: DispatchTime = .now()
+  private var keyboardCaptureReconcileScheduled = false
+  private var keyboardCaptureTapWasDisabled = false
+  private var keyboardCaptureLastFocus: Bool?
+
   /// True while Dart owns an active close guard (e.g., hidden parent keeping detached SSH/RDP child windows alive).
   var shouldInterceptClose: Bool {
     return closeGuardEnabled && !forceClosing
+  }
+
+  /// Borderless monitor-covering windows (RDP monitor windows) still take keyboard
+  /// focus; AppKit defaults this to false for windows without a title or resize bar.
+  override var canBecomeKey: Bool {
+    return true
+  }
+
+  override var canBecomeMain: Bool {
+    return true
   }
 
   /// Filters out macOS LaunchServices / Cocoa flags (e.g. `-NSDocumentRevisionsDebugMode YES`, `-psn_*`)
@@ -200,7 +261,9 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     setupWindowChromeChannel(messenger: messenger)
     setupWindowGeometryChannel(messenger: messenger)
     setupFilePanelChannel(messenger: messenger)
+    setupKeyboardCaptureChannel(messenger: messenger)
     registerWindowObservers()
+    registerKeyboardCaptureObservers()
 
     super.awakeFromNib()
   }
@@ -596,6 +659,367 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     }
   }
 
+  // MARK: - Keyboard Capture (`atermius/keyboard_capture`)
+
+  // While Dart arms it (a focused remote desktop under the pointer), a session
+  // CGEventTap swallows macOS-reserved shortcuts (Command+Tab, Spotlight, Mission
+  // Control, Quit/Hide/Minimize/Close) before the system or the menu bar acts on
+  // them and forwards the keys to Dart for the remote computer. Modifier changes
+  // are never tapped, so modifiers keep reaching Flutter. Key contents only
+  // travel in memory to Dart; nothing is logged or stored.
+
+  private func keyboardCaptureTrusted() -> Bool {
+    return AXIsProcessTrusted()
+  }
+
+  private func keyboardCaptureState(includeFocus: Bool) -> [String: Any] {
+    var state: [String: Any] = [
+      "supported": true,
+      "permission": keyboardCaptureTrusted() ? "granted" : "required",
+    ]
+    if includeFocus {
+      state["windowFocused"] = keyboardCaptureWindowFocused()
+    }
+    return state
+  }
+
+  private func keyboardCaptureWindowFocused() -> Bool {
+    return NSApp.isActive && isKeyWindow
+  }
+
+  /// Event-time gate: armed, Atermius active, this window key and the pointer inside it.
+  private func keyboardCaptureGateOpen() -> Bool {
+    guard keyboardCaptureArmed, keyboardCaptureWindowFocused(), isVisible, !isMiniaturized else {
+      return false
+    }
+    return frame.contains(NSEvent.mouseLocation)
+  }
+
+  private func setupKeyboardCaptureChannel(messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "atermius/keyboard_capture",
+      binaryMessenger: messenger
+    )
+    keyboardCaptureChannel = channel
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(["supported": false, "permission": "notRequired"])
+        return
+      }
+      switch call.method {
+      case "configure":
+        let args = call.arguments as? [String: Any]
+        self.keyboardCaptureArmed = (args?["armed"] as? Bool) ?? false
+        self.updateKeyboardCaptureTap()
+        result(self.keyboardCaptureState(includeFocus: false))
+      case "getState":
+        result(self.keyboardCaptureState(includeFocus: true))
+      case "requestPermission":
+        // Literal value of kAXTrustedCheckOptionPrompt (its Swift import differs between SDKs).
+        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
+        self.updateKeyboardCaptureTap()
+        result(self.keyboardCaptureState(includeFocus: false))
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  private func registerKeyboardCaptureObservers() {
+    let center = NotificationCenter.default
+    for name in [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification] {
+      keyboardCaptureObservers.append(center.addObserver(
+        forName: name, object: self, queue: .main) { [weak self] _ in
+          self?.keyboardCaptureFocusChanged()
+        })
+    }
+    for name in [NSApplication.didBecomeActiveNotification, NSApplication.didResignActiveNotification] {
+      keyboardCaptureObservers.append(center.addObserver(
+        forName: name, object: nil, queue: .main) { [weak self] _ in
+          self?.keyboardCaptureFocusChanged()
+        })
+    }
+    keyboardCaptureObservers.append(center.addObserver(
+      forName: NSWindow.willCloseNotification, object: self, queue: .main) { [weak self] _ in
+        self?.stopKeyboardCapture()
+      })
+  }
+
+  private func keyboardCaptureFocusChanged() {
+    // Releases forwarded keys (when focus was lost) before Dart hears about it.
+    updateKeyboardCaptureTap()
+    guard let channel = keyboardCaptureChannel else { return }
+    let focused = keyboardCaptureWindowFocused()
+    guard keyboardCaptureLastFocus != focused else { return }
+    keyboardCaptureLastFocus = focused
+    channel.invokeMethod("windowFocus", arguments: ["focused": focused])
+  }
+
+  /// Creates the tap while capture can run (armed, focused, Accessibility trusted) or
+  /// while early-released keys still await their physical key-up; removes it otherwise.
+  private func updateKeyboardCaptureTap() {
+    let active = keyboardCaptureArmed && keyboardCaptureWindowFocused() && keyboardCaptureTrusted()
+    if !active {
+      releaseKeyboardCaptureKeys()
+    }
+    if active || !keyboardCaptureSuppressed.isEmpty {
+      installKeyboardCaptureTap()
+    } else {
+      removeKeyboardCaptureTap()
+    }
+  }
+
+  private func installKeyboardCaptureTap() {
+    guard keyboardCaptureTap == nil, keyboardCaptureTrusted() else { return }
+    let mask = (CGEventMask(1) << CGEventMask(CGEventType.keyDown.rawValue))
+      | (CGEventMask(1) << CGEventMask(CGEventType.keyUp.rawValue))
+    guard let tap = CGEvent.tapCreate(
+      tap: .cgSessionEventTap,
+      place: .headInsertEventTap,
+      options: .defaultTap,
+      eventsOfInterest: mask,
+      callback: atermKeyboardCaptureTapCallback,
+      userInfo: Unmanaged.passUnretained(self).toOpaque()
+    ) else {
+      return
+    }
+    guard let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0) else {
+      CFMachPortInvalidate(tap)
+      return
+    }
+    CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
+    CGEvent.tapEnable(tap: tap, enable: true)
+    keyboardCaptureTap = tap
+    keyboardCaptureTapSource = source
+  }
+
+  private func removeKeyboardCaptureTap() {
+    if let tap = keyboardCaptureTap {
+      CGEvent.tapEnable(tap: tap, enable: false)
+    }
+    if let source = keyboardCaptureTapSource {
+      CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
+    }
+    if let tap = keyboardCaptureTap {
+      CFMachPortInvalidate(tap)
+    }
+    keyboardCaptureTap = nil
+    keyboardCaptureTapSource = nil
+    keyboardCaptureTapWasDisabled = false
+  }
+
+  /// Window closing: release everything remotely and stop tapping at once.
+  private func stopKeyboardCapture() {
+    keyboardCaptureArmed = false
+    releaseKeyboardCaptureKeys()
+    keyboardCaptureSuppressed.removeAll()
+    removeKeyboardCaptureTap()
+  }
+
+  private func sendKeyboardCaptureKey(down: Bool, code: Int, char: String) {
+    keyboardCaptureChannel?.invokeMethod("key", arguments: [
+      "platform": "macos",
+      "down": down,
+      "code": code,
+      "scan": 0,
+      "extended": false,
+      "char": char,
+    ])
+  }
+
+  /// Sends the up of every forwarded key; their remaining OS events stay swallowed.
+  private func releaseKeyboardCaptureKeys() {
+    guard !keyboardCaptureForwarded.isEmpty else { return }
+    let released = keyboardCaptureForwarded
+    keyboardCaptureForwarded.removeAll()
+    for (code, char) in released {
+      sendKeyboardCaptureKey(down: false, code: code, char: char)
+      keyboardCaptureSuppressed.insert(code)
+    }
+    keyboardCaptureSuppressDeadline = .now() + 5
+    scheduleKeyboardCaptureReconcile()
+  }
+
+  private static func keyboardCaptureKeyIsDown(_ code: Int) -> Bool {
+    return CGEventSource.keyState(.hidSystemState, key: CGKeyCode(truncatingIfNeeded: code))
+  }
+
+  private func scheduleKeyboardCaptureReconcile() {
+    guard !keyboardCaptureReconcileScheduled else { return }
+    keyboardCaptureReconcileScheduled = true
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+      guard let self = self else { return }
+      self.keyboardCaptureReconcileScheduled = false
+      self.reconcileKeyboardCaptureKeys()
+    }
+  }
+
+  /// Recovers key-ups the tap never saw (it was disabled by a timeout or secure
+  /// input) and ends the post-release suppression once keys are physically up.
+  private func reconcileKeyboardCaptureKeys() {
+    if keyboardCaptureTapWasDisabled {
+      keyboardCaptureTapWasDisabled = false
+      for (code, char) in keyboardCaptureForwarded where !Self.keyboardCaptureKeyIsDown(code) {
+        keyboardCaptureForwarded.removeValue(forKey: code)
+        sendKeyboardCaptureKey(down: false, code: code, char: char)
+      }
+    }
+    if DispatchTime.now() >= keyboardCaptureSuppressDeadline {
+      keyboardCaptureSuppressed.removeAll()
+    } else {
+      keyboardCaptureSuppressed = keyboardCaptureSuppressed.filter { Self.keyboardCaptureKeyIsDown($0) }
+    }
+    updateKeyboardCaptureTap()
+    if !keyboardCaptureSuppressed.isEmpty {
+      scheduleKeyboardCaptureReconcile()
+    }
+  }
+
+  /// Lowercased key character; "" when there is none or it is a function key
+  /// (arrows, F-keys use private-use code points).
+  private static func keyboardCaptureNormalizedCharacter(_ raw: String?) -> String {
+    guard let raw = raw, !raw.isEmpty else { return "" }
+    if raw.unicodeScalars.contains(where: { $0.value >= 0xF700 && $0.value <= 0xF8FF }) {
+      return ""
+    }
+    return raw.lowercased()
+  }
+
+  /// Unmodified, lowercased base character of the key in the current layout
+  /// (the "char" of the `key` payload).
+  private static func keyboardCaptureBaseCharacter(_ nsEvent: NSEvent?) -> String {
+    guard let nsEvent = nsEvent else { return "" }
+    return keyboardCaptureNormalizedCharacter(
+      nsEvent.characters(byApplyingModifiers: []) ?? nsEvent.charactersIgnoringModifiers)
+  }
+
+  private static func keyboardCaptureIsPrintableASCII(_ text: String) -> Bool {
+    let scalars = text.unicodeScalars
+    return scalars.count == 1 && scalars.allSatisfy { $0.value > 0x20 && $0.value < 0x7F }
+  }
+
+  /// Character Command key equivalents (menus, the system) match on this key.
+  /// Non-Latin layouts (Russian, Greek, ...) and "Dvorak – QWERTY ⌘" switch to a
+  /// Latin key map while Command is held, so it can differ from the base character.
+  private static func keyboardCaptureShortcutCharacter(_ nsEvent: NSEvent?, code: Int, base: String) -> String {
+    let command = keyboardCaptureNormalizedCharacter(nsEvent?.characters(byApplyingModifiers: .command))
+    for candidate in [command, base] where keyboardCaptureIsPrintableASCII(candidate) {
+      return candidate
+    }
+    // No Latin character even with Command: match the ANSI key position, like the
+    // ASCII-capable layout macOS falls back to for shortcuts. A wrong guess only
+    // sends the combination to the remote computer instead of the local app.
+    switch code {
+    case MacVirtualKey.ansiQ:
+      return "q"
+    case MacVirtualKey.ansiW:
+      return "w"
+    case MacVirtualKey.ansiH:
+      return "h"
+    case MacVirtualKey.ansiM:
+      return "m"
+    default:
+      return ""
+    }
+  }
+
+  /// Shortcuts macOS or the app menu would act on instead of the remote computer.
+  /// `shortcut` is the key's Command key-equivalent character.
+  private static func keyboardCaptureIsReserved(code: Int, flags: CGEventFlags, shortcut: String) -> Bool {
+    let command = flags.contains(.maskCommand)
+    let control = flags.contains(.maskControl)
+    let option = flags.contains(.maskAlternate)
+    switch code {
+    case MacVirtualKey.tab, MacVirtualKey.grave:
+      // App switcher (Shift reverses it) and next window of the app.
+      return command
+    case MacVirtualKey.space:
+      // Spotlight / Finder search and input source switching.
+      return command || control
+    case MacVirtualKey.leftArrow, MacVirtualKey.rightArrow, MacVirtualKey.downArrow, MacVirtualKey.upArrow:
+      // Spaces, Mission Control and App Exposé.
+      return control
+    case MacVirtualKey.escape:
+      // Force Quit Applications.
+      return command && option
+    default:
+      break
+    }
+    guard command else { return false }
+    switch shortcut {
+    case "`":
+      return true // Next window on layouts where ` is not on kVK_ANSI_Grave.
+    case "q":
+      return !control // Control+Command+Q (Lock Screen) stays local.
+    case "h", "m", "w":
+      return true // Hide, Minimize, Close.
+    default:
+      return false
+    }
+  }
+
+  /// Decides, at event time and on the main thread, whether the tap swallows the
+  /// event; swallowed key events are forwarded to Dart.
+  fileprivate func keyboardCaptureShouldSwallow(type: CGEventType, event: CGEvent) -> Bool {
+    switch type {
+    case .tapDisabledByTimeout, .tapDisabledByUserInput:
+      if let tap = keyboardCaptureTap {
+        CGEvent.tapEnable(tap: tap, enable: true)
+      }
+      // Key-ups may have been missed while the tap was disabled.
+      keyboardCaptureTapWasDisabled = true
+      scheduleKeyboardCaptureReconcile()
+      return false
+    case .keyDown, .keyUp:
+      break
+    default:
+      return false
+    }
+    let code = Int(event.getIntegerValueField(.keyboardEventKeycode))
+    if type == .keyUp {
+      if let char = keyboardCaptureForwarded.removeValue(forKey: code) {
+        sendKeyboardCaptureKey(down: false, code: code, char: char)
+        return true
+      }
+      if keyboardCaptureSuppressed.remove(code) != nil {
+        // The tap is removed by the next reconcile once nothing is left to drain.
+        scheduleKeyboardCaptureReconcile()
+        return true
+      }
+      return false
+    }
+    if keyboardCaptureSuppressed.contains(code) {
+      return true
+    }
+    let gateOpen = keyboardCaptureGateOpen()
+    if let char = keyboardCaptureForwarded[code] {
+      if gateOpen {
+        sendKeyboardCaptureKey(down: true, code: code, char: char) // auto-repeat
+      } else {
+        releaseKeyboardCaptureKeys()
+      }
+      return true
+    }
+    let flags = event.flags
+    // Only a fresh press starts a capture: a key already down when capture began
+    // keeps going to Flutter, so its up is never lost there.
+    guard gateOpen,
+          flags.contains(.maskCommand) || flags.contains(.maskControl),
+          event.getIntegerValueField(.keyboardEventAutorepeat) == 0 else {
+      return false
+    }
+    let nsEvent = NSEvent(cgEvent: event)
+    let char = Self.keyboardCaptureBaseCharacter(nsEvent)
+    let shortcut = Self.keyboardCaptureShortcutCharacter(nsEvent, code: code, base: char)
+    guard Self.keyboardCaptureIsReserved(code: code, flags: flags, shortcut: shortcut) else {
+      return false
+    }
+    keyboardCaptureForwarded[code] = char
+    sendKeyboardCaptureKey(down: true, code: code, char: char)
+    return true
+  }
+
   // MARK: - Window Observers
 
   private func registerWindowObservers() {
@@ -627,9 +1051,23 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     for observer in windowObservers {
       NotificationCenter.default.removeObserver(observer)
     }
+    for observer in keyboardCaptureObservers {
+      NotificationCenter.default.removeObserver(observer)
+    }
+    // The tap holds an unretained pointer to this window: it must never outlive it.
+    if let tap = keyboardCaptureTap {
+      CGEvent.tapEnable(tap: tap, enable: false)
+    }
+    if let source = keyboardCaptureTapSource {
+      CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
+    }
+    if let tap = keyboardCaptureTap {
+      CFMachPortInvalidate(tap)
+    }
     fullscreenChannel?.setMethodCallHandler(nil)
     chromeChannel?.setMethodCallHandler(nil)
     geometryChannel?.setMethodCallHandler(nil)
     filePanelChannel?.setMethodCallHandler(nil)
+    keyboardCaptureChannel?.setMethodCallHandler(nil)
   }
 }
